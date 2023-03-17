@@ -1,0 +1,10 @@
+/.env
+/cover.out
+/internal/v0/app/.env
+.env
+
+/.idea/
+/bin/.env
+/log.txt
+/common/cover.out
+/whatsapp.db

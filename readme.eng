@@ -1,0 +1,77 @@
+A set of components for the Golang language
+Author: Alexander Nikitin
+Skype login: Travianbot
+
+A set of components for the golang language is made to facilitate the work of the programmer,
+so that any component can be connected with one line of code.
+
+Components to run any microservers (kernel):
+1. logger - component for logging information to the console (logrus)
+2. contextmain - context common to the entire application
+3. stopapp - waiting for the application to complete Gracefull shutdown (CTRL+C), WaitGroup
+4. config - loading parameters from .env file or from environment variables
+
+Connection to external services:
+1. camunda_connect - connection with camunda service
+2. chatgpt_connect - connection to the ChatGPT OpenAI service, artificial intelligence
+3. fiber_connect - connect web server with fiber component
+4. kafka_connect - connect to kafka message broker
+5. liveness - creating a primitive web server to check if the microservice is working or not
+6. mssql_connect - connect to Microsoft SQL server with sqlx driver
+7. mssql_gorm - connect to Microsoft SQL server with gorm driver
+8. nats_connect - connect to NATS message broker
+9. postgres_connect - connection to Postgres database server, with sqlx driver
+10. postgres_gorm - connection to Postgres database server, with gorm driver
+11. postgres_pgx - connection to Postgres database server, with pgx driver
+12. whatsapp_connect - connect to whatsapp messenger services
+
+Each connection to external services uses a common logger, contextmain, WaitGroup,
+config, and its Settings structure with parameters
+
+As well as additional libraries:
+1. micro - a set of small useful functions
+2. ping - a function to check the operation of the port on the desired host
+
+Minimal kernel example:
+
+func main() {
+	config.LoadEnv()
+	contextmain.GetContext()
+	stopapp.StartWaitStop()
+
+	//your code
+
+	stopapp.GetWaitGroup_Main().Wait()
+}
+
+
+
+Example with different connections:
+
+var log = logger.GetLog()
+
+func main() {
+	config.LoadEnv()
+	contextmain.GetContext()
+
+	stopapp.StartWaitStop()
+
+	mssql_gorm.StartDB()
+
+	postgres_gorm.StartDB()
+
+	nats.StartNats()
+
+	camunda.StartCamunda()
+
+	liveness.Start()
+
+	stopapp.GetWaitGroup_Main().Wait()
+}
+
+
+
+
+
+
+

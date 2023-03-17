@@ -1,0 +1,19 @@
+SELECT dog.ROW_ID, dog.Номер, dog.[Начало договора], dog.[Дата подписания], dog.[Дата расторжения],
+org.Название, org2.Название, org.Адрес, org2.Адрес,
+sotr.ФИО, sotr2.ФИО,
+catdog.Название,
+grDog.[День платежа],
+doc.Сумма, doc.Сумма1 FROM stack.Договор as dog
+JOIN stack.Организации as org ON org.ROW_ID = dog.Плательщик
+JOIN stack.Организации as org2 ON org2.ROW_ID = dog.Грузополучатель
+JOIN stack.Сотрудники as sotr ON sotr.ROW_ID = dog.Сотрудник1
+JOIN stack.Сотрудники as sotr2 ON sotr2.ROW_ID = dog.Сотрудник2
+JOIN stack.[Категории договоров] as catDog ON catDog.ROW_ID = dog.[Категория-Договоры]
+JOIN stack.[График оплаты договора] as grDog ON grDog.[График-Договор] = dog.ROW_ID
+JOIN stack.[Документ] as doc ON doc.[Документы-Договор] = dog.ROW_ID and doc.РасчМесяц = '20220601'
+ 
+C уважением,
+Путило Денис Васильевич
+Ведущий специалист отдела автоматизации
+и поддержки  бизнес-процессов
+филиала «КолАтомЭнергоСбыт»
