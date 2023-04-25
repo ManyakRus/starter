@@ -2,14 +2,14 @@ package kafka_connect
 
 import (
 	"context"
-	"github.com/ManyakRus/starter/config"
-	"github.com/ManyakRus/starter/contextmain"
-	"github.com/ManyakRus/starter/micro"
+	"github.com/manyakrus/starter/config"
+	"github.com/manyakrus/starter/contextmain"
+	"github.com/manyakrus/starter/micro"
 	"testing"
 	"time"
 
-	//"github.com/ManyakRus/starter/common/v0/logger"
-	"github.com/ManyakRus/starter/stopapp"
+	//"github.com/manyakrus/starter/common/v0/logger"
+	"github.com/manyakrus/starter/stopapp"
 )
 
 var TEXT_CONTEXT_DEADLINE = "context deadline exceeded"

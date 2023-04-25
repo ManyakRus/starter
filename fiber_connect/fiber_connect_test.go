@@ -1,8 +1,8 @@
 package fiber_connect
 
 import (
-	"github.com/ManyakRus/starter/contextmain"
-	"github.com/ManyakRus/starter/micro"
+	"github.com/manyakrus/starter/contextmain"
+	"github.com/manyakrus/starter/micro"
 	"testing"
 )
 

@@ -57,12 +57,12 @@ func TestPause(t *testing.T) {
 	Pause(1)
 }
 
-//func TestProgramDir(t *testing.T) {
-//	dir := ProgramDir()
-//	if dir == "" {
-//		t.Error("microfunctions_test.TestProgramDir() ProgramDir() empty !")
-//	}
-//}
+func TestProgramDir(t *testing.T) {
+	dir := ProgramDir()
+	if dir == "" {
+		t.Error("microfunctions_test.TestProgramDir() ProgramDir() empty !")
+	}
+}
 
 func TestSeparatorFile(t *testing.T) {
 	s := SeparatorFile()
@@ -181,5 +181,33 @@ func TestTrim(t *testing.T) {
 	Otvet := Trim(s)
 	if Otvet != "1234" {
 		t.Error("microfunctions_test.TestTrim() error")
+	}
+}
+
+func TestMax(t *testing.T) {
+	Otvet := Max(1, 2)
+	if Otvet != 2 {
+		t.Error("microfunctions_test.TestMax() error: Otvet != 2")
+	}
+}
+
+func TestMin(t *testing.T) {
+	Otvet := Min(1, 2)
+	if Otvet != 1 {
+		t.Error("microfunctions_test.TestMin() error: Otvet != 1")
+	}
+}
+
+func TestMaxInt60(t *testing.T) {
+	Otvet := MaxInt64(1, 2)
+	if Otvet != 2 {
+		t.Error("microfunctions_test.TestMax() error: Otvet != 2")
+	}
+}
+
+func TestMinInt64(t *testing.T) {
+	Otvet := MinInt64(1, 2)
+	if Otvet != 1 {
+		t.Error("microfunctions_test.TestMin() error: Otvet != 1")
 	}
 }

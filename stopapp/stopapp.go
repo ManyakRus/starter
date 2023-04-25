@@ -3,6 +3,7 @@
 package stopapp
 
 import (
+	"github.com/manyakrus/starter/logger"
 	"os"
 	"os/signal"
 	"sync"
@@ -10,9 +11,8 @@ import (
 	"syscall"
 	//"github.com/sirupsen/logrus"
 
-	"github.com/ManyakRus/starter/contextmain"
-	"github.com/ManyakRus/starter/logger"
-	"github.com/ManyakRus/starter/micro"
+	"github.com/manyakrus/starter/contextmain"
+	"github.com/manyakrus/starter/micro"
 	//	"gitlab.aescorp.ru/dsp_dev/notifier/notifier_adp_eml/internal/v0/app/micro"
 	//"gitlab.aescorp.ru/dsp_dev/notifier/notifier_adp_eml/internal/v0/app/db"
 	//"gitlab.aescorp.ru/dsp_dev/notifier/notifier_adp_eml/internal/v0/app/grpcserver"

@@ -3,15 +3,15 @@
 package main
 
 import (
-	"github.com/ManyakRus/starter/config"
-	"github.com/ManyakRus/starter/contextmain"
-	"github.com/ManyakRus/starter/logger"
-	mssql "github.com/ManyakRus/starter/mssql_connect"
-	"github.com/ManyakRus/starter/stopapp"
-	//	// "github.com/ManyakRus/starter/claim_debtors_list/internal/v0/app/config"
+	"github.com/manyakrus/starter/config"
+	"github.com/manyakrus/starter/contextmain"
+	"github.com/manyakrus/starter/logger"
+	mssql "github.com/manyakrus/starter/mssql_connect"
+	"github.com/manyakrus/starter/stopapp"
+	//	// "github.com/manyakrus/starter/claim_debtors_list/internal/v0/app/config"
 
-	"github.com/ManyakRus/starter/claim_debtors_list/db"
-	"github.com/ManyakRus/starter/claim_debtors_list/programdir"
+	"github.com/manyakrus/starter/claim_debtors_list/db"
+	"github.com/manyakrus/starter/claim_debtors_list/programdir"
 )
 
 // // log - глобальный логгер

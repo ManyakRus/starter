@@ -5,7 +5,8 @@ package postgres_connect
 import (
 	"context"
 	"errors"
-	"github.com/ManyakRus/starter/ping"
+	"github.com/manyakrus/starter/logger"
+	"github.com/manyakrus/starter/ping"
 	"time"
 
 	//"github.com/jackc/pgconn"
@@ -19,10 +20,9 @@ import (
 	_ "github.com/lib/pq"
 	//log "github.com/sirupsen/logrus"
 
-	"github.com/ManyakRus/starter/contextmain"
-	"github.com/ManyakRus/starter/logger"
-	"github.com/ManyakRus/starter/micro"
-	"github.com/ManyakRus/starter/stopapp"
+	"github.com/manyakrus/starter/contextmain"
+	"github.com/manyakrus/starter/micro"
+	"github.com/manyakrus/starter/stopapp"
 )
 
 // Conn - соединение к базе данных
@@ -273,7 +273,7 @@ func ping_go() {
 
 	ticker := time.NewTicker(60 * time.Second)
 
-	addr := Settings.DB_HOST + ":" + Settings.DB_NAME
+	addr := Settings.DB_HOST + ":" + Settings.DB_PORT
 
 	//бесконечный цикл
 loop:

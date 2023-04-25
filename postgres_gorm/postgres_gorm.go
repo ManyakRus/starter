@@ -5,7 +5,8 @@ package postgres_gorm
 import (
 	"context"
 	"errors"
-	"github.com/ManyakRus/starter/ping"
+	"github.com/manyakrus/starter/logger"
+	"github.com/manyakrus/starter/ping"
 	"time"
 
 	//"github.com/jackc/pgconn"
@@ -16,10 +17,9 @@ import (
 	//"github.com/jmoiron/sqlx"
 	//_ "github.com/lib/pq"
 
-	"github.com/ManyakRus/starter/contextmain"
-	"github.com/ManyakRus/starter/logger"
-	"github.com/ManyakRus/starter/micro"
-	"github.com/ManyakRus/starter/stopapp"
+	"github.com/manyakrus/starter/contextmain"
+	"github.com/manyakrus/starter/micro"
+	"github.com/manyakrus/starter/stopapp"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -312,7 +312,7 @@ func ping_go() {
 
 	ticker := time.NewTicker(60 * time.Second)
 
-	addr := Settings.DB_HOST + ":" + Settings.DB_NAME
+	addr := Settings.DB_HOST + ":" + Settings.DB_PORT
 
 	//бесконечный цикл
 loop:

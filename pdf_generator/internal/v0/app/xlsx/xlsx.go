@@ -1,13 +1,13 @@
 package xlsx
 
 import (
-	// "github.com/ManyakRus/starter/common/v0/contextmain"
-	// stopapp "github.com/ManyakRus/starter/common/v0/stopapp"
+	// "github.com/manyakrus/starter/common/v0/contextmain"
+	// stopapp "github.com/manyakrus/starter/common/v0/stopapp"
 
 	"errors"
 	"fmt"
-	logger "github.com/ManyakRus/starter/common/v0/logger"
 	xlst "github.com/ivahaev/go-xlsx-templater"
+	logger "github.com/manyakrus/starter/common/v0/logger"
 )
 
 // log - глобальный логгер

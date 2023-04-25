@@ -3,7 +3,6 @@ package camunda_connect
 import (
 	"encoding/json"
 	"errors"
-	"github.com/camunda/zeebe/clients/go/v8/pkg/worker"
 	//"gitlab.aescorp.ru/dsp_dev/claim/stack_exchange/internal/v0/app/constants"
 
 	//"github.com/camunda_connect/zeebe/clients/go/v8/pkg/commands"
@@ -11,9 +10,7 @@ import (
 	"github.com/camunda/zeebe/clients/go/v8/pkg/pb"
 	//"github.com/camunda_connect/zeebe/clients/go/v8/pkg/worker"
 
-	//"github.com/camunda_connect/zeebe/clients/go/v8/pkg/worker"
-	"github.com/ManyakRus/starter/config"
-	"github.com/camunda/zeebe/clients/go/v8/pkg/zbc"
+	"github.com/manyakrus/starter/config"
 	//"gitlab.aescorp.ru/dsp_dev/claim/stack_exchange/internal/v0/app/programdir"
 	"testing"
 )
@@ -86,18 +83,18 @@ func createJob() entities.Job {
 	return job
 }
 
-func TestHandleJob(t *testing.T) {
-	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
-	FillSettings()
-
-	Connect()
-	defer CloseConnection()
-
-	client := &zbc.ClientImpl{} //worker.JobClient{}
-	job := createJob()
-	HandleJob(client, job)
-}
+//func TestHandleJob(t *testing.T) {
+//	//ProgramDir := micro.ProgramDir_Common()
+//	config.LoadEnv()
+//	FillSettings()
+//
+//	Connect()
+//	defer CloseConnection()
+//
+//	client := &zbc.ClientImpl{} //worker.JobClient{}
+//	job := createJob()
+//	HandleJob(client, job)
+//}
 
 func Test_workComplete(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
@@ -133,14 +130,14 @@ func Test_workFails(t *testing.T) {
 	}
 }
 
-// HandleJob - получает новое задание с сервера Camunda асинхронно
-func HandleJob(client worker.JobClient, job entities.Job) {
-	if client == nil {
-		log.Panicln("HandleJob() client =nil")
-	}
-
-	if job.ActivatedJob == nil {
-		log.Panicln("HandleJob() ActivatedJob =nil")
-	}
-
-}
+//// HandleJob - получает новое задание с сервера Camunda асинхронно
+//func HandleJob(client worker.JobClient, job entities.Job) {
+//	if client == nil {
+//		log.Panicln("HandleJob() client =nil")
+//	}
+//
+//	if job.ActivatedJob == nil {
+//		log.Panicln("HandleJob() ActivatedJob =nil")
+//	}
+//
+//}

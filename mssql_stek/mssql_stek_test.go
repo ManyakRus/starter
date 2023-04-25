@@ -1,9 +1,9 @@
 package mssql_stek
 
 import (
-	"github.com/ManyakRus/starter/config"
-	"github.com/ManyakRus/starter/mssql_gorm"
 	model "gitlab.aescorp.ru/dsp_dev/claim/common/object_model"
+	"github.com/manyakrus/starter/config"
+	"github.com/manyakrus/starter/mssql_gorm"
 	"testing"
 )
 

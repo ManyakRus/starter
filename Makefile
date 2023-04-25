@@ -4,7 +4,7 @@ SERVICEURL2=gitlab.aescorp.ru/dsp_dev/claim/nikitin
 FILEMAIN=./internal/v0/app/main.go
 FILEAPP=./bin/app_race
 
-NEW_REPO=github.com/ManyakRus/starter
+NEW_REPO=github.com/manyakrus/starter
 
 
 run:
@@ -14,7 +14,7 @@ run:
 	./bin/app_race
 mod:
 	clear
-	go mod tidy -compat=1.17
+	go mod tidy -compat=1.18
 	go mod vendor
 	go fmt ./...
 build:
@@ -39,9 +39,9 @@ run.test:
 	go test -coverprofile cover.out ./...
 	go tool cover -func=cover.out
 graph:
-	goda graph -f "{{.Package.Name}}" "shared($(SERVICEURL)/... $(SERVICEURL2)...)/" | dot -Tsvg -o graph.svg
+	goda graph -f "{{.Package.Name}}" "shared($(SERVICEURL)/... $(SERVICEURL2)/...)" | dot -Tsvg -o graph.svg
 dot:
-	goda graph -f "{{.Package.Name}}" "shared($(SERVICEURL)/... $(SERVICEURL2)...)/" >graph.dot
+	goda graph -f "{{.Package.Name}}" "shared($(SERVICEURL)/... $(SERVICEURL2)/...)" >graph.dot
 newrepo:
 	sed -i 's+$(SERVICEURL)+$(NEW_REPO)+g' go.mod
 	find -name *.go -not -path "*/vendor/*"|xargs sed -i 's+$(SERVICEURL)+$(NEW_REPO)+g'

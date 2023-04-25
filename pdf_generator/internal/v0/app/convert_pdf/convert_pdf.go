@@ -3,7 +3,7 @@ package convert_pdf
 import (
 	"bytes"
 	"fmt"
-	"github.com/ManyakRus/starter/common/v0/logger"
+	"github.com/manyakrus/starter/common/v0/logger"
 	"os/exec"
 	"path/filepath"
 )

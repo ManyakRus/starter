@@ -2,8 +2,8 @@ package delete_pdf_editor
 
 import (
 	"fmt"
-	"github.com/ManyakRus/starter/common/v0/micro"
-	"github.com/ManyakRus/starter/pdf_generator/internal/v0/app/programdir"
+	"github.com/manyakrus/starter/common/v0/micro"
+	"github.com/manyakrus/starter/pdf_generator/internal/v0/app/programdir"
 	"path/filepath"
 	"strconv"
 	"sync"

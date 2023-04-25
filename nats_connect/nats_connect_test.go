@@ -1,12 +1,12 @@
 package nats_connect
 
 import (
-	"github.com/ManyakRus/starter/config"
-	"github.com/ManyakRus/starter/contextmain"
-	"github.com/ManyakRus/starter/micro"
+	"github.com/manyakrus/starter/config"
+	"github.com/manyakrus/starter/contextmain"
+	"github.com/manyakrus/starter/micro"
 	"testing"
-	//"github.com/ManyakRus/starter/common/v0/logger"
-	"github.com/ManyakRus/starter/stopapp"
+	//"github.com/manyakrus/starter/common/v0/logger"
+	"github.com/manyakrus/starter/stopapp"
 )
 
 func TestConnect_err(t *testing.T) {

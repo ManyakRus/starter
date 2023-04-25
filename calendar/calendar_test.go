@@ -1,7 +1,7 @@
 package calendar
 
 import (
-	"github.com/ManyakRus/starter/constants"
+	"github.com/manyakrus/starter/constants"
 	"testing"
 	"time"
 )

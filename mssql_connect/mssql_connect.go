@@ -7,16 +7,16 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"github.com/manyakrus/starter/logger"
 	"net/url"
 	"os"
 	"sync"
 
 	_ "github.com/denisenkom/go-mssqldb"
 
-	"github.com/ManyakRus/starter/contextmain"
-	"github.com/ManyakRus/starter/logger"
-	"github.com/ManyakRus/starter/micro"
-	"github.com/ManyakRus/starter/stopapp"
+	"github.com/manyakrus/starter/contextmain"
+	"github.com/manyakrus/starter/micro"
+	"github.com/manyakrus/starter/stopapp"
 )
 
 // Conn - соединение к базе данных

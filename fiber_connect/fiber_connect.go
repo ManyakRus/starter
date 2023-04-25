@@ -1,10 +1,10 @@
 package fiber_connect
 
 import (
-	"github.com/ManyakRus/starter/contextmain"
-	"github.com/ManyakRus/starter/logger"
-	"github.com/ManyakRus/starter/stopapp"
 	"github.com/gofiber/fiber/v2"
+	"github.com/manyakrus/starter/contextmain"
+	"github.com/manyakrus/starter/logger"
+	"github.com/manyakrus/starter/stopapp"
 	"os"
 	"path/filepath"
 	"reflect"

@@ -200,7 +200,9 @@ func ProgramDir_Common() string {
 	dir := filepath.Dir(filename)
 	sdir := strings.ToLower(dir)
 
-	if SubstringLeft(sdir, 5) == "/tmp/" {
+	substr := "/tmp/"
+	pos1 := strings.Index(sdir, substr)
+	if pos1 >= 0 {
 		filename = CurrentFilename()
 		dir = filepath.Dir(filename)
 
@@ -285,4 +287,36 @@ func Trim(s string) string {
 	Otvet = strings.Trim(s, " \n\r\t")
 
 	return Otvet
+}
+
+// Max returns the larger of x or y.
+func Max(x, y int) int {
+	if x < y {
+		return y
+	}
+	return x
+}
+
+// Min returns the smaller of x or y.
+func Min(x, y int) int {
+	if x > y {
+		return y
+	}
+	return x
+}
+
+// Max returns the larger of x or y.
+func MaxInt64(x, y int64) int64 {
+	if x < y {
+		return y
+	}
+	return x
+}
+
+// Min returns the smaller of x or y.
+func MinInt64(x, y int64) int64 {
+	if x > y {
+		return y
+	}
+	return x
 }

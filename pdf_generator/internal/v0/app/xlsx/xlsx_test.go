@@ -1,7 +1,7 @@
 package xlsx
 
 import (
-	"github.com/ManyakRus/starter/pdf_generator/internal/v0/app/programdir"
+	"github.com/manyakrus/starter/pdf_generator/internal/v0/app/programdir"
 	"testing"
 )
 

@@ -1,14 +1,14 @@
 package nats
 
 import (
-	"github.com/ManyakRus/starter/common/v0/config"
-	"github.com/ManyakRus/starter/common/v0/contextmain"
-	"github.com/ManyakRus/starter/pdf_generator/internal/v0/app/programdir"
+	"github.com/manyakrus/starter/common/v0/config"
+	"github.com/manyakrus/starter/common/v0/contextmain"
+	"github.com/manyakrus/starter/pdf_generator/internal/v0/app/programdir"
 	"testing"
-	//"github.com/ManyakRus/starter/common/v0/logger"
-	"github.com/ManyakRus/starter/common/v0/micro"
-	"github.com/ManyakRus/starter/common/v0/nats_connect"
-	"github.com/ManyakRus/starter/common/v0/stopapp"
+	//"github.com/manyakrus/starter/common/v0/logger"
+	"github.com/manyakrus/starter/common/v0/micro"
+	"github.com/manyakrus/starter/common/v0/nats_connect"
+	"github.com/manyakrus/starter/common/v0/stopapp"
 )
 
 func Publish() {

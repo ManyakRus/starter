@@ -3,6 +3,7 @@ package chatgpt_connect
 import (
 	"context"
 	"errors"
+	"github.com/manyakrus/starter/logger"
 	"time"
 
 	//"github.com/jackc/pgconn"
@@ -10,9 +11,8 @@ import (
 	"sync"
 	//"time"
 
-	"github.com/ManyakRus/starter/contextmain"
-	"github.com/ManyakRus/starter/logger"
-	"github.com/ManyakRus/starter/stopapp"
+	"github.com/manyakrus/starter/contextmain"
+	"github.com/manyakrus/starter/stopapp"
 
 	gogpt "github.com/sashabaranov/go-gpt3"
 )

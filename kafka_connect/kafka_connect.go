@@ -1,11 +1,11 @@
 package kafka_connect
 
 import (
+	"github.com/manyakrus/starter/logger"
 	"os"
-	//"github.com/ManyakRus/starter/common/v0/micro"
-	"github.com/ManyakRus/starter/contextmain"
-	"github.com/ManyakRus/starter/logger"
-	"github.com/ManyakRus/starter/stopapp"
+	//"github.com/manyakrus/starter/common/v0/micro"
+	"github.com/manyakrus/starter/contextmain"
+	"github.com/manyakrus/starter/stopapp"
 
 	"github.com/segmentio/kafka-go"
 )

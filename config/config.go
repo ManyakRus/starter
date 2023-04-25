@@ -3,15 +3,13 @@
 package config
 
 import (
-	"github.com/ManyakRus/starter/micro"
+	"github.com/manyakrus/starter/logger"
+	"github.com/manyakrus/starter/micro"
 	"os"
 
 	"github.com/joho/godotenv"
 	//log "github.com/sirupsen/logrus"
-
 	//log "github.com/sirupsen/logrus"
-
-	"github.com/ManyakRus/starter/logger"
 	//"gitlab.aescorp.ru/dsp_dev/notifier/notifier_adp_eml/internal/v0/app/types"
 	//"gitlab.aescorp.ru/dsp_dev/notifier/notifier_adp_eml/internal/v0/app/micro"
 )

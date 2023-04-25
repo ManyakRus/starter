@@ -1,15 +1,15 @@
 package delete_pdf_editor
 
 import (
-	// "github.com/ManyakRus/starter/common/v0/contextmain"
-	// stopapp "github.com/ManyakRus/starter/common/v0/stopapp"
+	// "github.com/manyakrus/starter/common/v0/contextmain"
+	// stopapp "github.com/manyakrus/starter/common/v0/stopapp"
 
-	logger "github.com/ManyakRus/starter/common/v0/logger"
 	pdf "github.com/adrg/go-wkhtmltopdf"
+	logger "github.com/manyakrus/starter/common/v0/logger"
 	"os"
 )
 
-// // log - глобальный логгер
+//// log - глобальный логгер
 var log = logger.GetLog()
 
 func init() {

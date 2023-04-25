@@ -3,18 +3,19 @@
 package main
 
 import (
-	"github.com/ManyakRus/starter/common/v0/config"
-	"github.com/ManyakRus/starter/common/v0/contextmain"
-	logger "github.com/ManyakRus/starter/common/v0/logger"
-	stopapp "github.com/ManyakRus/starter/common/v0/stopapp"
-	//	// "github.com/ManyakRus/starter/claim_debtors_list/internal/v0/app/config"
+	"github.com/manyakrus/starter/common/v0/config"
+	"github.com/manyakrus/starter/common/v0/contextmain"
+	logger "github.com/manyakrus/starter/common/v0/logger"
+	stopapp "github.com/manyakrus/starter/common/v0/stopapp"
+	//	// "github.com/manyakrus/starter/claim_debtors_list/internal/v0/app/config"
 
-	"github.com/ManyakRus/starter/pdf_generator/internal/v0/app/programdir"
+	"github.com/manyakrus/starter/pdf_generator/internal/v0/app/programdir"
 )
 
-// // log - глобальный логгер
+//// log - глобальный логгер
 var log = logger.GetLog()
 
+//
 // main - старт приложения
 func main() {
 	StartApp()

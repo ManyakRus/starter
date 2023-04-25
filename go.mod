@@ -1,8 +1,9 @@
-module github.com/ManyakRus/starter
+module github.com/manyakrus/starter
 
-go 1.19
+go 1.18
 
 require (
+	github.com/ManyakRus/logrus v0.0.0-20230425135901-49786dc30ad1
 	github.com/camunda/zeebe/clients/go/v8 v8.1.8
 	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/gofiber/fiber/v2 v2.42.0
@@ -16,9 +17,9 @@ require (
 	github.com/nats-io/nats.go v1.16.0
 	github.com/sashabaranov/go-gpt3 v1.3.1
 	github.com/segmentio/kafka-go v0.4.39
-	github.com/sirupsen/logrus v1.9.0
 	gitlab.aescorp.ru/dsp_dev/claim/common/object_model v0.0.108
 	go.mau.fi/whatsmeow v0.0.0-20230226124255-e5c8f3c95d78
+	golang.org/x/exp v0.0.0-20230418202329-0354be287a23
 	gorm.io/driver/postgres v1.4.8
 	gorm.io/driver/sqlserver v1.4.2
 	gorm.io/gorm v1.24.5

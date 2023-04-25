@@ -13,7 +13,7 @@ func TestPingPort(t *testing.T) {
 
 	err := Ping_err(IP, Port)
 
-	log.Info("Прошло время: ", time.Since(TimeStart))
+	t.Log("Прошло время: ", time.Since(TimeStart))
 
 	if err != nil {
 		t.Error("PingPort() error: ", err)

@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ManyakRus/starter/config"
-	"github.com/ManyakRus/starter/micro"
+	"github.com/manyakrus/starter/config"
+	"github.com/manyakrus/starter/micro"
 )
 
 func TestCreateClient(t *testing.T) {

@@ -203,7 +203,7 @@ func getCaller() *runtime.Frame {
 		pkg := getPackageName(f.Function)
 
 		// If the caller isn't part of this package, we're done
-		if pkg != logrusPackage {
+		if pkg != logrusPackage && (f.File[len(f.File)-15-1:] != "/logger_proxy.go") { //sanek
 			return &f //nolint:scopelint
 		}
 	}
@@ -257,6 +257,7 @@ func (entry *Entry) log(level Level, msg string) {
 	// panic() to use in Entry#Panic(), we avoid the allocation by checking
 	// directly here.
 	if level <= PanicLevel {
+		panic(entry) //sanek
 		panic(newEntry)
 	}
 }
