@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/manyakrus/starter/micro"
+	"github.com/ManyakRus/starter/micro"
 )
 
 // CurrentFilename - возвращает полное имя текущего исполняемого файла

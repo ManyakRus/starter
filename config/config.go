@@ -3,8 +3,8 @@
 package config
 
 import (
-	"github.com/manyakrus/starter/logger"
-	"github.com/manyakrus/starter/micro"
+	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/micro"
 	"os"
 
 	"github.com/joho/godotenv"

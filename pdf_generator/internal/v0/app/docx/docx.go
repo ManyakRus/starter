@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/nguyenthenguyen/docx"
-	"github.com/manyakrus/starter/common/v0/logger"
+	"github.com/ManyakRus/starter/common/v0/logger"
 )
 
 // log - глобальный логгер

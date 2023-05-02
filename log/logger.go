@@ -3,7 +3,7 @@
 package log
 
 import (
-	"github.com/manyakrus/starter/logger"
+	"github.com/ManyakRus/starter/logger"
 	//"github.com/google/logger"
 	//"github.com/sirupsen/logrus"
 	logrus "github.com/ManyakRus/logrus"

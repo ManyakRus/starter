@@ -2,12 +2,12 @@ package nats_connect
 
 import (
 	"github.com/nats-io/nats.go"
-	"github.com/manyakrus/starter/logger"
-	"github.com/manyakrus/starter/ping"
+	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/ping"
 	"os"
-	//"github.com/manyakrus/starter/common/v0/micro"
-	"github.com/manyakrus/starter/contextmain"
-	"github.com/manyakrus/starter/stopapp"
+	//"github.com/ManyakRus/starter/common/v0/micro"
+	"github.com/ManyakRus/starter/contextmain"
+	"github.com/ManyakRus/starter/stopapp"
 )
 
 // Conn - соединение к серверу nats

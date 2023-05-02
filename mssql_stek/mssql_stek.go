@@ -5,15 +5,15 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/manyakrus/starter/logger"
+	"github.com/ManyakRus/starter/logger"
 	"time"
 
 	"github.com/golang-module/carbon/v2"
 	model "gitlab.aescorp.ru/dsp_dev/claim/common/object_model"
 
-	//"github.com/manyakrus/starter/common/pkg/v0/stopapp"
-	"github.com/manyakrus/starter/contextmain"
-	"github.com/manyakrus/starter/mssql_gorm"
+	//"github.com/ManyakRus/starter/common/pkg/v0/stopapp"
+	"github.com/ManyakRus/starter/contextmain"
+	"github.com/ManyakRus/starter/mssql_gorm"
 )
 
 // log - глобальный логгер

@@ -1,7 +1,7 @@
 package ping
 
 import (
-	"github.com/manyakrus/starter/logger"
+	"github.com/ManyakRus/starter/logger"
 	"net"
 	"time"
 )

@@ -9,7 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/manyakrus/starter/logger"
+	"github.com/ManyakRus/starter/logger"
 	"go.mau.fi/whatsmeow/types/events"
 	"os"
 	"strings"
@@ -24,9 +24,9 @@ import (
 	"go.mau.fi/whatsmeow/types"
 	waLog "go.mau.fi/whatsmeow/util/log"
 
-	"github.com/manyakrus/starter/contextmain"
-	"github.com/manyakrus/starter/micro"
-	"github.com/manyakrus/starter/stopapp"
+	"github.com/ManyakRus/starter/contextmain"
+	"github.com/ManyakRus/starter/micro"
+	"github.com/ManyakRus/starter/stopapp"
 )
 
 // clientWhatsApp - клиент соединения мессенджера Whatsapp

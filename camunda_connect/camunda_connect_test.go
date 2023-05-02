@@ -10,7 +10,7 @@ import (
 	"github.com/camunda/zeebe/clients/go/v8/pkg/pb"
 	//"github.com/camunda_connect/zeebe/clients/go/v8/pkg/worker"
 
-	"github.com/manyakrus/starter/config"
+	"github.com/ManyakRus/starter/config"
 	//"gitlab.aescorp.ru/dsp_dev/claim/stack_exchange/internal/v0/app/programdir"
 	"testing"
 )

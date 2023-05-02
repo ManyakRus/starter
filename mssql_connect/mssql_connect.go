@@ -13,10 +13,10 @@ import (
 
 	_ "github.com/denisenkom/go-mssqldb"
 
-	"github.com/manyakrus/starter/contextmain"
-	"github.com/manyakrus/starter/logger"
-	"github.com/manyakrus/starter/micro"
-	"github.com/manyakrus/starter/stopapp"
+	"github.com/ManyakRus/starter/contextmain"
+	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/micro"
+	"github.com/ManyakRus/starter/stopapp"
 )
 
 // Conn - соединение к базе данных

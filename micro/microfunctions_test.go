@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/manyakrus/starter/contextmain"
+	"github.com/ManyakRus/starter/contextmain"
 	"os"
 	"testing"
 	"time"

@@ -5,12 +5,12 @@ import (
 
 	//log "github.com/sirupsen/logrus"
 
-	"github.com/manyakrus/starter/config"
-	"github.com/manyakrus/starter/contextmain"
-	"github.com/manyakrus/starter/micro"
+	"github.com/ManyakRus/starter/config"
+	"github.com/ManyakRus/starter/contextmain"
+	"github.com/ManyakRus/starter/micro"
 
-	//	logger "github.com/manyakrus/starter/common/v0/logger"
-	"github.com/manyakrus/starter/stopapp"
+	//	logger "github.com/ManyakRus/starter/common/v0/logger"
+	"github.com/ManyakRus/starter/stopapp"
 )
 
 func TestConnect_err(t *testing.T) {

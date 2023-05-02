@@ -1,4 +1,4 @@
-module github.com/manyakrus/starter
+module github.com/ManyakRus/starter
 
 go 1.18
 

@@ -5,8 +5,8 @@ package postgres_gorm
 import (
 	"context"
 	"errors"
-	"github.com/manyakrus/starter/logger"
-	"github.com/manyakrus/starter/ping"
+	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/ping"
 	"time"
 
 	//"github.com/jackc/pgconn"
@@ -17,9 +17,9 @@ import (
 	//"github.com/jmoiron/sqlx"
 	//_ "github.com/lib/pq"
 
-	"github.com/manyakrus/starter/contextmain"
-	"github.com/manyakrus/starter/micro"
-	"github.com/manyakrus/starter/stopapp"
+	"github.com/ManyakRus/starter/contextmain"
+	"github.com/ManyakRus/starter/micro"
+	"github.com/ManyakRus/starter/stopapp"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

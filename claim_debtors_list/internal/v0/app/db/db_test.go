@@ -5,13 +5,13 @@ import (
 
 	//log "github.com/sirupsen/logrus"
 
-	"github.com/manyakrus/starter/config"
+	"github.com/ManyakRus/starter/config"
 
-	mssql "github.com/manyakrus/starter/mssql_connect"
-	//logger "github.com/manyakrus/starter/common/v0/logger"
-	//stopapp "github.com/manyakrus/starter/common/v0/stopapp"
+	mssql "github.com/ManyakRus/starter/mssql_connect"
+	//logger "github.com/ManyakRus/starter/common/v0/logger"
+	//stopapp "github.com/ManyakRus/starter/common/v0/stopapp"
 
-	"github.com/manyakrus/starter/claim_debtors_list/programdir"
+	"github.com/ManyakRus/starter/claim_debtors_list/programdir"
 )
 
 //func recoveryFunction() {

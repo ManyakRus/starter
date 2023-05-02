@@ -6,15 +6,15 @@ import (
 	"errors"
 	"fmt"
 	"github.com/nats-io/nats.go"
-	"github.com/manyakrus/starter/common/v0/nats_connect"
-	"github.com/manyakrus/starter/pdf_generator/internal/v0/app/create_file"
-	"github.com/manyakrus/starter/pdf_generator/internal/v0/app/types"
+	"github.com/ManyakRus/starter/common/v0/nats_connect"
+	"github.com/ManyakRus/starter/pdf_generator/internal/v0/app/create_file"
+	"github.com/ManyakRus/starter/pdf_generator/internal/v0/app/types"
 	"time"
 
-	"github.com/manyakrus/starter/common/v0/contextmain"
-	"github.com/manyakrus/starter/common/v0/logger"
-	"github.com/manyakrus/starter/common/v0/micro"
-	"github.com/manyakrus/starter/common/v0/stopapp"
+	"github.com/ManyakRus/starter/common/v0/contextmain"
+	"github.com/ManyakRus/starter/common/v0/logger"
+	"github.com/ManyakRus/starter/common/v0/micro"
+	"github.com/ManyakRus/starter/common/v0/stopapp"
 )
 
 // log - глобальный логгер

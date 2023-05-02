@@ -1,10 +1,10 @@
 SERVICEURL=gitlab.aescorp.ru/dsp_dev/claim/nikitin
-SERVICEURL2=github.com/manyakrus/starter
+SERVICEURL2=github.com/ManyakRus/starter
 
 FILEMAIN=./internal/v0/app/main.go
 FILEAPP=./bin/app_race
 
-NEW_REPO=github.com/manyakrus/starter
+NEW_REPO=github.com/ManyakRus/starter
 
 
 run:

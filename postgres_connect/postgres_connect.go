@@ -5,8 +5,8 @@ package postgres_connect
 import (
 	"context"
 	"errors"
-	"github.com/manyakrus/starter/logger"
-	"github.com/manyakrus/starter/ping"
+	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/ping"
 	"time"
 
 	//"github.com/jackc/pgconn"
@@ -20,9 +20,9 @@ import (
 	_ "github.com/lib/pq"
 	//log "github.com/sirupsen/logrus"
 
-	"github.com/manyakrus/starter/contextmain"
-	"github.com/manyakrus/starter/micro"
-	"github.com/manyakrus/starter/stopapp"
+	"github.com/ManyakRus/starter/contextmain"
+	"github.com/ManyakRus/starter/micro"
+	"github.com/ManyakRus/starter/stopapp"
 )
 
 // Conn - соединение к базе данных

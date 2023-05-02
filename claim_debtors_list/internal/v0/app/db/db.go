@@ -5,12 +5,12 @@ package db
 import (
 	//"fmt"
 
-	"github.com/manyakrus/starter/contextmain"
-	"github.com/manyakrus/starter/logger"
+	"github.com/ManyakRus/starter/contextmain"
+	"github.com/ManyakRus/starter/logger"
 
 	_ "github.com/denisenkom/go-mssqldb"
 	//"github.com/denisenkom/go-mssqldb"
-	mssql "github.com/manyakrus/starter/mssql_connect"
+	mssql "github.com/ManyakRus/starter/mssql_connect"
 )
 
 // // log - глобальный логгер

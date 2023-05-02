@@ -4,7 +4,7 @@ package log
 import (
 	"context"
 	"github.com/ManyakRus/logrus"
-	"github.com/manyakrus/starter/logger"
+	"github.com/ManyakRus/starter/logger"
 	"io"
 	"time"
 )

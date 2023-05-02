@@ -1,9 +1,9 @@
 package liveness
 
 import (
-	"github.com/manyakrus/starter/contextmain"
-	"github.com/manyakrus/starter/fiber_connect"
-	"github.com/manyakrus/starter/micro"
+	"github.com/ManyakRus/starter/contextmain"
+	"github.com/ManyakRus/starter/fiber_connect"
+	"github.com/ManyakRus/starter/micro"
 	"net/http"
 	"testing"
 )

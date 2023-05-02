@@ -13,7 +13,7 @@ import (
 	//"github.com/sirupsen/logrus"
 	logrus "github.com/ManyakRus/logrus"
 
-	"github.com/manyakrus/starter/micro"
+	"github.com/ManyakRus/starter/micro"
 )
 
 // log - глобальный логгер приложения

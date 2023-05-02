@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/manyakrus/starter/common/v0/logger"
+	"github.com/ManyakRus/starter/common/v0/logger"
 	"io/ioutil"
 	"os"
 )

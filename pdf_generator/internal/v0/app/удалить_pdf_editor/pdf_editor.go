@@ -1,11 +1,11 @@
 package delete_pdf_editor
 
 import (
-	// "github.com/manyakrus/starter/common/v0/contextmain"
-	// stopapp "github.com/manyakrus/starter/common/v0/stopapp"
+	// "github.com/ManyakRus/starter/common/v0/contextmain"
+	// stopapp "github.com/ManyakRus/starter/common/v0/stopapp"
 
 	pdf "github.com/adrg/go-wkhtmltopdf"
-	logger "github.com/manyakrus/starter/common/v0/logger"
+	logger "github.com/ManyakRus/starter/common/v0/logger"
 	"os"
 )
 

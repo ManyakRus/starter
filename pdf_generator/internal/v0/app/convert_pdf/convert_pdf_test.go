@@ -1,7 +1,7 @@
 package convert_pdf
 
 import (
-	"github.com/manyakrus/starter/pdf_generator/internal/v0/app/programdir"
+	"github.com/ManyakRus/starter/pdf_generator/internal/v0/app/programdir"
 	"testing"
 )
 

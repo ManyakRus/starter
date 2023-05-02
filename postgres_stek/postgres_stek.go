@@ -6,8 +6,8 @@ import (
 	"context"
 	"errors"
 	model "gitlab.aescorp.ru/dsp_dev/claim/common/object_model"
-	"github.com/manyakrus/starter/logger"
-	"github.com/manyakrus/starter/ping"
+	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/ping"
 	"time"
 
 	"sync"
@@ -16,9 +16,9 @@ import (
 	//"github.com/jmoiron/sqlx"
 	//_ "github.com/lib/pq"
 
-	"github.com/manyakrus/starter/contextmain"
-	"github.com/manyakrus/starter/micro"
-	"github.com/manyakrus/starter/stopapp"
+	"github.com/ManyakRus/starter/contextmain"
+	"github.com/ManyakRus/starter/micro"
+	"github.com/ManyakRus/starter/stopapp"
 
 	"golang.org/x/exp/maps"
 	"gorm.io/driver/postgres"
