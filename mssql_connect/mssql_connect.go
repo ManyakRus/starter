@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
-	"github.com/manyakrus/starter/logger"
 	"net/url"
 	"os"
 	"sync"
@@ -15,6 +14,7 @@ import (
 	_ "github.com/denisenkom/go-mssqldb"
 
 	"github.com/manyakrus/starter/contextmain"
+	"github.com/manyakrus/starter/logger"
 	"github.com/manyakrus/starter/micro"
 	"github.com/manyakrus/starter/stopapp"
 )

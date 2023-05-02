@@ -14,7 +14,7 @@ import (
 	"github.com/manyakrus/starter/contextmain"
 	"github.com/manyakrus/starter/stopapp"
 
-	gogpt "github.com/sashabaranov/go-gpt3"
+	gogpt "github.com/sashabaranov/go-openai"
 )
 
 // Conn - соединение к CHAT GPT
@@ -181,7 +181,7 @@ func SendMessage(Text string, user string) (string, error) {
 	defer cancel()
 
 	req := gogpt.CompletionRequest{
-		Model:     gogpt.GPT3TextDavinci003, //надо gogpt.GPT3TextDavinci003
+		Model:     gogpt.GPT4, //надо gogpt.GPT3TextDavinci003
 		MaxTokens: 2048,
 		Prompt:    Text,
 		User:      user,

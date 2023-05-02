@@ -1,5 +1,5 @@
 SERVICEURL=gitlab.aescorp.ru/dsp_dev/claim/nikitin
-SERVICEURL2=gitlab.aescorp.ru/dsp_dev/claim/nikitin
+SERVICEURL2=github.com/manyakrus/starter
 
 FILEMAIN=./internal/v0/app/main.go
 FILEAPP=./bin/app_race

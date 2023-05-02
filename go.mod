@@ -3,9 +3,11 @@ module github.com/manyakrus/starter
 go 1.18
 
 require (
-	github.com/ManyakRus/logrus v0.0.0-20230425135901-49786dc30ad1
+	github.com/ManyakRus/logrus v0.0.0-20230426064230-515895169d22
 	github.com/camunda/zeebe/clients/go/v8 v8.1.8
 	github.com/denisenkom/go-mssqldb v0.12.3
+	github.com/emersion/go-imap v1.2.1
+	github.com/emersion/go-message v0.16.0
 	github.com/gofiber/fiber/v2 v2.42.0
 	github.com/golang-module/carbon/v2 v2.2.3
 	github.com/jackc/pgx/v4 v4.17.2
@@ -15,10 +17,11 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/mdp/qrterminal/v3 v3.0.0
 	github.com/nats-io/nats.go v1.16.0
-	github.com/sashabaranov/go-gpt3 v1.3.1
+	github.com/sashabaranov/go-openai v1.9.1
 	github.com/segmentio/kafka-go v0.4.39
+	github.com/xhit/go-simple-mail/v2 v2.13.0
 	gitlab.aescorp.ru/dsp_dev/claim/common/object_model v0.0.108
-	go.mau.fi/whatsmeow v0.0.0-20230226124255-e5c8f3c95d78
+	go.mau.fi/whatsmeow v0.0.0-20230427180258-7f679583b39b
 	golang.org/x/exp v0.0.0-20230418202329-0354be287a23
 	gorm.io/driver/postgres v1.4.8
 	gorm.io/driver/sqlserver v1.4.2
@@ -30,7 +33,10 @@ require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/emersion/go-sasl v0.0.0-20200509203442-7bfe0ed36a21 // indirect
+	github.com/emersion/go-textwrapper v0.0.0-20200911093747-65d896831594 // indirect
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0 // indirect
+	github.com/go-test/deep v1.1.0 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
@@ -65,21 +71,22 @@ require (
 	github.com/savsgio/gotils v0.0.0-20220530130905-52f3993e8d6d // indirect
 	github.com/stretchr/testify v1.8.1 // indirect
 	github.com/tinylib/msgp v1.1.6 // indirect
+	github.com/toorop/go-dkim v0.0.0-20201103131630-e1cd1a0a5208 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.44.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	go.mau.fi/libsignal v0.1.0 // indirect
-	golang.org/x/crypto v0.6.0 // indirect
-	golang.org/x/net v0.6.0 // indirect
+	golang.org/x/crypto v0.8.0 // indirect
+	golang.org/x/net v0.9.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
-	golang.org/x/sys v0.5.0 // indirect
-	golang.org/x/text v0.7.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/text v0.9.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220624142145-8cd45d7dbd1f // indirect
 	google.golang.org/grpc v1.49.0 // indirect
-	google.golang.org/protobuf v1.28.1 // indirect
+	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	rsc.io/qr v0.2.0 // indirect

@@ -3,6 +3,7 @@
 package micro
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"runtime"
@@ -319,4 +320,31 @@ func MinInt64(x, y int64) int64 {
 		return y
 	}
 	return x
+}
+
+// GoGo - запускает функцию в отдельном потоке
+func GoGo(ctx context.Context, fn func() error) error {
+	var err error
+	chanErr := make(chan error)
+
+	go gogo_chan(fn, chanErr)
+
+	select {
+	case <-ctx.Done():
+		Text1 := "error: TimeOut"
+		err = errors.New(Text1)
+		return err
+	case err = <-chanErr:
+		//print("err: ", err)
+		break
+	}
+
+	return err
+}
+
+// gogo_chan - запускает функцию и возвращает ошибку в поток
+// только совместно с GoGo()
+func gogo_chan(fn func() error, chanErr chan error) {
+	err := fn()
+	chanErr <- err
 }

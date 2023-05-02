@@ -1,7 +1,10 @@
 package micro
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"github.com/manyakrus/starter/contextmain"
 	"os"
 	"testing"
 	"time"
@@ -210,4 +213,19 @@ func TestMinInt64(t *testing.T) {
 	if Otvet != 1 {
 		t.Error("microfunctions_test.TestMin() error: Otvet != 1")
 	}
+}
+
+func TestGoGo(t *testing.T) {
+	fn := func() error {
+		Pause(2000)
+		err := fmt.Errorf("test error")
+		return err
+	}
+
+	ctxMain := contextmain.GetContext()
+	ctx, cancel := context.WithTimeout(ctxMain, 1*time.Second)
+	defer cancel()
+
+	err := GoGo(ctx, fn)
+	t.Log("Err:", err)
 }

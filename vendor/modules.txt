@@ -2,7 +2,7 @@
 ## explicit; go 1.17
 filippo.io/edwards25519
 filippo.io/edwards25519/field
-# github.com/ManyakRus/logrus v0.0.0-20230425135901-49786dc30ad1
+# github.com/ManyakRus/logrus v0.0.0-20230426064230-515895169d22
 ## explicit; go 1.13
 github.com/ManyakRus/logrus
 # github.com/andybalholm/brotli v1.0.4
@@ -30,10 +30,30 @@ github.com/denisenkom/go-mssqldb/internal/cp
 github.com/denisenkom/go-mssqldb/internal/decimal
 github.com/denisenkom/go-mssqldb/internal/querytext
 github.com/denisenkom/go-mssqldb/msdsn
+# github.com/emersion/go-imap v1.2.1
+## explicit; go 1.13
+github.com/emersion/go-imap
+github.com/emersion/go-imap/client
+github.com/emersion/go-imap/commands
+github.com/emersion/go-imap/responses
+github.com/emersion/go-imap/utf7
+# github.com/emersion/go-message v0.16.0
+## explicit; go 1.14
+github.com/emersion/go-message
+github.com/emersion/go-message/mail
+github.com/emersion/go-message/textproto
+# github.com/emersion/go-sasl v0.0.0-20200509203442-7bfe0ed36a21
+## explicit; go 1.12
+github.com/emersion/go-sasl
+# github.com/emersion/go-textwrapper v0.0.0-20200911093747-65d896831594
+## explicit
+github.com/emersion/go-textwrapper
 # github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 ## explicit; go 1.13
 github.com/go-ozzo/ozzo-validation/v4
 github.com/go-ozzo/ozzo-validation/v4/is
+# github.com/go-test/deep v1.1.0
+## explicit; go 1.16
 # github.com/gofiber/fiber/v2 v2.42.0
 ## explicit; go 1.20
 github.com/gofiber/fiber/v2
@@ -202,9 +222,9 @@ github.com/pmezard/go-difflib/difflib
 # github.com/rivo/uniseg v0.2.0
 ## explicit; go 1.12
 github.com/rivo/uniseg
-# github.com/sashabaranov/go-gpt3 v1.3.1
-## explicit; go 1.17
-github.com/sashabaranov/go-gpt3
+# github.com/sashabaranov/go-openai v1.9.1
+## explicit; go 1.18
+github.com/sashabaranov/go-openai
 # github.com/savsgio/dictpool v0.0.0-20221023140959-7bf2e61cea94
 ## explicit; go 1.13
 github.com/savsgio/dictpool
@@ -261,6 +281,9 @@ github.com/stretchr/testify/suite
 # github.com/tinylib/msgp v1.1.6
 ## explicit; go 1.14
 github.com/tinylib/msgp/msgp
+# github.com/toorop/go-dkim v0.0.0-20201103131630-e1cd1a0a5208
+## explicit
+github.com/toorop/go-dkim
 # github.com/valyala/bytebufferpool v1.0.0
 ## explicit
 github.com/valyala/bytebufferpool
@@ -282,6 +305,9 @@ github.com/vmihailenco/msgpack/v5/msgpcode
 github.com/vmihailenco/tagparser/v2
 github.com/vmihailenco/tagparser/v2/internal
 github.com/vmihailenco/tagparser/v2/internal/parser
+# github.com/xhit/go-simple-mail/v2 v2.13.0
+## explicit; go 1.13
+github.com/xhit/go-simple-mail/v2
 # gitlab.aescorp.ru/dsp_dev/claim/common/object_model v0.0.108
 ## explicit; go 1.17
 gitlab.aescorp.ru/dsp_dev/claim/common/object_model
@@ -314,7 +340,7 @@ go.mau.fi/libsignal/util/errorhelper
 go.mau.fi/libsignal/util/keyhelper
 go.mau.fi/libsignal/util/medium
 go.mau.fi/libsignal/util/optional
-# go.mau.fi/whatsmeow v0.0.0-20230226124255-e5c8f3c95d78
+# go.mau.fi/whatsmeow v0.0.0-20230427180258-7f679583b39b
 ## explicit; go 1.19
 go.mau.fi/whatsmeow
 go.mau.fi/whatsmeow/appstate
@@ -332,7 +358,7 @@ go.mau.fi/whatsmeow/util/gcmutil
 go.mau.fi/whatsmeow/util/hkdfutil
 go.mau.fi/whatsmeow/util/keys
 go.mau.fi/whatsmeow/util/log
-# golang.org/x/crypto v0.6.0
+# golang.org/x/crypto v0.8.0
 ## explicit; go 1.17
 golang.org/x/crypto/curve25519
 golang.org/x/crypto/curve25519/internal/field
@@ -343,7 +369,7 @@ golang.org/x/crypto/pbkdf2
 # golang.org/x/exp v0.0.0-20230418202329-0354be287a23
 ## explicit; go 1.18
 golang.org/x/exp/maps
-# golang.org/x/net v0.6.0
+# golang.org/x/net v0.9.0
 ## explicit; go 1.17
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
@@ -358,14 +384,16 @@ golang.org/x/net/trace
 golang.org/x/oauth2
 golang.org/x/oauth2/clientcredentials
 golang.org/x/oauth2/internal
-# golang.org/x/sys v0.5.0
+# golang.org/x/sys v0.7.0
 ## explicit; go 1.17
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/text v0.7.0
+# golang.org/x/text v0.9.0
 ## explicit; go 1.17
 golang.org/x/text/cases
+golang.org/x/text/encoding
+golang.org/x/text/encoding/internal/identifier
 golang.org/x/text/internal
 golang.org/x/text/internal/language
 golang.org/x/text/internal/language/compact
@@ -440,7 +468,7 @@ google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
-# google.golang.org/protobuf v1.28.1
+# google.golang.org/protobuf v1.30.0
 ## explicit; go 1.11
 google.golang.org/protobuf/encoding/protojson
 google.golang.org/protobuf/encoding/prototext

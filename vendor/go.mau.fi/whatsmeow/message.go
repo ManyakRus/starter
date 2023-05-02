@@ -101,6 +101,7 @@ func (cli *Client) parseMessageInfo(node *waBinary.Node) (*types.MessageInfo, er
 	info.Timestamp = ag.UnixTime("t")
 	info.PushName = ag.OptionalString("notify")
 	info.Category = ag.OptionalString("category")
+	info.Type = ag.OptionalString("type")
 	if !ag.OK() {
 		return nil, ag.Error()
 	}
@@ -246,6 +247,9 @@ func isValidPadding(plaintext []byte) bool {
 }
 
 func unpadMessage(plaintext []byte) ([]byte, error) {
+	if len(plaintext) == 0 {
+		return nil, fmt.Errorf("plaintext is empty")
+	}
 	if checkPadding && !isValidPadding(plaintext) {
 		return nil, fmt.Errorf("plaintext doesn't have expected padding")
 	}

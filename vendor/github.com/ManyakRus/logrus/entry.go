@@ -203,7 +203,7 @@ func getCaller() *runtime.Frame {
 		pkg := getPackageName(f.Function)
 
 		// If the caller isn't part of this package, we're done
-		if pkg != logrusPackage && (f.File[len(f.File)-15-1:] != "/logger_proxy.go") { //sanek
+		if pkg != logrusPackage && (f.File[len(f.File)-15:] != "logger_proxy.go") { //sanek
 			return &f //nolint:scopelint
 		}
 	}
