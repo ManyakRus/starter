@@ -21,8 +21,12 @@ type tcpDialer struct{}
 func (t tcpDialer) ParseBrowserData(data msdsn.BrowserData, p *msdsn.Config) error {
 	// If instance is specified, but no port, check SQL Server Browser
 	// for the instance and discover its port.
-	p.Instance = strings.ToUpper(p.Instance)
-	strport, ok := data[p.Instance]["tcp"]
+	ok := len(data) > 0
+	strport := ""
+	if ok {
+		p.Instance = strings.ToUpper(p.Instance)
+		strport, ok = data[p.Instance]["tcp"]
+	}
 	if !ok {
 		f := "no instance matching '%v' returned from host '%v'"
 		return fmt.Errorf(f, p.Instance, p.Host)
@@ -100,12 +104,12 @@ func (t tcpDialer) DialSqlConnection(ctx context.Context, c *Connector, p *msdsn
 	}
 	// Can't do the usual err != nil check, as it is possible to have gotten an error before a successful connection
 	if conn == nil {
-		f := "unable to open tcp connection with host '%v:%v': %v"
-		return nil, fmt.Errorf(f, p.Host, resolveServerPort(p.Port), err.Error())
+		return nil, wrapConnErr(p, err)
 	}
 	if p.ServerSPN == "" {
 		p.ServerSPN = generateSpn(p.Host, instanceOrPort(p.Instance, p.Port))
 	}
+	p.Port = resolveServerPort(p.Port)
 	return conn, err
 }
 

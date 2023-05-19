@@ -81,6 +81,7 @@ type Config struct {
 	ProtocolParameters map[string]interface{}
 }
 
+// Build a tls.Config object from the supplied certificate.
 func SetupTLS(certificate string, insecureSkipVerify bool, hostInCertificate string, minTLSVersion string) (*tls.Config, error) {
 	config := tls.Config{
 		ServerName:         hostInCertificate,
@@ -111,6 +112,49 @@ func SetupTLS(certificate string, insecureSkipVerify bool, hostInCertificate str
 	certs.AppendCertsFromPEM(pem)
 	config.RootCAs = certs
 	return &config, nil
+}
+
+// Parse and handle encryption parameters. If encryption is desired, it returns the corresponding tls.Config object.
+func parseTLS(params map[string]string, host string) (Encryption, *tls.Config, error) {
+	trustServerCert := false
+
+	var encryption Encryption = EncryptionOff
+	encrypt, ok := params["encrypt"]
+	if ok {
+		if strings.EqualFold(encrypt, "DISABLE") {
+			encryption = EncryptionDisabled
+		} else {
+			e, err := strconv.ParseBool(encrypt)
+			if err != nil {
+				f := "invalid encrypt '%s': %s"
+				return encryption, nil, fmt.Errorf(f, encrypt, err.Error())
+			}
+			if e {
+				encryption = EncryptionRequired
+			}
+		}
+	} else {
+		trustServerCert = true
+	}
+	trust, ok := params["trustservercertificate"]
+	if ok {
+		var err error
+		trustServerCert, err = strconv.ParseBool(trust)
+		if err != nil {
+			f := "invalid trust server certificate '%s': %s"
+			return encryption, nil, fmt.Errorf(f, trust, err.Error())
+		}
+	}
+	certificate := params["certificate"]
+	if encryption != EncryptionDisabled {
+		tlsMin := params["tlsmin"]
+		tlsConfig, err := SetupTLS(certificate, trustServerCert, host, tlsMin)
+		if err != nil {
+			return encryption, nil, fmt.Errorf("failed to setup TLS: %w", err)
+		}
+		return encryption, tlsConfig, nil
+	}
+	return encryption, nil, nil
 }
 
 var skipSetup = errors.New("skip setting up TLS")
@@ -197,20 +241,6 @@ func Parse(dsn string) (Config, error) {
 		}
 		p.ConnTimeout = time.Duration(timeout) * time.Second
 	}
-	f := len(p.Protocols)
-	if f == 0 {
-		f = 1
-	}
-	p.DialTimeout = time.Duration(15*f) * time.Second
-	if strdialtimeout, ok := params["dial timeout"]; ok {
-		timeout, err := strconv.ParseUint(strdialtimeout, 10, 64)
-		if err != nil {
-			f := "invalid dial timeout '%v': %v"
-			return p, fmt.Errorf(f, strdialtimeout, err.Error())
-		}
-
-		p.DialTimeout = time.Duration(timeout) * time.Second
-	}
 
 	// default keep alive should be 30 seconds according to spec:
 	// https://msdn.microsoft.com/en-us/library/dd341108.aspx
@@ -222,55 +252,6 @@ func Parse(dsn string) (Config, error) {
 			return p, fmt.Errorf(f, keepAlive, err.Error())
 		}
 		p.KeepAlive = time.Duration(timeout) * time.Second
-	}
-
-	var (
-		trustServerCert   = false
-		certificate       = ""
-		hostInCertificate = ""
-	)
-	encrypt, ok := params["encrypt"]
-	if ok {
-		if strings.EqualFold(encrypt, "DISABLE") {
-			p.Encryption = EncryptionDisabled
-		} else {
-			e, err := strconv.ParseBool(encrypt)
-			if err != nil {
-				f := "invalid encrypt '%s': %s"
-				return p, fmt.Errorf(f, encrypt, err.Error())
-			}
-			if e {
-				p.Encryption = EncryptionRequired
-			}
-		}
-	} else {
-		trustServerCert = true
-	}
-	trust, ok := params["trustservercertificate"]
-	if ok {
-		var err error
-		trustServerCert, err = strconv.ParseBool(trust)
-		if err != nil {
-			f := "invalid trust server certificate '%s': %s"
-			return p, fmt.Errorf(f, trust, err.Error())
-		}
-	}
-	certificate = params["certificate"]
-	hostInCertificate, ok = params["hostnameincertificate"]
-	if ok {
-		p.HostInCertificateProvided = true
-	} else {
-		hostInCertificate = p.Host
-		p.HostInCertificateProvided = false
-	}
-
-	if p.Encryption != EncryptionDisabled {
-		tlsMin := params["tlsmin"]
-		var err error
-		p.TLSConfig, err = SetupTLS(certificate, trustServerCert, hostInCertificate, tlsMin)
-		if err != nil {
-			return p, fmt.Errorf("failed to setup TLS: %w", err)
-		}
 	}
 
 	serverSPN, ok := params["serverspn"]
@@ -353,6 +334,34 @@ func Parse(dsn string) (Config, error) {
 		return p, fmt.Errorf("No protocol handler is available for protocol: '%s'", protocol)
 	}
 
+	f := len(p.Protocols)
+	if f == 0 {
+		f = 1
+	}
+	p.DialTimeout = time.Duration(15*f) * time.Second
+	if strdialtimeout, ok := params["dial timeout"]; ok {
+		timeout, err := strconv.ParseUint(strdialtimeout, 10, 64)
+		if err != nil {
+			f := "invalid dial timeout '%v': %v"
+			return p, fmt.Errorf(f, strdialtimeout, err.Error())
+		}
+
+		p.DialTimeout = time.Duration(timeout) * time.Second
+	}
+
+	hostInCertificate, ok := params["hostnameincertificate"]
+	if ok {
+		p.HostInCertificateProvided = true
+	} else {
+		hostInCertificate = p.Host
+		p.HostInCertificateProvided = false
+	}
+
+	p.Encryption, p.TLSConfig, err = parseTLS(params, hostInCertificate)
+	if err != nil {
+		return p, err
+	}
+
 	return p, nil
 }
 
@@ -374,6 +383,10 @@ func (p Config) URL() *url.URL {
 	protocol, ok := p.Parameters["protocol"]
 	if ok {
 		q.Add("protocol", protocol)
+	}
+	pipe, ok := p.Parameters["pipe"]
+	if ok {
+		q.Add("pipe", pipe)
 	}
 	res := url.URL{
 		Scheme: "sqlserver",
@@ -644,16 +657,6 @@ func splitConnectionStringOdbc(dsn string) (map[string]string, error) {
 // Normalizes the given string as an ODBC-format key
 func normalizeOdbcKey(s string) string {
 	return strings.ToLower(strings.TrimRightFunc(s, unicode.IsSpace))
-}
-
-const defaultServerPort = 1433
-
-func resolveServerPort(port uint64) uint64 {
-	if port == 0 {
-		return defaultServerPort
-	}
-
-	return port
 }
 
 // ProtocolParser can populate Config with parameters to dial using its protocol

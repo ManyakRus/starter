@@ -231,13 +231,6 @@ func FillSettings() {
 	Settings.MSSQL_BASENAME = os.Getenv("MSSQL_BASENAME")
 	Settings.MSSQL_PORT = os.Getenv("MSSQL_PORT")
 	Settings.MSSQL_SCHEMA = os.Getenv("MSSQL_SCHEMA")
-	if Settings.MSSQL_LOGIN == "" {
-		log.Panicln("Need fill MSSQL_LOGIN ! in os.ENV ")
-	}
-
-	if Settings.MSSQL_PASSWORD == "" {
-		log.Panicln("Need fill MSSQL_PASSWORD ! in os.ENV ")
-	}
 
 	if Settings.MSSQL_ADDRESS == "" {
 		log.Panicln("Need fill MSSQL_ADDRESS ! in os.ENV ")
@@ -253,6 +246,14 @@ func FillSettings() {
 
 	if Settings.MSSQL_SCHEMA == "" {
 		log.Panicln("Need fill MSSQL_SCHEMA ! in os.ENV ")
+	}
+
+	if Settings.MSSQL_LOGIN == "" {
+		log.Panicln("Need fill MSSQL_LOGIN ! in os.ENV ")
+	}
+
+	if Settings.MSSQL_PASSWORD == "" {
+		log.Panicln("Need fill MSSQL_PASSWORD ! in os.ENV ")
 	}
 	//
 }

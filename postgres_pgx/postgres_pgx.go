@@ -255,6 +255,22 @@ func FillSettings() {
 	Settings.DB_SCHEMA = os.Getenv("DB_SCHEME")
 	Settings.DB_USER = os.Getenv("DB_USER")
 	Settings.DB_PASSWORD = os.Getenv("DB_PASSWORD")
+
+	if Settings.DB_HOST == "" {
+		log.Panicln("Need fill DB_HOST ! in os.ENV ")
+	}
+
+	if Settings.DB_PORT == "" {
+		log.Panicln("Need fill DB_PORT ! in os.ENV ")
+	}
+
+	if Settings.DB_NAME == "" {
+		log.Panicln("Need fill DB_NAME ! in os.ENV ")
+	}
+
+	if Settings.DB_SCHEMA == "" {
+		log.Panicln("Need fill DB_SCHEME ! in os.ENV ")
+	}
 	if Settings.DB_USER == "" {
 		log.Panicln("Need fill DB_USER ! in os.ENV ")
 	}
@@ -263,21 +279,6 @@ func FillSettings() {
 		log.Panicln("Need fill DB_PASSWORD ! in os.ENV ")
 	}
 
-	if Settings.DB_HOST == "" {
-		log.Panicln("Need fill DB_HOST ! in os.ENV ")
-	}
-
-	if Settings.DB_NAME == "" {
-		log.Panicln("Need fill DB_NAME ! in os.ENV ")
-	}
-
-	if Settings.DB_PORT == "" {
-		log.Panicln("Need fill DB_PORT ! in os.ENV ")
-	}
-
-	if Settings.DB_SCHEMA == "" {
-		log.Panicln("Need fill DB_SCHEME ! in os.ENV ")
-	}
 	//
 }
 

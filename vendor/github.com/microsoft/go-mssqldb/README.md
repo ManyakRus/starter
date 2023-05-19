@@ -45,13 +45,15 @@ Other supported formats are listed below.
 * `packet size` - in bytes; 512 to 32767 (default is 4096)
   * Encrypted connections have a maximum packet size of 16383 bytes
   * Further information on usage: <https://docs.microsoft.com/en-us/sql/database-engine/configure-windows/configure-the-network-packet-size-server-configuration-option>
-* `log` - logging flags (default 0/no logging, 63 for full logging)
-  * 1 log errors
-  * 2 log messages
-  * 4 log rows affected
-  * 8 trace sql statements
-  * 16 log statement parameters
-  * 32 log transaction begin/end
+* `log` - logging flags (default `0`/no logging, `255` for full logging)
+  * `1` log errors
+  * `2` log messages
+  * `4` log rows affected
+  * `8` trace sql statements
+  * `16` log statement parameters
+  * `32` log transaction begin/end
+  * `64` additional debug logs
+  * `128` log retries
 * `TrustServerCertificate`
   * false - Server certificate is checked. Default is false if encrypt is specified.
   * true - Server certificate is not checked. Default is true if encrypt is not specified. If trust server certificate is true, driver accepts any certificate presented by the server and any host name in that certificate. In this mode, TLS is susceptible to man-in-the-middle attacks. This should be used only for testing.
@@ -61,30 +63,68 @@ Other supported formats are listed below.
 * `ServerSPN` - The kerberos SPN (Service Principal Name) for the server. Default is MSSQLSvc/host:port.
 * `Workstation ID` - The workstation name (default is the host name)
 * `ApplicationIntent` - Can be given the value `ReadOnly` to initiate a read-only connection to an Availability Group listener. The `database` must be specified when connecting with `Application Intent` set to `ReadOnly`.
+* `protocol` - forces use of a protocol. Make sure the corresponding package is imported.
+
+### Connection parameters for namedpipe package
+* `pipe`  - If set, no Browser query is made and named pipe used will be `\\<host>\pipe\<pipe>`
+* `protocol` can be set to `np`
+* For a non-URL DSN, the `server` parameter can be set to the full pipe name like `\\host\pipe\sql\query`
+
+If no pipe name can be derived from the DSN, connection attempts will first query the SQL Browser service to find the pipe name for the instance.
+
+### Protocol configuration
+
+To force a specific protocol for the connection there two several options:
+1. Prepend the server name in a DSN with the protocol and a colon, like `np:host` or `lpc:host` or `tcp:host`
+2. Set the `protocol` parameter to the protocol name
+
+`msdsn.ProtocolParsers` can be reordered to prioritize other protocols ahead of `tcp`
 
 ### Kerberos Active Directory authentication outside Windows
+
+To connect with kerberos authentication from a Linux server you can use the optional krb5 package. 
+Imported krb alongside the main driver 
+```
+package main
+
+import (
+    ...
+    _ "github.com/microsoft/go-mssqldb"
+    _ "github.com/microsoft/go-mssqldb/integratedauth/krb5"
+)
+
+func main() {
+    ...
+}
+```
+
+It will become available for use when the connection string parameter "authenticator=krb5" is used.
+
 The package supports authentication via 3 methods.
 
 * Keytabs - Specify the username, keytab file, the krb5.conf file, and realm.
 
-      authenticator=krb5;server=DatabaseServerName;database=DBName;user id=MyUserName;realm=domain.com;krb5conffile=/etc/krb5.conf;keytabfile=~/MyUserName.keytab
+      authenticator=krb5;server=DatabaseServerName;database=DBName;user id=MyUserName;krb5-realm=domain.com;krb5-configfile=/etc/krb5.conf;krb5-keytabfile=~/MyUserName.keytab
 
 * Credential Cache - Specify the krb5.conf file path and credential cache file path.
 
-      authenticator=krb5;server=DatabaseServerName;database=DBName;krb5conffile=/etc/krb5.conf;krbcache=~/MyUserNameCachedCreds
+      authenticator=krb5;server=DatabaseServerName;database=DBName;krb5-configfile=/etc/krb5.conf;krb5-credcachefile=~/MyUserNameCachedCreds 
 
 * Raw credentials - Specity krb5.confg, Username, Password and Realm.
 
-      authenticator=krb5;server=DatabaseServerName;database=DBName;user id=MyUserName;password=foo;realm=comani.com;krb5conffile=/etc/krb5.conf;
+      authenticator=krb5;server=DatabaseServerName;database=DBName;user id=MyUserName;password=foo;krb5-realm=comani.com;krb5-configfile=/etc/krb5.conf;
 
 ### Kerberos Parameters
 
 * `authenticator` - set this to `krb5` to enable kerberos authentication. If this is not present, the default provider would be `ntlm` for unix and `winsspi` for windows.
-* `krb5conffile` (mandatory) - path to kerberos configuration file. 
-* `realm` (required with keytab and raw credentials) - Domain name for kerberos authentication. 
-* `keytabfile` - path to Keytab file.
-* `krbcache` - path to Credential cache.
-* For further information on usage: 
+* `krb5-configfile` (mandatory) - path to kerberos configuration file. 
+* `krb5-realm` (required with keytab and raw credentials) - Domain name for kerberos authentication. 
+* `krb5-keytabfile` - path to Keytab file.
+* `krb5-credcachefile` - path to Credential cache.
+* `krb5-dnslookupkdc` - Optional parameter in all contexts. Set to lookup KDCs in DNS. Boolean. Default is true. 
+* `krb5-udppreferencelimit` - Optional parameter in all contexts. 1 means to always use tcp. MIT krb5 has a default value of 1465, and it prevents user setting more than 32700. Integer. Default is 1.
+  
+For further information on usage: 
   * <https://web.mit.edu/kerberos/krb5-1.12/doc/admin/conf_files/krb5_conf.html>
   * <https://web.mit.edu/kerberos/krb5-1.12/doc/basic/index.html>
 
@@ -117,16 +157,16 @@ The package supports authentication via 3 methods.
 
     ```
 
-* `sqlserver://username@host/instance?krb5conffile=path/to/file&krbcache=/path/to/cache`
-    * `sqlserver://username@host/instance?krb5conffile=path/to/file&realm=domain.com&keytabfile=/path/to/keytabfile`
+* `sqlserver://username@host/instance?krb5-configfile=path/to/file&krb5-credcachefile=/path/to/cache`
+    * `sqlserver://username@host/instance?krb5-configfile=path/to/file&krb5-realm=domain.com&krb5-keytabfile=/path/to/keytabfile`
 
 2. ADO: `key=value` pairs separated by `;`. Values may not contain `;`, leading and trailing whitespace is ignored.
      Examples:
 
     * `server=localhost\\SQLExpress;user id=sa;database=master;app name=MyAppName`
     * `server=localhost;user id=sa;database=master;app name=MyAppName`
-    * `server=localhost;user id=sa;database=master;app name=MyAppName;krb5conffile=path/to/file;krbcache=path/to/cache;authenticator=krb5`
-    * `server=localhost;user id=sa;database=master;app name=MyAppName;krb5conffile=path/to/file;realm=domain.com;keytabfile=path/to/keytabfile;authenticator=krb5`
+    * `server=localhost;user id=sa;database=master;app name=MyAppName;krb5-configfile=path/to/file;krb5-credcachefile=path/to/cache;authenticator=krb5`
+    * `server=localhost;user id=sa;database=master;app name=MyAppName;krb5-configfile=path/to/file;krb5-realm=domain.com;krb5-keytabfile=path/to/keytabfile;authenticator=krb5`
 
 
     ADO strings support synonyms for database, app name, user id, and server
@@ -147,8 +187,8 @@ The package supports authentication via 3 methods.
     * `odbc:server=localhost;user id=sa;password=foo}bar`   // Literal `}`, password is "foo}bar"
     * `odbc:server=localhost;user id=sa;password={foo{bar}` // Literal `{`, password is "foo{bar"
     * `odbc:server=localhost;user id=sa;password={foo}}bar}` // Escaped `} with`}}`, password is "foo}bar"
-    * `odbc:server=localhost;user id=sa;database=master;app name=MyAppName;krb5conffile=path/to/file;krbcache=path/to/cache;authenticator=krb5`
-    * `odbc:server=localhost;user id=sa;database=master;app name=MyAppName;krb5conffile=path/to/file;realm=domain.com;keytabfile=path/to/keytabfile;authenticator=krb5`
+    * `odbc:server=localhost;user id=sa;database=master;app name=MyAppName;krb5-configfile=path/to/file;krb5-credcachefile=path/to/cache;authenticator=krb5`
+    * `odbc:server=localhost;user id=sa;database=master;app name=MyAppName;krb5-configfile=path/to/file;krb5-realm=domain.com;krb5-keytabfile=path/to/keytabfile;authenticator=krb5`
 
 ### Azure Active Directory authentication
 

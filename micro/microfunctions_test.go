@@ -229,3 +229,19 @@ func TestGoGo(t *testing.T) {
 	err := GoGo(ctx, fn)
 	t.Log("Err:", err)
 }
+
+func TestMaxDate(t *testing.T) {
+	now := time.Now()
+	Otvet := MaxDate(now, time.Date(1, 1, 1, 1, 1, 1, 1, time.Local))
+	if Otvet != now {
+		t.Error("microfunctions_test.TestMaxDate() error: Otvet != ", now)
+	}
+}
+
+func TestMinDate(t *testing.T) {
+	now := time.Now()
+	Otvet := MinDate(now, time.Date(9999, 1, 1, 1, 1, 1, 1, time.Local))
+	if Otvet != now {
+		t.Error("microfunctions_test.TestMinDate() error: Otvet != ", now)
+	}
+}

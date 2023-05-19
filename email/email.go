@@ -49,9 +49,7 @@ var Settings SettingsINI
 // SettingsINI - структура для хранения всех нужных переменных окружения
 type SettingsINI struct {
 	EMAIL_SMTP_SERVER    string
-	EMAIL_POP3_SERVER    string
 	EMAIL_SMTP_PORT      string
-	EMAIL_POP3_PORT      string
 	EMAIL_LOGIN          string
 	EMAIL_PASSWORD       string
 	EMAIL_SEND_TO_TEST   string
@@ -275,7 +273,7 @@ func LoadEnv_FromFile(filename string) {
 
 	Settings = SettingsINI{}
 	Settings.EMAIL_SMTP_SERVER = os.Getenv("EMAIL_SMTP_SERVER")
-	Settings.EMAIL_POP3_SERVER = os.Getenv("EMAIL_POP3_SERVER")
+	//Settings.EMAIL_POP3_SERVER = os.Getenv("EMAIL_POP3_SERVER")
 	Settings.EMAIL_SMTP_PORT = os.Getenv("EMAIL_SMTP_PORT")
 	Settings.EMAIL_LOGIN = os.Getenv("EMAIL_LOGIN")
 	Settings.EMAIL_PASSWORD = os.Getenv("EMAIL_PASSWORD")
@@ -288,9 +286,9 @@ func LoadEnv_FromFile(filename string) {
 		log.Warn("Need fill EMAIL_SMTP_SERVER ! in file ", filename)
 	}
 
-	if Settings.EMAIL_POP3_SERVER == "" {
-		log.Warn("Need fill EMAIL_POP3_SERVER ! in file ", filename)
-	}
+	//if Settings.EMAIL_POP3_SERVER == "" {
+	//	log.Warn("Need fill EMAIL_POP3_SERVER ! in file ", filename)
+	//}
 
 	if Settings.EMAIL_SMTP_PORT == "" {
 		log.Panicln("Need fill EMAIL_SMTP_PORT ! in file ", filename)

@@ -2,6 +2,8 @@ package object_model
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -21,21 +23,21 @@ import (
 type TypeRef struct {
 	ChannelTypes              []ChannelType              `json:"channel_types"`               // 1. Каналы сообщений
 	ClaimTypes                []ClaimType                `json:"claim_types"`                 // 2. Типы дел
-	ContractCategoryTypes     []ContractCategoryType     `json:"contract_category_types"`     // 3. * Категории договоров
-	DebtTypes                 []DebtType                 `json:"debt_types"`                  // 4. * Типы задолженностей
+	ContractCategoryTypes     []ContractCategoryType     `json:"contract_category_types"`     // 3. Категории договоров
+	DebtTypes                 []DebtType                 `json:"debt_types"`                  // 4. Типы задолженностей
 	DirectionTypes            []DirectionType            `json:"direction_types"`             // 5. Направления сообщений
-	DocumentLinkTypes         []DocumentLinkType         `json:"document_link_types"`         // 6. * Типы связей документов
-	DocumentTypes             []DocumentType             `json:"document_types"`              // 7. * Типы документов
+	DocumentLinkTypes         []DocumentLinkType         `json:"document_link_types"`         // 6. Типы связей документов
+	DocumentTypes             []DocumentType             `json:"document_types"`              // 7. Типы документов
 	FileTypes                 []FileType                 `json:"file_types"`                  // 8. Типы файлов
-	GenderTypes               []GenderType               `json:"gender_types"`                // 9. * Пол
-	LawsuitReasonTypes        []LawsuitReasonType        `json:"lawsuit_reason_types"`        // 10. * Причина отбора для претензии (Справочник).
-	LawsuitStageTypes         []LawsuitStageType         `json:"lawsuit_stage_types"`         // 11. * Этапы дел (справочник).
-	LawsuitStatusTypes        []LawsuitStatusType        `json:"lawsuit_status_types"`        // 12. * Статусы дел (справочник).
+	GenderTypes               []GenderType               `json:"gender_types"`                // 9. Пол
+	LawsuitReasonTypes        []LawsuitReasonType        `json:"lawsuit_reason_types"`        // 10. Причина отбора для претензии (Справочник).
+	LawsuitStageTypes         []LawsuitStageType         `json:"lawsuit_stage_types"`         // 11. Этапы дел (справочник).
+	LawsuitStatusTypes        []LawsuitStatusType        `json:"lawsuit_status_types"`        // 12. Статусы дел (справочник).
 	LegalTypes                []LegalType                `json:"legal_types"`                 // 13. Тип юридического лица
 	OrganizationCategoryTypes []OrganizationCategoryType `json:"organization_category_types"` // 14. Категории организаций
-	ServiceTypes              []ServiceType              `json:"service_types"`               // 15. Типы услуг
-	TableNames                []TableName                `json:"table_names"`                 // 16. * Имена таблиц для привязок
-	WhiteListReasonTypes      []WhiteListReasonType      `json:"white_list_reason_types"`     // 17. * Причина добавления в белый список
+	OrganizationStateTypes    []OrganizationStateType    `json:"organization_state_types"`    // 15. Состояния организаций
+	ServiceTypes              []ServiceType              `json:"service_types"`               // 16. Типы услуг
+	TableNames                []TableName                `json:"table_names"`                 // 17. Имена таблиц для привязок
 }
 
 // CommonRef Справочники
@@ -47,6 +49,7 @@ type CommonRef struct {
 	ServiceProviders []ServiceProvider   `json:"service_providers"` // 5. Поставщики услуг
 	UserRoles        []UserRole          `json:"user_roles"`        // 6. Роли сотрудников
 	WhiteList        []ContractWhiteItem `json:"white_list"`        // 7. Белый список
+	BlackList        []ContractBlackItem `json:"black_list"`        // 8. Чёрный список
 }
 
 // BriefCase Набор данных для конкретного портфеля
@@ -60,6 +63,7 @@ type BriefCase struct {
 	Payments     []LawsuitPayment     `json:"payments"`      // 10. Платежи
 	StateDuties  []StateDuty          `json:"state_duties"`  // 11. Гос.пошлина
 	StatusStates []LawsuitStatusState `json:"status_states"` // 12. История статусов дела
+	Hashtags     []Hashtag            `json:"hashtags"`      // 13. Хештеги портфеля
 	// TODO Добавить период претензии
 }
 
@@ -102,51 +106,54 @@ type ExtLinkStruct struct {
 type Contract struct {
 	CommonStruct
 	GroupStruct
-	BeginAt            time.Time         `json:"begin_at"               gorm:"column:begin_at"`
-	BranchID           int64             `json:"branch_id"              gorm:"column:branch_id;default:null"`
-	CategoryID         int64             `json:"category_id"            gorm:"column:category_id;default:null"`
-	ConnectionID       int64             `json:"connection_id"          gorm:"column:connection_id;default:null"`
-	CuratorClaim       Employee          `json:"curator_claim"          gorm:"-:all"`
-	CuratorClaimID     int64             `json:"curator_claim_id"       gorm:"column:curator_claim_id;default:null"`
-	CuratorContract    Employee          `json:"curator_contract"       gorm:"-:all"`
-	CuratorContractID  int64             `json:"curator_contract_id"    gorm:"column:curator_contract_id;default:null"`
-	CuratorLegal       Employee          `json:"curator_legal"          gorm:"-:all"`
-	CuratorLegalID     int64             `json:"curator_legal_id"       gorm:"column:curator_legal_id;default:null"`
-	CuratorPayment     Employee          `json:"curator_payment"        gorm:"-:all"`
-	CuratorPaymentID   int64             `json:"curator_payment_id"     gorm:"column:curator_payment_id;default:null"`
-	CuratorTechAudit   Employee          `json:"curator_tech_audit"     gorm:"-:all"`
-	CuratorTechAuditID int64             `json:"curator_tech_audit_id"  gorm:"column:curator_tech_audit_id;default:null"`
-	DaysToResolveClaim int               `json:"days_to_resolve_claim"  gorm:"column:days_to_resolve_claim"`
-	Description        string            `json:"description"            gorm:"column:description;default:\"\""`
-	Email              string            `json:"email"                  gorm:"column:email;default:\"\""`
-	EndAt              time.Time         `json:"end_at"                 gorm:"column:end_at"`
-	IndividualID       int64             `json:"individual_id"          gorm:"column:individual_id;default:null"`
-	IsIndOrganization  bool              `json:"is_ind_organization"    gorm:"column:is_ind_organization;default:false"`
-	IsOrganization     bool              `json:"is_organization"        gorm:"column:is_organization;default:false"`
-	IsValidEmail       bool              `json:"is_valid_email"         gorm:"column:is_valid_email;default:false"`
-	Number             string            `json:"number"                 gorm:"column:number;default:\"\""`
-	Organization       Organization      `json:"organization"           gorm:"-:all"`
-	OrganizationID     int64             `json:"organization_id"        gorm:"column:organization_id;default:null"`
-	PostAddress        string            `json:"post_address"           gorm:"column:post_address;default:\"\""`
-	SignAt             time.Time         `json:"sign_at"                gorm:"column:sign_at"`
-	Status             string            `json:"status"                 gorm:"column:status;default:\"\""`
-	TerminateAt        time.Time         `json:"terminate_at"           gorm:"column:terminate_at"`
-	PaymentDays        []PaymentDay      `json:"payment_days"`      // Дни платежей
-	PaymentSchedules   []PaymentSchedule `json:"payment_schedules"` // Графики платежей
+	BeginAt            time.Time            `json:"begin_at"               gorm:"column:begin_at"`
+	BranchID           int64                `json:"branch_id"              gorm:"column:branch_id;default:null"`
+	CategoryID         int64                `json:"category_id"            gorm:"column:category_id;default:null"`
+	Category           ContractCategoryType `json:"category"               gorm:"-:all"`
+	ConnectionID       int64                `json:"connection_id"          gorm:"column:connection_id;default:null"`
+	CuratorClaim       Employee             `json:"curator_claim"          gorm:"-:all"`
+	CuratorClaimID     int64                `json:"curator_claim_id"       gorm:"column:curator_claim_id;default:null"`
+	CuratorContract    Employee             `json:"curator_contract"       gorm:"-:all"`
+	CuratorContractID  int64                `json:"curator_contract_id"    gorm:"column:curator_contract_id;default:null"`
+	CuratorLegal       Employee             `json:"curator_legal"          gorm:"-:all"`
+	CuratorLegalID     int64                `json:"curator_legal_id"       gorm:"column:curator_legal_id;default:null"`
+	CuratorPayment     Employee             `json:"curator_payment"        gorm:"-:all"`
+	CuratorPaymentID   int64                `json:"curator_payment_id"     gorm:"column:curator_payment_id;default:null"`
+	CuratorTechAudit   Employee             `json:"curator_tech_audit"     gorm:"-:all"`
+	CuratorTechAuditID int64                `json:"curator_tech_audit_id"  gorm:"column:curator_tech_audit_id;default:null"`
+	DaysToResolveClaim int                  `json:"days_to_resolve_claim"  gorm:"column:days_to_resolve_claim"`
+	Description        string               `json:"description"            gorm:"column:description;default:\"\""`
+	Email              string               `json:"email"                  gorm:"column:email;default:\"\""`
+	EndAt              time.Time            `json:"end_at"                 gorm:"column:end_at"`
+	IndividualID       int64                `json:"individual_id"          gorm:"column:individual_id;default:null"`
+	IsIndOrganization  bool                 `json:"is_ind_organization"    gorm:"column:is_ind_organization;default:false"`
+	IsOrganization     bool                 `json:"is_organization"        gorm:"column:is_organization;default:false"`
+	IsValidEmail       bool                 `json:"is_valid_email"         gorm:"column:is_valid_email;default:false"`
+	Number             string               `json:"number"                 gorm:"column:number;default:\"\""`
+	Organization       Organization         `json:"organization"           gorm:"-:all"`
+	OrganizationID     int64                `json:"organization_id"        gorm:"column:organization_id;default:null"`
+	PostAddress        string               `json:"post_address"           gorm:"column:post_address;default:\"\""`
+	SignAt             time.Time            `json:"sign_at"                gorm:"column:sign_at"`
+	Status             string               `json:"status"                 gorm:"column:status;default:\"\""`
+	TerminateAt        time.Time            `json:"terminate_at"           gorm:"column:terminate_at"`
+	IsErrorFromStack   bool                 `json:"is_error_from_stack"    gorm:"column:is_error_from_stack;default:false"`
+	ErrorFromStackAt   time.Time            `json:"error_from_stack_at"    gorm:"column:error_from_stack_at"`
+	PaymentDays        []PaymentDay         `json:"payment_days"`      // Дни платежей
+	PaymentSchedules   []PaymentSchedule    `json:"payment_schedules"` // Графики платежей
 }
 
 // LawsuitStatusType Статусы дел (справочник).
 type LawsuitStatusType struct {
 	CommonStruct
 	NameStruct
-	Code string `json:"code" gorm:"column:code;default:\"\""`
+	Code string `json:"code" gorm:"column:code;default:0"`
 }
 
 // LawsuitStageType Этапы дел (справочник).
 type LawsuitStageType struct {
 	CommonStruct
 	NameStruct
-	Code string `json:"code" gorm:"column:code;default:\"\""`
+	Code string `json:"code" gorm:"column:code;default:0"`
 }
 
 // LawsuitReasonType Причина отбора для претензии (Справочник).
@@ -186,8 +193,9 @@ type Lawsuit struct {
 	CuratorTechAuditID        int64             `json:"curator_tech_audit_id"   gorm:"column:curator_tech_audit_id;default:null"`
 	DateFrom                  time.Time         `json:"date_from"               gorm:"column:date_from;default:null"`
 	DateTo                    time.Time         `json:"date_to"                 gorm:"column:date_to;default:null"`
-	DebtSum                   float64           `json:"debt_sum"                gorm:"column:debt_sum;default:0"`                             // Общая сумма долга
-	InvoiceSum                float64           `json:"invoice_sum"             gorm:"column:invoice_sum;default:0"`                          // Сумма долга за период
+	DebtSum                   float64           `json:"debt_sum"                gorm:"column:debt_sum;default:0"`    // Общая сумма долга
+	InvoiceSum                float64           `json:"invoice_sum"             gorm:"column:invoice_sum;default:0"` // Сумма долга за период
+	IsClosed                  bool              `json:"is_closed"               gorm:"column:is_closed;default:null"`
 	NotifyClaimAt             time.Time         `json:"notify_claim_at"         gorm:"column:notify_claim_at;default:null"`                   // Уведомление о задолженности. Дата отправки.
 	NotifyClaimChannel        int               `json:"notify_claim_channel"    gorm:"column:notify_claim_channel;default:null"`              // Уведомление о задолженности. Канал отправки.
 	NotifyClaimCode           int               `json:"notify_claim_code"       gorm:"column:notify_claim_code;default:null"`                 // Уведомление о задолженности. Код доставки из НСИ.
@@ -210,6 +218,7 @@ type Lawsuit struct {
 	ProcessStartedAt          time.Time         `json:"process_started_at"      gorm:"column:process_started_at;default:null"`
 	Reason                    LawsuitReasonType `json:"reason"                  gorm:"-:all"`
 	ReasonID                  int64             `json:"reason_id"               gorm:"column:reason_id;default:null"`
+	RestrictSum               float64           `json:"restrict_sum"            gorm:"column:restrict_sum;default:0"`
 	Stage                     LawsuitStageType  `json:"stage"                   gorm:"-:all"` // Этап
 	StageAt                   time.Time         `json:"stage_at"                gorm:"column:stage_at;default:null"`
 	StageID                   int64             `json:"stage_id"                gorm:"column:stage_id;default:null"`
@@ -218,30 +227,53 @@ type Lawsuit struct {
 	StatusAt                  time.Time         `json:"status_at"               gorm:"column:status_at;default:null"`
 	StatusID                  int64             `json:"status_id"               gorm:"column:status_id;default:null"`
 	Tag                       string            `json:"tag"                     gorm:"column:tag;default:\"\""`
-	UnknownPayments           bool              `json:"unknown_payments"        gorm:"unknown_payments:tag;default:false"` // "c не разнесёнными платежами"
+	UnknownPayments           bool              `json:"unknown_payments"        gorm:"unknown_payments:tag;default:false"` // "С не разнесёнными платежами"
 }
 
 // LawsuitInvoice Счета фактуры относящиеся к делу.
 type LawsuitInvoice struct {
 	CommonStruct
-	LawsuitID  int64     `json:"lawsuit_id"  gorm:"column:lawsuit_id;default:null"`  // Lawsuit
-	DocumentID int64     `json:"document_id" gorm:"column:document_id;default:null"` // Document
-	Document   Document  `json:"document"    gorm:"-:all"`
-	Sum        float64   `json:"sum"         gorm:"column:sum;default:null"`
-	Count      int64     `json:"count"       gorm:"column:count;not null"`
-	IsClosed   bool      `json:"is_closed"   gorm:"is_closed:tag;default:false"`
-	ClosedAt   time.Time `json:"closed_at"   gorm:"column:closed_at;default:null"`
+	ClosedAt     time.Time `json:"closed_at"    gorm:"column:closed_at;default:null"`
+	ClosedSum    float64   `json:"closed_sum"   gorm:"column:closed_sum;default:null"`
+	Count        int64     `json:"count"        gorm:"column:count;not null"`
+	Document     Document  `json:"document"     gorm:"-:all"`
+	DocumentID   int64     `json:"document_id"  gorm:"column:document_id;default:null"`        // Document
+	DocumentSum  float64   `json:"document_sum" gorm:"column:document_sum;not null;default:0"` // Сумма указанная в платёжном документе
+	IsClosed     bool      `json:"is_closed"    gorm:"is_closed:tag;default:false"`
+	IsCorrective bool      `json:"is_corrective"    gorm:"column:is_corrective;default:false"`
+	LawsuitID    int64     `json:"lawsuit_id"   gorm:"column:lawsuit_id;default:null"` // Lawsuit
+	Sum          float64   `json:"sum"          gorm:"column:sum;not null;default:0"`  // Сумма фактуры после коррекции
 }
 
 // LawsuitPayment Платежи относящиеся к делу.
 type LawsuitPayment struct {
 	CommonStruct
-	LawsuitID  int64          `json:"lawsuit_id"  gorm:"column:lawsuit_id;default:null"`  // Lawsuit
-	DocumentID int64          `json:"document_id" gorm:"column:document_id;default:null"` // Document
-	Document   Document       `json:"document"    gorm:"-:all"`
-	InvoiceID  int64          `json:"invoice_id"  gorm:"column:invoice_id;default:null"` // LawsuitInvoice
-	Invoice    LawsuitInvoice `json:"invoice"     gorm:"-:all"`
-	Sum        float64        `json:"sum"         gorm:"column:sum;default:null"`
+	Document     Document       `json:"document"     gorm:"-:all"`
+	DocumentID   int64          `json:"document_id"  gorm:"column:document_id;default:null"`        // Document
+	DocumentSum  float64        `json:"document_sum" gorm:"column:document_sum;not null;default:0"` // Сумма указанная в платёжном документе
+	Invoice      LawsuitInvoice `json:"invoice"      gorm:"-:all"`
+	InvoiceID    int64          `json:"invoice_id"   gorm:"column:invoice_id;default:null"` // LawsuitInvoice
+	IsCorrective bool           `json:"is_corrective"    gorm:"column:is_corrective;default:false"`
+	LawsuitID    int64          `json:"lawsuit_id"   gorm:"column:lawsuit_id;default:null"` // Lawsuit
+	Sum          float64        `json:"sum"          gorm:"column:sum;not null;default:0"`  // Сумма погашения после коррекции
+}
+
+// LawsuitInvoiceCorrection -
+type LawsuitInvoiceCorrection struct {
+	CommonStruct
+	CorrectionDocumentID  int64   `json:"correction_document_id" gorm:"column:correction_document_id;default:null"`
+	CorrectionDocumentSum float64 `json:"correction_document_sum" gorm:"column:correction_document_sum;default:null"`
+	InvoiceDocumentID     int64   `json:"invoice_document_id"    gorm:"column:invoice_document_id;default:null"`
+	LawsuitID             int64   `json:"lawsuit_id"             gorm:"column:lawsuit_id;default:null"` // Lawsuit
+}
+
+// LawsuitPaymentCorrection -
+type LawsuitPaymentCorrection struct {
+	CommonStruct
+	CorrectionDocumentID  int64   `json:"correction_document_id" gorm:"column:correction_document_id;default:null"`
+	CorrectionDocumentSum float64 `json:"correction_document_sum" gorm:"column:correction_document_sum;default:null"`
+	LawsuitID             int64   `json:"lawsuit_id"             gorm:"column:lawsuit_id;default:null"` // Lawsuit
+	PaymentDocumentID     int64   `json:"payment_document_id"    gorm:"column:payment_document_id;default:null"`
 }
 
 // LawsuitStatusState История статусов дела.
@@ -278,6 +310,7 @@ type DebtType struct {
 	CommonStruct
 	GroupStruct
 	NameStruct
+	CodeNSI      int   `json:"code_nsi"        gorm:"column:code_nsi;default:0"`
 	ExtCode      int   `json:"ext_code"        gorm:"column:ext_code;default:0"`
 	ConnectionID int64 `json:"connection_id"   gorm:"column:connection_id;default:null"`
 }
@@ -292,6 +325,14 @@ type FileTemplate struct {
 // Message Сообщения (входящие и исходящие).
 type Message struct {
 	CommonStruct
+
+	// Тип сообщения
+	// Идентификатор сообщения
+	// Дата отправки
+	// Статус отправки
+	// Код доставки
+	// Статус доставки
+
 	ChannelTypeID   int64  `json:"channel_type_id"   gorm:"column:channel_type_id;default:null"`
 	Code            string `json:"code"              gorm:"column:code;default:\"\""`
 	Data            string `json:"data"              gorm:"column:data;default:\"\""`
@@ -333,28 +374,35 @@ type Organization struct {
 	CommonStruct
 	NameStruct
 	GroupStruct
-	IsBankrupt     bool      `json:"is_bankrupt"     gorm:"column:is_bankrupt;default:false"`
-	BankruptAt     time.Time `json:"bankrupt_at"     gorm:"column:bankrupt_at"`
-	BookkeeperName string    `json:"bookkeeper_name" gorm:"column:bookkeeper_name;default:\"\""`
-	CategoryID     int64     `json:"category_id"     gorm:"column:category_id;default:null"`
-	ConnectionID   int64     `json:"connection_id"   gorm:"column:connection_id;default:null"`
-	Email          string    `json:"email"           gorm:"column:email;default:\"\""`
-	FullName       string    `json:"full_name"       gorm:"column:full_name;default:\"\""`
-	INN            string    `json:"inn"             gorm:"column:inn;default:\"\""`
-	IsActive       bool      `json:"is_active"       gorm:"column:is_active;default:false"`
-	KPP            string    `json:"kpp"             gorm:"column:kpp;default:\"\""`
-	LegalAddress   string    `json:"legal_address"   gorm:"column:legal_address;default:\"\""`
-	LiquidateAt    time.Time `json:"liquidate_at"    gorm:"column:liquidate_at"`
-	IsLiquidated   bool      `json:"is_liquidated"   gorm:"column:is_liquidated;default:false"`
-	ManagerName    string    `json:"manager_name"    gorm:"column:manager_name;default:\"\""`
-	OGRN           string    `json:"ogrn"            gorm:"column:ogrn;default:\"\""`
-	OKATO          string    `json:"okato"           gorm:"column:okato;default:\"\""`
-	OKPO           string    `json:"okpo"            gorm:"column:okpo;default:\"\""`
-	Phone          string    `json:"phone"           gorm:"column:phone;default:\"\""`
-	PostAddress    string    `json:"post_address"    gorm:"column:post_address;default:\"\""`
-	RegistrationAt time.Time `json:"registration_at" gorm:"column:registration_at;default:null"`
-	WWW            string    `json:"www"             gorm:"column:www;default:\"\""`
-	Accounts       []Account `json:"accounts"        gorm:"-:all"`
+	BankruptAt     time.Time             `json:"bankrupt_at"     gorm:"column:bankrupt_at"`
+	BookkeeperName string                `json:"bookkeeper_name" gorm:"column:bookkeeper_name;default:\"\""`
+	CategoryID     int64                 `json:"category_id"     gorm:"column:category_id;default:null"`
+	ConnectionID   int64                 `json:"connection_id"   gorm:"column:connection_id;default:null"`
+	Email          string                `json:"email"           gorm:"column:email;default:\"\""`
+	FullName       string                `json:"full_name"       gorm:"column:full_name;default:\"\""`
+	INN            string                `json:"inn"             gorm:"column:inn;default:\"\""`
+	IsActive       bool                  `json:"is_active"       gorm:"column:is_active;default:false"`
+	IsBankrupt     bool                  `json:"is_bankrupt"     gorm:"column:is_bankrupt;default:false"`
+	IsLiquidated   bool                  `json:"is_liquidated"   gorm:"column:is_liquidated;default:false"`
+	KPP            string                `json:"kpp"             gorm:"column:kpp;default:\"\""`
+	LegalAddress   string                `json:"legal_address"   gorm:"column:legal_address;default:\"\""`
+	LegalTypeID    int64                 `json:"legal_type_id"   gorm:"column:legal_type_id;default:0"`
+	LiquidateAt    time.Time             `json:"liquidate_at"    gorm:"column:liquidate_at"`
+	ManagerName    string                `json:"manager_name"    gorm:"column:manager_name;default:\"\""`
+	OGRN           string                `json:"ogrn"            gorm:"column:ogrn;default:\"\""`
+	OKATO          string                `json:"okato"           gorm:"column:okato;default:\"\""`
+	OKPO           string                `json:"okpo"            gorm:"column:okpo;default:\"\""`
+	Phone          string                `json:"phone"           gorm:"column:phone;default:\"\""`
+	PostAddress    string                `json:"post_address"    gorm:"column:post_address;default:\"\""`
+	RegistrationAt time.Time             `json:"registration_at" gorm:"column:registration_at;default:null"`
+	State          OrganizationStateType `json:"state"           gorm:"-:all"`                          // Статус организации из НСИ.
+	StateCode      string                `json:"state_code"      gorm:"column:state_code;default:\"\""` // Код статуса организации из НСИ.
+	StateID        int64                 `json:"state_id"        gorm:"column:state_id;default:null"`   // ID статуса организации из НСИ.
+	WWW            string                `json:"www"             gorm:"column:www;default:\"\""`
+
+	// LegalType      LegalType             `json:"legal_type"      gorm:"-:all"` // TODO LegalType
+
+	Accounts []Account `json:"accounts"        gorm:"-:all"`
 }
 
 // OrganizationCategoryType Категория организаций (справочник).
@@ -363,6 +411,16 @@ type OrganizationCategoryType struct {
 	NameStruct
 	GroupStruct
 	ConnectionID int64 `json:"connection_id" gorm:"column:connection_id;default:null"`
+}
+
+// OrganizationStateType Состояние организации (справочник).
+type OrganizationStateType struct {
+	CommonStruct
+	NameStruct
+	Code               string `json:"code"                gorm:"column:code;default:\"1\""`
+	ActionIndividual   string `json:"action_individual"   gorm:"action_individual:code;default:\"none\""`   // include exclude none
+	ActionOrganization string `json:"action_organization" gorm:"action_organization:code;default:\"none\""` // include exclude none
+	Color              string `json:"color"               gorm:"color:code;default:\"\""`                   // red yellow green
 }
 
 // ContractCategoryType Категория договоров (справочник).
@@ -406,6 +464,7 @@ type DirectionType struct {
 type LegalType struct {
 	CommonStruct
 	NameStruct
+	IsIndividual bool `json:"is_individual" gorm:"column:is_individual;default:false"`
 }
 
 // ChannelType Тип канала (справочник).
@@ -425,8 +484,9 @@ type ClaimType struct {
 type Document struct {
 	CommonStruct // Id с/ф в СТЕК; Дата формирования
 	GroupStruct
-	Analytics      string    `json:"analytics"        gorm:"column:analytics;default:\"\""` // Тип начисления (окончательный, пени, ограничения, по суду);
-	Balance        float64   `json:"balance"          gorm:"column:balance;default:null"`   // Неоплаченный остаток С/ф
+	Analytics      string    `json:"analytics"        gorm:"column:analytics;default:\"\""`    // Тип начисления (окончательный, пени, ограничения, по суду);
+	Balance        float64   `json:"balance"          gorm:"column:balance;default:null"`      // Неоплаченный остаток С/ф
+	BillKindID     int64     `json:"bill_kind_id"     gorm:"column:bill_kind_id;default:null"` //
 	BillingMonth   time.Time `json:"billing_month"    gorm:"column:billing_month;default:null"`
 	ConnectionID   int64     `json:"connection_id"    gorm:"column:connection_id;default:null"`
 	ContractID     int64     `json:"contract_id"      gorm:"column:contract_id;default:null"` // Номер договора;
@@ -435,13 +495,22 @@ type Document struct {
 	DocumentAt     time.Time `json:"document_at"      gorm:"column:document_at;default:null"` // Дата С/ф;
 	DocumentSum    float64   `json:"document_sum"     gorm:"column:document_sum;not null"`    // Начислено по С/ф
 	DocumentTypeID int64     `json:"document_type_id" gorm:"column:document_type_id;default:null"`
-	Number         string    `json:"number"           gorm:"column:number;default:\"\""`   // Номер С/ф;
-	PayFrom        time.Time `json:"pay_from"         gorm:"column:pay_from;default:null"` // Период С/ф; с
-	PayTo          time.Time `json:"pay_to"           gorm:"column:pay_to;default:null"`   // Период С/ф; по
-	Payment        float64   `json:"payment"          gorm:"column:payment;default:null"`  // Оплата по С/ф
+	Note           string    `json:"note"             gorm:"column:note;default:\"\""`         // Примечание, в частности назначение платежа
+	Number         string    `json:"number"           gorm:"column:number;default:\"\""`       // Номер С/ф;
+	NumberFull     string    `json:"number_full"      gorm:"column:number_full;default:\"\""`  // Полный номер С/ф;
+	PayDeadline    time.Time `json:"pay_deadline"     gorm:"column:pay_deadline;default:null"` // День когда уже пошла просрочка
+	PayFrom        time.Time `json:"pay_from"         gorm:"column:pay_from;default:null"`     // Период С/ф; с
+	PayTo          time.Time `json:"pay_to"           gorm:"column:pay_to;default:null"`       // Период С/ф; по
+	Payment        float64   `json:"payment"          gorm:"column:payment;default:null"`      // Оплата по С/ф
 	Reason         string    `json:"reason"           gorm:"column:reason;default:\"\""`
 	ReversalID     int64     `json:"reversal_id"      gorm:"column:reversal_id;default:null"` // Указатель на исправленный документ
-	Note           string    `json:"note"             gorm:"column:note;default:\"\""`        // Примечание, в частности назначение платежа
+}
+
+// BillKindType Вид платежа
+type BillKindType struct {
+	CommonStruct
+	NameStruct
+	Code int `json:"code" gorm:"column:code;default:null"`
 }
 
 // Balance Сальдо договора.
@@ -460,11 +529,12 @@ type Balance struct {
 // DocumentLink Связи документов
 type DocumentLink struct {
 	CommonStruct
-	ConnectionID int64 `json:"connection_id" gorm:"column:connection_id;default:null"`
-	ContractID   int64 `json:"contract_id"   gorm:"column:contract_id;default:null"`
-	Document1ID  int64 `json:"document1_id"  gorm:"column:document1_id;default:null"`
-	Document2ID  int64 `json:"document2_id"  gorm:"column:document2_id;default:null"`
-	LinkTypeID   int64 `json:"link_type_id"  gorm:"column:link_type_id;default:null"`
+	ConnectionID  int64   `json:"connection_id" gorm:"column:connection_id;default:null"`
+	ContractID    int64   `json:"contract_id"   gorm:"column:contract_id;default:null"`
+	CorrectionSum float64 `json:"correction_sum" gorm:"column:correction_sum;not null;default:0"`
+	Document1ID   int64   `json:"document1_id"  gorm:"column:document1_id;default:null"`
+	Document2ID   int64   `json:"document2_id"  gorm:"column:document2_id;default:null"`
+	LinkTypeID    int64   `json:"link_type_id"  gorm:"column:link_type_id;default:null"`
 }
 
 // DocumentLinkType Тип связи документов
@@ -472,6 +542,24 @@ type DocumentLinkType struct {
 	CommonStruct
 	NameStruct
 	Code int `json:"code" gorm:"column:code;default:null"`
+}
+
+// Calendar - список выходных
+type Calendar struct {
+	CommonStruct
+	Date      time.Time `json:"date" gorm:"column:date;default:null"`
+	Hours     int       `json:"hours" gorm:"column:hours;default:0"`
+	Days      int       `json:"days" gorm:"column:days;default:0"`
+	DayTypeID int64     `json:"day_type_id" gorm:"column:day_type_id;default:null"`
+	Comment   string    `json:"comment" gorm:"column:comment;default:\"\""`
+}
+
+// DayType - тип рабочего дня
+type DayType struct {
+	CommonStruct
+	NameStruct
+	ShortName string `json:"short_name" gorm:"column:short_name;default:\"\""`
+	IsWorkDay bool   `json:"is_work_day" gorm:"column:is_work_day;default:false"`
 }
 
 // DocumentType Тип документов (справочник).
@@ -662,27 +750,53 @@ type CompletedMonth struct {
 // ContractWhiteItem "Белый" список договоров. Кому не предъявляется претензия.
 type ContractWhiteItem struct {
 	CommonStruct
-	Contract       Contract            `json:"contract"        gorm:"-:all"`
-	ContractID     int64               `json:"contract_id"     gorm:"column:contract_id;default:null"`
-	ContractNumber string              `json:"contract_number" gorm:"column:contract_number;default:null"`
-	CreatedBy      Employee            `json:"created_by"      gorm:"-:all"`
-	CreatedByID    int64               `json:"created_by_id"   gorm:"column:created_by_id;default:null"`
-	DateFrom       time.Time           `json:"date_from"       gorm:"column:date_from;default:null"`
-	DateTo         time.Time           `json:"date_to"         gorm:"column:date_to;default:null"`
-	EDMSLink       string              `json:"edms_link"       gorm:"column:edms_link;default:\"\""`
-	ModifiedBy     Employee            `json:"modified_by"     gorm:"-:all"`
-	ModifiedByID   int64               `json:"modified_by_id"  gorm:"column:modified_by_id;default:null"`
-	Note           string              `json:"note"            gorm:"column:note;default:\"\""`
-	Reason         WhiteListReasonType `json:"reason"          gorm:"-:all"`
-	ReasonID       int64               `json:"reason_id"       gorm:"column:reason_id;default:null"`
+	Contract       Contract  `json:"contract"        gorm:"-:all"`
+	ContractID     int64     `json:"contract_id"     gorm:"column:contract_id;default:null"`
+	ContractNumber string    `json:"contract_number" gorm:"column:contract_number;default:null"`
+	CreatedBy      Employee  `json:"created_by"      gorm:"-:all"`
+	CreatedByID    int64     `json:"created_by_id"   gorm:"column:created_by_id;default:null"`
+	DateFrom       time.Time `json:"date_from"       gorm:"column:date_from;default:null"`
+	DateTo         time.Time `json:"date_to"         gorm:"column:date_to;default:null"`
+	EDMSLink       string    `json:"edms_link"       gorm:"column:edms_link;default:\"\""`
+	ModifiedBy     Employee  `json:"modified_by"     gorm:"-:all"`
+	ModifiedByID   int64     `json:"modified_by_id"  gorm:"column:modified_by_id;default:null"`
+	Note           string    `json:"note"            gorm:"column:note;default:\"\""`
+	Reason         string    `json:"reason"          gorm:"column:reason;default:\"\""`
 }
 
-// WhiteListReasonType Причина добавления договора в "белый" список (справочник).
-type WhiteListReasonType struct {
+type ContractWhiteList []ContractWhiteItem
+
+// ContractBlackItem "Чёрный" список договоров. Кому предъявляется претензия без ожидания.
+type ContractBlackItem struct {
+	CommonStruct
+	Contract       Contract  `json:"contract"        gorm:"-:all"`
+	ContractID     int64     `json:"contract_id"     gorm:"column:contract_id;default:null"`
+	ContractNumber string    `json:"contract_number" gorm:"column:contract_number;default:null"`
+	CreatedBy      Employee  `json:"created_by"      gorm:"-:all"`
+	CreatedByID    int64     `json:"created_by_id"   gorm:"column:created_by_id;default:null"`
+	DateFrom       time.Time `json:"date_from"       gorm:"column:date_from;default:null"`
+	DateTo         time.Time `json:"date_to"         gorm:"column:date_to;default:null"`
+	EDMSLink       string    `json:"edms_link"       gorm:"column:edms_link;default:\"\""`
+	ModifiedBy     Employee  `json:"modified_by"     gorm:"-:all"`
+	ModifiedByID   int64     `json:"modified_by_id"  gorm:"column:modified_by_id;default:null"`
+	Note           string    `json:"note"            gorm:"column:note;default:\"\""`
+	Reason         string    `json:"reason"          gorm:"column:reason;default:\"\""`
+}
+
+type ContractBlackList []ContractBlackItem
+
+type Hashtag struct {
 	CommonStruct
 	NameStruct
-	Code int `json:"code" gorm:"column:code;default:null"`
 }
+
+type HashtagLink struct {
+	CommonStruct
+	ExtLinkStruct
+	HashtagID int64 `json:"hashtag_id" gorm:"column:hashtag_id;default:null"`
+}
+
+type HashtagList []Hashtag
 
 // ===========================================================================
 // ===== Отчёты =====
@@ -706,11 +820,11 @@ type ReportSummary struct {
 	ClaimsStatus7    int    `json:"claims_status_7"      gorm:"-:all"`
 	ClaimsStatus7Sum string `json:"claims_status_7_sum"  gorm:"-:all"`
 
-	// Досудебная претензия на стадии мониторинга с направлением по e-mail
+	// Досудебная претензия, которая на стадии мониторинга с направлением по e-mail
 	ClaimsChannel1401    int    `json:"claims_channel_1401"      gorm:"-:all"`
 	ClaimsChannel1401Sum string `json:"claims_channel_1401_sum"  gorm:"-:all"`
 
-	// Досудебная претензия на стадии мониторинга с направлением заказным письмом
+	// Досудебная претензия, которая на стадии мониторинга с направлением заказным письмом
 	ClaimsChannel1406    int    `json:"claims_channel_1406"      gorm:"-:all"`
 	ClaimsChannel1406Sum string `json:"claims_channel_1406_sum"  gorm:"-:all"`
 
@@ -917,6 +1031,30 @@ func ContractAsBytes(c *Contract) ([]byte, error) {
 
 // ===========================================================================
 
+// NewOrganization -
+func NewOrganization() Organization {
+	return Organization{}
+}
+
+func AsOrganization(b []byte) (Organization, error) {
+	c := NewOrganization()
+	err := msgpack.Unmarshal(b, &c)
+	if err != nil {
+		return NewOrganization(), err
+	}
+	return c, nil
+}
+
+func OrganizationAsBytes(c *Organization) ([]byte, error) {
+	b, err := msgpack.Marshal(c)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+// ===========================================================================
+
 // NewReportSummary Суммарный отчёт (дашборд)
 func NewReportSummary() ReportSummary {
 	return ReportSummary{}
@@ -965,6 +1103,174 @@ func FacsimileAsBytes(c *Facsimile) ([]byte, error) {
 
 // ===========================================================================
 
+// NewWhiteListItem -- Новая запись белого списка
+func NewWhiteListItem() ContractWhiteItem {
+	return ContractWhiteItem{}
+}
+
+func AsWhiteListItem(b []byte) (ContractWhiteItem, error) {
+	c := NewWhiteListItem()
+	err := msgpack.Unmarshal(b, &c)
+	if err != nil {
+		return NewWhiteListItem(), err
+	}
+	return c, nil
+}
+
+func WhiteListItemAsBytes(c *ContractWhiteItem) ([]byte, error) {
+	b, err := msgpack.Marshal(c)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+// ===========================================================================
+
+// NewContractWhiteList Новый объект белого списка
+func NewContractWhiteList() ContractWhiteList {
+	return ContractWhiteList{}
+}
+
+func AsContractWhiteList(b []byte) (ContractWhiteList, error) {
+	c := NewContractWhiteList()
+	err := msgpack.Unmarshal(b, &c)
+	if err != nil {
+		return NewContractWhiteList(), err
+	}
+	return c, nil
+}
+
+func ContractWhiteListAsBytes(c *ContractWhiteList) ([]byte, error) {
+	b, err := msgpack.Marshal(c)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+// ===========================================================================
+
+// NewBlackListItem -- Новая запись чёрного списка
+func NewBlackListItem() ContractBlackItem {
+	return ContractBlackItem{}
+}
+
+func AsBlackListItem(b []byte) (ContractBlackItem, error) {
+	c := NewBlackListItem()
+	err := msgpack.Unmarshal(b, &c)
+	if err != nil {
+		return NewBlackListItem(), err
+	}
+	return c, nil
+}
+
+func BlackListItemAsBytes(c *ContractBlackItem) ([]byte, error) {
+	b, err := msgpack.Marshal(c)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+// ===========================================================================
+
+// NewContractBlackList -- Новый объект чёрного списка
+func NewContractBlackList() ContractBlackList {
+	return ContractBlackList{}
+}
+
+func AsContractBlackList(b []byte) (ContractBlackList, error) {
+	c := NewContractBlackList()
+	err := msgpack.Unmarshal(b, &c)
+	if err != nil {
+		return NewContractBlackList(), err
+	}
+	return c, nil
+}
+
+func ContractBlackListAsBytes(c *ContractBlackList) ([]byte, error) {
+	b, err := msgpack.Marshal(c)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+// ===========================================================================
+
+// NewHashtag Новый объект хештег
+func NewHashtag() Hashtag {
+	return Hashtag{}
+}
+
+func AsHashtag(b []byte) (Hashtag, error) {
+	h := NewHashtag()
+	err := msgpack.Unmarshal(b, &h)
+	if err != nil {
+		return NewHashtag(), err
+	}
+	return h, nil
+}
+
+func HashtagAsBytes(h *Hashtag) ([]byte, error) {
+	b, err := msgpack.Marshal(h)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+// ===========================================================================
+
+// NewHashtagList Новый объект хештег
+func NewHashtagList() HashtagList {
+	return HashtagList{}
+}
+
+func AsHashtagList(b []byte) (HashtagList, error) {
+	h := NewHashtagList()
+	err := msgpack.Unmarshal(b, &h)
+	if err != nil {
+		return NewHashtagList(), err
+	}
+	return h, nil
+}
+
+func HashtagListAsBytes(h *HashtagList) ([]byte, error) {
+	b, err := msgpack.Marshal(h)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+// ===========================================================================
+
+// NewHashtagLink Новый объект связи хештега
+func NewHashtagLink() HashtagLink {
+	return HashtagLink{}
+}
+
+func AsHashtagLink(b []byte) (HashtagLink, error) {
+	hl := NewHashtagLink()
+	err := msgpack.Unmarshal(b, &hl)
+	if err != nil {
+		return NewHashtagLink(), err
+	}
+	return hl, nil
+}
+
+func HashtagLinkAsBytes(hl *HashtagLink) ([]byte, error) {
+	b, err := msgpack.Marshal(hl)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+// ===========================================================================
+
 // BriefCaseView выборка
 func BriefCaseView(bc *BriefCase, c *CommonRef, t *TypeRef, useFormat bool) (map[string]interface{}, error) {
 	result := make(map[string]interface{})
@@ -995,17 +1301,19 @@ func BriefCaseView(bc *BriefCase, c *CommonRef, t *TypeRef, useFormat bool) (map
 	result["Lawsuit_NumberTrial"] = lawSuit.NumberTrial
 
 	// TODO View LawsuitStageTypes Улучшить поиск
-	stage := "Неизвестно"
+	stage := LawsuitStageType{}
 	for i := 0; i < len(t.LawsuitStageTypes); i++ {
 		if t.LawsuitStageTypes[i].ID == lawSuit.StageID {
-			stage = t.LawsuitStageTypes[i].Name
+			stage = t.LawsuitStageTypes[i]
 			break
 		}
 	}
 	// Этап - для фильтрации
 	result["Lawsuit_StageID"] = lawSuit.StageID
+	// Этап - для вариантов отображения
+	result["Lawsuit_StageCode"] = stage.Code
 	// Этап - для вывода в таблицу
-	result["Lawsuit_Stage"] = stage
+	result["Lawsuit_Stage"] = stage.Name
 	// Дата установки этапа
 	if useFormat {
 		result["Lawsuit_StageAt"] = formatDate(lawSuit.StageAt)
@@ -1014,17 +1322,19 @@ func BriefCaseView(bc *BriefCase, c *CommonRef, t *TypeRef, useFormat bool) (map
 	}
 
 	// TODO View LawsuitStatusTypes Улучшить поиск
-	status := "Неизвестно"
+	status := LawsuitStatusType{}
 	for i := 0; i < len(t.LawsuitStatusTypes); i++ {
 		if t.LawsuitStatusTypes[i].ID == lawSuit.StatusID {
-			status = t.LawsuitStatusTypes[i].Name
+			status = t.LawsuitStatusTypes[i]
 			break
 		}
 	}
 	// Статус - для фильтрации
 	result["Lawsuit_StatusID"] = lawSuit.StatusID
+	// Статус - для вариантов отображения
+	result["Lawsuit_StatusCode"] = status.Code
 	// Статус - для вывода в таблицу
-	result["Lawsuit_Status"] = status
+	result["Lawsuit_Status"] = status.Name
 	// Дата установки статуса
 	if useFormat {
 		result["Lawsuit_StatusAt"] = formatDate(lawSuit.StatusAt)
@@ -1151,12 +1461,27 @@ func BriefCaseView(bc *BriefCase, c *CommonRef, t *TypeRef, useFormat bool) (map
 
 	changes := make([]interface{}, 0)
 	for i := 0; i < len(bc.ChangeItems); i++ {
+		// TODO Костыль, нужно по-быстрому решить, чтобы не парсить в веб
+		actionCode := 0
+		newValueCode := 0
+		prevValueCode := 0
+		if bc.ChangeItems[i].Key == "Обновление статуса" {
+			actionCode = 1
+			// "Сформировано уведомление (2)"
+			value := regexp.MustCompile(`\d`).FindStringSubmatch(bc.ChangeItems[i].Value)
+			if len(value) == 1 {
+				newValueCode, _ = strconv.Atoi(value[0])
+			}
+		}
 		tmp := map[string]interface{}{
-			"ID":        bc.ChangeItems[i].ID,
-			"CreatedAt": formatTime(bc.ChangeItems[i].CreatedAt),
-			"Action":    bc.ChangeItems[i].Key,
-			"NewValue":  bc.ChangeItems[i].Value,
-			"PrevValue": bc.ChangeItems[i].Prev,
+			"ID":            bc.ChangeItems[i].ID,
+			"CreatedAt":     formatTime(bc.ChangeItems[i].CreatedAt),
+			"Action":        bc.ChangeItems[i].Key,
+			"NewValue":      bc.ChangeItems[i].Value,
+			"PrevValue":     bc.ChangeItems[i].Prev,
+			"ActionCode":    actionCode,
+			"NewValueCode":  newValueCode,
+			"PrevValueCode": prevValueCode,
 		}
 		changes = append(changes, tmp)
 	}
@@ -1181,8 +1506,8 @@ func BriefCaseView(bc *BriefCase, c *CommonRef, t *TypeRef, useFormat bool) (map
 			break
 		}
 	}
-	result["Contract_CategoryID"] = contract.CategoryID
 	result["Contract_Category"] = category
+	result["Contract_CategoryID"] = contract.CategoryID
 	// Статус
 	if contract.Status == "" {
 		result["Contract_Status"] = "Активен"
@@ -1270,6 +1595,7 @@ func BriefCaseView(bc *BriefCase, c *CommonRef, t *TypeRef, useFormat bool) (map
 
 	invoices := make([]interface{}, 0)
 	totalSum := 0.0
+	totalCorrectionSum := 0.0
 	totalDebtSum := 0.0
 	totalPayment := 0.0
 	totalBalance := 0.0
@@ -1279,10 +1605,16 @@ func BriefCaseView(bc *BriefCase, c *CommonRef, t *TypeRef, useFormat bool) (map
 			continue
 		}
 
-		payment := 0.0
+		paymentSum := 0.0
+		correctionSum := 0.0
 		for j := 0; j < len(bc.Payments); j++ {
 			if bc.Invoices[i].ID == bc.Payments[j].InvoiceID {
-				payment += bc.Payments[j].Sum
+				if bc.Payments[j].IsCorrective {
+					correctionSum += bc.Payments[j].Sum
+				} else {
+					paymentSum += bc.Payments[j].Sum
+				}
+
 			}
 		}
 
@@ -1291,26 +1623,38 @@ func BriefCaseView(bc *BriefCase, c *CommonRef, t *TypeRef, useFormat bool) (map
 			note = "Не задано"
 		}
 
+		number := "СФ:" + bc.Invoices[i].Document.Number
+		numberFull := bc.Invoices[i].Document.NumberFull
+		sum := Currency(bc.Invoices[i].Sum)
+		if bc.Invoices[i].IsCorrective {
+			number = "К" + number
+			sum = ""
+		}
+
 		tmp := map[string]interface{}{
 			"ID":          bc.Invoices[i].ID,
 			"ClaimNumber": lawSuit.NumberClaim,                            // Поле "Претензия"
 			"Date":        formatDate(bc.Invoices[i].Document.DocumentAt), // Поле "Дата С/Ф"
-			"Number":      bc.Invoices[i].Document.Number,                 // Поле "Номер С/Ф"
+			"Number":      number,                                         // Поле "Номер С/Ф"
+			"NumberFull":  numberFull,                                     // Поле "Номер С/Ф" полный
 			"Type":        bc.Invoices[i].Document.Analytics,              // Поле "Тип начисления"
 			"Count":       bc.Invoices[i].Count,                           // Кол-во кВт
-			"Sum":         Currency(bc.Invoices[i].Sum),                   // Поле "Начислено"
-			"DebtSum":     Currency(bc.Invoices[i].Sum - payment),         // Поле "Долг в претензии"
-			"Payment":     Currency(payment),                              // Поле "Оплачено"
-			"Balance":     Currency(bc.Invoices[i].Sum - payment),         // Поле "Остаток"
+			"Sum":         sum,                                            // Поле "Начислено"
+			"Correction":  Currency(correctionSum),                        // Поле "Корректировка"
+			"DebtSum":     Currency(bc.Invoices[i].Sum - paymentSum),      // Поле "Долг в претензии"
+			"Payment":     Currency(paymentSum),                           // Поле "Оплачено"
+			"Balance":     Currency(bc.Invoices[i].Sum - paymentSum),      // Поле "Остаток"
 			"Note":        note,                                           // Поле "Примечание"
 		}
 
 		// TODO Аналитики нужно считать отдельно
 		if strings.Trim(bc.Invoices[i].Document.Analytics, " ") == "" {
 			totalSum += bc.Invoices[i].Sum
-			totalDebtSum += bc.Invoices[i].Sum - payment
-			totalPayment += payment
-			totalBalance += bc.Invoices[i].Sum - payment
+			totalCorrectionSum += correctionSum
+			totalPayment += paymentSum
+
+			totalDebtSum += bc.Invoices[i].Sum - paymentSum - correctionSum
+			totalBalance += bc.Invoices[i].Sum - paymentSum - correctionSum
 		}
 
 		invoices = append(invoices, tmp)
@@ -1319,16 +1663,18 @@ func BriefCaseView(bc *BriefCase, c *CommonRef, t *TypeRef, useFormat bool) (map
 	result["Contract_Invoices"] = invoices
 	// Суммы счетов фактур по данному договору
 	result["Contract_TotalInvoices"] = map[string]interface{}{
-		"Sum":     Currency(totalSum),     // Поле "Начислено"
-		"DebtSum": Currency(totalDebtSum), // Поле "Долг в претензии"
-		"Payment": Currency(totalPayment), // Поле "Оплачено"
-		"Balance": Currency(totalBalance), // Поле "Остаток"
+		"Sum":     Currency(totalSum),           // Поле "Начислено"
+		"CorSum":  Currency(totalCorrectionSum), // Поле "Корректировка"
+		"DebtSum": Currency(totalDebtSum),       // Поле "Долг в претензии"
+		"Payment": Currency(totalPayment),       // Поле "Оплачено"
+		"Balance": Currency(totalBalance),       // Поле "Остаток"
 	}
 
 	result["Lawsuit_Period"] = bc.Lawsuit.ClaimPeriodStr
 
 	payments := make([]interface{}, 0)
 	totalSum = 0.0
+	totalCorrectionSum = 0.0
 	totalDebtSum = 0.0
 	totalPayment = 0.0
 	totalBalance = 0.0
@@ -1339,17 +1685,29 @@ func BriefCaseView(bc *BriefCase, c *CommonRef, t *TypeRef, useFormat bool) (map
 			continue
 		}
 
-		invoice := 0.0
+		note := bc.Payments[i].Document.Note
+		if note == "" {
+			note = "Не задано"
+		}
+
+		invoiceSum := 0.0
 		for j := 0; j < len(bc.Invoices); j++ {
 			if bc.Payments[i].InvoiceID == bc.Invoices[j].ID {
-				invoice += bc.Invoices[j].Sum
+				invoiceSum += bc.Invoices[j].Sum
 				break
 			}
 		}
 
-		note := bc.Payments[i].Document.Note
-		if note == "" {
-			note = "Не задано"
+		number := "ПП:" + bc.Payments[i].Document.Number
+		correction := ""
+		payment := Currency(bc.Payments[i].Sum)
+		if bc.Payments[i].Document.DocumentTypeID == 35 {
+			number = "СФ:" + bc.Payments[i].Document.Number
+			correction = Currency(bc.Payments[i].Sum)
+			payment = ""
+		}
+		if bc.Payments[i].IsCorrective {
+			number = "К" + number
 		}
 
 		tmp := map[string]interface{}{
@@ -1357,12 +1715,13 @@ func BriefCaseView(bc *BriefCase, c *CommonRef, t *TypeRef, useFormat bool) (map
 			"InvoiceID":   bc.Payments[i].InvoiceID,                       // Ссылка на С/Ф
 			"ClaimNumber": lawSuit.NumberClaim,                            // Поле "Претензия"
 			"Date":        formatDate(bc.Payments[i].Document.DocumentAt), // Поле "Дата С/Ф"
-			"Number":      bc.Payments[i].Document.Number,                 // Поле "Номер С/Ф"
+			"Number":      number,                                         // Поле "Номер С/Ф"
 			"Type":        bc.Payments[i].Document.Analytics,              // Поле "Тип начисления"
-			"Sum":         Currency(invoice),                              // Поле "Начислено"
-			"DebtSum":     Currency(invoice - bc.Payments[i].Sum),         // Поле "Долг в претензии"
-			"Payment":     Currency(bc.Payments[i].Sum),                   // Поле "Оплачено"
-			"Balance":     Currency(invoice - bc.Payments[i].Sum),         // Поле "Остаток"
+			"Sum":         "",                                             // Поле "Начислено"
+			"Correction":  correction,                                     // Поле "Корректировка"
+			"DebtSum":     "",                                             // Поле "Долг в претензии"
+			"Payment":     payment,                                        // Поле "Оплачено"
+			"Balance":     "",                                             // Поле "Остаток"
 			"Note":        note,                                           // Поле "Примечание"
 		}
 
@@ -1372,10 +1731,15 @@ func BriefCaseView(bc *BriefCase, c *CommonRef, t *TypeRef, useFormat bool) (map
 			if bc.Payments[i].InvoiceID == 0 {
 				totalUnknownPayment += bc.Payments[i].Sum
 			} else {
-				totalSum += invoice
-				totalDebtSum += invoice - bc.Payments[i].Sum
+				totalDebtSum += invoiceSum - bc.Payments[i].Sum
 				totalPayment += bc.Payments[i].Sum
-				totalBalance += invoice - bc.Payments[i].Sum
+				totalBalance += invoiceSum - bc.Payments[i].Sum
+
+				if bc.Payments[i].IsCorrective {
+					totalCorrectionSum += bc.Payments[i].Sum
+				} else {
+					totalSum += invoiceSum
+				}
 			}
 		}
 
@@ -1385,10 +1749,11 @@ func BriefCaseView(bc *BriefCase, c *CommonRef, t *TypeRef, useFormat bool) (map
 	result["Contract_Payments"] = payments
 	// Суммы платёжных документов по данному договору
 	result["Contract_TotalPayments"] = map[string]interface{}{
-		"Sum":     Currency(totalSum),     // Поле "Начислено"
-		"DebtSum": Currency(totalDebtSum), // Поле "Долг в претензии"
-		"Payment": Currency(totalPayment), // Поле "Оплачено"
-		"Balance": Currency(totalBalance), // Поле "Остаток"
+		"Sum":     Currency(totalSum),           // Поле "Начислено"
+		"CorSum":  Currency(totalCorrectionSum), // Поле "Корректировка"
+		"DebtSum": Currency(totalDebtSum),       // Поле "Долг в претензии"
+		"Payment": Currency(totalPayment),       // Поле "Оплачено"
+		"Balance": Currency(totalBalance),       // Поле "Остаток"
 	}
 	// Суммы нераспознанных платёжных документов по данному договору
 	result["Contract_TotalUnknownPayments"] = map[string]interface{}{
@@ -1406,6 +1771,7 @@ func BriefCaseView(bc *BriefCase, c *CommonRef, t *TypeRef, useFormat bool) (map
 	}
 	// Наименование ЮЛ
 	result["Organization_Name"] = organization.Name
+	result["Organization_FullName"] = organization.FullName
 	// ИНН ЮЛ
 	result["Organization_INN"] = organization.INN
 	// КПП ЮЛ
@@ -1422,17 +1788,35 @@ func BriefCaseView(bc *BriefCase, c *CommonRef, t *TypeRef, useFormat bool) (map
 	}
 	result["Organization_CategoryID"] = organization.CategoryID
 	result["Organization_Category"] = category
-	// Ликвидность организации
-	if organization.IsLiquidated {
-		result["Organization_Liquidity"] = "Ликвидирован"
-	} else {
-		result["Organization_Liquidity"] = "Действующий"
+	// Состояние организации
+	state := "Действующее"
+	code := "1"
+	color := "green"
+	for i := 0; i < len(t.OrganizationStateTypes); i++ {
+		if t.OrganizationStateTypes[i].ID == organization.StateID {
+			state = t.OrganizationStateTypes[i].Name
+			code = t.OrganizationStateTypes[i].Code
+			color = t.OrganizationStateTypes[i].Color
+			break
+		}
 	}
-	if organization.IsBankrupt {
-		result["Organization_Bankrupt"] = "Банкрот"
-	} else {
-		result["Organization_Bankrupt"] = "Действующий"
-	}
+	result["Organization_State"] = state
+	result["Organization_StateCode"] = code
+	result["Organization_StateColor"] = color
+	result["Organization_StateID"] = organization.StateID
+
+	// Ликвидность организации - deprecated
+	// if organization.IsLiquidated {
+	// 	result["Organization_Liquidity"] = "Ликвидирован"
+	// } else {
+	// 	result["Organization_Liquidity"] = "Действующий"
+	// }
+	// Банкротство организации - deprecated
+	// if organization.IsBankrupt {
+	// 	result["Organization_Bankrupt"] = "Банкрот"
+	// } else {
+	// 	result["Organization_Bankrupt"] = "Действующий"
+	// }
 
 	FileMail := ""
 	FileMailName := ""
@@ -1443,17 +1827,17 @@ func BriefCaseView(bc *BriefCase, c *CommonRef, t *TypeRef, useFormat bool) (map
 	for i := 0; i < len(bc.Files); i++ {
 		if strings.Contains(bc.Files[i].Name, "Письмо") {
 			FileMail = bc.Files[i].FileID
-			FileMailName = bc.Files[i].FileName
+			FileMailName = bc.Files[i].FullName
 		}
 
 		if strings.Contains(bc.Files[i].Name, "Претензия") {
 			FileClaim = bc.Files[i].FileID
-			FileClaimName = bc.Files[i].FileName
+			FileClaimName = bc.Files[i].FullName
 		}
 
 		if strings.Contains(bc.Files[i].Name, "Реестр") {
 			FileClaimDetail = bc.Files[i].FileID
-			FileClaimDetailName = bc.Files[i].FileName
+			FileClaimDetailName = bc.Files[i].FullName
 		}
 	}
 	result["File_Mail"] = FileMail
@@ -1465,26 +1849,27 @@ func BriefCaseView(bc *BriefCase, c *CommonRef, t *TypeRef, useFormat bool) (map
 
 	// TODO Переделать под нормальные статусы
 	if lawSuit.NotifyClaimDone {
-		result["Notify_StatusDebt"] = fmt.Sprintf("%v %q %v", 1401, contract.Email, "Доставлено успешно")
+		result["Notify_ClaimStatus"] = fmt.Sprintf("%v", "Доставлено успешно")
 	} else if lawSuit.NotifyClaimAt.Before(time.Now().AddDate(-10, 1, 1)) {
-		result["Notify_StatusDebt"] = fmt.Sprintf("%v %q %v", 1401, contract.Email, "Ожидание")
+		result["Notify_ClaimStatus"] = fmt.Sprintf("%v", "Ожидание")
 	} else if !contract.IsValidEmail {
-		result["Notify_StatusDebt"] = fmt.Sprintf("%v %q %v", 1401, contract.Email, "Не доставлено (недоступен канал)")
+		result["Notify_ClaimStatus"] = fmt.Sprintf("%v", "Не доставлено (недоступен канал)")
 	} else if contract.Email == "" {
-		result["Notify_StatusDebt"] = fmt.Sprintf("%v %q %v", 1401, "email не задан", "Не доставлено (отсутствует канал)")
+		result["Notify_ClaimStatus"] = fmt.Sprintf("%v", "Не доставлено (отсутствует канал)")
+	} else {
+		result["Notify_ClaimStatus"] = fmt.Sprintf("%v", contract.Email)
 	}
-
-	// TODO Переделать под нормальные статусы
 	if lawSuit.NotifyPretrialDone {
-		result["Notify_StatusPretrial"] = fmt.Sprintf("%v %q %v", 1401, contract.Email, "Доставлено успешно")
+		result["Notify_PretrialStatus"] = fmt.Sprintf("%v", "Доставлено успешно")
 	} else if lawSuit.NotifyPretrialAt.Before(time.Now().AddDate(-10, 1, 1)) {
-		result["Notify_StatusPretrial"] = fmt.Sprintf("%v %q %v", 1401, contract.Email, "Ожидание")
+		result["Notify_PretrialStatus"] = fmt.Sprintf("%v", "Ожидание")
 	} else if !contract.IsValidEmail {
-		result["Notify_StatusPretrial"] = fmt.Sprintf("%v %q %v", 1401, contract.Email, "Не доставлено (недоступен канал)")
+		result["Notify_StatusPretrial"] = fmt.Sprintf("%v", "Не доставлено (недоступен канал)")
 	} else if contract.Email == "" {
-		result["Notify_StatusPretrial"] = fmt.Sprintf("%v %q %v", 1401, "email не задан", "Не доставлено (отсутствует канал)")
+		result["Notify_PretrialStatus"] = fmt.Sprintf("%v", "Не доставлено (отсутствует канал)")
+	} else {
+		result["Notify_PretrialStatus"] = fmt.Sprintf("%v", contract.Email)
 	}
-
 	result["Notify_ClaimChannel"] = lawSuit.NotifyClaimChannel
 	result["Notify_ClaimCode"] = lawSuit.NotifyClaimCode
 	result["Notify_ClaimDone"] = lawSuit.NotifyClaimDone
@@ -1493,7 +1878,6 @@ func BriefCaseView(bc *BriefCase, c *CommonRef, t *TypeRef, useFormat bool) (map
 	result["Notify_PretrialCode"] = lawSuit.NotifyPretrialCode
 	result["Notify_PretrialDone"] = lawSuit.NotifyPretrialDone
 	result["Notify_PretrialMailingCode"] = lawSuit.NotifyPretrialMailingCode
-
 	if useFormat {
 		result["Notify_ClaimAt"] = formatDate(lawSuit.NotifyClaimAt)
 		result["Notify_PretrialAt"] = formatDate(lawSuit.NotifyPretrialAt)
@@ -1501,6 +1885,17 @@ func BriefCaseView(bc *BriefCase, c *CommonRef, t *TypeRef, useFormat bool) (map
 		result["Notify_ClaimAt"] = lawSuit.NotifyClaimAt
 		result["Notify_PretrialAt"] = lawSuit.NotifyPretrialAt
 	}
+
+	hashtags := make([]interface{}, 0)
+	for i := 0; i < len(bc.Hashtags); i++ {
+		tmp := map[string]interface{}{
+			"ID":          bc.Hashtags[i].ID,
+			"Name":        bc.Hashtags[i].Name,
+			"Description": bc.Hashtags[i].Description,
+		}
+		hashtags = append(hashtags, tmp)
+	}
+	result["Lawsuit_Hashtags"] = hashtags
 
 	return result, nil
 }
@@ -1535,6 +1930,9 @@ func MailTemplateView(bc *BriefCase) (map[string]interface{}, error) {
 		return result, fmt.Errorf("MailTemplateView, BriefCase is nil")
 	}
 
+	// {"cmdType":"mailing","mailing":{"head":{"protVer":"1.0.1","sysId":"RAPIRA","sourceSystem":"BS012","created":"2023-01-23 13:03:59","minProcVer":"1.0.1","senderVer":"1.0.1"},"command":"init","mailingList":[{"mailingCode":"TEST5_CLAIMDEBT20230119T132742","mailingPhaseCode":"1/1","startAt":"","timezone":"0","endAt":""}]}}
+	// {"cmdType":"customerTemplateMessage","customerTemplateMessage":{"head":{"protVer":"1.0.1","sysId":"RAPIRA","sourceSystem":"BS012","created":"2023-01-23 13:03:59","minProcVer":"1.0.1","senderVer":"1.0.1"},"mailingCode":"TEST5_CLAIMDEBT20230119T132742","mailingPhaseCode":"1/1","templateCode":"CLAIMPRETRIAL","channelCode":"1401","fieldList":[{"contactInfo":"nechaevaa@atomsbt.ru","userId":"","userAddress":"183039, г. Мурманск, ул. Новое Плато, д.5, кв.60","persAcc":"5140145126","isOrganisationAcc":"1","header":"Досудебная претензия","dbtDate":"2022-09-30","dbtSum":"12 372,12","infoPhone":"9021356077","claimDate":"25.12.2022","claimPretrialDate":"28.12.2022","contractDate":"15.11.2018","contractNumber":"5140145126","dbtSumPeriod":"12 372,12","dbtSumFull":"14 460,29","lkLink":"https://lkul-murmansk.atomsbt.ru/","organisation":"","attachment":""}]}}
+
 	dbtSumFull := bc.Lawsuit.DebtSum +
 		bc.Lawsuit.Penny +
 		bc.Lawsuit.Penalty +
@@ -1544,13 +1942,33 @@ func MailTemplateView(bc *BriefCase) (map[string]interface{}, error) {
 	template := "CLAIMDEBT"
 	channel := "1401" // электронная почта
 	mailingCode := bc.Lawsuit.NotifyClaimMailingCode
-
-	if bc.Lawsuit.Status.Code != "1" {
+	if bc.Lawsuit.Status.Code != "1" || bc.Lawsuit.Contract.Email == "" {
 		subject = "Досудебная претензия"
 		template = "CLAIMPRETRIAL"
-		channel = "1401"
-		// channel := "1406" // Почта России
+		if bc.Lawsuit.Contract.Email == "" || !bc.Lawsuit.Contract.IsValidEmail {
+			channel = "1406" // Почта России
+		}
 		mailingCode = bc.Lawsuit.NotifyPretrialMailingCode
+
+		attachments := make([]interface{}, 0)
+		for i := 0; i < len(bc.Files); i++ {
+			if !strings.Contains(bc.Files[i].Name, "Претензия") {
+				continue
+			}
+			tmp := map[string]interface{}{
+				"bucketName": "claim",
+				// "fileName":      bc.Files[i].FileName, // Тут название без с расширением
+				"fileName":      bc.Files[i].Name, // Тут название без расширения
+				"fileExtension": bc.Files[i].Extension,
+				"fileSizeByte":  bc.Files[i].Size,
+				"pathToFile":    bc.Files[i].FullName,
+				"eTag":          bc.Files[i].FileID,
+			}
+			attachments = append(attachments, tmp)
+			// Получаем только первый файл, поскольку их вообще по БП не должно быть больше
+			break
+		}
+		result["attachments"] = attachments // Вложения
 	}
 
 	// Курск - https://lkul-kursk.atomsbt.ru/
@@ -1560,77 +1978,135 @@ func MailTemplateView(bc *BriefCase) (map[string]interface{}, error) {
 	// Хакасия - https://lkul-khakasia.atomsbt.ru/
 	lkLink := bc.Lawsuit.Branch.PersonalAreaLink
 
-	// {"cmdType":"mailing","mailing":{"head":{"protVer":"1.0.1","sysId":"RAPIRA","sourceSystem":"BS012","created":"2023-01-23 13:03:59","minProcVer":"1.0.1","senderVer":"1.0.1"},"command":"init","mailingList":[{"mailingCode":"TEST5_CLAIMDEBT20230119T132742","mailingPhaseCode":"1/1","startAt":"","timezone":"0","endAt":""}]}}
-
-	// {"cmdType":"customerTemplateMessage","customerTemplateMessage":{"head":{"protVer":"1.0.1","sysId":"RAPIRA","sourceSystem":"BS012","created":"2023-01-23 13:03:59","minProcVer":"1.0.1","senderVer":"1.0.1"},"mailingCode":"TEST5_CLAIMDEBT20230119T132742","mailingPhaseCode":"1/1","templateCode":"CLAIMPRETRIAL","channelCode":"1401","fieldList":[{"contactInfo":"nechaevaa@atomsbt.ru","userId":"","userAddress":"183039, г. Мурманск, ул. Новое Плато, д.5, кв.60","persAcc":"5140145126","isOrganisationAcc":"1","header":"Досудебная претензия","dbtDate":"2022-09-30","dbtSum":"12 372,12","infoPhone":"9021356077","claimDate":"25.12.2022","claimPretrialDate":"28.12.2022","contractDate":"15.11.2018","contractNumber":"5140145126","dbtSumPeriod":"12 372,12","dbtSumFull":"14 460,29","lkLink":"https://lkul-murmansk.atomsbt.ru/","organisation":"","attachment":""}]}}
-
-	result["StageCode"] = bc.Lawsuit.Stage.Code                          // Этап
-	result["StatusCode"] = bc.Lawsuit.Status.Code                        // Статус
-	result["mailingCode"] = mailingCode                                  // TODO Код рассылка "CLAIM20221004T112001" Обязательно в таком формате
-	result["templateCode"] = template                                    // TODO Код шаблона (имя-строка на стороне уведомлений)
-	result["channelCode"] = channel                                      // TODO Канал доставки
-	result["lkLink"] = lkLink                                            // Ссылка на Личный кабинет
-	result["claimDate"] = formatDate(bc.Lawsuit.ClaimAt)                 // Дата формирования претензии+3 к.д.
-	result["claimPretrialDate"] = formatDate(bc.Lawsuit.PretrialAt)      // Дата формирования досудебной претензии+5 к.д.
-	result["contactInfo"] = bc.Lawsuit.Contract.Email                    // Endpoint абонента
-	result["contractDate"] = formatDate(bc.Lawsuit.Contract.SignAt)      // Дата договора
-	result["contractNumber"] = bc.Lawsuit.Contract.Number                // Номер договора
-	result["dbtDate"] = bc.Lawsuit.DateFrom.Format("2006-01-02")         // Период
-	result["dbtDateStr"] = russianDate(bc.Lawsuit.DateFrom, true)        // TODO Переделать на строку Период строкой
-	result["dbtSum"] = Currency(bc.Lawsuit.DebtSum)                      // TODO Сумма образовавшейся задолженности
-	result["dbtSumFull"] = Currency(dbtSumFull)                          // Общая сумма долга
-	result["dbtSumPeriod"] = Currency(bc.Lawsuit.DebtSum)                // Сумма долга за период
-	result["mailingSubject"] = subject                                   // Заголовок письма
-	result["infoPhone"] = bc.Lawsuit.Contract.Organization.Phone         // Телефон абонента
-	result["isOrganisationAcc"] = "1"                                    // true // Если организация
-	result["organisation"] = bc.Lawsuit.Contract.Organization.Name       // Организация
+	result["StageCode"] = bc.Lawsuit.Stage.Code                     // Этап
+	result["StatusCode"] = bc.Lawsuit.Status.Code                   // Статус
+	result["mailingCode"] = mailingCode                             // TODO Код рассылка "CLAIM20221004T112001" Обязательно в таком формате
+	result["templateCode"] = template                               // TODO Код шаблона (имя-строка на стороне уведомлений)
+	result["channelCode"] = channel                                 // TODO Канал доставки
+	result["lkLink"] = lkLink                                       // Ссылка на Личный кабинет
+	result["claimDate"] = formatDate(bc.Lawsuit.ClaimAt)            // Дата формирования претензии+3 к.д.
+	result["claimPretrialDate"] = formatDate(bc.Lawsuit.PretrialAt) // Дата формирования досудебной претензии+5 к.д.
+	result["contactInfo"] = bc.Lawsuit.Contract.Email               // Endpoint абонента
+	result["contractDate"] = formatDate(bc.Lawsuit.Contract.SignAt) // Дата договора
+	result["contractNumber"] = bc.Lawsuit.Contract.Number           // Номер договора
+	result["dbtDate"] = bc.Lawsuit.DateFrom.Format("2006-01-02")    // Период
+	result["dbtDateStr"] = russianDate(bc.Lawsuit.DateFrom, true)   // TODO Переделать на строку Период строкой
+	result["dbtSum"] = Currency(bc.Lawsuit.DebtSum)                 // TODO Сумма образовавшейся задолженности
+	result["dbtSumFull"] = Currency(dbtSumFull)                     // Общая сумма долга
+	result["dbtSumPeriod"] = Currency(bc.Lawsuit.DebtSum)           // Сумма долга за период
+	result["mailingSubject"] = subject                              // Заголовок письма
+	result["infoPhone"] = bc.Lawsuit.Contract.Organization.Phone    // Телефон абонента
+	result["isOrganisationAcc"] = "1"                               // Если организация
+	// Организация
+	if strings.Trim(bc.Lawsuit.Contract.Organization.FullName, " ") == "" {
+		result["organisation"] = bc.Lawsuit.Contract.Organization.Name
+	} else {
+		result["organisation"] = bc.Lawsuit.Contract.Organization.FullName
+	}
 	result["persAcc"] = bc.Lawsuit.Contract.Number                       // Лицевой счёт / номер договора
 	result["userAddress"] = bc.Lawsuit.Contract.Organization.PostAddress // Почтовый адрес абонента
-
-	attachments := make([]interface{}, 0)
-	for i := 0; i < len(bc.Files); i++ {
-		if !strings.Contains(bc.Files[i].Name, "Претензия") {
-			continue
-		}
-		tmp := map[string]interface{}{
-			"bucketName":    "claim",
-			"fileName":      bc.Files[i].FileName,
-			"fileExtension": bc.Files[i].Extension,
-			"fileSizeByte":  bc.Files[i].Size,
-			"pathToFile":    "",
-			"eTag":          "",
-		}
-		attachments = append(attachments, tmp)
-	}
-	result["attachments"] = attachments // Вложения
 
 	return result, nil
 }
 
 // WhiteListView Белый список договоров
-func WhiteListView(c *CommonRef) ([]interface{}, error) {
-	result := make([]interface{}, 0)
+func WhiteListView(cwl *ContractWhiteList) (object_view.ViewMap, error) {
+	result := object_view.ViewMap{}
 
-	for i := 0; i < len(c.WhiteList); i++ {
-		item := c.WhiteList[i]
+	for i := 0; i < len(*cwl); i++ {
+		item := (*cwl)[i]
+
+		dateFrom := formatDate(item.DateFrom)
+		dateTo := formatDate(item.DateTo)
+
+		if item.DateFrom.Year() <= 2000 {
+			dateFrom = ""
+		}
+		if item.DateTo.Year() >= 2100 {
+			dateTo = ""
+		}
 
 		tmp := map[string]interface{}{
 			"ID":                   item.ID,
 			"ContractNumber":       item.Contract.Number,
-			"CreatedAt":            formatTime(item.CreatedAt),
+			"CreatedAt":            formatDate(item.CreatedAt),
 			"CreatedBy":            item.CreatedBy.Name,
-			"DateFrom":             formatTime(item.DateFrom),
-			"DateTo":               formatTime(item.DateTo),
+			"DateFrom":             dateFrom,
+			"DateFromDatePicker":   item.DateFrom.Format("2006-01-02"),
+			"DateTo":               dateTo,
+			"DateToDatePicker":     item.DateTo.Format("2006-01-02"),
 			"EDMSLink":             item.EDMSLink,
-			"ModifiedAt":           formatTime(item.ModifiedAt),
+			"ModifiedAt":           formatDate(item.ModifiedAt),
 			"ModifiedBy":           item.ModifiedBy.Name,
-			"Note":                 item.Note,
-			"OrganizationCategory": item.Contract.Organization.CategoryID,
+			"OrganizationCategory": item.Contract.Category.Name,
 			"OrganizationINN":      item.Contract.Organization.INN,
-			"Reason":               item.Reason.Name,
+			"OrganizationKPP":      item.Contract.Organization.KPP,
+			"OrganizationName":     item.Contract.Organization.Name,
+			"Reason":               item.Reason,
+			"IsDeleted":            item.IsDeleted,
+			"DeletedAt":            formatDate(item.DeletedAt),
+		}
+		result.Append(fmt.Sprintf("%v", i), tmp)
+	}
+
+	return result, nil
+}
+
+// BlackListView Белый список договоров
+func BlackListView(cbl *ContractBlackList) (object_view.ViewMap, error) {
+	result := object_view.ViewMap{}
+
+	for i := 0; i < len(*cbl); i++ {
+		item := (*cbl)[i]
+
+		dateFrom := formatDate(item.DateFrom)
+		dateTo := formatDate(item.DateTo)
+
+		if item.DateFrom.Year() <= 2000 {
+			dateFrom = ""
+		}
+		if item.DateTo.Year() >= 2100 {
+			dateTo = ""
 		}
 
-		result = append(result, tmp)
+		tmp := map[string]interface{}{
+			"ID":                   item.ID,
+			"ContractNumber":       item.Contract.Number,
+			"CreatedAt":            formatDate(item.CreatedAt),
+			"CreatedBy":            item.CreatedBy.Name,
+			"DateFrom":             dateFrom,
+			"DateFromDatePicker":   item.DateFrom.Format("2006-01-02"),
+			"DateTo":               dateTo,
+			"DateToDatePicker":     item.DateTo.Format("2006-01-02"),
+			"EDMSLink":             item.EDMSLink,
+			"ModifiedAt":           formatDate(item.ModifiedAt),
+			"ModifiedBy":           item.ModifiedBy.Name,
+			"OrganizationCategory": item.Contract.Category.Name,
+			"OrganizationINN":      item.Contract.Organization.INN,
+			"OrganizationKPP":      item.Contract.Organization.KPP,
+			"OrganizationName":     item.Contract.Organization.Name,
+			"Reason":               item.Reason,
+			"IsDeleted":            item.IsDeleted,
+			"DeletedAt":            formatDate(item.DeletedAt),
+		}
+		result.Append(fmt.Sprintf("%v", i), tmp)
+	}
+
+	return result, nil
+}
+
+// HashtagListView Список хештегов
+func HashtagListView(hl *HashtagList) (object_view.ViewMap, error) {
+	result := object_view.ViewMap{}
+
+	for i := 0; i < len(*hl); i++ {
+		item := (*hl)[i]
+
+		tmp := map[string]interface{}{
+			"ID":   item.ID,
+			"Name": item.Name,
+		}
+		result.Append(fmt.Sprintf("%v", i), tmp)
 	}
 
 	return result, nil
@@ -1665,26 +2141,6 @@ func formatDate(date time.Time) string {
 
 func formatTime(date time.Time) string {
 	return date.Format("02.01.2006 15:04:05")
-}
-
-// PeriodDates Диапазон дат строкой
-// Январь 2022 - Март 2022
-// Январь 2022, Март 2022, Июнь 2022
-// Январь 2022, Март 2022 - Июнь 2022
-// TODO Реализовать сложный (составной) период
-func PeriodDates(date1 time.Time, date2 time.Time) string {
-	if date1.Year() == date2.Year() && date1.Month() == date2.Month() {
-		return fmt.Sprintf("%v",
-			date2.Format("01.2006"))
-	} else if date1.Before(date2) {
-		return fmt.Sprintf("%v-%v",
-			date1.Format("01.2006"),
-			date2.Format("01.2006"))
-	} else {
-		return fmt.Sprintf("%v-%v",
-			date2.Format("01.2006"),
-			date1.Format("01.2006"))
-	}
 }
 
 func russianDate(date time.Time, long bool) string {

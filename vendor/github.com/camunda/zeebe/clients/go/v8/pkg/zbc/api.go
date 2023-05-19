@@ -31,7 +31,11 @@ type Client interface {
 	NewSetVariablesCommand() commands.SetVariablesCommandStep1
 	NewResolveIncidentCommand() commands.ResolveIncidentCommandStep1
 
+	NewEvaluateDecisionCommand() commands.EvaluateDecisionCommandStep1
+
 	NewPublishMessageCommand() commands.PublishMessageCommandStep1
+
+	NewBroadcastSignalCommand() commands.BroadcastSignalCommandStep1
 
 	NewActivateJobsCommand() commands.ActivateJobsCommandStep1
 	NewCompleteJobCommand() commands.CompleteJobCommandStep1

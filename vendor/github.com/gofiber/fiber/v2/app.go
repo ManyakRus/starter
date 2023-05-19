@@ -30,7 +30,7 @@ import (
 )
 
 // Version of current fiber package
-const Version = "2.42.0"
+const Version = "2.46.0"
 
 // Handler defines a function to serve HTTP requests.
 type Handler = func(*Ctx) error
@@ -847,7 +847,7 @@ func (app *App) HandlersCount() uint32 {
 //
 // Shutdown does not close keepalive connections so its recommended to set ReadTimeout to something else than 0.
 func (app *App) Shutdown() error {
-	return app.shutdownWithContext(context.Background())
+	return app.ShutdownWithContext(context.Background())
 }
 
 // ShutdownWithTimeout gracefully shuts down the server without interrupting any active connections. However, if the timeout is exceeded,
@@ -860,11 +860,15 @@ func (app *App) Shutdown() error {
 func (app *App) ShutdownWithTimeout(timeout time.Duration) error {
 	ctx, cancelFunc := context.WithTimeout(context.Background(), timeout)
 	defer cancelFunc()
-	return app.shutdownWithContext(ctx)
+	return app.ShutdownWithContext(ctx)
 }
 
-// shutdownWithContext shuts down the server including by force if the context's deadline is exceeded.
-func (app *App) shutdownWithContext(ctx context.Context) error {
+// ShutdownWithContext shuts down the server including by force if the context's deadline is exceeded.
+//
+// Make sure the program doesn't exit and waits instead for ShutdownWithTimeout to return.
+//
+// ShutdownWithContext does not close keepalive connections so its recommended to set ReadTimeout to something else than 0.
+func (app *App) ShutdownWithContext(ctx context.Context) error {
 	if app.hooks != nil {
 		defer app.hooks.executeOnShutdownHooks()
 	}
@@ -1048,13 +1052,18 @@ func (app *App) serverErrorHandler(fctx *fasthttp.RequestCtx, err error) {
 	c := app.AcquireCtx(fctx)
 	defer app.ReleaseCtx(c)
 
-	var errNetOP *net.OpError
+	var (
+		errNetOP *net.OpError
+		netErr   net.Error
+	)
 
 	switch {
 	case errors.As(err, new(*fasthttp.ErrSmallBuffer)):
 		err = ErrRequestHeaderFieldsTooLarge
 	case errors.As(err, &errNetOP) && errNetOP.Timeout():
 		err = ErrRequestTimeout
+	case errors.As(err, &netErr):
+		err = ErrBadGateway
 	case errors.Is(err, fasthttp.ErrBodyTooLarge):
 		err = ErrRequestEntityTooLarge
 	case errors.Is(err, fasthttp.ErrGetOnly):
@@ -1081,12 +1090,7 @@ func (app *App) startupProcess() *App {
 	app.mutex.Lock()
 	defer app.mutex.Unlock()
 
-	// add routes of sub-apps
-	app.mountFields.subAppsRoutesAdded.Do(func() {
-		app.appendSubAppLists(app.mountFields.appList)
-		app.addSubAppsRoutes(app.mountFields.appList)
-		app.generateAppListKeys()
-	})
+	app.mountStartupProcess()
 
 	// build route tree stack
 	app.buildTree()

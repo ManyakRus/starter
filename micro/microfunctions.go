@@ -290,7 +290,7 @@ func Trim(s string) string {
 	return Otvet
 }
 
-// Max returns the larger of x or y.
+// Max returns the largest of x or y.
 func Max(x, y int) int {
 	if x < y {
 		return y
@@ -298,7 +298,7 @@ func Max(x, y int) int {
 	return x
 }
 
-// Min returns the smaller of x or y.
+// Min returns the smallest of x or y.
 func Min(x, y int) int {
 	if x > y {
 		return y
@@ -306,7 +306,7 @@ func Min(x, y int) int {
 	return x
 }
 
-// Max returns the larger of x or y.
+// Max returns the largest of x or y.
 func MaxInt64(x, y int64) int64 {
 	if x < y {
 		return y
@@ -314,9 +314,25 @@ func MaxInt64(x, y int64) int64 {
 	return x
 }
 
-// Min returns the smaller of x or y.
+// Min returns the smallest of x or y.
 func MinInt64(x, y int64) int64 {
 	if x > y {
+		return y
+	}
+	return x
+}
+
+// MaxDate returns the largest of x or y.
+func MaxDate(x, y time.Time) time.Time {
+	if x.Before(y) == true {
+		return y
+	}
+	return x
+}
+
+// MinDate returns the smallest of x or y.
+func MinDate(x, y time.Time) time.Time {
+	if x.Before(y) == false {
 		return y
 	}
 	return x
