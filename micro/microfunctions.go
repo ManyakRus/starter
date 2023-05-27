@@ -218,6 +218,23 @@ func ProgramDir_Common() string {
 		}
 	}
 
+	substr = "\\temp\\"
+	pos1 = strings.Index(sdir, substr)
+	if pos1 >= 0 {
+		filename = CurrentFilename()
+		dir = filepath.Dir(filename)
+
+		substr := SeparatorFile() + "vendor" + SeparatorFile()
+		pos_vendor := strings.Index(strings.ToLower(dir), substr)
+		if pos_vendor >= 0 {
+			dir = dir[0:pos_vendor]
+		} else if dir[len(dir)-5:] == "micro" {
+			dir = FindDirUp(dir)
+			//dir = FindDirUp(dir)
+			//dir = FindDirUp(dir)
+		}
+	}
+
 	//dir, err := os.Getwd()
 	//if err != nil {
 	//	log.Fatalln(err)
