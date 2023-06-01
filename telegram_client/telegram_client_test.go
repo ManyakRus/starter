@@ -35,6 +35,7 @@ func TestTimeLimit(t *testing.T) {
 }
 
 func TestSendMessage(t *testing.T) {
+	var err error
 	config.LoadEnv()
 	//stopapp.StartWaitStop()
 
@@ -44,9 +45,10 @@ func TestSendMessage(t *testing.T) {
 
 	CreateTelegramClient(nil)
 
-	err := ConnectTelegram()
+	err = ConnectTelegram()
 	if err != nil {
 		t.Error("telegramclient_test.TestSendMessage() error: ", err)
+		return
 	}
 
 	text := "Test www.ya.ru " + time.Now().String()

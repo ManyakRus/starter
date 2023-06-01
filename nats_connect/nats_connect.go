@@ -1,8 +1,10 @@
 package nats_connect
 
 import (
+	"context"
 	"github.com/nats-io/nats.go"
 	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/micro"
 	"github.com/ManyakRus/starter/ping"
 	"os"
 	//"github.com/ManyakRus/starter/common/v0/micro"
@@ -120,4 +122,25 @@ func FillSettings() {
 	//}
 
 	//
+}
+
+// SendMessageCtx - Отправляет сообщение, учитывает таймаут контекста
+func SendMessageCtx(ctx context.Context, subject string, data []byte) error {
+	var err error
+
+	fn := func() error {
+		err = SendMessage(subject, data)
+		return err
+	}
+	err = micro.GoGo(ctx, fn)
+	return err
+}
+
+// SendMessage - Отправляет сообщение
+func SendMessage(subject string, data []byte) error {
+	var err error
+
+	err = Conn.Publish(subject, data)
+
+	return err
 }

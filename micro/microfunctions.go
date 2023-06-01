@@ -204,6 +204,7 @@ func ProgramDir_Common() string {
 	substr := "/tmp/"
 	pos1 := strings.Index(sdir, substr)
 	if pos1 >= 0 {
+		//linux
 		filename = CurrentFilename()
 		dir = filepath.Dir(filename)
 
@@ -216,22 +217,23 @@ func ProgramDir_Common() string {
 			//dir = FindDirUp(dir)
 			//dir = FindDirUp(dir)
 		}
-	}
+	} else {
+		//Windows
+		substr = "\\temp\\"
+		pos1 = strings.Index(sdir, substr)
+		if pos1 >= 0 {
+			filename = CurrentFilename()
+			dir = filepath.Dir(filename)
 
-	substr = "\\temp\\"
-	pos1 = strings.Index(sdir, substr)
-	if pos1 >= 0 {
-		filename = CurrentFilename()
-		dir = filepath.Dir(filename)
-
-		substr := SeparatorFile() + "vendor" + SeparatorFile()
-		pos_vendor := strings.Index(strings.ToLower(dir), substr)
-		if pos_vendor >= 0 {
-			dir = dir[0:pos_vendor]
-		} else if dir[len(dir)-5:] == "micro" {
-			dir = FindDirUp(dir)
-			//dir = FindDirUp(dir)
-			//dir = FindDirUp(dir)
+			substr := SeparatorFile() + "vendor" + SeparatorFile()
+			pos_vendor := strings.Index(strings.ToLower(dir), substr)
+			if pos_vendor >= 0 {
+				dir = dir[0:pos_vendor]
+			} else if dir[len(dir)-5:] == "micro" {
+				dir = FindDirUp(dir)
+				//dir = FindDirUp(dir)
+				//dir = FindDirUp(dir)
+			}
 		}
 	}
 

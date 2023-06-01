@@ -115,7 +115,7 @@ func SendMessage(phone_send_to string, text string) (int, error) {
 
 	//ctxMain := contextmain.GetContext()
 	ctxMain := context.Background()
-	ctx, cancel := context.WithTimeout(ctxMain, 600*time.Second)
+	ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second)
 	defer cancel()
 
 	sender := message.NewSender(api)
@@ -125,8 +125,11 @@ func SendMessage(phone_send_to string, text string) (int, error) {
 
 	target := sender.Resolve(phone_send_to)
 	target.NoForwards()
+
+	//отправка сообщения
 	UpdatesClass, err := target.Text(ctx, text)
 
+	//проверка на ошибки
 	isFlood := false
 	if err != nil {
 		textFind := "peer: can't resolve phone"
@@ -256,8 +259,25 @@ func (a termAuth) Code(ctx context.Context, _ *tg.AuthSentCode) (string, error) 
 		return "", nil
 	}
 
+	//Stdin, _ := io.Pipe() //нужен т.к. не работает в тест
+
+	//r, _ := io.Pipe()
+	//scanner := bufio.NewScanner(r)
+	//msg := "Enter code from telegram: "
+	//fmt.Fprintln(os.Stdout, msg)
+	//
+	//scanner.Scan()
+	//if err := scanner.Err(); err != nil {
+	//	log.Fatal(err)
+	//}
+	//code := scanner.Text()
+	//if len(code) == 0 {
+	//	log.Fatal("empty input")
+	//}
+
 	fmt.Print("Enter code: ")
 	code, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	//code, err := bufio.NewReader(os.Stdin).ReadString('\n')
 	if err != nil {
 		return "", err
 	}
@@ -284,7 +304,7 @@ func (s *memorySession) LoadSession(context.Context) ([]byte, error) {
 	cpy, err := ioutil.ReadFile(filenameSession)
 	if err != nil {
 		cpy = nil
-		log.Info(err)
+		log.Error(err)
 		return nil, nil
 		//return nil, session.ErrNotFound
 	}
@@ -322,6 +342,10 @@ func (s *memorySession) StoreSession(ctx context.Context, data []byte) error {
 // CreateTelegramClient создание клиента Телеграм
 func CreateTelegramClient(func_OnNewMessage func(ctx context.Context, entities tg.Entities, u *tg.UpdateNewMessage) error) {
 	// https://core.telegram.org/api/obtaining_api_id
+
+	if Settings.TELEGRAM_APP_ID == 0 {
+		FillSettings()
+	}
 
 	programDir := micro.ProgramDir()
 	filenameSession = programDir + "session.txt"
@@ -397,12 +421,13 @@ func ConnectTelegram() error {
 
 	bg.WithContext(ctx)
 	var err error
+	//Option := bg.WithContext(ctx)
 	stopTelegramFunc, err = bg.Connect(client)
 	if err != nil {
 		log.Fatalln("Can not connect to Telegram ! Error: ", err)
 	}
 
-	micro.Sleep(10) //не успевает
+	micro.Sleep(100) //не успевает
 	//for i := 1; i <= 5; i++ {
 	//	err = client.Ping(ctx)
 	//	if err != nil {

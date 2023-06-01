@@ -1,10 +1,13 @@
 package nats_connect
 
 import (
+	"context"
 	"github.com/ManyakRus/starter/config"
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/micro"
 	"testing"
+	"time"
+
 	//"github.com/ManyakRus/starter/common/v0/logger"
 	"github.com/ManyakRus/starter/stopapp"
 )
@@ -54,8 +57,26 @@ func TestWaitStop(t *testing.T) {
 }
 
 func TestConnect(t *testing.T) {
-	//ProgramDir := micro.ProgramDir_Common()
 	config.LoadEnv()
 	Connect()
-	CloseConnection()
+	defer CloseConnection()
+}
+
+func TestSendMessageCtx(t *testing.T) {
+
+	config.LoadEnv()
+	Connect()
+	defer CloseConnection()
+
+	ctxMain := contextmain.GetContext()
+	ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second)
+	defer cancel()
+
+	Subject := "TESTING"
+	Data := []byte("testing")
+	err := SendMessageCtx(ctx, Subject, Data)
+	if err != nil {
+		t.Error("TestSendMessageCtx() error: ", err)
+	}
+
 }

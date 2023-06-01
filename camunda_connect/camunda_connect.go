@@ -232,6 +232,7 @@ func Send_BPMN_File(BPMN_filename string) {
 	}
 
 	FileName = dir + FileName
+	log.Info("Load .bpmn file from: ", FileName)
 
 	_, err = Client.NewDeployResourceCommand().AddResourceFile(FileName).Send(ctx)
 	if err != nil {
