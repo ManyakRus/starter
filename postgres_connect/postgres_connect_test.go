@@ -21,7 +21,7 @@ func TestConnect_err(t *testing.T) {
 	config.LoadEnv()
 	err := Connect_err()
 	if err != nil {
-		t.Error("TestConnect error: ", err)
+		t.Error("TestConnect() error: ", err)
 	}
 
 	err = CloseConnection_err()
@@ -56,7 +56,7 @@ func TestReconnect(t *testing.T) {
 	config.LoadEnv()
 	err := Connect_err()
 	if err != nil {
-		t.Error("TestIsClosed Connect() error: ", err)
+		t.Error("TestReconnect() Connect_err() error: ", err)
 	}
 
 	//ctx := context.Background()

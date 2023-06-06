@@ -219,13 +219,10 @@ func CloseConnection() {
 
 }
 
-// WaitStop - ожидает отмену глобального контекста или сигнала завершения приложения
+// WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
 
 	select {
-	//case <-stopapp.SignalInterrupt:
-	//	log.Warn("Interrupt clean shutdown.")
-	//	contextmain.CancelContext()
 	case <-contextmain.GetContext().Done():
 		log.Warn("Context app is canceled.")
 	}

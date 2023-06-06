@@ -128,7 +128,7 @@ type Contract struct {
 	IndividualID       int64                `json:"individual_id"          gorm:"column:individual_id;default:null"`
 	IsIndOrganization  bool                 `json:"is_ind_organization"    gorm:"column:is_ind_organization;default:false"`
 	IsOrganization     bool                 `json:"is_organization"        gorm:"column:is_organization;default:false"`
-	IsValidEmail       bool                 `json:"is_valid_email"         gorm:"column:is_valid_email;default:false"`
+	IsValidEmail       bool                 `json:"is_valid_email"         gorm:"column:is_valid_email;default:true"`
 	Number             string               `json:"number"                 gorm:"column:number;default:\"\""`
 	Organization       Organization         `json:"organization"           gorm:"-:all"`
 	OrganizationID     int64                `json:"organization_id"        gorm:"column:organization_id;default:null"`
@@ -216,6 +216,7 @@ type Lawsuit struct {
 	Percent395                float64           `json:"percent_395"             gorm:"column:percent_395;default:0"`
 	PretrialAt                time.Time         `json:"pretrial_at"             gorm:"column:pretrial_at;default:null"` // Досудебная претензия. Оплатить до.
 	ProcessStartedAt          time.Time         `json:"process_started_at"      gorm:"column:process_started_at;default:null"`
+	ProcessKey                string            `json:"process_key"             gorm:"column:process_key;default:\"\""`
 	Reason                    LawsuitReasonType `json:"reason"                  gorm:"-:all"`
 	ReasonID                  int64             `json:"reason_id"               gorm:"column:reason_id;default:null"`
 	RestrictSum               float64           `json:"restrict_sum"            gorm:"column:restrict_sum;default:0"`
@@ -403,6 +404,16 @@ type Organization struct {
 	// LegalType      LegalType             `json:"legal_type"      gorm:"-:all"` // TODO LegalType
 
 	Accounts []Account `json:"accounts"        gorm:"-:all"`
+}
+
+type OrganizationCasebook struct {
+	CommonStruct
+	INN            string    `json:"inn"             gorm:"column:inn;default:\"\""`
+	JSONFileID     int64     `json:"json_file_id"    gorm:"column:json_file_id;default:null"`
+	KPP            string    `json:"kpp"             gorm:"column:kpp;default:\"\""`
+	OrganizationID int64     `json:"organization_id" gorm:"column:organization_id;default:null"`
+	PDFFileID      int64     `json:"pdf_file_id"     gorm:"column:pdf_file_id;default:null"`
+	UpdatedAt      time.Time `json:"updated_at"      gorm:"column:updated_at;default:null"`
 }
 
 // OrganizationCategoryType Категория организаций (справочник).
@@ -1942,7 +1953,8 @@ func MailTemplateView(bc *BriefCase) (map[string]interface{}, error) {
 	template := "CLAIMDEBT"
 	channel := "1401" // электронная почта
 	mailingCode := bc.Lawsuit.NotifyClaimMailingCode
-	if bc.Lawsuit.Status.Code != "1" || bc.Lawsuit.Contract.Email == "" {
+	inBlackList := false // TODO Добавить проверку на наличие в чёрном списке
+	if bc.Lawsuit.Status.Code != "1" || bc.Lawsuit.Contract.Email == "" || inBlackList {
 		subject = "Досудебная претензия"
 		template = "CLAIMPRETRIAL"
 		if bc.Lawsuit.Contract.Email == "" || !bc.Lawsuit.Contract.IsValidEmail {

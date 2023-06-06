@@ -223,9 +223,9 @@ func StopWhatsApp() {
 
 }
 
-// WaitStop - ожидает отмену глобального контекста или сигнала завершения приложения
+// WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
-	//stopapp.GetWaitGroup_Main().Add(1)
+
 	select {
 	case <-contextmain.GetContext().Done():
 		log.Warn("Context app is canceled.")

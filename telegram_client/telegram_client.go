@@ -526,7 +526,7 @@ func FindMessageByID(ctx context.Context, id int) (*tg.Message, error) {
 	return Otvet, err
 }
 
-// WaitStop - ожидает отмену глобального контекста или сигнала завершения приложения
+// WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
 	//stopapp.GetWaitGroup_Main().Add(1)
 	select {

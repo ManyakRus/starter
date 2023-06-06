@@ -196,7 +196,7 @@ func CloseConnection_err() error {
 	return err
 }
 
-// WaitStop - ожидает отмену глобального контекста или сигнала завершения приложения
+// WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
 
 	select {

@@ -177,7 +177,7 @@ func WorkFails(err error, client worker.JobClient, jobKey int64) error {
 	return err1
 }
 
-// WaitStop - ожидает отмену глобального контекста или сигнала завершения приложения
+// WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
 
 	select {

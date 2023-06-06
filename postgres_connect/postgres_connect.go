@@ -5,20 +5,13 @@ package postgres_connect
 import (
 	"context"
 	"errors"
-	"github.com/ManyakRus/starter/logger"
-	"github.com/ManyakRus/starter/ping"
-	"time"
-
-	//"github.com/jackc/pgconn"
-	"os"
-	"sync"
-	//"time"
-
-	//_ "github.com/jackc/pgconn"
-	//_ "github.com/jackc/pgx/v4"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	//log "github.com/sirupsen/logrus"
+	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/ping"
+	"os"
+	"sync"
+	"time"
 
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/micro"
@@ -199,13 +192,10 @@ func CloseConnection_err() error {
 	return err
 }
 
-// WaitStop - ожидает отмену глобального контекста или сигнала завершения приложения
+// WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
 
 	select {
-	//case <-stopapp.SignalInterrupt:
-	//	log.Warn("Interrupt clean shutdown.")
-	//	contextmain.CancelContext()
 	case <-contextmain.GetContext().Done():
 		log.Warn("Context app is canceled.")
 	}
@@ -233,7 +223,7 @@ func StartDB() {
 
 }
 
-// FillSettings загружает переменные окружения в структуру из файла или из переменных окружения
+// FillSettings загружает переменные окружения в структуру из переменных окружения
 func FillSettings() {
 	Settings = SettingsINI{}
 	Settings.DB_HOST = os.Getenv("DB_HOST")

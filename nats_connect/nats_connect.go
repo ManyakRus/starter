@@ -84,7 +84,7 @@ func CloseConnection() {
 	return
 }
 
-// WaitStop - ожидает отмену глобального контекста или сигнала завершения приложения
+// WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
 
 	select {
