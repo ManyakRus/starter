@@ -245,3 +245,85 @@ func TestMinDate(t *testing.T) {
 		t.Error("microfunctions_test.TestMinDate() error: Otvet != ", now)
 	}
 }
+
+func TestCheckINNControlSum(t *testing.T) {
+	Inn := ""
+	err := CheckINNControlSum(Inn)
+	if err == nil {
+		t.Error("TestCheckINNControlSum() error")
+	}
+
+}
+
+func TestCheckINNControlSum10(t *testing.T) {
+
+	Inn := "5111002549"
+	err := CheckINNControlSum10(Inn)
+	if err != nil {
+		t.Error("TestCheckINNControlSum10() error: ", err)
+	}
+
+}
+
+func TestCheckINNControlSum12(t *testing.T) {
+
+	Inn := "510800222725"
+	err := CheckINNControlSum12(Inn)
+	if err != nil {
+		t.Error("TestCheckINNControlSum12() error: ", err)
+	}
+
+}
+
+func TestStringFromInt64(t *testing.T) {
+	Otvet := StringFromInt64(0)
+	if Otvet != "0" {
+		t.Error("TestStringFromInt64() error: != '0'")
+	}
+}
+
+func TestStringDate(t *testing.T) {
+	Otvet := StringDate(time.Now())
+	if Otvet == "" {
+		t.Error("TestStringDate() error: =''")
+	}
+}
+
+func TestProgramDir_bin(t *testing.T) {
+	Otvet := ProgramDir_bin()
+	if Otvet == "" {
+		t.Error("TestProgramDir_bin() error: =''")
+	}
+}
+
+func TestSaveTempFile(t *testing.T) {
+
+	bytes := []byte("123")
+	Otvet := SaveTempFile(bytes)
+	if Otvet == "" {
+		t.Error("TestSaveTempFile() error: Otvet =''")
+	}
+
+}
+
+func TestHash(t *testing.T) {
+	Otvet := Hash("123")
+	if Otvet == 0 {
+		t.Error("TestHash() error: =0")
+	}
+}
+
+func TestTextError(t *testing.T) {
+	err := errors.New("1")
+	s := TextError(err)
+	if s != "1" {
+		t.Error("TestTextError() error")
+	}
+}
+
+func TestGetType(t *testing.T) {
+	Otvet := GetType(1)
+	if Otvet != "int" {
+		t.Error("TestGetType() error: Otvet: ", Otvet)
+	}
+}

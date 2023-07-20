@@ -109,7 +109,7 @@ func Test_termAuth_Phone(t *testing.T) {
 	a := termAuth{
 		phone: "111",
 	}
-	got, err := a.Phone(contextmain.Ctx)
+	got, err := a.Phone(contextmain.GetContext())
 	if got != "111" {
 		t.Error("telegramclient_test.Test_termAuth_Phone() error: ", err)
 	}

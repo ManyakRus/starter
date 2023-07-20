@@ -6,7 +6,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"hash/fnv"
+	"reflect"
 	"runtime"
+	"strconv"
 	"strings"
 	"unicode"
 
@@ -384,4 +387,243 @@ func gogo_chan(fn func() error, chanErr chan error) {
 	chanErr <- err
 }
 
+// CheckInnKpp - проверяет правильность ИНН и КПП
+func CheckInnKpp(Inn, Kpp string, is_individual bool) error {
 
+	var err error
+
+	if Inn == "" {
+		Text1 := "ИНН не должен быть пустой"
+		err = errors.New(Text1)
+		return err
+	}
+
+	if is_individual == true {
+		if len(Inn) != 12 {
+			Text1 := "Длина ИНН должна быть 12 символов"
+			err = errors.New(Text1)
+			return err
+		}
+		if len(Kpp) != 0 {
+			Text1 := "КПП должен быть пустой"
+			err = errors.New(Text1)
+			return err
+		}
+	} else {
+		if len(Inn) != 10 {
+			Text1 := "Длина ИНН должна быть 10 символов"
+			err = errors.New(Text1)
+			return err
+		}
+		if len(Kpp) != 9 {
+			Text1 := "КПП должен быть 9 символов"
+			err = errors.New(Text1)
+			return err
+		}
+
+		err = CheckINNControlSum(Inn)
+	}
+
+	return err
+}
+
+// CheckINNControlSum - проверяет правильность ИНН по контрольной сумме
+func CheckINNControlSum(Inn string) error {
+	var err error
+
+	if len(Inn) == 10 {
+		err = CheckINNControlSum10(Inn)
+	} else if len(Inn) == 12 {
+		err = CheckINNControlSum12(Inn)
+	} else {
+		err = errors.New("ИНН должен быть 10 или 12 символов")
+	}
+
+	return err
+}
+
+// CheckINNControlSum10 - проверяет правильность 10-значного ИНН по контрольной сумме
+func CheckINNControlSum10(Inn string) error {
+	var err error
+
+	MassKoef := [10]int{2, 4, 10, 3, 5, 9, 4, 6, 8, 0}
+
+	var sum int
+	var x int
+	for i, _ := range Inn {
+		s := Inn[i : i+1]
+		var err1 error
+		x, err1 = strconv.Atoi(s)
+		if err1 != nil {
+			err = errors.New("Неправильная цифра в ИНН: " + s)
+			return err
+		}
+
+		sum = sum + x*MassKoef[i]
+	}
+
+	ControlSum := sum % 11
+	ControlSum = ControlSum % 10
+	if ControlSum != x {
+		err = errors.New("Неправильная контрольная сумма ИНН")
+		return err
+	}
+
+	return err
+}
+
+// CheckINNControlSum2 - проверяет правильность 12-значного ИНН по контрольной сумме
+func CheckINNControlSum12(Inn string) error {
+	var err error
+
+	//контрольное чилос по 11 знакам
+	MassKoef := [11]int{7, 2, 4, 10, 3, 5, 9, 4, 6, 8, 0}
+
+	var sum int
+	var x11 int
+	for i := 0; i < 11; i++ {
+		s := Inn[i : i+1]
+		var err1 error
+		x, err1 := strconv.Atoi(s)
+		if err1 != nil {
+			err = errors.New("Неправильная цифра в ИНН: " + s)
+			return err
+		}
+		if i == 10 {
+			x11 = x
+		}
+
+		sum = sum + x*MassKoef[i]
+	}
+
+	ControlSum := sum % 11
+	ControlSum = ControlSum % 10
+
+	if ControlSum != x11 {
+		err = errors.New("Неправильная контрольная сумма ИНН")
+		return err
+	}
+
+	//контрольное чилос по 12 знакам
+	MassKoef2 := [12]int{3, 7, 2, 4, 10, 3, 5, 9, 4, 6, 8, 0}
+
+	var sum2 int
+	var x12 int
+	for i := 0; i < 12; i++ {
+		s := Inn[i : i+1]
+		var err1 error
+		x, err1 := strconv.Atoi(s)
+		if err1 != nil {
+			err = errors.New("Неправильная цифра в ИНН: " + s)
+			return err
+		}
+		if i == 11 {
+			x12 = x
+		}
+
+		sum2 = sum2 + x*MassKoef2[i]
+	}
+
+	ControlSum2 := sum2 % 11
+	ControlSum2 = ControlSum2 % 10
+
+	if ControlSum2 != x12 {
+		err = errors.New("Неправильная контрольная сумма ИНН")
+		return err
+	}
+
+	return err
+}
+
+// StringFromInt64 - возвращает строку из числа
+func StringFromInt64(i int64) string {
+	Otvet := ""
+
+	Otvet = strconv.FormatInt(i, 10)
+
+	return Otvet
+}
+
+// StringDate - возвращает строку дата без времени
+func StringDate(t time.Time) string {
+	Otvet := ""
+
+	Otvet = t.Format("02.01.2006")
+
+	return Otvet
+}
+
+// ProgramDir_bin - возвращает каталог "bin" или каталог программы
+func ProgramDir_bin() string {
+	Otvet := ""
+
+	dir := ProgramDir()
+	FileName := dir + "bin" + SeparatorFile()
+
+	ok, _ := FileExists(FileName)
+	if ok == true {
+		return FileName
+	}
+
+	Otvet = dir
+	return Otvet
+}
+
+// SaveTempFile - записывает массив байт в файл
+func SaveTempFile(bytes []byte) string {
+	Otvet, err := SaveTempFile_err(bytes)
+	if err != nil {
+		TextError := fmt.Sprint("SaveTempFile() error: ", err)
+		print(TextError)
+		panic(TextError)
+	}
+
+	return Otvet
+}
+
+// SaveTempFile_err - записывает массив байт в файл, возвращает ошибку
+func SaveTempFile_err(bytes []byte) (string, error) {
+	Otvet := ""
+
+	// create and open a temporary file
+	f, err := os.CreateTemp("", "") // in Go version older than 1.17 you can use ioutil.TempFile
+	if err != nil {
+		return Otvet, err
+	}
+
+	// close and remove the temporary file at the end of the program
+	defer f.Close()
+	defer os.Remove(f.Name())
+
+	// write data to the temporary file
+	if _, err := f.Write(bytes); err != nil {
+		return Otvet, err
+	}
+
+	Otvet = f.Name()
+
+	return Otvet, err
+}
+
+// Hash - возвращает число хэш из строки
+func Hash(s string) uint32 {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	return h.Sum32()
+}
+
+// TextError - возвращает текст ошибки из error
+func TextError(err error) string {
+	Otvet := ""
+
+	if err != nil {
+		Otvet = err.Error()
+	}
+
+	return Otvet
+}
+
+// GetType - возвращает строку тип объекта
+func GetType(myvar interface{}) string {
+	return reflect.TypeOf(myvar).String()
+}

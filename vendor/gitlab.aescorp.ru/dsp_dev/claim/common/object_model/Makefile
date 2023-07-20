@@ -1,5 +1,5 @@
-## run.test
-run.test:
+## test.run
+test.run:
 	clear
 	go fmt ./...
 	go test -coverprofile cover.out -covermode atomic ./ ./object_storage/... ./object_view/...
@@ -8,7 +8,7 @@ run.test:
 ## mod
 mod:
 	clear
-	go mod tidy -compat=1.17
+	go mod tidy -compat=1.20
 	go mod vendor
 	go fmt ./...
 

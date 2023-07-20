@@ -106,7 +106,10 @@ func TestCreateBucketCtx(t *testing.T) {
 	defer CloseConnection()
 
 	ctxMain := contextmain.GetContext()
-	CreateBucketCtx(ctxMain, "claim", "moscow")
+	err := CreateBucketCtx_err(ctxMain, "claim", "moscow")
+	if err != nil {
+		t.Error("TestCreateBucketCtx() error: ", err)
+	}
 }
 
 func TestUploadFileCtx(t *testing.T) {

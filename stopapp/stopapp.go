@@ -41,6 +41,11 @@ var TotalMessagesSendingNow int32
 // SecondsWaitTotalMessagesSendingNow - количество секунд ожидания для отправки последнего сообщения
 const SecondsWaitTotalMessagesSendingNow = 10
 
+// SetWaitGroup_Main - присваивает внешний WaitGroup
+func SetWaitGroup_Main(wg *sync.WaitGroup) {
+	wgMain = wg
+}
+
 // GetWaitGroup_Main - возвращает группу ожидания завершения всех частей программы
 func GetWaitGroup_Main() *sync.WaitGroup {
 	lockWGMain.Lock()
@@ -50,9 +55,11 @@ func GetWaitGroup_Main() *sync.WaitGroup {
 	//	wgMain = &sync.WaitGroup{}
 	//}
 
-	onceWGMain.Do(func() {
+	if wgMain == nil {
+		//onceWGMain.Do(func() {
 		wgMain = &sync.WaitGroup{}
-	})
+		//})
+	}
 
 	return wgMain
 }

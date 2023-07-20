@@ -13,9 +13,10 @@ type File struct {
 }
 
 type Folder struct {
-	Name    string
-	Files   []*File
-	Folders map[string]*Folder
+	FileName string
+	Name     string
+	Files    []*File
+	Folders  map[string]*Folder
 }
 
 func (f *Folder) String() string {
@@ -30,7 +31,7 @@ func FindFoldersTree(dir string, NeedFolders, NeedFiles, NeedDot bool, exclude s
 	var nodes = map[string]interface{}{}
 	var walkFun filepath.WalkFunc = func(p string, info os.FileInfo, err error) error {
 		if info.IsDir() {
-			nodes[p] = &Folder{path.Base(p), []*File{}, map[string]*Folder{}}
+			nodes[p] = &Folder{p, path.Base(p), []*File{}, map[string]*Folder{}}
 		} else {
 			nodes[p] = &File{path.Base(p)}
 		}
@@ -50,26 +51,34 @@ func FindFoldersTree(dir string, NeedFolders, NeedFiles, NeedDot bool, exclude s
 			parentFolder = nodes[path.Dir(key)].(*Folder)
 		}
 
+		// найдём название Папки/Файла
+		var Name string
+		switch value.(type) {
+		case *File:
+			Name = value.(*File).Name
+		case *Folder:
+			Name = value.(*Folder).Name
+		}
+
+		// проверка скрытые файлы с точкой
+		if NeedDot == false && len(Name) > 0 && Name[0:1] == "." {
+			continue
+		}
+
+		// проверка кроме exclude
+		if exclude != "" && len(Name) >= len(exclude) && Name[0:len(exclude)] == exclude {
+			continue
+		}
+
+		//
 		switch v := value.(type) {
 		case *File:
 			if NeedFiles == false {
 				break
 			}
-			if NeedDot == false && len(v.Name) > 0 && v.Name[0:1] == "." {
-				break
-			}
-			if exclude != "" && len(v.Name) >= len(exclude) && v.Name[0:len(exclude)] == exclude {
-				break
-			}
 			parentFolder.Files = append(parentFolder.Files, v)
 		case *Folder:
 			if NeedFolders == false {
-				break
-			}
-			if NeedDot == false && len(v.Name) > 0 && v.Name[0:1] == "." {
-				break
-			}
-			if exclude != "" && len(v.Name) >= len(exclude) && v.Name[0:len(exclude)] == exclude {
 				break
 			}
 			parentFolder.Folders[v.Name] = v

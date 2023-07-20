@@ -49,7 +49,7 @@ func Connect() {
 		FillSettings()
 	}
 
-	ping.Ping(Settings.MINIO_HOST, Settings.MINIO_PORT)
+	//ping.Ping(Settings.MINIO_HOST, Settings.MINIO_PORT)
 
 	err := Connect_err()
 	if err != nil {

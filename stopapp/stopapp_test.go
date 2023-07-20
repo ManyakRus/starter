@@ -1,5 +1,9 @@
 package stopapp
 
+import (
+	"testing"
+)
+
 //import (
 //	"testing"
 //
@@ -39,3 +43,11 @@ package stopapp
 //func TestWaitTotalMessagesSendingNow(t *testing.T) {
 //	WaitTotalMessagesSendingNow("stopapp_test")
 //}
+
+func TestSetWaitGroup_Main(t *testing.T) {
+	SetWaitGroup_Main(nil)
+	wg := GetWaitGroup_Main()
+	if wg == nil {
+		t.Error("TestSetWaitGroup_Main() error: wg = nil")
+	}
+}
