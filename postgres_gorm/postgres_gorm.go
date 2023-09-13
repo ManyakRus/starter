@@ -260,15 +260,15 @@ func FillSettings() {
 	Settings.DB_USER = os.Getenv("DB_USER")
 	Settings.DB_PASSWORD = os.Getenv("DB_PASSWORD")
 
-	// заполним из переменных оуружения как у Нечаева
-	if Settings.DB_HOST == "" {
-		Settings.DB_HOST = os.Getenv("STORE_HOST")
-		Settings.DB_PORT = os.Getenv("STORE_PORT")
-		Settings.DB_NAME = os.Getenv("STORE_NAME")
-		Settings.DB_SCHEMA = os.Getenv("STORE_SCHEME")
-		Settings.DB_USER = os.Getenv("STORE_LOGIN")
-		Settings.DB_PASSWORD = os.Getenv("STORE_PASSWORD")
-	}
+	//// заполним из переменных оуружения как у Нечаева
+	//if Settings.DB_HOST == "" {
+	//	Settings.DB_HOST = os.Getenv("STORE_HOST")
+	//	Settings.DB_PORT = os.Getenv("STORE_PORT")
+	//	Settings.DB_NAME = os.Getenv("STORE_NAME")
+	//	Settings.DB_SCHEMA = os.Getenv("STORE_SCHEME")
+	//	Settings.DB_USER = os.Getenv("STORE_LOGIN")
+	//	Settings.DB_PASSWORD = os.Getenv("STORE_PASSWORD")
+	//}
 
 	if Settings.DB_HOST == "" {
 		log.Panicln("Need fill DB_HOST ! in os.ENV ")

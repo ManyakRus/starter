@@ -30,6 +30,10 @@ func FindFoldersTree(dir string, NeedFolders, NeedFiles, NeedDot bool, exclude s
 	var tree *Folder
 	var nodes = map[string]interface{}{}
 	var walkFun filepath.WalkFunc = func(p string, info os.FileInfo, err error) error {
+		if info == nil {
+			return nil
+		}
+
 		if info.IsDir() {
 			nodes[p] = &Folder{p, path.Base(p), []*File{}, map[string]*Folder{}}
 		} else {

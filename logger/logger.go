@@ -73,7 +73,7 @@ func SetLevel(LOG_LEVEL string) {
 	}
 
 	if LOG_LEVEL == "" {
-		LOG_LEVEL = "info"
+		LOG_LEVEL = "debug"
 	}
 	level, err := logrus.ParseLevel(LOG_LEVEL)
 	if err != nil {

@@ -200,7 +200,12 @@ func CurrentFilename() string {
 
 // ProgramDir - возвращает главный каталог программы, в конце "/"
 func ProgramDir_Common() string {
-	filename := os.Args[0]
+	//filename := os.Args[0]
+	filename, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+
 	dir := filepath.Dir(filename)
 	sdir := strings.ToLower(dir)
 
@@ -593,7 +598,7 @@ func SaveTempFile_err(bytes []byte) (string, error) {
 
 	// close and remove the temporary file at the end of the program
 	defer f.Close()
-	defer os.Remove(f.Name())
+	//defer os.Remove(f.Name())
 
 	// write data to the temporary file
 	if _, err := f.Write(bytes); err != nil {
@@ -626,4 +631,64 @@ func TextError(err error) string {
 // GetType - возвращает строку тип объекта
 func GetType(myvar interface{}) string {
 	return reflect.TypeOf(myvar).String()
+}
+
+// FindFileNameShort - возвращает имя файла(каталога) без пути
+func FindFileNameShort(path string) string {
+	Otvet := ""
+	if path == "" {
+		return Otvet
+	}
+	Otvet = filepath.Base(path)
+
+	return Otvet
+}
+
+// CurrentDirectory - возвращает текущую директорию ОС
+func CurrentDirectory() string {
+	Otvet, err := os.Getwd()
+	if err != nil {
+		//log.Println(err)
+	}
+
+	return Otvet
+}
+
+// BoolFromInt64 - возвращает true если число <>0
+func BoolFromInt64(i int64) bool {
+	Otvet := false
+
+	if i != 0 {
+		Otvet = true
+	}
+
+	return Otvet
+}
+
+// BoolFromInt - возвращает true если число <>0
+func BoolFromInt(i int) bool {
+	Otvet := false
+
+	if i != 0 {
+		Otvet = true
+	}
+
+	return Otvet
+}
+
+// DeleteFileSeperator - убирает в конце / или \
+func DeleteFileSeperator(dir string) string {
+	Otvet := dir
+
+	len1 := len(Otvet)
+	if len1 == 0 {
+		return Otvet
+	}
+
+	LastWord := Otvet[len1-1 : len1]
+	if LastWord == SeparatorFile() {
+		Otvet = Otvet[0 : len1-1]
+	}
+
+	return Otvet
 }

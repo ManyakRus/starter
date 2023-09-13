@@ -305,7 +305,7 @@ func UploadFileCtx_err(ctx context.Context, bucketName, objectName, filePath str
 		return "", fmt.Errorf("UploadFile, error: %w", err)
 	}
 
-	log.Infof("[INFO] UploadFile, Successfully upload file: %q, size: %d, tag: %s\n", objectName, info.Size, info.ETag)
+	log.Debugf("UploadFile, Successfully upload file: %q, size: %d, tag: %s\n", objectName, info.Size, info.ETag)
 	return info.ETag, nil
 }
 
@@ -345,15 +345,17 @@ func DownloadFileCtx_err(ctx context.Context, bucketName, objectName string) ([]
 
 	Object, err := Conn.GetObject(ctx, bucketName, objectName, miniogo.GetObjectOptions{})
 	if err != nil {
-		log.Panic("GetObject() error: ", err)
-		return Otvet, fmt.Errorf("DownloadFileCtx_err(), error: %w", err)
+		//log.Panic("GetObject() error: ", err)
+		//return Otvet, fmt.Errorf("DownloadFileCtx_err(), error: %w", err)
+		return Otvet, err
 	}
 	defer Object.Close()
 
 	//count, err := Object.Read(Otvet)
 	Otvet, err = io.ReadAll(Object)
 	if err != nil {
-		log.Panic("minio Read() error: ", err)
+		//log.Panic("minio Read() error: ", err)
+		//return Otvet, err
 		return Otvet, err
 	}
 	if len(Otvet) == 0 {

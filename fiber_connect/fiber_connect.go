@@ -50,7 +50,12 @@ func FillSettings() {
 	}
 
 	if Settings.WEBSERVER_PORT == "" {
-		log.Info("Need fill WEBSERVER_PORT ! in OS Environment ")
+		Settings.WEBSERVER_HOST = os.Getenv("WEB_SERVER_HOST")
+		Settings.WEBSERVER_PORT = os.Getenv("WEB_SERVER_PORT")
+	}
+
+	if Settings.WEBSERVER_PORT == "" {
+		log.Warn("Need fill WEBSERVER_PORT ! in OS Environment ")
 		Settings.WEBSERVER_PORT = "3002"
 	}
 

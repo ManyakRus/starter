@@ -3,11 +3,9 @@
 package config
 
 import (
+	"github.com/joho/godotenv"
 	"github.com/ManyakRus/starter/logger"
 	"github.com/ManyakRus/starter/micro"
-	"os"
-
-	"github.com/joho/godotenv"
 	//log "github.com/sirupsen/logrus"
 	//log "github.com/sirupsen/logrus"
 	//"gitlab.aescorp.ru/dsp_dev/notifier/notifier_adp_eml/internal/v0/app/types"
@@ -30,15 +28,15 @@ func LoadEnv_from_file(filename string) {
 
 	err := godotenv.Load(filename)
 	if err != nil {
-		log.Debug("Can not parse .env file: ", filename, " error: "+err.Error())
+		log.Debug("Can not parse .env file: ", filename, " warning: "+err.Error())
 	} else {
 		log.Info("load .env from file: ", filename)
 	}
 
-	LOG_LEVEL := os.Getenv("LOG_LEVEL")
-	if LOG_LEVEL == "" {
-		LOG_LEVEL = "info"
-	}
-	logger.SetLevel(LOG_LEVEL)
+	//LOG_LEVEL := os.Getenv("LOG_LEVEL")
+	//if LOG_LEVEL == "" {
+	//	LOG_LEVEL = "info"
+	//}
+	//logger.SetLevel(LOG_LEVEL)
 
 }

@@ -327,3 +327,42 @@ func TestGetType(t *testing.T) {
 		t.Error("TestGetType() error: Otvet: ", Otvet)
 	}
 }
+
+func TestFindFileNameShort(t *testing.T) {
+	dir := ProgramDir()
+	Otvet := FindFileNameShort(dir)
+	if Otvet == "" {
+		t.Error("TestFindFileNameShort() error: Otvet =''")
+	}
+}
+
+func TestCurrentDirectory(t *testing.T) {
+
+	Otvet := CurrentDirectory()
+	if Otvet == "" {
+		t.Error("TestCurrentDirectory() error: Otvet = ''")
+	}
+}
+
+func TestBoolFromInt64(t *testing.T) {
+	Otvet := BoolFromInt64(111)
+	if Otvet != true {
+		t.Error("TestBoolFromInt64() error: Otvet != true")
+	}
+}
+
+func TestBoolFromInt(t *testing.T) {
+	Otvet := BoolFromInt(111)
+	if Otvet != true {
+		t.Error("TestBoolFromInt64() error: Otvet != true")
+	}
+}
+
+func TestDeleteFileSeperator(t *testing.T) {
+
+	dir := "home" + SeparatorFile()
+	dir = DeleteFileSeperator(dir)
+	if dir != "home" {
+		t.Error("TestDeleteFileSeperator() error")
+	}
+}

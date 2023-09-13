@@ -1,5 +1,5 @@
-SERVICEURL=gitlab.aescorp.ru/dsp_dev/claim/nikitin
-SERVICEURL2=github.com/ManyakRus/starter
+SERVICENAME=nikitin
+SERVICEURL=gitlab.aescorp.ru/dsp_dev/claim/$(SERVICENAME)
 
 FILEMAIN=./internal/v0/app/main.go
 FILEAPP=./bin/app_race
@@ -35,10 +35,12 @@ test.run:
 	go fmt ./...
 	go test -coverprofile cover.out ./...
 	go tool cover -func=cover.out
-graph:
-	goda graph -f "{{.Package.Name}}" "shared($(SERVICEURL)/... $(SERVICEURL2)/...)" | dot -Tsvg -o graph.svg
-dot:
-	goda graph -f "{{.Package.Name}}" "shared($(SERVICEURL)/... $(SERVICEURL2)/...)" >graph.dot
 newrepo:
 	sed -i 's+$(SERVICEURL)+$(NEW_REPO)+g' go.mod
 	find -name *.go -not -path "*/vendor/*"|xargs sed -i 's+$(SERVICEURL)+$(NEW_REPO)+g'
+graph:
+	clear
+	image_packages ./ docs/packages.graphml
+conn:
+	clear
+	image_connections ./ docs/connections.graphml $(SERVICENAME)
