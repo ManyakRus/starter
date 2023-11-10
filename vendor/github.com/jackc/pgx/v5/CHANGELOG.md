@@ -1,3 +1,38 @@
+# 5.5.0 (November 4, 2023)
+
+* Add CollectExactlyOneRow. (Julien GOTTELAND)
+* Add OpenDBFromPool to create *database/sql.DB from *pgxpool.Pool. (Lev Zakharov)
+* Prepare can automatically choose statement name based on sql. This makes it easier to explicitly manage prepared statements.
+* Statement cache now uses deterministic, stable statement names.
+* database/sql prepared statement names are deterministically generated.
+* Fix: SendBatch wasn't respecting context cancellation.
+* Fix: Timeout error from pipeline is now normalized.
+* Fix: database/sql encoding json.RawMessage to []byte.
+* CancelRequest: Wait for the cancel request to be acknowledged by the server. This should improve PgBouncer compatibility. (Anton Levakin)
+* stdlib: Use Ping instead of CheckConn in ResetSession
+* Add json.Marshaler and json.Unmarshaler for Float4, Float8 (Kirill Mironov)
+
+# 5.4.3 (August 5, 2023)
+
+* Fix: QCharArrayOID was defined with the wrong OID (Christoph Engelbert)
+* Fix: connect_timeout for sslmode=allow|prefer (smaher-edb)
+* Fix: pgxpool: background health check cannot overflow pool
+* Fix: Check for nil in defer when sending batch (recover properly from panic)
+* Fix: json scan of non-string pointer to pointer
+* Fix: zeronull.Timestamptz should use pgtype.Timestamptz
+* Fix: NewConnsCount was not correctly counting connections created by Acquire directly. (James Hartig)
+* RowTo(AddrOf)StructByPos ignores fields with "-" db tag
+* Optimization: improve text format numeric parsing (horpto)
+
+# 5.4.2 (July 11, 2023)
+
+* Fix: RowScanner errors are fatal to Rows
+* Fix: Enable failover efforts when pg_hba.conf disallows non-ssl connections (Brandon Kauffman)
+* Hstore text codec internal improvements (Evan Jones)
+* Fix: Stop timers for background reader when not in use. Fixes memory leak when closing connections (Adrian-Stefan Mares)
+* Fix: Stop background reader as soon as possible.
+* Add PgConn.SyncConn(). This combined with the above fix makes it safe to directly use the underlying net.Conn.
+
 # 5.4.1 (June 18, 2023)
 
 * Fix: concurrency bug with pgtypeDefaultMap and simple protocol (Lev Zakharov)

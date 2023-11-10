@@ -7,8 +7,9 @@ import (
 // Facsimile Соответствие участков ответственных и договоров
 type Facsimile struct {
 	CommonStruct
-	Branch      string `json:"branch"      gorm:"column:branch;default:\"\""`
-	Department  string `json:"department"  gorm:"column:department;default:\"\""`
+	Branch     string `json:"branch"      gorm:"column:branch;default:\"\""`
+	Department string `json:"department"  gorm:"column:department;default:\"\""`
+	// Post        string `json:"post"        gorm:"column:post;default:\"\""`
 	Responsible string `json:"responsible" gorm:"column:responsible;default:\"\""`
 	Contract    string `json:"contract"    gorm:"column:contract;default:\"\""`
 }

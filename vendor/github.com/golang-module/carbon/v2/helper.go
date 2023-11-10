@@ -32,6 +32,35 @@ var formats = map[byte]string{
 	'r': "Thu, 21 Dec 2000 16:01:07 +0200", // Format: RFC 2822 formatted date. Eg: Thu, 21 Dec 2000 16:01:07 +0200.
 }
 
+// common layout symbols
+// 常规布局模板符号
+var layouts = []string{
+	DayDateTimeLayout,
+	DateTimeLayout, DateTimeNanoLayout, ShortDateTimeLayout, ShortDateTimeNanoLayout,
+	DateLayout, DateNanoLayout, ShortDateLayout, ShortDateNanoLayout,
+	ISO8601Layout, ISO8601NanoLayout,
+	RFC822Layout, RFC822ZLayout, RFC850Layout, RFC1123Layout, RFC1123ZLayout, RFC3339Layout, RFC3339NanoLayout, RFC1036Layout, RFC7231Layout,
+	KitchenLayout,
+	CookieLayout,
+	ANSICLayout,
+	UnixDateLayout,
+	RubyDateLayout,
+	"2006",
+	"2006-1", "2006-1-2", "2006-1-2 15", "2006-1-2 15:4", "2006-1-2 15:4:5", "2006-1-2 15:4:5.999999999",
+	"2006.1", "2006.1.2", "2006.1.2 15", "2006.1.2 15:4", "2006.1.2 15:4:5", "2006.1.2 15:4:5.999999999",
+	"2006/1", "2006/1/2", "2006/1/2 15", "2006/1/2 15:4", "2006/1/2 15:4:5", "2006/1/2 15:4:5.999999999",
+	"2006-01-02 15:04:05PM MST", "2006-01-02 15:04:05.999999999PM MST", "2006-1-2 15:4:5PM MST", "2006-1-2 15:4:5.999999999PM MST",
+	"2006-01-02 15:04:05 PM MST", "2006-01-02 15:04:05.999999999 PM MST", "2006-1-2 15:4:5 PM MST", "2006-1-2 15:4:5.999999999 PM MST",
+	"1/2/2006", "1/2/2006 15", "1/2/2006 15:4", "1/2/2006 15:4:5", "1/2/2006 15:4:5.999999999",
+	"2006-1-2 15:4:5 -0700 MST", "2006-1-2 15:4:5.999999999 -0700 MST",
+	"2006-1-2T15:4:5Z07", "2006-1-2T15:4:5.999999999Z07",
+	"2006-1-2T15:4:5Z07:00", "2006-1-2T15:4:5.999999999Z07:00",
+	"2006-1-2T15:4:5-07:00", "2006-1-2T15:4:5.999999999-07:00",
+	"20060102150405-07:00", "20060102150405.999999999-07:00",
+	"20060102150405Z07", "20060102150405.999999999Z07",
+	"20060102150405Z07:00", "20060102150405.999999999Z07:00",
+}
+
 // converts format to layout.
 // format 转 layout
 func format2layout(format string) string {

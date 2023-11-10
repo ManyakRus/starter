@@ -7,13 +7,14 @@ import (
 // CommonRef Справочники
 type CommonRef struct {
 	Banks            []Bank              `json:"banks"`             // 1. Банки
-	Branches         []Branch            `json:"branches"`          // 2. Отделения
-	Courts           []Court             `json:"courts"`            // 3. Суды
-	FileTemplates    []FileTemplate      `json:"file_templates"`    // 4. Шаблоны документов
-	ServiceProviders []ServiceProvider   `json:"service_providers"` // 5. Поставщики услуг
-	UserRoles        []UserRole          `json:"user_roles"`        // 6. Роли сотрудников
-	WhiteList        []ContractWhiteItem `json:"white_list"`        // 7. Белый список
-	BlackList        []ContractBlackItem `json:"black_list"`        // 8. Чёрный список
+	BlackList        []ContractBlackItem `json:"black_list"`        // 2. Чёрный список
+	Branches         []Branch            `json:"branches"`          // 3. Отделения
+	CompletedMonths  []CompletedMonth    `json:"completed_months"`  // 4. Закрытые месяцы
+	Courts           []Court             `json:"courts"`            // 5. Суды
+	FileTemplates    []FileTemplate      `json:"file_templates"`    // 6. Шаблоны документов
+	ServiceProviders []ServiceProvider   `json:"service_providers"` // 7. Поставщики услуг
+	UserRoles        []UserRole          `json:"user_roles"`        // 8. Роли сотрудников
+	WhiteList        []ContractWhiteItem `json:"white_list"`        // 9. Белый список
 }
 
 // NewCommonRef Новый набор глобальных справочников

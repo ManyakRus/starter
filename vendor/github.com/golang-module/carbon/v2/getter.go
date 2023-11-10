@@ -31,7 +31,7 @@ func (c Carbon) MonthOfYear() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	return int(c.time.In(c.loc).Month())
+	return int(c.ToStdTime().Month())
 }
 
 // DayOfYear gets day of year like 365.
@@ -40,7 +40,7 @@ func (c Carbon) DayOfYear() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	return c.time.In(c.loc).YearDay()
+	return c.ToStdTime().YearDay()
 }
 
 // DayOfMonth gets day of month like 30.
@@ -49,7 +49,7 @@ func (c Carbon) DayOfMonth() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	return c.time.In(c.loc).Day()
+	return c.ToStdTime().Day()
 }
 
 // DayOfWeek gets day of week like 6.
@@ -58,7 +58,7 @@ func (c Carbon) DayOfWeek() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	day := int(c.time.In(c.loc).Weekday())
+	day := int(c.ToStdTime().Weekday())
 	if day == 0 {
 		return DaysPerWeek
 	}
@@ -71,7 +71,7 @@ func (c Carbon) WeekOfYear() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	_, week := c.time.In(c.loc).ISOWeek()
+	_, week := c.ToStdTime().ISOWeek()
 	return week
 }
 
@@ -136,7 +136,7 @@ func (c Carbon) Date() (year, month, day int) {
 		return
 	}
 	var tm time.Month
-	year, tm, day = c.time.In(c.loc).Date()
+	year, tm, day = c.ToStdTime().Date()
 	return year, int(tm), day
 }
 
@@ -176,7 +176,7 @@ func (c Carbon) Time() (hour, minute, second int) {
 	if c.IsInvalid() {
 		return
 	}
-	return c.time.In(c.loc).Clock()
+	return c.ToStdTime().Clock()
 }
 
 // TimeMilli gets current hour, minute, second and millisecond like 13, 14, 15, 999.
@@ -233,7 +233,7 @@ func (c Carbon) Year() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	return c.time.In(c.loc).Year()
+	return c.ToStdTime().Year()
 }
 
 // Quarter gets current quarter like 3.
@@ -283,7 +283,7 @@ func (c Carbon) Hour() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	return c.time.In(c.loc).Hour()
+	return c.ToStdTime().Hour()
 }
 
 // Minute gets current minute like 14.
@@ -292,7 +292,7 @@ func (c Carbon) Minute() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	return c.time.In(c.loc).Minute()
+	return c.ToStdTime().Minute()
 }
 
 // Second gets current second like 15.
@@ -301,7 +301,7 @@ func (c Carbon) Second() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	return c.time.In(c.loc).Second()
+	return c.ToStdTime().Second()
 }
 
 // Millisecond gets current millisecond like 999.
@@ -310,7 +310,7 @@ func (c Carbon) Millisecond() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	return c.time.In(c.loc).Nanosecond() / 1e6
+	return c.ToStdTime().Nanosecond() / 1e6
 }
 
 // Microsecond gets current microsecond like 999999.
@@ -319,7 +319,7 @@ func (c Carbon) Microsecond() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	return c.time.In(c.loc).Nanosecond() / 1e3
+	return c.ToStdTime().Nanosecond() / 1e3
 }
 
 // Nanosecond gets current nanosecond like 999999999.
@@ -328,7 +328,7 @@ func (c Carbon) Nanosecond() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	return c.time.In(c.loc).Nanosecond()
+	return c.ToStdTime().Nanosecond()
 }
 
 // Timestamp gets timestamp with second like 1596604455.
@@ -337,7 +337,7 @@ func (c Carbon) Timestamp() int64 {
 	if c.IsInvalid() {
 		return 0
 	}
-	return c.time.In(c.loc).Unix()
+	return c.ToStdTime().Unix()
 }
 
 // TimestampMilli gets timestamp with millisecond like 1596604455000.
@@ -346,7 +346,7 @@ func (c Carbon) TimestampMilli() int64 {
 	if c.IsInvalid() {
 		return 0
 	}
-	t := c.time.In(c.loc)
+	t := c.ToStdTime()
 	return t.Unix()*1e3 + int64(t.Nanosecond())/1e6
 }
 
@@ -356,7 +356,7 @@ func (c Carbon) TimestampMicro() int64 {
 	if c.IsInvalid() {
 		return 0
 	}
-	t := c.time.In(c.loc)
+	t := c.ToStdTime()
 	return t.Unix()*1e6 + int64(t.Nanosecond())/1e3
 }
 
@@ -366,7 +366,7 @@ func (c Carbon) TimestampNano() int64 {
 	if c.IsInvalid() {
 		return 0
 	}
-	return c.time.In(c.loc).UnixNano()
+	return c.ToStdTime().UnixNano()
 }
 
 // Location gets location name like "PRC".
@@ -378,14 +378,14 @@ func (c Carbon) Location() string {
 // Timezone gets timezone name like "CST".
 // 获取时区
 func (c Carbon) Timezone() string {
-	name, _ := c.time.In(c.loc).Zone()
+	name, _ := c.ToStdTime().Zone()
 	return name
 }
 
 // Offset gets offset seconds from the UTC timezone like 28800.
 // 获取距离UTC时区的偏移量，单位秒
 func (c Carbon) Offset() int {
-	_, offset := c.time.In(c.loc).Zone()
+	_, offset := c.ToStdTime().Zone()
 	return offset
 }
 
@@ -402,7 +402,10 @@ func (c Carbon) Age() int {
 		return 0
 	}
 	now := c.Now()
-	if c.Timestamp() > now.Timestamp() {
+	if c.HasTestNow() {
+		now = CreateFromTimestampNano(c.testNow, c.Location())
+	}
+	if c.TimestampNano() > now.TimestampNano() {
 		return 0
 	}
 	return int(c.DiffInYears(now))

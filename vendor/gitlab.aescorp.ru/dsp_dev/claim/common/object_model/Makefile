@@ -1,3 +1,5 @@
+SERVICENAME=object_model
+
 ## test.run
 test.run:
 	clear
@@ -26,3 +28,10 @@ lint:
 ## help
 help:
 	@fgrep -h "##" $(MAKEFILE_LIST) | fgrep -v fgrep | sed -e 's/\\$$//' | sed -e 's/##//'
+
+graph:
+	clear
+	image_packages ./ docs/packages.graphml
+conn:
+	clear
+	image_connections ./object_storage docs/connections.graphml $(SERVICENAME)

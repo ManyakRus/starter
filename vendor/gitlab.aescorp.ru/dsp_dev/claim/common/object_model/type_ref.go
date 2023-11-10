@@ -18,11 +18,12 @@ type TypeRef struct {
 	LawsuitReasonTypes        []LawsuitReasonType        `json:"lawsuit_reason_types"`        // 10. Причина отбора для претензии (Справочник).
 	LawsuitStageTypes         []LawsuitStageType         `json:"lawsuit_stage_types"`         // 11. Этапы дел (справочник).
 	LawsuitStatusTypes        []LawsuitStatusType        `json:"lawsuit_status_types"`        // 12. Статусы дел (справочник).
-	LegalTypes                []LegalType                `json:"legal_types"`                 // 13. Тип юридического лица
-	OrganizationCategoryTypes []OrganizationCategoryType `json:"organization_category_types"` // 14. Категории организаций
-	OrganizationStateTypes    []OrganizationStateType    `json:"organization_state_types"`    // 15. Состояния организаций
-	ServiceTypes              []ServiceType              `json:"service_types"`               // 16. Типы услуг
-	TableNames                []TableName                `json:"table_names"`                 // 17. Имена таблиц для привязок
+	LawsuitTypes              []LawsuitType              `json:"lawsuit_types"`               // 13. Типы претензий
+	LegalTypes                []LegalType                `json:"legal_types"`                 // 14. Тип юридического лица
+	OrganizationCategoryTypes []OrganizationCategoryType `json:"organization_category_types"` // 15. Категории организаций
+	OrganizationStateTypes    []OrganizationStateType    `json:"organization_state_types"`    // 16. Состояния организаций
+	ServiceTypes              []ServiceType              `json:"service_types"`               // 17. Типы услуг
+	TableNames                []TableName                `json:"table_names"`                 // 18. Имена таблиц для привязок
 }
 
 // NewTypeRef Новый набор справочников типов

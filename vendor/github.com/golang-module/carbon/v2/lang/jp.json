@@ -12,7 +12,7 @@
 	"hour": "%d 時間",
 	"minute": "%d 分",
 	"second": "%d 秒",
-	"now": "今",
+	"now": "現在",
 	"ago": "%s前",
 	"from_now": "%s後",
 	"before": "%s前",

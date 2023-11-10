@@ -47,6 +47,9 @@ const GatewayHostEnvVar = "ZEEBE_HOST"
 const GatewayPortEnvVar = "ZEEBE_PORT"
 const OverrideAuthorityEnvVar = "ZEEBE_OVERRIDE_AUTHORITY"
 
+// Version specifies the client's version; this is used as part of the user agent string, for example
+var Version = embedded.Version
+
 type ClientImpl struct {
 	gateway             pb.GatewayClient
 	connection          *grpc.ClientConn
@@ -140,6 +143,10 @@ func (c *ClientImpl) NewThrowErrorCommand() commands.ThrowErrorCommandStep1 {
 	return commands.NewThrowErrorCommand(c.gateway, c.credentialsProvider.ShouldRetryRequest)
 }
 
+func (c *ClientImpl) NewDeleteResourceCommand() commands.DeleteResourceCommandStep1 {
+	return commands.NewDeleteResourceCommand(c.gateway, c.credentialsProvider.ShouldRetryRequest)
+}
+
 func (c *ClientImpl) NewJobWorker() worker.JobWorkerBuilderStep1 {
 	return worker.NewJobWorkerBuilder(c.gateway, c, c.credentialsProvider.ShouldRetryRequest)
 }
@@ -170,7 +177,7 @@ func NewClient(config *ClientConfig) (Client, error) {
 	}
 
 	if config.UserAgent == "" {
-		config.UserAgent = "zeebe-client-go/" + getVersion()
+		config.UserAgent = "zeebe-client-go/" + Version
 	}
 
 	config.DialOpts = append(config.DialOpts, grpc.WithUserAgent(config.UserAgent))
@@ -299,13 +306,4 @@ func configureKeepAlive(config *ClientConfig) error {
 	config.DialOpts = append(config.DialOpts, grpc.WithKeepaliveParams(keepalive.ClientParameters{Time: keepAlive}))
 
 	return nil
-}
-
-func getVersion() string {
-	zbVersion := "development"
-	if readVersion, err := embedded.Asset("VERSION"); err == nil {
-		zbVersion = strings.TrimSpace(string(readVersion))
-	}
-
-	return zbVersion
 }

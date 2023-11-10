@@ -1,4 +1,4 @@
-// package alias -- специальные типы РАПИРы
+// Package alias -- специальные типы РАПИРы
 package alias
 
 // PaymentId -- ID платёжки
@@ -15,6 +15,9 @@ type LawsuitNumber string
 
 // ClaimNumber -- Номер дела
 type ClaimNumber string
+
+// TrialNumber -- Номер иска
+type TrialNumber string
 
 // ContractNumber -- Номер договора
 type ContractNumber string

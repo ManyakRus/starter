@@ -12,7 +12,7 @@
 	"hour": "1 heure|%d heures",
 	"minute": "1 minute|%d minutes",
 	"second": "1 seconde|%d secondes",
-	"now": "à l'instant",
+	"now": "maintenant",
 	"ago": "il y a %s",
 	"from_now": "%s à partir de maintenant",
 	"before": "avant %s",

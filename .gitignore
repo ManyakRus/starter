@@ -10,3 +10,4 @@
 /whatsapp.db
 /session.txt
 /minio_connect/test.md
+/nats_liveness/store/

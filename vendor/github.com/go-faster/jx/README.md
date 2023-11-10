@@ -12,6 +12,7 @@ go get github.com/go-faster/jx
 * [Non-goals](#non-goals)
 
 ## Features
+* Mostly zero-allocation and highly optimized
 * Directly encode and decode json values
 * No reflect or `interface{}`
 * Pools and direct buffer access for less (or none) allocations
@@ -19,7 +20,7 @@ go get github.com/go-faster/jx
 * Validation
 
 See [usage](#Usage) for examples. Mostly suitable for fast low-level json manipulation
-with high control, for dynamic parsing and encoding unstructured data. Used in [ogen](https://github.com/ogen-go/ogen) project for
+with high control, for dynamic parsing and encoding of unstructured data. Used in [ogen](https://github.com/ogen-go/ogen) project for
 json (un)marshaling code generation based on json and OpenAPI schemas.
 
 For example, we have following OpenTelemetry log entry:
@@ -50,10 +51,12 @@ e.g. using `[16]byte` for `TraceId` with zero-allocation `hex` encoding in json:
 
 | Name     | Speed     | Allocations |
 |----------|-----------|-------------|
-| Decode   | 970 MB/s  | 0 allocs/op |
-| Validate | 1535 MB/s | 0 allocs/op |
-| Encode   | 1104 MB/s | 0 allocs/op |
-| Write    | 2146 MB/s | 0 allocs/op |
+| Decode   | 1279 MB/s | 0 allocs/op |
+| Validate | 1914 MB/s | 0 allocs/op |
+| Encode   | 1202 MB/s | 0 allocs/op |
+| Write    | 2055 MB/s | 0 allocs/op |
+
+`cpu: AMD Ryzen 9 7950X`
 
 See [otel_test.go](./otel_test.go) for example.
 

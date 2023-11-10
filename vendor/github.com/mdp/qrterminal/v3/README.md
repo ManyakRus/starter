@@ -82,7 +82,7 @@ OSX: `brew install mdp/tap/qrterminal`
 
 Others: Download from the [releases page](https://github.com/mdp/qrterminal/releases)
 
-Source: `go get -u github.com/mdp/qrterminal/v3/cmd/qrterminal`
+Source: `go install github.com/mdp/qrterminal/v3/cmd/qrterminal@latest`
 
 Docker: `docker pull ghcr.io/mdp/qrterminal:latest`
 
@@ -102,7 +102,7 @@ You can also pipe text via stdin
 
 or
 
-`cat wireguard_peer.conf | `docker run --rm -i ghcr.io/mdp/qrterminal:latest`
+`cat wireguard_peer.conf | docker run --rm -i ghcr.io/mdp/qrterminal:latest`
 
 
 ### Contributors/Credits:

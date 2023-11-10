@@ -10,7 +10,7 @@ import (
 func (c *Carbon) Scan(v interface{}) error {
 	value, ok := v.(time.Time)
 	if ok {
-		*c = Carbon{time: value, loc: time.Local}
+		*c = CreateFromStdTime(value)
 		return nil
 	}
 	return fmt.Errorf("can not convert %v to carbon", v)
@@ -21,5 +21,5 @@ func (c Carbon) Value() (driver.Value, error) {
 	if c.IsZero() {
 		return nil, nil
 	}
-	return c.time, nil
+	return c.ToStdTime(), nil
 }

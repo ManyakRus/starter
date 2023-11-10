@@ -5,9 +5,9 @@ package postgres_stek
 import (
 	"context"
 	"errors"
-	model "gitlab.aescorp.ru/dsp_dev/claim/common/object_model"
 	"github.com/ManyakRus/starter/logger"
 	"github.com/ManyakRus/starter/ping"
+	"gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/object_model/entities/connections"
 	"time"
 
 	"sync"
@@ -34,7 +34,7 @@ import (
 var MapConn = make(map[int64]*gorm.DB)
 
 // MapConnection - все объекты Connection
-var MapConnection = make(map[int64]model.Connection)
+var MapConnection = make(map[int64]connections.Connection)
 
 // log - глобальный логгер
 var log = logger.GetLog()
@@ -48,7 +48,7 @@ var NeedReconnect bool
 var MutexConnection sync.Mutex
 
 // Connect_err - подключается к базе данных
-func Connect(Connection model.Connection) {
+func Connect(Connection connections.Connection) {
 
 	if Connection.Server == "" {
 		log.Panicln("Need fill Connection.Server")
@@ -66,7 +66,7 @@ func Connect(Connection model.Connection) {
 }
 
 // Connect_err - подключается к базе данных
-func Connect_err(Connection model.Connection) error {
+func Connect_err(Connection connections.Connection) error {
 
 	var err error
 
@@ -110,7 +110,7 @@ func Connect_err(Connection model.Connection) error {
 }
 
 // IsClosed проверка что база данных закрыта
-func IsClosed(Connection model.Connection) bool {
+func IsClosed(Connection connections.Connection) bool {
 	var otvet bool
 	Conn := MapConn[Connection.ID]
 	if Conn == nil {
@@ -133,7 +133,7 @@ func IsClosed(Connection model.Connection) bool {
 
 // Reconnect повторное подключение к базе данных, если оно отключено
 // или полная остановка программы
-func Reconnect(Connection model.Connection, err error) {
+func Reconnect(Connection connections.Connection, err error) {
 	mutexReconnect.Lock()
 	defer mutexReconnect.Unlock()
 
@@ -192,7 +192,7 @@ func Reconnect(Connection model.Connection, err error) {
 // CloseConnectionAll - закрытие всех соединений к базам данных
 func CloseConnectionAll() {
 
-	var MapConnection_copy = make(map[int64]model.Connection)
+	var MapConnection_copy = make(map[int64]connections.Connection)
 
 	maps.Copy(MapConnection_copy, MapConnection) // копия для race error
 
@@ -205,7 +205,7 @@ func CloseConnectionAll() {
 }
 
 // CloseConnection - закрытие соединения с базой данных
-func CloseConnection(Connection model.Connection) {
+func CloseConnection(Connection connections.Connection) {
 	Conn := MapConn[Connection.ID]
 	if Conn == nil {
 		return
@@ -222,7 +222,7 @@ func CloseConnection(Connection model.Connection) {
 }
 
 // CloseConnection_err - закрытие соединения с базой данных
-func CloseConnection_err(Connection model.Connection) error {
+func CloseConnection_err(Connection connections.Connection) error {
 
 	Conn := MapConn[Connection.ID]
 	if Conn == nil {
@@ -268,7 +268,7 @@ func WaitStop() {
 }
 
 // StartDB - делает соединение с БД, отключение и др.
-func StartDB(Connection model.Connection) {
+func StartDB(Connection connections.Connection) {
 	Connect(Connection)
 
 	stopapp.GetWaitGroup_Main().Add(1)
@@ -280,7 +280,7 @@ func StartDB(Connection model.Connection) {
 }
 
 // GetDSN - возвращает строку соединения к базе данных
-func GetDSN(Connection model.Connection) string {
+func GetDSN(Connection connections.Connection) string {
 	dsn := "host=" + Connection.Server + " "
 	dsn += "user=" + Connection.Login + " "
 	dsn += "password=" + Connection.Password + " "
@@ -291,7 +291,7 @@ func GetDSN(Connection model.Connection) string {
 }
 
 // GetConnection - возвращает соединение к нужной базе данных
-func GetConnection(Connection model.Connection) *gorm.DB {
+func GetConnection(Connection connections.Connection) *gorm.DB {
 	Conn := MapConn[Connection.ID]
 	if Conn == nil {
 		Connect(Connection)

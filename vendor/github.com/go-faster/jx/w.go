@@ -1,6 +1,9 @@
 package jx
 
-import "io"
+import (
+	"bytes"
+	"io"
+)
 
 // Writer writes json tokens to underlying buffer.
 //
@@ -51,12 +54,29 @@ func (w *Writer) ResetWriter(out io.Writer) {
 	w.stream.Reset(out)
 }
 
+// Grow grows the underlying buffer.
+//
+// Calls (*bytes.Buffer).Grow(n int) on w.Buf.
+func (w *Writer) Grow(n int) {
+	buf := bytes.NewBuffer(w.Buf)
+	buf.Grow(n)
+	w.Buf = buf.Bytes()
+}
+
 // byte writes a single byte.
 func (w *Writer) byte(c byte) (fail bool) {
+	if w.stream == nil {
+		w.Buf = append(w.Buf, c)
+		return false
+	}
 	return writeStreamBytes(w, c)
 }
 
 func (w *Writer) twoBytes(c1, c2 byte) bool {
+	if w.stream == nil {
+		w.Buf = append(w.Buf, c1, c2)
+		return false
+	}
 	return writeStreamBytes(w, c1, c2)
 }
 

@@ -257,7 +257,7 @@ func (entry *Entry) log(level Level, msg string) {
 	// panic() to use in Entry#Panic(), we avoid the allocation by checking
 	// directly here.
 	if level <= PanicLevel {
-		panic(entry) //sanek
+		//panic(entry) //sanek не было
 		panic(newEntry)
 	}
 }

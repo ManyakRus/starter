@@ -171,7 +171,7 @@ func (c *ChatInviteAlready) GetChat() (value ChatClass) {
 	return c.Chat
 }
 
-// ChatInvite represents TL type `chatInvite#300c44c1`.
+// ChatInvite represents TL type `chatInvite#cde0ec40`.
 // Chat invite info
 //
 // See https://core.telegram.org/constructor/chatInvite for reference.
@@ -207,6 +207,12 @@ type ChatInvite struct {
 	// Links:
 	//  1) https://core.telegram.org/api/invites#join-requests
 	RequestNeeded bool
+	// Verified field of ChatInvite.
+	Verified bool
+	// Scam field of ChatInvite.
+	Scam bool
+	// Fake field of ChatInvite.
+	Fake bool
 	// Chat/supergroup/channel title
 	Title string
 	// Description of the group of channel
@@ -221,10 +227,12 @@ type ChatInvite struct {
 	//
 	// Use SetParticipants and GetParticipants helpers.
 	Participants []UserClass
+	// Color field of ChatInvite.
+	Color int
 }
 
 // ChatInviteTypeID is TL type id of ChatInvite.
-const ChatInviteTypeID = 0x300c44c1
+const ChatInviteTypeID = 0xcde0ec40
 
 // construct implements constructor of ChatInviteClass.
 func (c ChatInvite) construct() ChatInviteClass { return &c }
@@ -261,6 +269,15 @@ func (c *ChatInvite) Zero() bool {
 	if !(c.RequestNeeded == false) {
 		return false
 	}
+	if !(c.Verified == false) {
+		return false
+	}
+	if !(c.Scam == false) {
+		return false
+	}
+	if !(c.Fake == false) {
+		return false
+	}
 	if !(c.Title == "") {
 		return false
 	}
@@ -274,6 +291,9 @@ func (c *ChatInvite) Zero() bool {
 		return false
 	}
 	if !(c.Participants == nil) {
+		return false
+	}
+	if !(c.Color == 0) {
 		return false
 	}
 
@@ -296,17 +316,24 @@ func (c *ChatInvite) FillFrom(from interface {
 	GetPublic() (value bool)
 	GetMegagroup() (value bool)
 	GetRequestNeeded() (value bool)
+	GetVerified() (value bool)
+	GetScam() (value bool)
+	GetFake() (value bool)
 	GetTitle() (value string)
 	GetAbout() (value string, ok bool)
 	GetPhoto() (value PhotoClass)
 	GetParticipantsCount() (value int)
 	GetParticipants() (value []UserClass, ok bool)
+	GetColor() (value int)
 }) {
 	c.Channel = from.GetChannel()
 	c.Broadcast = from.GetBroadcast()
 	c.Public = from.GetPublic()
 	c.Megagroup = from.GetMegagroup()
 	c.RequestNeeded = from.GetRequestNeeded()
+	c.Verified = from.GetVerified()
+	c.Scam = from.GetScam()
+	c.Fake = from.GetFake()
 	c.Title = from.GetTitle()
 	if val, ok := from.GetAbout(); ok {
 		c.About = val
@@ -318,6 +345,7 @@ func (c *ChatInvite) FillFrom(from interface {
 		c.Participants = val
 	}
 
+	c.Color = from.GetColor()
 }
 
 // TypeID returns type id in TL schema.
@@ -369,6 +397,21 @@ func (c *ChatInvite) TypeInfo() tdp.Type {
 			Null:       !c.Flags.Has(6),
 		},
 		{
+			Name:       "Verified",
+			SchemaName: "verified",
+			Null:       !c.Flags.Has(7),
+		},
+		{
+			Name:       "Scam",
+			SchemaName: "scam",
+			Null:       !c.Flags.Has(8),
+		},
+		{
+			Name:       "Fake",
+			SchemaName: "fake",
+			Null:       !c.Flags.Has(9),
+		},
+		{
 			Name:       "Title",
 			SchemaName: "title",
 		},
@@ -389,6 +432,10 @@ func (c *ChatInvite) TypeInfo() tdp.Type {
 			Name:       "Participants",
 			SchemaName: "participants",
 			Null:       !c.Flags.Has(4),
+		},
+		{
+			Name:       "Color",
+			SchemaName: "color",
 		},
 	}
 	return typ
@@ -411,6 +458,15 @@ func (c *ChatInvite) SetFlags() {
 	if !(c.RequestNeeded == false) {
 		c.Flags.Set(6)
 	}
+	if !(c.Verified == false) {
+		c.Flags.Set(7)
+	}
+	if !(c.Scam == false) {
+		c.Flags.Set(8)
+	}
+	if !(c.Fake == false) {
+		c.Flags.Set(9)
+	}
 	if !(c.About == "") {
 		c.Flags.Set(5)
 	}
@@ -422,7 +478,7 @@ func (c *ChatInvite) SetFlags() {
 // Encode implements bin.Encoder.
 func (c *ChatInvite) Encode(b *bin.Buffer) error {
 	if c == nil {
-		return fmt.Errorf("can't encode chatInvite#300c44c1 as nil")
+		return fmt.Errorf("can't encode chatInvite#cde0ec40 as nil")
 	}
 	b.PutID(ChatInviteTypeID)
 	return c.EncodeBare(b)
@@ -431,44 +487,45 @@ func (c *ChatInvite) Encode(b *bin.Buffer) error {
 // EncodeBare implements bin.BareEncoder.
 func (c *ChatInvite) EncodeBare(b *bin.Buffer) error {
 	if c == nil {
-		return fmt.Errorf("can't encode chatInvite#300c44c1 as nil")
+		return fmt.Errorf("can't encode chatInvite#cde0ec40 as nil")
 	}
 	c.SetFlags()
 	if err := c.Flags.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode chatInvite#300c44c1: field flags: %w", err)
+		return fmt.Errorf("unable to encode chatInvite#cde0ec40: field flags: %w", err)
 	}
 	b.PutString(c.Title)
 	if c.Flags.Has(5) {
 		b.PutString(c.About)
 	}
 	if c.Photo == nil {
-		return fmt.Errorf("unable to encode chatInvite#300c44c1: field photo is nil")
+		return fmt.Errorf("unable to encode chatInvite#cde0ec40: field photo is nil")
 	}
 	if err := c.Photo.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode chatInvite#300c44c1: field photo: %w", err)
+		return fmt.Errorf("unable to encode chatInvite#cde0ec40: field photo: %w", err)
 	}
 	b.PutInt(c.ParticipantsCount)
 	if c.Flags.Has(4) {
 		b.PutVectorHeader(len(c.Participants))
 		for idx, v := range c.Participants {
 			if v == nil {
-				return fmt.Errorf("unable to encode chatInvite#300c44c1: field participants element with index %d is nil", idx)
+				return fmt.Errorf("unable to encode chatInvite#cde0ec40: field participants element with index %d is nil", idx)
 			}
 			if err := v.Encode(b); err != nil {
-				return fmt.Errorf("unable to encode chatInvite#300c44c1: field participants element with index %d: %w", idx, err)
+				return fmt.Errorf("unable to encode chatInvite#cde0ec40: field participants element with index %d: %w", idx, err)
 			}
 		}
 	}
+	b.PutInt(c.Color)
 	return nil
 }
 
 // Decode implements bin.Decoder.
 func (c *ChatInvite) Decode(b *bin.Buffer) error {
 	if c == nil {
-		return fmt.Errorf("can't decode chatInvite#300c44c1 to nil")
+		return fmt.Errorf("can't decode chatInvite#cde0ec40 to nil")
 	}
 	if err := b.ConsumeID(ChatInviteTypeID); err != nil {
-		return fmt.Errorf("unable to decode chatInvite#300c44c1: %w", err)
+		return fmt.Errorf("unable to decode chatInvite#cde0ec40: %w", err)
 	}
 	return c.DecodeBare(b)
 }
@@ -476,11 +533,11 @@ func (c *ChatInvite) Decode(b *bin.Buffer) error {
 // DecodeBare implements bin.BareDecoder.
 func (c *ChatInvite) DecodeBare(b *bin.Buffer) error {
 	if c == nil {
-		return fmt.Errorf("can't decode chatInvite#300c44c1 to nil")
+		return fmt.Errorf("can't decode chatInvite#cde0ec40 to nil")
 	}
 	{
 		if err := c.Flags.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode chatInvite#300c44c1: field flags: %w", err)
+			return fmt.Errorf("unable to decode chatInvite#cde0ec40: field flags: %w", err)
 		}
 	}
 	c.Channel = c.Flags.Has(0)
@@ -488,38 +545,41 @@ func (c *ChatInvite) DecodeBare(b *bin.Buffer) error {
 	c.Public = c.Flags.Has(2)
 	c.Megagroup = c.Flags.Has(3)
 	c.RequestNeeded = c.Flags.Has(6)
+	c.Verified = c.Flags.Has(7)
+	c.Scam = c.Flags.Has(8)
+	c.Fake = c.Flags.Has(9)
 	{
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode chatInvite#300c44c1: field title: %w", err)
+			return fmt.Errorf("unable to decode chatInvite#cde0ec40: field title: %w", err)
 		}
 		c.Title = value
 	}
 	if c.Flags.Has(5) {
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode chatInvite#300c44c1: field about: %w", err)
+			return fmt.Errorf("unable to decode chatInvite#cde0ec40: field about: %w", err)
 		}
 		c.About = value
 	}
 	{
 		value, err := DecodePhoto(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode chatInvite#300c44c1: field photo: %w", err)
+			return fmt.Errorf("unable to decode chatInvite#cde0ec40: field photo: %w", err)
 		}
 		c.Photo = value
 	}
 	{
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode chatInvite#300c44c1: field participants_count: %w", err)
+			return fmt.Errorf("unable to decode chatInvite#cde0ec40: field participants_count: %w", err)
 		}
 		c.ParticipantsCount = value
 	}
 	if c.Flags.Has(4) {
 		headerLen, err := b.VectorHeader()
 		if err != nil {
-			return fmt.Errorf("unable to decode chatInvite#300c44c1: field participants: %w", err)
+			return fmt.Errorf("unable to decode chatInvite#cde0ec40: field participants: %w", err)
 		}
 
 		if headerLen > 0 {
@@ -528,10 +588,17 @@ func (c *ChatInvite) DecodeBare(b *bin.Buffer) error {
 		for idx := 0; idx < headerLen; idx++ {
 			value, err := DecodeUser(b)
 			if err != nil {
-				return fmt.Errorf("unable to decode chatInvite#300c44c1: field participants: %w", err)
+				return fmt.Errorf("unable to decode chatInvite#cde0ec40: field participants: %w", err)
 			}
 			c.Participants = append(c.Participants, value)
 		}
+	}
+	{
+		value, err := b.Int()
+		if err != nil {
+			return fmt.Errorf("unable to decode chatInvite#cde0ec40: field color: %w", err)
+		}
+		c.Color = value
 	}
 	return nil
 }
@@ -631,6 +698,63 @@ func (c *ChatInvite) GetRequestNeeded() (value bool) {
 	return c.Flags.Has(6)
 }
 
+// SetVerified sets value of Verified conditional field.
+func (c *ChatInvite) SetVerified(value bool) {
+	if value {
+		c.Flags.Set(7)
+		c.Verified = true
+	} else {
+		c.Flags.Unset(7)
+		c.Verified = false
+	}
+}
+
+// GetVerified returns value of Verified conditional field.
+func (c *ChatInvite) GetVerified() (value bool) {
+	if c == nil {
+		return
+	}
+	return c.Flags.Has(7)
+}
+
+// SetScam sets value of Scam conditional field.
+func (c *ChatInvite) SetScam(value bool) {
+	if value {
+		c.Flags.Set(8)
+		c.Scam = true
+	} else {
+		c.Flags.Unset(8)
+		c.Scam = false
+	}
+}
+
+// GetScam returns value of Scam conditional field.
+func (c *ChatInvite) GetScam() (value bool) {
+	if c == nil {
+		return
+	}
+	return c.Flags.Has(8)
+}
+
+// SetFake sets value of Fake conditional field.
+func (c *ChatInvite) SetFake(value bool) {
+	if value {
+		c.Flags.Set(9)
+		c.Fake = true
+	} else {
+		c.Flags.Unset(9)
+		c.Fake = false
+	}
+}
+
+// GetFake returns value of Fake conditional field.
+func (c *ChatInvite) GetFake() (value bool) {
+	if c == nil {
+		return
+	}
+	return c.Flags.Has(9)
+}
+
 // GetTitle returns value of Title field.
 func (c *ChatInvite) GetTitle() (value string) {
 	if c == nil {
@@ -689,6 +813,14 @@ func (c *ChatInvite) GetParticipants() (value []UserClass, ok bool) {
 		return value, false
 	}
 	return c.Participants, true
+}
+
+// GetColor returns value of Color field.
+func (c *ChatInvite) GetColor() (value int) {
+	if c == nil {
+		return
+	}
+	return c.Color
 }
 
 // MapParticipants returns field Participants wrapped in UserClassArray helper.
@@ -882,7 +1014,7 @@ const ChatInviteClassName = "ChatInvite"
 //	}
 //	switch v := g.(type) {
 //	case *tg.ChatInviteAlready: // chatInviteAlready#5a686d7c
-//	case *tg.ChatInvite: // chatInvite#300c44c1
+//	case *tg.ChatInvite: // chatInvite#cde0ec40
 //	case *tg.ChatInvitePeek: // chatInvitePeek#61695cb0
 //	default: panic(v)
 //	}
@@ -920,7 +1052,7 @@ func DecodeChatInvite(buf *bin.Buffer) (ChatInviteClass, error) {
 		}
 		return &v, nil
 	case ChatInviteTypeID:
-		// Decoding chatInvite#300c44c1.
+		// Decoding chatInvite#cde0ec40.
 		v := ChatInvite{}
 		if err := v.Decode(buf); err != nil {
 			return nil, fmt.Errorf("unable to decode ChatInviteClass: %w", err)

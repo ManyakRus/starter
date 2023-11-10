@@ -37,8 +37,6 @@ linters-settings:
 linters:
   disable-all: true
   enable:
-    - deadcode
-    - depguard
     - dogsled
     - errcheck
     - goconst
@@ -51,10 +49,8 @@ linters:
     - ineffassign
     - misspell
     - nakedret
-    - structcheck
     - typecheck
     - unconvert
-    - varcheck
     - whitespace
 
     # Breaks with buildssa error for some reason.
@@ -94,15 +90,14 @@ issues:
 
     # Check that equal to self is true
     - linters: [gocritic]
-      source: '(assert|require).+Equal'
-      text: 'dupArg'
+      source: "(assert|require).+Equal"
+      text: "dupArg"
       path: _test\.go
 
     # Ignore shadowing of err.
-    - linters: [ govet ]
+    - linters: [govet]
       text: 'declaration of "(err|ctx|log|c)"'
 
     # Ignore linters in main packages.
     - path: main\.go
-      linters: [ goconst, funlen, gocognit, gocyclo ]
-
+      linters: [goconst, funlen, gocognit, gocyclo]

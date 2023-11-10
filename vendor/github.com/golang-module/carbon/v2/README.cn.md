@@ -2,15 +2,14 @@
 
 [![Carbon Release](https://img.shields.io/github/release/golang-module/carbon.svg)](https://github.com/golang-module/carbon/releases)
 [![Go Test](https://github.com/golang-module/carbon/actions/workflows/test.yml/badge.svg)](https://github.com/golang-module/carbon/actions)
-[![Go Report Card](https://goreportcard.com/badge/github.com/golang-module/carbon)](https://goreportcard.com/report/github.com/golang-module/carbon)
+[![Go Report Card](https://goreportcard.com/badge/github.com/golang-module/carbon/v2)](https://goreportcard.com/report/github.com/golang-module/carbon/v2)
 [![Go Coverage](https://codecov.io/gh/golang-module/carbon/branch/master/graph/badge.svg)](https://codecov.io/gh/golang-module/carbon)
 [![Carbon Doc](https://img.shields.io/badge/go.dev-reference-brightgreen?logo=go&logoColor=white&style=flat)](https://pkg.go.dev/github.com/golang-module/carbon)
 ![License](https://img.shields.io/github/license/golang-module/carbon)
 
 简体中文 | [English](README.md) | [日本語](README.jp.md)
 
-一个轻量级、语义化、对开发者友好的 golang
-时间处理库，支持链式调用，已被 [awesome-go-cn](https://github.com/yinggaozhen/awesome-go-cn#日期和时间 "awesome-go-cn") 收录
+一个轻量级、语义化、对开发者友好的 golang 时间处理库，支持链式调用，已被 [awesome-go-cn](https://github.com/yinggaozhen/awesome-go-cn#日期和时间 "awesome-go-cn") 收录
 
 [github.com/golang-module/carbon](https://github.com/golang-module/carbon "github.com/golang-module/carbon")
 
@@ -24,16 +23,12 @@
 // 使用 github 库
 go get -u github.com/golang-module/carbon/v2
 
-import (
-	"github.com/golang-module/carbon/v2"
-)
+import "github.com/golang-module/carbon/v2"
 
 // 使用 gitee 库
 go get -u gitee.com/golang-module/carbon/v2
 
-import (
-	"gitee.com/golang-module/carbon/v2"
-)
+import "gitee.com/golang-module/carbon/v2"
 ```
 
 ##### Golang 版本小于 1.16 (必须)
@@ -42,19 +37,15 @@ import (
 // 使用 github 库
 go get -u github.com/golang-module/carbon
 
-import (
-	"github.com/golang-module/carbon"
-)
+import "github.com/golang-module/carbon"
 
 // 使用 gitee 库
 go get -u gitee.com/golang-module/carbon
 
-import (
-	"gitee.com/golang-module/carbon"
-)
+import "gitee.com/golang-module/carbon"
 ```
 
-> v1 和 v2 版本区别请查阅 <a href="#常见问题">常见问题</a>
+> v1 和 v2 版本区别请查阅 <a href="#常见问题">常见问题</a>，v1 版本不再更新，仅维护。
 
 #### 用法示例
 
@@ -65,6 +56,7 @@ import (
 ```go
 // 今天此刻
 fmt.Sprintf("%s", carbon.Now()) // 2020-08-05 13:14:15
+carbon.Now().String() // 2020-08-05 13:14:15
 carbon.Now().ToString() // 2020-08-05 13:14:15 +0800 CST
 carbon.Now().ToDateTimeString() // 2020-08-05 13:14:15
 // 今天日期
@@ -84,6 +76,7 @@ carbon.Now().TimestampNano() // 1596604455999999999
 
 // 昨天此刻
 fmt.Sprintf("%s", carbon.Yesterday()) // 2020-08-04 13:14:15
+carbon.Yesterday().String() // 2020-08-04 13:14:15
 carbon.Yesterday().ToString() // 2020-08-04 13:14:15 +0800 CST
 carbon.Yesterday().ToDateTimeString() // 2020-08-04 13:14:15
 // 昨天日期
@@ -105,6 +98,7 @@ carbon.Yesterday().TimestampNano() // 1596518055999999999
 
 // 明天此刻
 fmt.Sprintf("%s", carbon.Tomorrow()) // 2020-08-06 13:14:15
+carbon.Tomorrow().String() // 2020-08-06 13:14:15
 carbon.Tomorrow().ToString() // 2020-08-06 13:14:15 +0800 CST
 carbon.Tomorrow().ToDateTimeString() // 2020-08-06 13:14:15
 // 明天日期
@@ -241,9 +235,22 @@ carbon.ParseByLayout("2020-08-05 13:14:15", "2006-01-02 15:04:05", carbon.Tokyo)
 
 ```go
 // 将 time.Time 转换成 Carbon
-carbon.FromStdTime(time.Now())
+carbon.CreateFromStdTime(time.Now())
 // 将 Carbon 转换成 time.Time
 carbon.Now().ToStdTime()
+```
+
+##### 最近和最远
+
+```go
+c := carbon.Parse("2023-04-01")
+c1 := carbon.Parse("2023-03-28")
+c2 := carbon.Parse("2023-04-16")
+
+// 返回最近的 Carbon 实例
+c.Closest(c1, c2) // c1
+// 返回最远的 Carbon 实例
+c.Farthest(c1, c2) // c2
 ```
 
 ##### 开始时间、结束时间
@@ -548,6 +555,15 @@ carbon.Parse("2022-08-05 13:14:15").DiffForHumans(carbon.Now()) // 2 years after
 ##### 时间判断
 
 ```go
+// 是否是夏令时
+carbon.Parse("").IsDST() // false
+carbon.Parse("0").IsDST() // false
+carbon.Parse("0000-00-00 00:00:00").IsDST() // false
+carbon.Parse("0000-00-00").IsDST() // false
+carbon.Parse("00:00:00").IsDST() // false
+carbon.Parse("2023-01-01", "Australia/Brisbane").IsDST() // false
+carbon.Parse("2023-01-01", "Australia/Sydney").IsDST() // true
+
 // 是否是零值时间
 carbon.Parse("").IsZero() // true
 carbon.Parse("0").IsZero() // true
@@ -1240,21 +1256,25 @@ carbon.Parse("2020-03-21 21:00:00").Lunar().IsTwelfthDoubleHour() // true
 ###### 定义模型
 
 ```go
-	type Person struct {
-	Name string `json:"name"`
-	Age int `json:"age"`
-	Birthday1 carbon.DateTime `json:"birthday"`
-	Birthday2 carbon.DateTimeMilli `json:"birthday"`
-	Birthday3 carbon.DateTimeMicro `json:"birthday"`
-	Birthday4 carbon.DateTimeNano `json:"birthday"`
-	GraduatedAt1 carbon.Date `json:"graduated_at"`
-	GraduatedAt2 carbon.DateMilli `json:"graduated_at"`
-	GraduatedAt3 carbon.DateMicro `json:"graduated_at"`
-	GraduatedAt4 carbon.DateNano `json:"graduated_at"`
-	CreatedAt1 carbon.Timestamp `json:"created_at1"`
-	CreatedAt2 carbon.TimestampMilli `json:"created_at2"`
-	CreatedAt3 carbon.TimestampMicro `json:"created_at3"`
-	CreatedAt4 carbon.TimestampNano `json:"created_at4"`
+type Person struct {
+    Name string `json:"name"`
+    Age int `json:"age"`
+    Birthday1 carbon.DateTime `json:"birthday"`
+    Birthday2 carbon.DateTimeMilli `json:"birthday"`
+    Birthday3 carbon.DateTimeMicro `json:"birthday"`
+    Birthday4 carbon.DateTimeNano `json:"birthday"`
+    GraduatedAt1 carbon.Date `json:"graduated_at"`
+    GraduatedAt2 carbon.DateMilli `json:"graduated_at"`
+    GraduatedAt3 carbon.DateMicro `json:"graduated_at"`
+    GraduatedAt4 carbon.DateNano `json:"graduated_at"`
+	OperatedAt1 carbon.Time `json:"operated_at1"`
+    OperatedAt2 carbon.TimeMilli `json:"operated_at2"`
+    OperatedAt3 carbon.TimeMicro `json:"operated_at3"`
+    OperatedAt4 carbon.TimeNano `json:"operated_at4"`
+    CreatedAt1 carbon.Timestamp `json:"created_at1"`
+    CreatedAt2 carbon.TimestampMilli `json:"created_at2"`
+    CreatedAt3 carbon.TimestampMicro `json:"created_at3"`
+    CreatedAt4 carbon.TimestampNano `json:"created_at4"`
 }
 ```
 
@@ -1262,20 +1282,49 @@ carbon.Parse("2020-03-21 21:00:00").Lunar().IsTwelfthDoubleHour() // true
 
 ```go
 person := Person {
-	Name:        "gouguoyin",
-	Age:          18,
-	Birthday1:    carbon.DateTime{carbon.Now().SubYears(18)},
-	Birthday2:    carbon.DateTime{carbon.Now().SubYears(18)},
-	Birthday3:    carbon.DateTime{carbon.Now().SubYears(18)},
-	Birthday4:    carbon.DateTime{carbon.Now().SubYears(18)},
-	GraduatedAt1: carbon.Date{carbon.Now()},
-	GraduatedAt2: carbon.Date{carbon.Now()},
-	GraduatedAt3: carbon.Date{carbon.Now()},
-	GraduatedAt4: carbon.Date{carbon.Now()},
-	CreatedAt1:   carbon.Timestamp{carbon.Now()},
-	CreatedAt2:   carbon.TimestampMilli{carbon.Now()},
-	CreatedAt3:   carbon.TimestampMicro{carbon.Now()},
-	CreatedAt4:   carbon.TimestampNano{carbon.Now()},
+    Name:        "gouguoyin",
+    Age:          18,
+    Birthday1:    carbon.DateTime{carbon.Now().SubYears(18)},
+    Birthday2:    carbon.DateTimeMilli{carbon.Now().SubYears(18)},
+    Birthday3:    carbon.DateTimeMicro{carbon.Now().SubYears(18)},
+    Birthday4:    carbon.DateTimeNano{carbon.Now().SubYears(18)},
+    GraduatedAt1: carbon.Date{carbon.Now()},
+    GraduatedAt2: carbon.DateMilli{carbon.Now()},
+    GraduatedAt3: carbon.DateMicro{carbon.Now()},
+    GraduatedAt4: carbon.DateNano{carbon.Now()},
+    OperatedAt1:  carbon.Time{carbon.Now()},
+    OperatedAt2:  carbon.TimeMilli{carbon.Now()},
+    OperatedAt3:  carbon.TimeMicro{carbon.Now()},
+    OperatedAt4:  carbon.TimeNano{carbon.Now()},
+    CreatedAt1:   carbon.Timestamp{carbon.Now()},
+    CreatedAt2:   carbon.TimestampMilli{carbon.Now()},
+    CreatedAt3:   carbon.TimestampMicro{carbon.Now()},
+    CreatedAt4:   carbon.TimestampNano{carbon.Now()},
+}
+```
+
+或
+
+```go
+person := Person {
+    Name:        "gouguoyin",
+    Age:          18,
+    Birthday1:    carbon.Now().SubYears(18).ToDateTimeStruct(),
+    Birthday2:    carbon.Now().SubYears(18).ToDateTimeMilliStruct(),
+    Birthday3:    carbon.Now().SubYears(18).ToDateTimeMicroStruct(),
+    Birthday4:    carbon.Now().SubYears(18).ToDateTimeNanoStruct(),
+    GraduatedAt1: carbon.Now().ToDateStruct(),
+    GraduatedAt2: carbon.Now().ToDateMilliStruct(),
+    GraduatedAt3: carbon.Now().ToDateMicroStruct(),
+    GraduatedAt4: carbon.Now().ToDateNanoStruct(),
+    OperatedAt1:  carbon.Now().ToTimeStruct(),
+    OperatedAt2:  carbon.Now().ToTimeMilliStruct(),
+    OperatedAt3:  carbon.Now().ToTimeMicroStruct(),
+    OperatedAt4:  carbon.Now().ToTimeNanoStruct(),
+    CreatedAt1:   carbon.Now().ToTimestampStruct(),
+    CreatedAt2:   carbon.Now().ToTimestampMilliStruct(),
+    CreatedAt3:   carbon.Now().ToTimestampMicroStruct(),
+    CreatedAt4:   carbon.Now().ToTimestampNanoStruct(),
 }
 ```
 
@@ -1284,26 +1333,30 @@ person := Person {
 ```go
 data, err := json.Marshal(&person)
 if err != nil {
-	// 错误处理
-	log.Fatal(err)
+    // 错误处理
+    log.Fatal(err)
 }
 fmt.Printf("%s", data)
 // 输出
 {
-	"name": "gouguoyin",
-	"age": 18,
-	"birthday1": "2003-07-16 16:22:02",
-	"birthday2": "2003-07-16 16:22:02.999",
-	"birthday3": "2003-07-16 16:22:02.999999",
-	"birthday4": "2003-07-16 16:22:02.999999999",
-	"graduated_at1": "2020-08-05",
-	"graduated_at2": "2020-08-05.999",
-	"graduated_at3": "2020-08-05.999999",
-	"graduated_at4": "2020-08-05.999999999",
-	"created_at1": 1596604455,
-	"created_at2": 1596604455999,
-	"created_at3": 1596604455999999,
-	"created_at4": 1596604455999999999
+    "name": "gouguoyin",
+    "age": 18,
+    "birthday1": "2003-07-16 16:22:02",
+    "birthday2": "2003-07-16 16:22:02.999",
+    "birthday3": "2003-07-16 16:22:02.999999",
+    "birthday4": "2003-07-16 16:22:02.999999999",
+    "graduated_at1": "2020-08-05",
+    "graduated_at2": "2020-08-05.999",
+    "graduated_at3": "2020-08-05.999999",
+    "graduated_at4": "2020-08-05.999999999",
+    "operated_at1": "13:14:15",
+    "operated_at2": "13:14:15.999",
+    "operated_at3": "13:14:15.999999",
+    "operated_at4": "13:14:15.999999999",
+    "created_at1": 1596604455,
+    "created_at2": 1596604455999,
+    "created_at3": 1596604455999999,
+    "created_at4": 1596604455999999999
 }
 ```
 
@@ -1311,30 +1364,56 @@ fmt.Printf("%s", data)
 
 ```go
 str := `{
-	"name": "gouguoyin",
-	"age": 18,
-	"birthday1": "2003-07-16 16:22:02",
-	"birthday2": "2003-07-16 16:22:02.999",
-	"birthday3": "2003-07-16 16:22:02.999999",
-	"birthday4": "2003-07-16 16:22:02.999999999",
-	"graduated_at1": "2020-08-05",
-	"graduated_at2": "2020-08-05.999",
-	"graduated_at3": "2020-08-05.999999",
-	"graduated_at4": "2020-08-05.999999999",
-	"created_at1": 1596604455,
-	"created_at2": 1596604455999,
-	"created_at3": 1596604455999999,
-	"created_at4": 1596604455999999999
+    "name": "gouguoyin",
+    "age": 18,
+    "birthday1": "2003-07-16 16:22:02",
+    "birthday2": "2003-07-16 16:22:02.999",
+    "birthday3": "2003-07-16 16:22:02.999999",
+    "birthday4": "2003-07-16 16:22:02.999999999",
+    "graduated_at1": "2020-08-05",
+    "graduated_at2": "2020-08-05.999",
+    "graduated_at3": "2020-08-05.999999",
+    "graduated_at4": "2020-08-05.999999999",
+    "operated_at1": "13:14:15",
+    "operated_at2": "13:14:15.999",
+    "operated_at3": "13:14:15.999999",
+    "operated_at4": "13:14:15.999999999",
+    "created_at1": 1596604455,
+    "created_at2": 1596604455999,
+    "created_at3": 1596604455999999,
+    "created_at4": 1596604455999999999
 }`
 person := new(Person)
 err := json.Unmarshal([]byte(str), &person)
 if err != nil {
-	// 错误处理
-	log.Fatal(err)
+    // 错误处理
+    log.Fatal(err)
 }
-fmt.Printf("%+v", *person)
-// 输出
-{Name:gouguoyin Age:18 Birthday1:2003-07-16 16:22:02 Birthday2:2003-07-16 16:22:02.999 Birthday3:2003-07-16 16:22:02.999999 Birthday4:2003-07-16 16:22:02.999999999 GraduatedAt1:2020-08-05 GraduatedAt2:2020-08-05.999 GraduatedAt3:2020-08-05.999999 GraduatedAt4:2020-08-05.999999999 CreatedAt1:2020-08-05 13:14:15 CreatedAt2:2020-08-05 13:14:15.999 CreatedAt3:2020-08-05 13:14:15.999999 CreatedAt4:2020-08-05 13:14:15.999999999}
+
+person.Birthday1.String() // 2002-08-05 13:14:15
+person.Birthday2.String() // 2002-08-05 13:14:15.999
+person.Birthday3.String() // 2002-08-05 13:14:15.999999
+person.Birthday4.String() // 2002-08-05 13:14:15.999999999
+
+person.GraduatedAt1.String() // 2020-08-05
+person.GraduatedAt2.String() // 2020-08-05.999
+person.GraduatedAt3.String() // 2020-08-05.999999
+person.GraduatedAt4.String() // 2020-08-05.999999999
+
+person.OperatedAt1.String() // 13:14:15
+person.OperatedAt2.String() // 13:14:15.999
+person.OperatedAt3.String() // 13:14:15.999999
+person.OperatedAt4.String() // 13:14:15.999999999
+
+person.CreatedAt1.String() // "1691212455"
+person.CreatedAt2.String() // "1722834855999"
+person.CreatedAt3.String() // "1754370855999999"
+person.CreatedAt4.String() // "1754370855999999999"
+
+person.CreatedAt1.Int64() // 1691212455
+person.CreatedAt2.Int64() // 1722834855999
+person.CreatedAt3.Int64() // 1754370855999999
+person.CreatedAt4.Int64() // 1754370855999999999
 ```
 
 ##### 国际化支持
@@ -1357,6 +1436,9 @@ fmt.Printf("%+v", *person)
 * [马来西亚巴哈马语(ms-MY)](./lang/ms-MY.json "马来西亚巴哈马语"): 由 [hollowaykeanho](https://github.com/hollowaykeanho "hollowaykeanho") 翻译
 * [法语(fr)](./lang/fr.json "法语"): 由 [hollowaykeanho](https://github.com/hollowaykeanho "hollowaykeanho") 翻译
 * [泰语(th)](./lang/th.json "泰语"): 由 [izcream](https://github.com/izcream "izcream") 翻译
+* [瑞典语(se)](./lang/se.json "瑞典语"): 由 [jwanglof](https://github.com/jwanglof "jwanglof") 翻译
+* [伊朗语(fa)](./lang/fa.json "伊朗语"): 由 [erfanMomeniii](https://github.com/ErfanMomeniii "ErfanMomeniii") 翻译
+* [波兰语(nl)](./lang/nl.json "波兰语"): 由 [RemcoE33](https://github.com/RemcoE33 "RemcoE33") 翻译
 
 目前支持的方法有
 
@@ -1421,24 +1503,24 @@ c.Now().Season() // Summer
 ```go
 lang := carbon.NewLanguage()
 resources := map[string]string {
-	"months": "january|february|march|april|may|june|july|august|september|october|november|december",
-	"short_months": "jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec",
-	"weeks": "sunday|monday|tuesday|wednesday|thursday|friday|saturday",
-	"short_weeks": "sun|mon|tue|wed|thu|fri|sat",
-	"seasons": "spring|summer|autumn|winter",
-	"constellations": "aries|taurus|gemini|cancer|leo|virgo|libra|scorpio|sagittarius|capricornus|aquarius|pisce",
-	"year": "1 yr|%d yrs",
-	"month": "1 mo|%d mos",
-	"week": "%dw",
-	"day": "%dd",
-	"hour": "%dh",
-	"minute": "%dm",
-	"second": "%ds",
-	"now": "just now",
-	"ago": "%s ago",
-	"from_now": "in %s",
-	"before": "%s before",
-	"after": "%s after",
+    "months": "january|february|march|april|may|june|july|august|september|october|november|december",
+    "short_months": "jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec",
+    "weeks": "sunday|monday|tuesday|wednesday|thursday|friday|saturday",
+    "short_weeks": "sun|mon|tue|wed|thu|fri|sat",
+    "seasons": "spring|summer|autumn|winter",
+    "constellations": "aries|taurus|gemini|cancer|leo|virgo|libra|scorpio|sagittarius|capricornus|aquarius|pisce",
+    "year": "1 yr|%d yrs",
+    "month": "1 mo|%d mos",
+    "week": "%dw",
+    "day": "%dd",
+    "hour": "%dh",
+    "minute": "%dm",
+    "second": "%ds",
+    "now": "just now",
+    "ago": "%s ago",
+    "from_now": "in %s",
+    "before": "%s before",
+    "after": "%s after",
 }
 lang.SetResources(resources)
 
@@ -1451,6 +1533,22 @@ c.Now().ToWeekString() // tuesday
 c.Now().ToShortWeekString() // tue
 c.Now().Constellation() // leo
 c.Now().Season() // summer
+```
+
+##### 测试
+
+```go
+testNow := carbon.Parse("2020-08-05")
+
+carbon.SetTestNow(testNow).Yesterday().ToDateString() // 2020-08-04
+carbon.SetTestNow(testNow).Now().ToDateString() // 2020-08-05
+carbon.SetTestNow(testNow).Tomorrow().ToDateString() // 2020-08-06
+carbon.SetTestNow(testNow).Parse("2000-08-05").Age() // 30
+
+carbon.Now().HasTestNow() // false
+carbon.SetTestNow(testNow).HasTestNow() // true
+carbon.SetTestNow(testNow).ClearTestNow().HasTestNow() // false
+
 ```
 
 ##### 错误处理
@@ -1478,16 +1576,16 @@ invalid timezone "xxx", please see the file "$GOROOT/lib/time/zoneinfo.zip" for 
 | D | 缩写单词表示的周几 |  3 |     Mon-Sun      | Mon |
 | j | 月份中的第几天，没有前导零 |  - |       1-31       | 2 |
 | S | 第几天的英文缩写后缀，一般和j配合使用 |  2 |   st/nd/rd/th    | th |
-| l | 完整单词表示的周几 | - | Monday-Sunday | Monday |
-| F | 完整单词表示的月份 | - | January-December | January |
-| m | 数字表示的月份，有前导零 | 2 | 01-12 | 01 |
-| M | 缩写单词表示的月份 | 3 | Jan-Dec | Jan |
-| n | 数字表示的月份，没有前导零 | - | 1-12 | 1 |
-| Y | 4 位数字完整表示的年份 | 4 | 0000-9999 | 2006 |
-| y | 2 位数字表示的年份 | 2 | 00-99 | 06 |
-| a | 小写的上午和下午标识 | 2 | am/pm | pm |
-| A | 大写的上午和下午标识 | 2 | AM/PM | PM |
-| g | 小时，12 小时格式 | - | 1-12 | 3 |
+| l | 完整单词表示的周几 |  - |  Monday-Sunday   | Monday |
+| F | 完整单词表示的月份 |  - | January-December | January |
+| m | 数字表示的月份，有前导零 |  2 |      01-12       | 01 |
+| M | 缩写单词表示的月份 |  3 |     Jan-Dec      | Jan |
+| n | 数字表示的月份，没有前导零 |  - |       1-12       | 1 |
+| Y | 4 位数字完整表示的年份 |  4 |    0000-9999     | 2006 |
+| y | 2 位数字表示的年份 |  2 |      00-99       | 06 |
+| a | 小写的上午和下午标识 |  2 |      am/pm       | pm |
+| A | 大写的上午和下午标识 |  2 |      AM/PM       | PM |
+| g | 小时，12 小时格式 |  - |       1-12       | 3 |
 | G | 小时，24 小时格式 | - | 0-23 | 15 |
 | h | 小时，12 小时格式 | 2 | 00-11 | 03 |
 | H | 小时，24 小时格式 | 2 | 00-23 | 15 |
@@ -1540,6 +1638,7 @@ COPY ./zoneinfo.zip /usr/local/go/lib/time/zoneinfo.zip
 * [briannesbitt/carbon](https://github.com/briannesbitt/Carbon)
 * [jinzhu/now](https://github.com/jinzhu/now)
 * [goframe/gtime](https://github.com/gogf/gf/tree/master/os/gtime)
+* [jodaOrg/joda-time](https://github.com/jodaOrg/joda-time)
 * [arrow-py/arrow](https://github.com/arrow-py/arrow)
 * [moment/moment](https://github.com/moment/moment)
 * [iamkun/dayjs](https://github.com/iamkun/dayjs)

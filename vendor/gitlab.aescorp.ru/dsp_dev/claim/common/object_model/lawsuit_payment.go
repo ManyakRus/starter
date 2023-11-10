@@ -19,15 +19,15 @@ type LawsuitPayment struct {
 	Sum          float64         `json:"sum"          gorm:"column:sum;not null;default:0"`  // Сумма погашения после коррекции
 }
 
-// IsAfterNotify -- возвращает признак создания платежа после уведомления
-func (sf *LawsuitPayment) IsAfterNotify(contractNumber alias.ContractNumber) alias.IsAfterNotify {
-	lawsuit := NewLawsuit(contractNumber)
-	controlDate := lawsuit.CreatedAt
-	strControlDate := controlDate.Local().Format("2006-01-02 15:04:05")
-	paymentDate := sf.CreatedAt
-	strPaymentDate := paymentDate.Local().Format("2006-01-02 15:04:05")
-	return strControlDate < strPaymentDate
-}
+// // IsAfterNotify -- возвращает признак создания платежа после уведомления
+// func (sf *LawsuitPayment) IsAfterNotify(contractNumber alias.ContractNumber) alias.IsAfterNotify {
+// 	lawsuit := NewLawsuit(contractNumber)
+// 	controlDate := lawsuit.CreatedAt
+// 	strControlDate := controlDate.Local().Format("2006-01-02 15:04:05")
+// 	paymentDate := sf.CreatedAt
+// 	strPaymentDate := paymentDate.Local().Format("2006-01-02 15:04:05")
+// 	return strControlDate < strPaymentDate
+// }
 
 // RegisteredAt -- омент регистрации платежа в системе
 func (sf *LawsuitPayment) RegisteredAt() alias.PaymentRegisteredAt {

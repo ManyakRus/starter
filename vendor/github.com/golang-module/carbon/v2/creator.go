@@ -4,6 +4,15 @@ import (
 	"time"
 )
 
+// CreateFromStdTime creates a Carbon instance from standard time.Time.
+// 从标准的 time.Time 创建 Carbon 实例
+func CreateFromStdTime(tt time.Time) Carbon {
+	c := NewCarbon()
+	c.time = tt
+	c.loc = tt.Location()
+	return c
+}
+
 // CreateFromTimestamp creates a Carbon instance from a given timestamp with second.
 // 从给定的秒级时间戳创建 Carbon 实例
 func (c Carbon) CreateFromTimestamp(timestamp int64, timezone ...string) Carbon {

@@ -4049,6 +4049,429 @@ func (i *InputMediaDice) GetEmoticon() (value string) {
 	return i.Emoticon
 }
 
+// InputMediaStory represents TL type `inputMediaStory#89fdd778`.
+//
+// See https://core.telegram.org/constructor/inputMediaStory for reference.
+type InputMediaStory struct {
+	// Peer field of InputMediaStory.
+	Peer InputPeerClass
+	// ID field of InputMediaStory.
+	ID int
+}
+
+// InputMediaStoryTypeID is TL type id of InputMediaStory.
+const InputMediaStoryTypeID = 0x89fdd778
+
+// construct implements constructor of InputMediaClass.
+func (i InputMediaStory) construct() InputMediaClass { return &i }
+
+// Ensuring interfaces in compile-time for InputMediaStory.
+var (
+	_ bin.Encoder     = &InputMediaStory{}
+	_ bin.Decoder     = &InputMediaStory{}
+	_ bin.BareEncoder = &InputMediaStory{}
+	_ bin.BareDecoder = &InputMediaStory{}
+
+	_ InputMediaClass = &InputMediaStory{}
+)
+
+func (i *InputMediaStory) Zero() bool {
+	if i == nil {
+		return true
+	}
+	if !(i.Peer == nil) {
+		return false
+	}
+	if !(i.ID == 0) {
+		return false
+	}
+
+	return true
+}
+
+// String implements fmt.Stringer.
+func (i *InputMediaStory) String() string {
+	if i == nil {
+		return "InputMediaStory(nil)"
+	}
+	type Alias InputMediaStory
+	return fmt.Sprintf("InputMediaStory%+v", Alias(*i))
+}
+
+// FillFrom fills InputMediaStory from given interface.
+func (i *InputMediaStory) FillFrom(from interface {
+	GetPeer() (value InputPeerClass)
+	GetID() (value int)
+}) {
+	i.Peer = from.GetPeer()
+	i.ID = from.GetID()
+}
+
+// TypeID returns type id in TL schema.
+//
+// See https://core.telegram.org/mtproto/TL-tl#remarks.
+func (*InputMediaStory) TypeID() uint32 {
+	return InputMediaStoryTypeID
+}
+
+// TypeName returns name of type in TL schema.
+func (*InputMediaStory) TypeName() string {
+	return "inputMediaStory"
+}
+
+// TypeInfo returns info about TL type.
+func (i *InputMediaStory) TypeInfo() tdp.Type {
+	typ := tdp.Type{
+		Name: "inputMediaStory",
+		ID:   InputMediaStoryTypeID,
+	}
+	if i == nil {
+		typ.Null = true
+		return typ
+	}
+	typ.Fields = []tdp.Field{
+		{
+			Name:       "Peer",
+			SchemaName: "peer",
+		},
+		{
+			Name:       "ID",
+			SchemaName: "id",
+		},
+	}
+	return typ
+}
+
+// Encode implements bin.Encoder.
+func (i *InputMediaStory) Encode(b *bin.Buffer) error {
+	if i == nil {
+		return fmt.Errorf("can't encode inputMediaStory#89fdd778 as nil")
+	}
+	b.PutID(InputMediaStoryTypeID)
+	return i.EncodeBare(b)
+}
+
+// EncodeBare implements bin.BareEncoder.
+func (i *InputMediaStory) EncodeBare(b *bin.Buffer) error {
+	if i == nil {
+		return fmt.Errorf("can't encode inputMediaStory#89fdd778 as nil")
+	}
+	if i.Peer == nil {
+		return fmt.Errorf("unable to encode inputMediaStory#89fdd778: field peer is nil")
+	}
+	if err := i.Peer.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode inputMediaStory#89fdd778: field peer: %w", err)
+	}
+	b.PutInt(i.ID)
+	return nil
+}
+
+// Decode implements bin.Decoder.
+func (i *InputMediaStory) Decode(b *bin.Buffer) error {
+	if i == nil {
+		return fmt.Errorf("can't decode inputMediaStory#89fdd778 to nil")
+	}
+	if err := b.ConsumeID(InputMediaStoryTypeID); err != nil {
+		return fmt.Errorf("unable to decode inputMediaStory#89fdd778: %w", err)
+	}
+	return i.DecodeBare(b)
+}
+
+// DecodeBare implements bin.BareDecoder.
+func (i *InputMediaStory) DecodeBare(b *bin.Buffer) error {
+	if i == nil {
+		return fmt.Errorf("can't decode inputMediaStory#89fdd778 to nil")
+	}
+	{
+		value, err := DecodeInputPeer(b)
+		if err != nil {
+			return fmt.Errorf("unable to decode inputMediaStory#89fdd778: field peer: %w", err)
+		}
+		i.Peer = value
+	}
+	{
+		value, err := b.Int()
+		if err != nil {
+			return fmt.Errorf("unable to decode inputMediaStory#89fdd778: field id: %w", err)
+		}
+		i.ID = value
+	}
+	return nil
+}
+
+// GetPeer returns value of Peer field.
+func (i *InputMediaStory) GetPeer() (value InputPeerClass) {
+	if i == nil {
+		return
+	}
+	return i.Peer
+}
+
+// GetID returns value of ID field.
+func (i *InputMediaStory) GetID() (value int) {
+	if i == nil {
+		return
+	}
+	return i.ID
+}
+
+// InputMediaWebPage represents TL type `inputMediaWebPage#c21b8849`.
+//
+// See https://core.telegram.org/constructor/inputMediaWebPage for reference.
+type InputMediaWebPage struct {
+	// Flags field of InputMediaWebPage.
+	Flags bin.Fields
+	// ForceLargeMedia field of InputMediaWebPage.
+	ForceLargeMedia bool
+	// ForceSmallMedia field of InputMediaWebPage.
+	ForceSmallMedia bool
+	// Optional field of InputMediaWebPage.
+	Optional bool
+	// URL field of InputMediaWebPage.
+	URL string
+}
+
+// InputMediaWebPageTypeID is TL type id of InputMediaWebPage.
+const InputMediaWebPageTypeID = 0xc21b8849
+
+// construct implements constructor of InputMediaClass.
+func (i InputMediaWebPage) construct() InputMediaClass { return &i }
+
+// Ensuring interfaces in compile-time for InputMediaWebPage.
+var (
+	_ bin.Encoder     = &InputMediaWebPage{}
+	_ bin.Decoder     = &InputMediaWebPage{}
+	_ bin.BareEncoder = &InputMediaWebPage{}
+	_ bin.BareDecoder = &InputMediaWebPage{}
+
+	_ InputMediaClass = &InputMediaWebPage{}
+)
+
+func (i *InputMediaWebPage) Zero() bool {
+	if i == nil {
+		return true
+	}
+	if !(i.Flags.Zero()) {
+		return false
+	}
+	if !(i.ForceLargeMedia == false) {
+		return false
+	}
+	if !(i.ForceSmallMedia == false) {
+		return false
+	}
+	if !(i.Optional == false) {
+		return false
+	}
+	if !(i.URL == "") {
+		return false
+	}
+
+	return true
+}
+
+// String implements fmt.Stringer.
+func (i *InputMediaWebPage) String() string {
+	if i == nil {
+		return "InputMediaWebPage(nil)"
+	}
+	type Alias InputMediaWebPage
+	return fmt.Sprintf("InputMediaWebPage%+v", Alias(*i))
+}
+
+// FillFrom fills InputMediaWebPage from given interface.
+func (i *InputMediaWebPage) FillFrom(from interface {
+	GetForceLargeMedia() (value bool)
+	GetForceSmallMedia() (value bool)
+	GetOptional() (value bool)
+	GetURL() (value string)
+}) {
+	i.ForceLargeMedia = from.GetForceLargeMedia()
+	i.ForceSmallMedia = from.GetForceSmallMedia()
+	i.Optional = from.GetOptional()
+	i.URL = from.GetURL()
+}
+
+// TypeID returns type id in TL schema.
+//
+// See https://core.telegram.org/mtproto/TL-tl#remarks.
+func (*InputMediaWebPage) TypeID() uint32 {
+	return InputMediaWebPageTypeID
+}
+
+// TypeName returns name of type in TL schema.
+func (*InputMediaWebPage) TypeName() string {
+	return "inputMediaWebPage"
+}
+
+// TypeInfo returns info about TL type.
+func (i *InputMediaWebPage) TypeInfo() tdp.Type {
+	typ := tdp.Type{
+		Name: "inputMediaWebPage",
+		ID:   InputMediaWebPageTypeID,
+	}
+	if i == nil {
+		typ.Null = true
+		return typ
+	}
+	typ.Fields = []tdp.Field{
+		{
+			Name:       "ForceLargeMedia",
+			SchemaName: "force_large_media",
+			Null:       !i.Flags.Has(0),
+		},
+		{
+			Name:       "ForceSmallMedia",
+			SchemaName: "force_small_media",
+			Null:       !i.Flags.Has(1),
+		},
+		{
+			Name:       "Optional",
+			SchemaName: "optional",
+			Null:       !i.Flags.Has(2),
+		},
+		{
+			Name:       "URL",
+			SchemaName: "url",
+		},
+	}
+	return typ
+}
+
+// SetFlags sets flags for non-zero fields.
+func (i *InputMediaWebPage) SetFlags() {
+	if !(i.ForceLargeMedia == false) {
+		i.Flags.Set(0)
+	}
+	if !(i.ForceSmallMedia == false) {
+		i.Flags.Set(1)
+	}
+	if !(i.Optional == false) {
+		i.Flags.Set(2)
+	}
+}
+
+// Encode implements bin.Encoder.
+func (i *InputMediaWebPage) Encode(b *bin.Buffer) error {
+	if i == nil {
+		return fmt.Errorf("can't encode inputMediaWebPage#c21b8849 as nil")
+	}
+	b.PutID(InputMediaWebPageTypeID)
+	return i.EncodeBare(b)
+}
+
+// EncodeBare implements bin.BareEncoder.
+func (i *InputMediaWebPage) EncodeBare(b *bin.Buffer) error {
+	if i == nil {
+		return fmt.Errorf("can't encode inputMediaWebPage#c21b8849 as nil")
+	}
+	i.SetFlags()
+	if err := i.Flags.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode inputMediaWebPage#c21b8849: field flags: %w", err)
+	}
+	b.PutString(i.URL)
+	return nil
+}
+
+// Decode implements bin.Decoder.
+func (i *InputMediaWebPage) Decode(b *bin.Buffer) error {
+	if i == nil {
+		return fmt.Errorf("can't decode inputMediaWebPage#c21b8849 to nil")
+	}
+	if err := b.ConsumeID(InputMediaWebPageTypeID); err != nil {
+		return fmt.Errorf("unable to decode inputMediaWebPage#c21b8849: %w", err)
+	}
+	return i.DecodeBare(b)
+}
+
+// DecodeBare implements bin.BareDecoder.
+func (i *InputMediaWebPage) DecodeBare(b *bin.Buffer) error {
+	if i == nil {
+		return fmt.Errorf("can't decode inputMediaWebPage#c21b8849 to nil")
+	}
+	{
+		if err := i.Flags.Decode(b); err != nil {
+			return fmt.Errorf("unable to decode inputMediaWebPage#c21b8849: field flags: %w", err)
+		}
+	}
+	i.ForceLargeMedia = i.Flags.Has(0)
+	i.ForceSmallMedia = i.Flags.Has(1)
+	i.Optional = i.Flags.Has(2)
+	{
+		value, err := b.String()
+		if err != nil {
+			return fmt.Errorf("unable to decode inputMediaWebPage#c21b8849: field url: %w", err)
+		}
+		i.URL = value
+	}
+	return nil
+}
+
+// SetForceLargeMedia sets value of ForceLargeMedia conditional field.
+func (i *InputMediaWebPage) SetForceLargeMedia(value bool) {
+	if value {
+		i.Flags.Set(0)
+		i.ForceLargeMedia = true
+	} else {
+		i.Flags.Unset(0)
+		i.ForceLargeMedia = false
+	}
+}
+
+// GetForceLargeMedia returns value of ForceLargeMedia conditional field.
+func (i *InputMediaWebPage) GetForceLargeMedia() (value bool) {
+	if i == nil {
+		return
+	}
+	return i.Flags.Has(0)
+}
+
+// SetForceSmallMedia sets value of ForceSmallMedia conditional field.
+func (i *InputMediaWebPage) SetForceSmallMedia(value bool) {
+	if value {
+		i.Flags.Set(1)
+		i.ForceSmallMedia = true
+	} else {
+		i.Flags.Unset(1)
+		i.ForceSmallMedia = false
+	}
+}
+
+// GetForceSmallMedia returns value of ForceSmallMedia conditional field.
+func (i *InputMediaWebPage) GetForceSmallMedia() (value bool) {
+	if i == nil {
+		return
+	}
+	return i.Flags.Has(1)
+}
+
+// SetOptional sets value of Optional conditional field.
+func (i *InputMediaWebPage) SetOptional(value bool) {
+	if value {
+		i.Flags.Set(2)
+		i.Optional = true
+	} else {
+		i.Flags.Unset(2)
+		i.Optional = false
+	}
+}
+
+// GetOptional returns value of Optional conditional field.
+func (i *InputMediaWebPage) GetOptional() (value bool) {
+	if i == nil {
+		return
+	}
+	return i.Flags.Has(2)
+}
+
+// GetURL returns value of URL field.
+func (i *InputMediaWebPage) GetURL() (value string) {
+	if i == nil {
+		return
+	}
+	return i.URL
+}
+
 // InputMediaClassName is schema name of InputMediaClass.
 const InputMediaClassName = "InputMedia"
 
@@ -4078,6 +4501,8 @@ const InputMediaClassName = "InputMedia"
 //	case *tg.InputMediaGeoLive: // inputMediaGeoLive#971fa843
 //	case *tg.InputMediaPoll: // inputMediaPoll#f94e5f1
 //	case *tg.InputMediaDice: // inputMediaDice#e66fbf7b
+//	case *tg.InputMediaStory: // inputMediaStory#89fdd778
+//	case *tg.InputMediaWebPage: // inputMediaWebPage#c21b8849
 //	default: panic(v)
 //	}
 type InputMediaClass interface {
@@ -4207,6 +4632,20 @@ func DecodeInputMedia(buf *bin.Buffer) (InputMediaClass, error) {
 	case InputMediaDiceTypeID:
 		// Decoding inputMediaDice#e66fbf7b.
 		v := InputMediaDice{}
+		if err := v.Decode(buf); err != nil {
+			return nil, fmt.Errorf("unable to decode InputMediaClass: %w", err)
+		}
+		return &v, nil
+	case InputMediaStoryTypeID:
+		// Decoding inputMediaStory#89fdd778.
+		v := InputMediaStory{}
+		if err := v.Decode(buf); err != nil {
+			return nil, fmt.Errorf("unable to decode InputMediaClass: %w", err)
+		}
+		return &v, nil
+	case InputMediaWebPageTypeID:
+		// Decoding inputMediaWebPage#c21b8849.
+		v := InputMediaWebPage{}
 		if err := v.Decode(buf); err != nil {
 			return nil, fmt.Errorf("unable to decode InputMediaClass: %w", err)
 		}

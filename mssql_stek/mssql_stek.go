@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/golang-module/carbon/v2"
-	model "gitlab.aescorp.ru/dsp_dev/claim/common/object_model"
+	"gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/object_model/entities/connections"
 
 	//"github.com/ManyakRus/starter/common/pkg/v0/stopapp"
 	"github.com/ManyakRus/starter/contextmain"
@@ -23,7 +23,7 @@ var log = logger.GetLog()
 var Loc = time.Local
 
 // FindDate_ClosedMonth - возвращает дату последнего закрытого периода в СТЕК
-func FindDate_ClosedMonth(c model.Connection) (time.Time, error) {
+func FindDate_ClosedMonth(c connections.Connection) (time.Time, error) {
 	var err error
 	var Otvet time.Time
 
@@ -93,7 +93,7 @@ func FindDate_ClosedMonth(c model.Connection) (time.Time, error) {
 }
 
 // FindDateFromTo - находит даты загрузки остатков и документов
-func FindDateFromTo(Connection model.Connection) (date1_balances, date2_balances, date1_doc, date2_doc time.Time, err error) {
+func FindDateFromTo(Connection connections.Connection) (date1_balances, date2_balances, date1_doc, date2_doc time.Time, err error) {
 
 	date_closed, err := FindDate_ClosedMonth(Connection)
 

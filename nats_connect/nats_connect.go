@@ -105,12 +105,22 @@ func FillSettings() {
 	Settings.NATS_LOGIN = os.Getenv("NATS_LOGIN")
 	Settings.NATS_PASSWORD = os.Getenv("NATS_PASSWORD")
 
+	// как у всех
 	if Settings.NATS_HOST == "" {
-		log.Panicln("Need fill NATS_HOST ! in os.ENV ")
+		Settings.NATS_HOST = os.Getenv("BUS_LOCAL_HOST")
 	}
 
 	if Settings.NATS_PORT == "" {
-		log.Panicln("Need fill NATS_PORT ! in os.ENV ")
+		Settings.NATS_PORT = os.Getenv("BUS_LOCAL_PORT")
+	}
+
+	if Settings.NATS_HOST == "" {
+		log.Error("Need fill NATS_HOST ! in os.ENV ")
+	}
+
+	//
+	if Settings.NATS_PORT == "" {
+		log.Error("Need fill NATS_PORT ! in os.ENV ")
 	}
 
 	//if Settings.NATS_LOGIN == "" {

@@ -29,7 +29,7 @@ import (
 //
 //		// Construct a synchronous writer (the default mode).
 //		w := &kafka.Writer{
-//			Addr:         Addr: kafka.TCP("localhost:9092", "localhost:9093", "localhost:9094"),
+//			Addr:         kafka.TCP("localhost:9092", "localhost:9093", "localhost:9094"),
 //			Topic:        "topic-A",
 //			RequiredAcks: kafka.RequireAll,
 //		}
@@ -55,7 +55,7 @@ import (
 // writer to receive notifications of messages being written to kafka:
 //
 //	w := &kafka.Writer{
-//		Addr:         Addr: kafka.TCP("localhost:9092", "localhost:9093", "localhost:9094"),
+//		Addr:         kafka.TCP("localhost:9092", "localhost:9093", "localhost:9094"),
 //		Topic:        "topic-A",
 //		RequiredAcks: kafka.RequireAll,
 //		Async:        true, // make the writer asynchronous
@@ -600,9 +600,12 @@ func (w *Writer) Close() error {
 //
 // The context passed as first argument may also be used to asynchronously
 // cancel the operation. Note that in this case there are no guarantees made on
-// whether messages were written to kafka. The program should assume that the
-// whole batch failed and re-write the messages later (which could then cause
-// duplicates).
+// whether messages were written to kafka, they might also still be written
+// after this method has already returned, therefore it is important to not
+// modify byte slices of passed messages if WriteMessages returned early due
+// to a canceled context.
+// The program should assume that the whole batch failed and re-write the
+// messages later (which could then cause duplicates).
 func (w *Writer) WriteMessages(ctx context.Context, msgs ...Message) error {
 	if w.Addr == nil {
 		return errors.New("kafka.(*Writer).WriteMessages: cannot create a kafka writer with a nil address")
@@ -621,7 +624,7 @@ func (w *Writer) WriteMessages(ctx context.Context, msgs ...Message) error {
 	batchBytes := w.batchBytes()
 
 	for i := range msgs {
-		n := int64(msgs[i].size())
+		n := int64(msgs[i].totalSize())
 		if n > batchBytes {
 			// This error is left for backward compatibility with historical
 			// behavior, but it can yield O(N^2) behaviors. The expectations
@@ -888,13 +891,13 @@ func (w *Writer) Stats() WriterStats {
 		Retries:         stats.retries.snapshot(),
 		BatchSize:       stats.batchSize.snapshot(),
 		BatchBytes:      stats.batchSizeBytes.snapshot(),
-		MaxAttempts:     int64(w.MaxAttempts),
-		WriteBackoffMin: w.WriteBackoffMin,
-		WriteBackoffMax: w.WriteBackoffMax,
-		MaxBatchSize:    int64(w.BatchSize),
-		BatchTimeout:    w.BatchTimeout,
-		ReadTimeout:     w.ReadTimeout,
-		WriteTimeout:    w.WriteTimeout,
+		MaxAttempts:     int64(w.maxAttempts()),
+		WriteBackoffMin: w.writeBackoffMin(),
+		WriteBackoffMax: w.writeBackoffMax(),
+		MaxBatchSize:    int64(w.batchSize()),
+		BatchTimeout:    w.batchTimeout(),
+		ReadTimeout:     w.readTimeout(),
+		WriteTimeout:    w.writeTimeout(),
 		RequiredAcks:    int64(w.RequiredAcks),
 		Async:           w.Async,
 		Topic:           w.Topic,
@@ -1153,7 +1156,7 @@ func (ptw *partitionWriter) writeBatch(batch *writeBatch) {
 		stats.errors.observe(1)
 
 		ptw.w.withErrorLogger(func(log Logger) {
-			log.Printf("error writing messages to %s (partition %d): %s", key.topic, key.partition, err)
+			log.Printf("error writing messages to %s (partition %d, attempt %d): %s", key.topic, key.partition, attempt, err)
 		})
 
 		if !isTemporary(err) && !isTransientNetworkError(err) {
@@ -1216,7 +1219,7 @@ func newWriteBatch(now time.Time, timeout time.Duration) *writeBatch {
 }
 
 func (b *writeBatch) add(msg Message, maxSize int, maxBytes int64) bool {
-	bytes := int64(msg.size())
+	bytes := int64(msg.totalSize())
 
 	if b.size > 0 && (b.bytes+bytes) > maxBytes {
 		return false

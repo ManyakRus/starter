@@ -676,6 +676,21 @@ func BoolFromInt(i int) bool {
 	return Otvet
 }
 
+// BoolFromString - возвращает true если строка = true, или =1
+func BoolFromString(s string) bool {
+	Otvet := false
+
+	s = strings.TrimLeft(s, " ")
+	s = strings.TrimRight(s, " ")
+	s = strings.ToLower(s)
+
+	if s == "true" || s == "1" {
+		Otvet = true
+	}
+
+	return Otvet
+}
+
 // DeleteFileSeperator - убирает в конце / или \
 func DeleteFileSeperator(dir string) string {
 	Otvet := dir
@@ -691,4 +706,49 @@ func DeleteFileSeperator(dir string) string {
 	}
 
 	return Otvet
+}
+
+// CreateFolder - создаёт папку на диске
+func CreateFolder(FilenameFull string, FilePermissions uint32) error {
+	var err error
+
+	FileMode1 := os.FileMode(FilePermissions)
+	if FilePermissions == 0 {
+		FileMode1 = os.FileMode(0700)
+	}
+
+	if _, err := os.Stat(FilenameFull); errors.Is(err, os.ErrNotExist) {
+		err := os.Mkdir(FilenameFull, FileMode1)
+		if err != nil {
+			return err
+		}
+	}
+
+	return err
+}
+
+// DeleteFolder - создаёт папку на диске
+func DeleteFolder(FilenameFull string) error {
+	var err error
+
+	if _, err := os.Stat(FilenameFull); errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+
+	err = os.RemoveAll(FilenameFull)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
+// ContextDone - возвращает true если контекст завершен
+func ContextDone(ctx context.Context) bool {
+	select {
+	case <-ctx.Done():
+		return true
+	default:
+		return false
+	}
 }

@@ -298,6 +298,32 @@ func (s InputMediaClassArray) AsInputMediaDice() (to InputMediaDiceArray) {
 	return to
 }
 
+// AsInputMediaStory returns copy with only InputMediaStory constructors.
+func (s InputMediaClassArray) AsInputMediaStory() (to InputMediaStoryArray) {
+	for _, elem := range s {
+		value, ok := elem.(*InputMediaStory)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsInputMediaWebPage returns copy with only InputMediaWebPage constructors.
+func (s InputMediaClassArray) AsInputMediaWebPage() (to InputMediaWebPageArray) {
+	for _, elem := range s {
+		value, ok := elem.(*InputMediaWebPage)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
 // InputMediaUploadedPhotoArray is adapter for slice of InputMediaUploadedPhoto.
 type InputMediaUploadedPhotoArray []InputMediaUploadedPhoto
 
@@ -1434,6 +1460,198 @@ func (s *InputMediaDiceArray) PopFirst() (v InputMediaDice, ok bool) {
 
 // Pop returns last element of slice (if exists) and deletes it.
 func (s *InputMediaDiceArray) Pop() (v InputMediaDice, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// InputMediaStoryArray is adapter for slice of InputMediaStory.
+type InputMediaStoryArray []InputMediaStory
+
+// Sort sorts slice of InputMediaStory.
+func (s InputMediaStoryArray) Sort(less func(a, b InputMediaStory) bool) InputMediaStoryArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of InputMediaStory.
+func (s InputMediaStoryArray) SortStable(less func(a, b InputMediaStory) bool) InputMediaStoryArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of InputMediaStory.
+func (s InputMediaStoryArray) Retain(keep func(x InputMediaStory) bool) InputMediaStoryArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s InputMediaStoryArray) First() (v InputMediaStory, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s InputMediaStoryArray) Last() (v InputMediaStory, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *InputMediaStoryArray) PopFirst() (v InputMediaStory, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero InputMediaStory
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *InputMediaStoryArray) Pop() (v InputMediaStory, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// SortByID sorts slice of InputMediaStory by ID.
+func (s InputMediaStoryArray) SortByID() InputMediaStoryArray {
+	return s.Sort(func(a, b InputMediaStory) bool {
+		return a.GetID() < b.GetID()
+	})
+}
+
+// SortStableByID sorts slice of InputMediaStory by ID.
+func (s InputMediaStoryArray) SortStableByID() InputMediaStoryArray {
+	return s.SortStable(func(a, b InputMediaStory) bool {
+		return a.GetID() < b.GetID()
+	})
+}
+
+// FillMap fills constructors to given map.
+func (s InputMediaStoryArray) FillMap(to map[int]InputMediaStory) {
+	for _, value := range s {
+		to[value.GetID()] = value
+	}
+}
+
+// ToMap collects constructors to map.
+func (s InputMediaStoryArray) ToMap() map[int]InputMediaStory {
+	r := make(map[int]InputMediaStory, len(s))
+	s.FillMap(r)
+	return r
+}
+
+// InputMediaWebPageArray is adapter for slice of InputMediaWebPage.
+type InputMediaWebPageArray []InputMediaWebPage
+
+// Sort sorts slice of InputMediaWebPage.
+func (s InputMediaWebPageArray) Sort(less func(a, b InputMediaWebPage) bool) InputMediaWebPageArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of InputMediaWebPage.
+func (s InputMediaWebPageArray) SortStable(less func(a, b InputMediaWebPage) bool) InputMediaWebPageArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of InputMediaWebPage.
+func (s InputMediaWebPageArray) Retain(keep func(x InputMediaWebPage) bool) InputMediaWebPageArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s InputMediaWebPageArray) First() (v InputMediaWebPage, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s InputMediaWebPageArray) Last() (v InputMediaWebPage, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *InputMediaWebPageArray) PopFirst() (v InputMediaWebPage, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero InputMediaWebPage
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *InputMediaWebPageArray) Pop() (v InputMediaWebPage, ok bool) {
 	if s == nil || len(*s) < 1 {
 		return
 	}

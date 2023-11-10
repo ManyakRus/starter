@@ -13,6 +13,9 @@ func (c Carbon) Now(timezone ...string) Carbon {
 	if c.Error != nil {
 		return c
 	}
+	if c.HasTestNow() {
+		return CreateFromTimestampNano(c.testNow, c.Location())
+	}
 	c.time = time.Now().In(c.loc)
 	return c
 }
@@ -32,12 +35,13 @@ func (c Carbon) Tomorrow(timezone ...string) Carbon {
 	if c.Error != nil {
 		return c
 	}
-	if c.IsZero() {
-		c.time = c.Now().time.In(c.loc).AddDate(0, 0, 1)
-		return c
+	if c.HasTestNow() {
+		return CreateFromTimestampNano(c.testNow, c.Location()).AddDay()
 	}
-	c.time = c.time.In(c.loc).AddDate(0, 0, 1)
-	return c
+	if !c.IsZero() {
+		return c.AddDay()
+	}
+	return c.Now().AddDay()
 }
 
 // Tomorrow returns a Carbon instance for tomorrow.
@@ -55,18 +59,49 @@ func (c Carbon) Yesterday(timezone ...string) Carbon {
 	if c.Error != nil {
 		return c
 	}
-	if c.IsZero() {
-		c.time = c.Now().time.In(c.loc).AddDate(0, 0, -1)
-		return c
+	if c.HasTestNow() {
+		return CreateFromTimestampNano(c.testNow, c.Location()).SubDay()
 	}
-	c.time = c.time.In(c.loc).AddDate(0, 0, -1)
-	return c
+	if !c.IsZero() {
+		return c.SubDay()
+	}
+	return c.Now().SubDay()
 }
 
 // Yesterday returns a Carbon instance for yesterday.
 // 昨天
 func Yesterday(timezone ...string) Carbon {
 	return NewCarbon().Yesterday(timezone...)
+}
+
+// Closest returns the closest Carbon instance from the given Carbon instance (second-precision).
+// 返回离给定 carbon 实例最近的 Carbon 实例
+func (c Carbon) Closest(c1 Carbon, c2 Carbon) Carbon {
+	if c1.IsZero() || c1.IsInvalid() {
+		return c2
+	}
+	if c2.IsZero() || c2.IsInvalid() {
+		return c1
+	}
+	if c.DiffAbsInSeconds(c1) < c.DiffAbsInSeconds(c2) {
+		return c1
+	}
+	return c2
+}
+
+// Farthest returns the farthest Carbon instance from the given Carbon instance (second-precision).
+// 返回离给定 carbon 实例最远的 Carbon 实例
+func (c Carbon) Farthest(c1 Carbon, c2 Carbon) Carbon {
+	if c1.IsZero() || c1.IsInvalid() {
+		return c2
+	}
+	if c2.IsZero() || c2.IsInvalid() {
+		return c1
+	}
+	if c.DiffAbsInSeconds(c1) > c.DiffAbsInSeconds(c2) {
+		return c1
+	}
+	return c2
 }
 
 // AddDuration adds one duration.
@@ -76,7 +111,7 @@ func (c Carbon) AddDuration(duration string) Carbon {
 		return c
 	}
 	td, err := parseByDuration(duration)
-	c.time, c.Error = c.time.In(c.loc).Add(td), err
+	c.time, c.Error = c.ToStdTime().Add(td), err
 	return c
 }
 
@@ -188,7 +223,7 @@ func (c Carbon) AddYears(years int) Carbon {
 	if c.IsInvalid() {
 		return c
 	}
-	c.time = c.time.In(c.loc).AddDate(years, 0, 0)
+	c.time = c.ToStdTime().AddDate(years, 0, 0)
 	return c
 }
 
@@ -301,7 +336,7 @@ func (c Carbon) AddMonths(months int) Carbon {
 	if c.IsInvalid() {
 		return c
 	}
-	c.time = c.time.In(c.loc).AddDate(0, months, 0)
+	c.time = c.ToStdTime().AddDate(0, months, 0)
 	return c
 }
 
@@ -387,7 +422,7 @@ func (c Carbon) AddDays(days int) Carbon {
 	if c.IsInvalid() {
 		return c
 	}
-	c.time = c.time.In(c.loc).AddDate(0, 0, days)
+	c.time = c.ToStdTime().AddDate(0, 0, days)
 	return c
 }
 
@@ -416,7 +451,7 @@ func (c Carbon) AddHours(hours int) Carbon {
 		return c
 	}
 	td := time.Duration(hours) * time.Hour
-	c.time = c.time.In(c.loc).Add(td)
+	c.time = c.ToStdTime().Add(td)
 	return c
 }
 
@@ -445,7 +480,7 @@ func (c Carbon) AddMinutes(minutes int) Carbon {
 		return c
 	}
 	td := time.Duration(minutes) * time.Minute
-	c.time = c.time.In(c.loc).Add(td)
+	c.time = c.ToStdTime().Add(td)
 	return c
 }
 
@@ -474,7 +509,7 @@ func (c Carbon) AddSeconds(seconds int) Carbon {
 		return c
 	}
 	td := time.Duration(seconds) * time.Second
-	c.time = c.time.In(c.loc).Add(td)
+	c.time = c.ToStdTime().Add(td)
 	return c
 }
 
@@ -503,7 +538,7 @@ func (c Carbon) AddMilliseconds(milliseconds int) Carbon {
 		return c
 	}
 	td := time.Duration(milliseconds) * time.Millisecond
-	c.time = c.time.In(c.loc).Add(td)
+	c.time = c.ToStdTime().Add(td)
 	return c
 }
 
@@ -532,7 +567,7 @@ func (c Carbon) AddMicroseconds(microseconds int) Carbon {
 		return c
 	}
 	td := time.Duration(microseconds) * time.Microsecond
-	c.time = c.time.In(c.loc).Add(td)
+	c.time = c.ToStdTime().Add(td)
 	return c
 }
 
@@ -561,7 +596,7 @@ func (c Carbon) AddNanoseconds(nanoseconds int) Carbon {
 		return c
 	}
 	td := time.Duration(nanoseconds) * time.Nanosecond
-	c.time = c.time.In(c.loc).Add(td)
+	c.time = c.ToStdTime().Add(td)
 	return c
 }
 

@@ -366,3 +366,54 @@ func TestDeleteFileSeperator(t *testing.T) {
 		t.Error("TestDeleteFileSeperator() error")
 	}
 }
+
+func TestCreateFolder(t *testing.T) {
+	dir := ProgramDir()
+	Filename := dir + "TestCreateFolder"
+	err := CreateFolder(Filename, 0)
+	if err != nil {
+		t.Error("TestCreateFolder() error: ", err)
+	}
+
+	err = DeleteFolder(Filename)
+	if err != nil {
+		t.Error("TestCreateFolder() error: ", err)
+	}
+
+}
+
+func TestDeleteFolder(t *testing.T) {
+	dir := ProgramDir()
+	err := DeleteFolder(dir + "TestCreateFolder")
+	if err != nil {
+		t.Error("TestDeleteFolder() error: ", err)
+	}
+}
+
+func TestBoolFromString(t *testing.T) {
+	Otvet := BoolFromString(" TrUe ")
+	if Otvet != true {
+		t.Error("TestBoolFromString() error: Otvet != true")
+	}
+
+	Otvet = BoolFromString("TrUe0")
+	if Otvet != false {
+		t.Error("TestBoolFromString() error: Otvet != true")
+	}
+
+}
+
+func TestContextDone(t *testing.T) {
+	// Testing when context is done
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if !ContextDone(ctx) {
+		t.Error("Expected ContextDone to return true when context is done")
+	}
+
+	// Testing when context is not done
+	ctx = context.Background()
+	if ContextDone(ctx) {
+		t.Error("Expected ContextDone to return false when context is not done")
+	}
+}

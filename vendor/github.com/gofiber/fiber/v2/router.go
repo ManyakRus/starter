@@ -6,6 +6,7 @@ package fiber
 
 import (
 	"fmt"
+	"html"
 	"sort"
 	"strconv"
 	"strings"
@@ -147,7 +148,7 @@ func (app *App) next(c *Ctx) (bool, error) {
 	}
 
 	// If c.Next() does not match, return 404
-	err := NewError(StatusNotFound, "Cannot "+c.method+" "+c.pathOriginal)
+	err := NewError(StatusNotFound, "Cannot "+c.method+" "+html.EscapeString(c.pathOriginal))
 	if !c.matched && app.methodExist(c) {
 		// If no match, scan stack again if other methods match the request
 		// Moved from app.handler because middleware may break the route chain
@@ -184,7 +185,7 @@ func (app *App) handler(rctx *fasthttp.RequestCtx) { //revive:disable-line:confu
 func (app *App) addPrefixToRoute(prefix string, route *Route) *Route {
 	prefixedPath := getGroupPath(prefix, route.Path)
 	prettyPath := prefixedPath
-	// Case sensitive routing, all to lowercase
+	// Case-sensitive routing, all to lowercase
 	if !app.config.CaseSensitive {
 		prettyPath = utils.ToLower(prettyPath)
 	}
@@ -248,7 +249,7 @@ func (app *App) register(method, pathRaw string, group *Group, handlers ...Handl
 	}
 	// Create a stripped path in-case sensitive / trailing slashes
 	pathPretty := pathRaw
-	// Case sensitive routing, all to lowercase
+	// Case-sensitive routing, all to lowercase
 	if !app.config.CaseSensitive {
 		pathPretty = utils.ToLower(pathPretty)
 	}
@@ -305,7 +306,7 @@ func (app *App) register(method, pathRaw string, group *Group, handlers ...Handl
 }
 
 func (app *App) registerStatic(prefix, root string, config ...Static) {
-	// For security we want to restrict to the current work directory.
+	// For security, we want to restrict to the current work directory.
 	if root == "" {
 		root = "."
 	}
@@ -317,7 +318,7 @@ func (app *App) registerStatic(prefix, root string, config ...Static) {
 	if prefix[0] != '/' {
 		prefix = "/" + prefix
 	}
-	// in case sensitive routing, all to lowercase
+	// in case-sensitive routing, all to lowercase
 	if !app.config.CaseSensitive {
 		prefix = utils.ToLower(prefix)
 	}

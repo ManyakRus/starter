@@ -14,13 +14,17 @@ type ReportSummary struct {
 	ClaimsInWork    int    `json:"claims_in_work"      gorm:"-:all"`
 	ClaimsInWorkSum string `json:"claims_in_work_sum"  gorm:"-:all"`
 
+	// На этапе уведомления
+	ClaimsStatus3    int    `json:"claims_status_3"      gorm:"-:all"`
+	ClaimsStatus3Sum string `json:"claims_status_3_sum"  gorm:"-:all"`
+
 	// Завершено на этапе претензии в связи с оплатой с начала года
-	ClaimsStatus2    int    `json:"claims_status_2"      gorm:"-:all"`
-	ClaimsStatus2Sum string `json:"claims_status_2_sum"  gorm:"-:all"`
+	ClaimsStatus6    int    `json:"claims_status_6"      gorm:"-:all"`
+	ClaimsStatus6Sum string `json:"claims_status_6_sum"  gorm:"-:all"`
 
 	// Ожидает передачи в исковое производство
-	ClaimsStatus7    int    `json:"claims_status_7"      gorm:"-:all"`
-	ClaimsStatus7Sum string `json:"claims_status_7_sum"  gorm:"-:all"`
+	ClaimsStatus8    int    `json:"claims_status_8"      gorm:"-:all"`
+	ClaimsStatus8Sum string `json:"claims_status_8_sum"  gorm:"-:all"`
 
 	// Досудебная претензия, которая на стадии мониторинга с направлением по e-mail
 	ClaimsChannel1401    int    `json:"claims_channel_1401"      gorm:"-:all"`

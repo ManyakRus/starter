@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"runtime"
@@ -14,6 +13,8 @@ import (
 	"time"
 
 	"github.com/valyala/fasthttp/reuseport"
+
+	"github.com/gofiber/fiber/v2/log"
 )
 
 const (
@@ -77,7 +78,7 @@ func (app *App) prefork(network, addr string, tlsConfig *tls.Config) error {
 		for _, proc := range childs {
 			if err := proc.Process.Kill(); err != nil {
 				if !errors.Is(err, os.ErrProcessDone) {
-					log.Printf("prefork: failed to kill child: %v\n", err)
+					log.Errorf("prefork: failed to kill child: %v", err)
 				}
 			}
 		}
@@ -128,7 +129,7 @@ func (app *App) prefork(network, addr string, tlsConfig *tls.Config) error {
 
 	// Run onListen hooks
 	// Hooks have to be run here as different as non-prefork mode due to they should run as child or master
-	app.runOnListenHooks()
+	app.runOnListenHooks(app.prepareListenData(addr, tlsConfig != nil))
 
 	// Print startup message
 	if !app.config.DisableStartupMessage {

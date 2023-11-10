@@ -11,8 +11,8 @@ import (
 	"github.com/ManyakRus/starter/micro"
 	"github.com/ManyakRus/starter/ping"
 	"github.com/ManyakRus/starter/stopapp"
-	//"gitlab.aescorp.ru/dsp_dev/claim/stack_exchange/internal/v0/app/constants"
-	//"github.com/ManyakRus/starter/mssql"
+	// "gitlab.aescorp.ru/dsp_dev/claim/stack_exchange/internal/v0/app/constants"
+	// "github.com/ManyakRus/starter/mssql"
 	"os"
 	"time"
 )
@@ -30,10 +30,10 @@ var NeedReconnect bool
 type SettingsINI struct {
 	CAMUNDA_HOST string
 	CAMUNDA_PORT string
-	//// CAMUNDA_ID - имя сервиса в CAMUNDA
-	//CAMUNDA_ID       string
-	//CAMUNDA_BPMNFILE string
-	//CAMUNDA_JOBTYPE  string
+	// // CAMUNDA_ID - имя сервиса в CAMUNDA
+	// CAMUNDA_ID       string
+	// CAMUNDA_BPMNFILE string
+	// CAMUNDA_JOBTYPE  string
 }
 
 // Client - клиент подключения к CAMUNDA_ID
@@ -47,9 +47,9 @@ func FillSettings() {
 	Settings = SettingsINI{}
 	Settings.CAMUNDA_HOST = os.Getenv("CAMUNDA_HOST")
 	Settings.CAMUNDA_PORT = os.Getenv("CAMUNDA_PORT")
-	//Settings.CAMUNDA_ID = os.Getenv("CAMUNDA_ID")
-	//Settings.CAMUNDA_BPMNFILE = os.Getenv("CAMUNDA_BPMNFILE")
-	//Settings.CAMUNDA_JOBTYPE = os.Getenv("CAMUNDA_JOBTYPE")
+	// Settings.CAMUNDA_ID = os.Getenv("CAMUNDA_ID")
+	// Settings.CAMUNDA_BPMNFILE = os.Getenv("CAMUNDA_BPMNFILE")
+	// Settings.CAMUNDA_JOBTYPE = os.Getenv("CAMUNDA_JOBTYPE")
 	if Settings.CAMUNDA_HOST == "" {
 		log.Panic("Need fill CAMUNDA_HOST ! in OS Environment ")
 	}
@@ -58,17 +58,17 @@ func FillSettings() {
 		log.Panic("Need fill CAMUNDA_PORT ! in OS Environment ")
 	}
 
-	//if Settings.CAMUNDA_ID == "" {
+	// if Settings.CAMUNDA_ID == "" {
 	//	log.Panic("Need fill CAMUNDA_ID ! in OS Environment ")
-	//}
+	// }
 	//
-	//if Settings.CAMUNDA_JOBTYPE == "" {
+	// if Settings.CAMUNDA_JOBTYPE == "" {
 	//	log.Panic("Need fill CAMUNDA_JOBTYPE ! in OS Environment ")
-	//}
+	// }
 	//
-	//if Settings.CAMUNDA_BPMNFILE == "" {
+	// if Settings.CAMUNDA_BPMNFILE == "" {
 	//	log.Debug("Need fill CAMUNDA_BPMNFILE ! in OS Environment ")
-	//}
+	// }
 	//
 
 }
@@ -93,7 +93,7 @@ func Connect() {
 
 	log.Infoln("CAMUNDA connected. ip: ", Settings.CAMUNDA_HOST)
 
-	//JobWorker = Client.NewJobWorker().JobType(CAMUNDA_ID).Handler(HandleJob).Open()
+	// JobWorker = Client.NewJobWorker().JobType(CAMUNDA_ID).Handler(HandleJob).Open()
 }
 
 // CloseConnection - отключается от сервера Camunda
@@ -140,7 +140,7 @@ func GetURL() string {
 
 // WorkComplete - отправляет статус ОК на сервер Camunda
 func WorkComplete(client worker.JobClient, jobKey int64, variables map[string]interface{}) error {
-	//log.Debugf("[DEBUG] HandleJob, %v, out params: %v\n", jobKey, variables)
+	// log.Debugf("[DEBUG] HandleJob, %v, out params: %v\n", jobKey, variables)
 
 	request, err := client.NewCompleteJobCommand().JobKey(jobKey).VariablesFromMap(variables)
 	if err != nil {
@@ -155,7 +155,7 @@ func WorkComplete(client worker.JobClient, jobKey int64, variables map[string]in
 		log.Error("camunda_connect.WorkComplete() error: ", err)
 	}
 
-	//log.Debugf("[INFO] HandleJob, %v, complete\n", jobKey)
+	// log.Debugf("[INFO] HandleJob, %v, complete\n", jobKey)
 	return err
 }
 
@@ -173,7 +173,7 @@ func WorkFails(err error, client worker.JobClient, jobKey int64) error {
 		log.Error("camunda_connect.WorkFails() error: ", err1)
 	}
 
-	//log.Debugf("[WARNING] HandleJob, %v, fail\n", jobKey)
+	// log.Debugf("[WARNING] HandleJob, %v, fail\n", jobKey)
 	return err1
 }
 
@@ -187,17 +187,17 @@ func WaitStop() {
 
 	CloseJobWorker()
 
-	//ждём пока отправляемых сейчас сообщений будет =0
+	// ждём пока отправляемых сейчас сообщений будет =0
 	stopapp.WaitTotalMessagesSendingNow("camunda_connect")
 
-	//закрываем соединение
+	// закрываем соединение
 	CloseConnection()
 	stopapp.GetWaitGroup_Main().Done()
 }
 
 // StartCamunda - необходимые процедуры для подключения к серверу Camunda
 func StartCamunda(HandleJob func(client worker.JobClient, job entities.Job), CAMUNDA_JOBTYPE string, BPMN_filename string) {
-	//var err error
+	// var err error
 
 	Connect()
 
@@ -234,11 +234,11 @@ func Send_BPMN_File(BPMN_filename string) {
 	FileName = dir + FileName
 	log.Info("Load .bpmn file from: ", FileName)
 
-	_, err = Client.NewDeployResourceCommand().AddResourceFile(FileName).Send(ctx)
+	res, err := Client.NewDeployResourceCommand().AddResourceFile(FileName).Send(ctx)
 	if err != nil {
 		log.Panicln(err)
 	}
-
+	log.Info("Send .bpmn file, result: %v", res)
 }
 
 // ping_go - делает пинг каждые 60 секунд, и реконнект
@@ -248,7 +248,7 @@ func ping_go() {
 
 	addr := Settings.CAMUNDA_HOST + ":" + Settings.CAMUNDA_PORT
 
-	//бесконечный цикл
+	// бесконечный цикл
 loop:
 	for {
 		select {
@@ -257,7 +257,7 @@ loop:
 			break loop
 		case <-ticker.C:
 			err := ping.Ping_err(Settings.CAMUNDA_HOST, Settings.CAMUNDA_PORT)
-			//log.Debug("ticker, ping err: ", err) //удалить
+			// log.Debug("ticker, ping err: ", err) //удалить
 			if err != nil {
 				NeedReconnect = true
 				log.Warn("CAMUNDA Ping(", addr, ") error: ", err)

@@ -26,3 +26,10 @@ func TestLoadEnv_from_file(t *testing.T) {
 		t.Error("TestLoadEnv_from_file() error: value =''")
 	}
 }
+
+func TestLoadSettingsTxt_err(t *testing.T) {
+	err := LoadSettingsTxt_err()
+	if err == nil {
+		t.Error("TestLoadSettingsTxt_err() error: ", err)
+	}
+}

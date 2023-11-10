@@ -1,13 +1,13 @@
 package mssql_stek
 
 import (
-	model "gitlab.aescorp.ru/dsp_dev/claim/common/object_model"
 	"github.com/ManyakRus/starter/config"
 	"github.com/ManyakRus/starter/mssql_gorm"
+	"gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/object_model/entities/connections"
 	"testing"
 )
 
-var CONNECTION = model.Connection{ID: 3, BranchId: 2, IsLegal: true}
+var CONNECTION = connections.Connection{ID: 3, BranchID: 2, IsLegal: true}
 
 func TestFindDateClosedMonth(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()

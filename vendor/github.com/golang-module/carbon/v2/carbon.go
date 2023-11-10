@@ -14,7 +14,7 @@ import (
 
 // Version current version
 // 当前版本号
-const Version = "2.2.3"
+const Version = "2.2.13"
 
 // timezone constants
 // 时区常量
@@ -180,6 +180,7 @@ const (
 // 定义 Carbon 结构体
 type Carbon struct {
 	time         time.Time
+	testNow      int64 // timestamp with nanosecond of test now time
 	weekStartsAt time.Weekday
 	loc          *time.Location
 	lang         *Language
@@ -189,32 +190,8 @@ type Carbon struct {
 // NewCarbon returns a new Carbon instance.
 // 初始化 Carbon 结构体
 func NewCarbon() Carbon {
-	return Carbon{weekStartsAt: time.Sunday, loc: time.Local, lang: NewLanguage()}
-}
-
-// FromStdTime converts standard time.Time to Carbon.
-// 将标准 time.Time 转换成 Carbon
-func FromStdTime(tt time.Time) Carbon {
-	c := NewCarbon()
-	c.time = tt
-	c.loc = tt.Location()
+	c := Carbon{testNow: 0, weekStartsAt: time.Sunday, loc: time.Local, lang: NewLanguage()}
+	c.lang.rw.Lock()
+	defer c.lang.rw.Unlock()
 	return c
-}
-
-// ToStdTime converts Carbon to standard time.Time.
-// 将 Carbon 转换成标准 time.Time
-func (c Carbon) ToStdTime() time.Time {
-	return c.time.In(c.loc)
-}
-
-// Time2Carbon converts standard time.Time to Carbon, will be removed in the future, recommended use FromStdTime
-// 将标准 time.Time 转换成 Carbon，未来将移除，推荐使用 FromStdTime
-func Time2Carbon(tt time.Time) Carbon {
-	return FromStdTime(tt)
-}
-
-// Carbon2Time converts Carbon to standard time.Time, will be removed in the future, recommended use ToStdTime
-// 将 Carbon 转换成标准 time.Time，未来将移除，推荐使用 ToStdTime
-func (c Carbon) Carbon2Time() time.Time {
-	return c.ToStdTime()
 }

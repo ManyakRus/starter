@@ -43,6 +43,8 @@ type MessagesEditMessageRequest struct {
 	Flags bin.Fields
 	// Disable webpage preview
 	NoWebpage bool
+	// InvertMedia field of MessagesEditMessageRequest.
+	InvertMedia bool
 	// Where was the message sent
 	Peer InputPeerClass
 	// ID of the message to edit
@@ -96,6 +98,9 @@ func (e *MessagesEditMessageRequest) Zero() bool {
 	if !(e.NoWebpage == false) {
 		return false
 	}
+	if !(e.InvertMedia == false) {
+		return false
+	}
 	if !(e.Peer == nil) {
 		return false
 	}
@@ -133,6 +138,7 @@ func (e *MessagesEditMessageRequest) String() string {
 // FillFrom fills MessagesEditMessageRequest from given interface.
 func (e *MessagesEditMessageRequest) FillFrom(from interface {
 	GetNoWebpage() (value bool)
+	GetInvertMedia() (value bool)
 	GetPeer() (value InputPeerClass)
 	GetID() (value int)
 	GetMessage() (value string, ok bool)
@@ -142,6 +148,7 @@ func (e *MessagesEditMessageRequest) FillFrom(from interface {
 	GetScheduleDate() (value int, ok bool)
 }) {
 	e.NoWebpage = from.GetNoWebpage()
+	e.InvertMedia = from.GetInvertMedia()
 	e.Peer = from.GetPeer()
 	e.ID = from.GetID()
 	if val, ok := from.GetMessage(); ok {
@@ -195,6 +202,11 @@ func (e *MessagesEditMessageRequest) TypeInfo() tdp.Type {
 			Null:       !e.Flags.Has(1),
 		},
 		{
+			Name:       "InvertMedia",
+			SchemaName: "invert_media",
+			Null:       !e.Flags.Has(16),
+		},
+		{
 			Name:       "Peer",
 			SchemaName: "peer",
 		},
@@ -235,6 +247,9 @@ func (e *MessagesEditMessageRequest) TypeInfo() tdp.Type {
 func (e *MessagesEditMessageRequest) SetFlags() {
 	if !(e.NoWebpage == false) {
 		e.Flags.Set(1)
+	}
+	if !(e.InvertMedia == false) {
+		e.Flags.Set(16)
 	}
 	if !(e.Message == "") {
 		e.Flags.Set(11)
@@ -336,6 +351,7 @@ func (e *MessagesEditMessageRequest) DecodeBare(b *bin.Buffer) error {
 		}
 	}
 	e.NoWebpage = e.Flags.Has(1)
+	e.InvertMedia = e.Flags.Has(16)
 	{
 		value, err := DecodeInputPeer(b)
 		if err != nil {
@@ -415,6 +431,25 @@ func (e *MessagesEditMessageRequest) GetNoWebpage() (value bool) {
 		return
 	}
 	return e.Flags.Has(1)
+}
+
+// SetInvertMedia sets value of InvertMedia conditional field.
+func (e *MessagesEditMessageRequest) SetInvertMedia(value bool) {
+	if value {
+		e.Flags.Set(16)
+		e.InvertMedia = true
+	} else {
+		e.Flags.Unset(16)
+		e.InvertMedia = false
+	}
+}
+
+// GetInvertMedia returns value of InvertMedia conditional field.
+func (e *MessagesEditMessageRequest) GetInvertMedia() (value bool) {
+	if e == nil {
+		return
+	}
+	return e.Flags.Has(16)
 }
 
 // GetPeer returns value of Peer field.
@@ -550,6 +585,7 @@ func (e *MessagesEditMessageRequest) MapEntities() (value MessageEntityClassArra
 //	400 DOCUMENT_INVALID: The specified document is invalid.
 //	400 ENTITIES_TOO_LONG: You provided too many styled message entities.
 //	400 ENTITY_BOUNDS_INVALID: A specified entity offset or length is invalid, see here » for info on how to properly compute the entity offset/length.
+//	400 IMAGE_PROCESS_FAILED: Failure while processing image.
 //	403 INLINE_BOT_REQUIRED: Only the inline bot can edit message.
 //	400 INPUT_USER_DEACTIVATED: The specified user was deleted.
 //	400 MEDIA_CAPTION_TOO_LONG: The caption is too long.
@@ -557,6 +593,7 @@ func (e *MessagesEditMessageRequest) MapEntities() (value MessageEntityClassArra
 //	400 MEDIA_GROUPED_INVALID: You tried to send media of different types in an album.
 //	400 MEDIA_NEW_INVALID: The new media is invalid.
 //	400 MEDIA_PREV_INVALID: Previous media invalid.
+//	400 MEDIA_TTL_INVALID: The specified media TTL is invalid.
 //	403 MESSAGE_AUTHOR_REQUIRED: Message author required.
 //	400 MESSAGE_EDIT_TIME_EXPIRED: You can't edit this message anymore, too much time has passed since its creation.
 //	400 MESSAGE_EMPTY: The provided message is empty.

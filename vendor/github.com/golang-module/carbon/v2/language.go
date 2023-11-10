@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 //go:embed lang
@@ -34,6 +35,7 @@ type Language struct {
 	locale    string
 	resources map[string]string
 	Error     error
+	rw        *sync.RWMutex
 }
 
 // NewLanguage returns a new Language instance.
@@ -43,12 +45,16 @@ func NewLanguage() *Language {
 		dir:       defaultDir,
 		locale:    defaultLocale,
 		resources: make(map[string]string),
+		rw:        new(sync.RWMutex),
 	}
 }
 
 // SetLocale sets language locale.
 // 设置区域
 func (lang *Language) SetLocale(locale string) {
+	lang.rw.Lock()
+	defer lang.rw.Unlock()
+
 	if len(lang.resources) != 0 {
 		return
 	}
@@ -59,14 +65,15 @@ func (lang *Language) SetLocale(locale string) {
 		lang.Error = invalidLocaleError(fileName)
 		return
 	}
-	if json.Unmarshal(bytes, &lang.resources) != nil {
-		lang.Error = invalidLocaleError(fileName)
-	}
+	_ = json.Unmarshal(bytes, &lang.resources)
 }
 
 // SetResources sets language resources.
 // 设置资源
 func (lang *Language) SetResources(resources map[string]string) {
+	lang.rw.Lock()
+	defer lang.rw.Unlock()
+
 	if len(lang.resources) == 0 {
 		lang.resources = resources
 		return
