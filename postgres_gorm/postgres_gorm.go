@@ -321,6 +321,7 @@ func GetConnection() *gorm.DB {
 func ping_go() {
 
 	ticker := time.NewTicker(60 * time.Second)
+	defer ticker.Stop()
 
 	addr := Settings.DB_HOST + ":" + Settings.DB_PORT
 
