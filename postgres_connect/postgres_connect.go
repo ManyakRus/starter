@@ -5,10 +5,10 @@ package postgres_connect
 import (
 	"context"
 	"errors"
-	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
 	"github.com/ManyakRus/starter/logger"
 	"github.com/ManyakRus/starter/ping"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"os"
 	"sync"
 	"time"

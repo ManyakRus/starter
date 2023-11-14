@@ -3,9 +3,9 @@
 package config
 
 import (
-	"github.com/joho/godotenv"
 	"github.com/ManyakRus/starter/logger"
 	"github.com/ManyakRus/starter/micro"
+	"github.com/joho/godotenv"
 	//log "github.com/sirupsen/logrus"
 	//log "github.com/sirupsen/logrus"
 	//"gitlab.aescorp.ru/dsp_dev/notifier/notifier_adp_eml/internal/v0/app/types"

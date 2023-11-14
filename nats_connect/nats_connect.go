@@ -2,10 +2,10 @@ package nats_connect
 
 import (
 	"context"
-	"github.com/nats-io/nats.go"
 	"github.com/ManyakRus/starter/logger"
 	"github.com/ManyakRus/starter/micro"
 	"github.com/ManyakRus/starter/ping"
+	"github.com/nats-io/nats.go"
 	"os"
 	//"github.com/ManyakRus/starter/common/v0/micro"
 	"github.com/ManyakRus/starter/contextmain"

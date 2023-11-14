@@ -1,8 +1,8 @@
 package email
 
 import (
-	mail "github.com/xhit/go-simple-mail/v2"
 	"github.com/ManyakRus/starter/config"
+	mail "github.com/xhit/go-simple-mail/v2"
 	"testing"
 )
 

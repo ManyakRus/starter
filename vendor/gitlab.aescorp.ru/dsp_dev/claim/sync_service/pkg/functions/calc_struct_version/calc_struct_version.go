@@ -1,7 +1,7 @@
 package calc_struct_version
 
 import (
-	"gitlab.aescorp.ru/dsp_dev/claim/nikitin/micro"
+	"github.com/ManyakRus/starter/micro"
 	"reflect"
 )
 

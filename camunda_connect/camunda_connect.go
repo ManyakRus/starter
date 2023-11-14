@@ -3,14 +3,14 @@ package camunda_connect
 
 import (
 	"context"
-	"github.com/camunda/zeebe/clients/go/v8/pkg/entities"
-	"github.com/camunda/zeebe/clients/go/v8/pkg/worker"
-	"github.com/camunda/zeebe/clients/go/v8/pkg/zbc"
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/logger"
 	"github.com/ManyakRus/starter/micro"
 	"github.com/ManyakRus/starter/ping"
 	"github.com/ManyakRus/starter/stopapp"
+	"github.com/camunda/zeebe/clients/go/v8/pkg/entities"
+	"github.com/camunda/zeebe/clients/go/v8/pkg/worker"
+	"github.com/camunda/zeebe/clients/go/v8/pkg/zbc"
 	// "gitlab.aescorp.ru/dsp_dev/claim/stack_exchange/internal/v0/app/constants"
 	// "github.com/ManyakRus/starter/mssql"
 	"os"

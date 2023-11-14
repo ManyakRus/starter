@@ -1,6 +1,3 @@
-//File generated automatic with crud_generator app
-//Do not change anything here.
-
 package connections
 
 import ()

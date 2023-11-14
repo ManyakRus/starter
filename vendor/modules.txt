@@ -70,7 +70,7 @@ github.com/go-ozzo/ozzo-validation/v4
 github.com/go-ozzo/ozzo-validation/v4/is
 # github.com/go-test/deep v1.1.0
 ## explicit; go 1.16
-# github.com/gofiber/fiber/v2 v2.50.0
+# github.com/gofiber/fiber/v2 v2.51.0
 ## explicit; go 1.20
 github.com/gofiber/fiber/v2
 github.com/gofiber/fiber/v2/internal/schema
@@ -93,6 +93,9 @@ github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
+# github.com/golang/snappy v0.0.4
+## explicit
+github.com/golang/snappy
 # github.com/google/go-cmp v0.6.0
 ## explicit; go 1.13
 github.com/google/go-cmp/cmp
@@ -336,7 +339,7 @@ github.com/rivo/uniseg
 # github.com/rs/xid v1.5.0
 ## explicit; go 1.12
 github.com/rs/xid
-# github.com/sashabaranov/go-openai v1.17.5
+# github.com/sashabaranov/go-openai v1.17.6
 ## explicit; go 1.18
 github.com/sashabaranov/go-openai
 github.com/sashabaranov/go-openai/internal
@@ -406,6 +409,20 @@ github.com/sirupsen/logrus
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 github.com/stretchr/testify/suite
+# github.com/syndtr/goleveldb v1.0.0
+## explicit
+github.com/syndtr/goleveldb/leveldb
+github.com/syndtr/goleveldb/leveldb/cache
+github.com/syndtr/goleveldb/leveldb/comparer
+github.com/syndtr/goleveldb/leveldb/errors
+github.com/syndtr/goleveldb/leveldb/filter
+github.com/syndtr/goleveldb/leveldb/iterator
+github.com/syndtr/goleveldb/leveldb/journal
+github.com/syndtr/goleveldb/leveldb/memdb
+github.com/syndtr/goleveldb/leveldb/opt
+github.com/syndtr/goleveldb/leveldb/storage
+github.com/syndtr/goleveldb/leveldb/table
+github.com/syndtr/goleveldb/leveldb/util
 # github.com/toorop/go-dkim v0.0.0-20201103131630-e1cd1a0a5208
 ## explicit
 github.com/toorop/go-dkim
@@ -433,17 +450,17 @@ github.com/vmihailenco/tagparser/v2/internal/parser
 # github.com/xhit/go-simple-mail/v2 v2.16.0
 ## explicit; go 1.13
 github.com/xhit/go-simple-mail/v2
-# gitlab.aescorp.ru/dsp_dev/claim/common/object_model v1.0.292
-## explicit; go 1.20
-gitlab.aescorp.ru/dsp_dev/claim/common/object_model
-gitlab.aescorp.ru/dsp_dev/claim/common/object_model/alias
-gitlab.aescorp.ru/dsp_dev/claim/common/object_model/front/front_format
-gitlab.aescorp.ru/dsp_dev/claim/common/object_model/object_view
 # gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange v0.0.16
 ## explicit; go 1.17
+gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange
+gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/data_packer
+gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/sync_confirm
 gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/sync_global
 gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/sync_types
-# gitlab.aescorp.ru/dsp_dev/claim/sync_service v1.2.21
+# gitlab.aescorp.ru/dsp_dev/claim/stack_exchange_postgres v1.0.15
+## explicit; go 1.18
+gitlab.aescorp.ru/dsp_dev/claim/stack_exchange_postgres/internal/v0/app/constants
+# gitlab.aescorp.ru/dsp_dev/claim/sync_service v1.2.24
 ## explicit; go 1.20
 gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/functions/calc_struct_version
 gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/object_model/entities/connections
@@ -480,7 +497,7 @@ go.mau.fi/libsignal/util/optional
 go.mau.fi/util/jsontime
 go.mau.fi/util/random
 go.mau.fi/util/retryafter
-# go.mau.fi/whatsmeow v0.0.0-20231104103606-23bd57d939ca
+# go.mau.fi/whatsmeow v0.0.0-20231112141858-68b25b3f6fe9
 ## explicit; go 1.20
 go.mau.fi/whatsmeow
 go.mau.fi/whatsmeow/appstate
@@ -498,15 +515,16 @@ go.mau.fi/whatsmeow/util/gcmutil
 go.mau.fi/whatsmeow/util/hkdfutil
 go.mau.fi/whatsmeow/util/keys
 go.mau.fi/whatsmeow/util/log
-# go.opentelemetry.io/otel v1.19.0
+# go.opentelemetry.io/otel v1.20.0
 ## explicit; go 1.20
 go.opentelemetry.io/otel/attribute
 go.opentelemetry.io/otel/codes
 go.opentelemetry.io/otel/internal
 go.opentelemetry.io/otel/internal/attribute
-# go.opentelemetry.io/otel/trace v1.19.0
+# go.opentelemetry.io/otel/trace v1.20.0
 ## explicit; go 1.20
 go.opentelemetry.io/otel/trace
+go.opentelemetry.io/otel/trace/embedded
 # go.uber.org/atomic v1.11.0
 ## explicit; go 1.18
 go.uber.org/atomic
@@ -540,7 +558,7 @@ golang.org/x/crypto/nacl/secretbox
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/salsa20/salsa
 golang.org/x/crypto/ssh/terminal
-# golang.org/x/exp v0.0.0-20231108232855-2478ac86f678
+# golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa
 ## explicit; go 1.20
 golang.org/x/exp/maps
 # golang.org/x/net v0.18.0

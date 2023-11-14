@@ -5,9 +5,9 @@ package postgres_pgx
 import (
 	"context"
 	"errors"
-	"github.com/jackc/pgx/v4"
 	"github.com/ManyakRus/starter/logger"
 	"github.com/ManyakRus/starter/ping"
+	"github.com/jackc/pgx/v4"
 	"time"
 
 	//"github.com/jackc/pgconn"

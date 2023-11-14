@@ -1,9 +1,9 @@
 package liveness
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"github.com/ManyakRus/starter/fiber_connect"
 	"github.com/ManyakRus/starter/logger"
+	"github.com/gofiber/fiber/v2"
 )
 
 const LIVENESS_URL = "/liveness/"
