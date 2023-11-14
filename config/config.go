@@ -74,3 +74,15 @@ func LoadEnv_from_file_err(filename string) error {
 
 	return err
 }
+
+// LoadENV_or_SettingsTXT - загружает из файла .env или settings.txt переменные в переменные окружения
+func LoadENV_or_SettingsTXT() {
+	errENV := LoadEnv_err()
+	var err2 error
+	if errENV != nil {
+		err2 = LoadSettingsTxt_err()
+	}
+	if err2 != nil {
+		log.Panic("LoadENV_or_SettingsTXT() error: ", err2)
+	}
+}

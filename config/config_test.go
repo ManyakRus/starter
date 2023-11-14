@@ -33,3 +33,8 @@ func TestLoadSettingsTxt_err(t *testing.T) {
 		t.Error("TestLoadSettingsTxt_err() error: ", err)
 	}
 }
+
+func TestLoadENV_or_SettingsTXT(t *testing.T) {
+
+	LoadENV_or_SettingsTXT()
+}
