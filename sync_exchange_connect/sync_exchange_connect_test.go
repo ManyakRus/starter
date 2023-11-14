@@ -21,7 +21,7 @@ func TestConnect(t *testing.T) {
 
 func TestStartNats(t *testing.T) {
 	config.LoadEnv()
-	StartNats(SERVICE_NAME_TEST)
+	Start(SERVICE_NAME_TEST)
 	defer CloseConnection()
 
 	micro.Pause(100)

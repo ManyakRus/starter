@@ -26,8 +26,8 @@ func Connect(ServiceName string) {
 	//return err
 }
 
-// StartNats - необходимые процедуры для подключения к серверу Nats
-func StartNats(ServiceName string) {
+// Start - необходимые процедуры для подключения к серверу Nats SyncExchange
+func Start(ServiceName string) {
 	//var err error
 
 	Connect(ServiceName)
