@@ -752,3 +752,27 @@ func ContextDone(ctx context.Context) bool {
 		return false
 	}
 }
+
+// StringFromUpperCase - возвращает строку, первая буква в верхнем регистре
+func StringFromUpperCase(s string) string {
+	Otvet := s
+	if Otvet == "" {
+		return Otvet
+	}
+
+	Otvet = strings.ToUpper(Otvet[:1]) + Otvet[1:]
+
+	return Otvet
+}
+
+// StringFromLowerCase - возвращает строку, первая буква в нижнем регистре
+func StringFromLowerCase(s string) string {
+	Otvet := s
+	if Otvet == "" {
+		return Otvet
+	}
+
+	Otvet = strings.ToLower(Otvet[:1]) + Otvet[1:]
+
+	return Otvet
+}

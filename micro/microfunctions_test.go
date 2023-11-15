@@ -417,3 +417,59 @@ func TestContextDone(t *testing.T) {
 		t.Error("Expected ContextDone to return false when context is not done")
 	}
 }
+
+func TestStringFromUpperCase(t *testing.T) {
+	// Testing empty string
+	if result := StringFromUpperCase(""); result != "" {
+		t.Errorf("Expected '', but got %s", result)
+	}
+
+	// Testing lowercase input
+	if result := StringFromUpperCase("hello"); result != "Hello" {
+		t.Errorf("Expected 'Hello', but got %s", result)
+	}
+
+	// Testing uppercase input
+	if result := StringFromUpperCase("WORLD"); result != "WORLD" {
+		t.Errorf("Expected 'WORLD', but got %s", result)
+	}
+
+	// Testing mixed case input
+	if result := StringFromUpperCase("gOoD mOrNiNg"); result != "GOoD mOrNiNg" {
+		t.Errorf("Expected 'GOoD mOrNiNg', but got %s", result)
+	}
+}
+
+func TestStringFromLowerCase(t *testing.T) {
+	// Testing an empty string
+	input := ""
+	expected := ""
+	result := StringFromLowerCase(input)
+	if result != expected {
+		t.Errorf("Input: %s, Expected: %s, Result: %s", input, expected, result)
+	}
+
+	// Testing a string with a lowercase first letter
+	input = "hello"
+	expected = "hello"
+	result = StringFromLowerCase(input)
+	if result != expected {
+		t.Errorf("Input: %s, Expected: %s, Result: %s", input, expected, result)
+	}
+
+	// Testing a string with an uppercase first letter
+	input = "World"
+	expected = "world"
+	result = StringFromLowerCase(input)
+	if result != expected {
+		t.Errorf("Input: %s, Expected: %s, Result: %s", input, expected, result)
+	}
+
+	// Testing a string with special characters
+	input = "Codeium"
+	expected = "codeium"
+	result = StringFromLowerCase(input)
+	if result != expected {
+		t.Errorf("Input: %s, Expected: %s, Result: %s", input, expected, result)
+	}
+}
