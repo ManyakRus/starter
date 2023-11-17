@@ -776,3 +776,19 @@ func StringFromLowerCase(s string) string {
 
 	return Otvet
 }
+
+// DeleteEndSlash - убирает в конце / или \
+func DeleteEndSlash(Text string) string {
+	Otvet := Text
+
+	if Otvet == "" {
+		return Otvet
+	}
+
+	LastSymbol := Otvet[len(Otvet)-1:]
+	if LastSymbol == "/" || LastSymbol == `\` {
+		Otvet = Otvet[0 : len(Otvet)-1]
+	}
+
+	return Otvet
+}

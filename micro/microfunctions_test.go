@@ -473,3 +473,41 @@ func TestStringFromLowerCase(t *testing.T) {
 		t.Errorf("Input: %s, Expected: %s, Result: %s", input, expected, result)
 	}
 }
+
+func TestDeleteEndSlash(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "Text ends with /",
+			input:    "example/",
+			expected: "example",
+		},
+		{
+			name:     "Text ends with \\",
+			input:    "example\\",
+			expected: "example",
+		},
+		{
+			name:     "Text does not end with / or \\",
+			input:    "example",
+			expected: "example",
+		},
+		{
+			name:     "Empty string",
+			input:    "",
+			expected: "",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result := DeleteEndSlash(test.input)
+			if result != test.expected {
+				t.Errorf("Expected %s, but got %s", test.expected, result)
+			}
+		})
+	}
+}
