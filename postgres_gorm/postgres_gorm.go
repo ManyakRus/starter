@@ -7,6 +7,7 @@ import (
 	"errors"
 	"github.com/ManyakRus/starter/logger"
 	"github.com/ManyakRus/starter/ping"
+	"strings"
 	"time"
 
 	//"github.com/jackc/pgconn"
@@ -73,6 +74,14 @@ func Connect() {
 // Connect_err - подключается к базе данных
 func Connect_err() error {
 	var err error
+	err = Connect_WithApplicationName_err("")
+
+	return err
+}
+
+// Connect_WithApplicationName_err - подключается к базе данных, с указанием имени приложения
+func Connect_WithApplicationName_err(ApplicationName string) error {
+	var err error
 
 	if Settings.DB_HOST == "" {
 		FillSettings()
@@ -84,7 +93,7 @@ func Connect_err() error {
 	//defer cancel()
 
 	// get the database connection URL.
-	dsn := GetDSN()
+	dsn := GetDSN(ApplicationName)
 
 	//
 	conf := &gorm.Config{}
@@ -249,6 +258,18 @@ func StartDB() {
 
 }
 
+// Start - делает соединение с БД, отключение и др.
+func Start(ApplicationName string) {
+	Connect_WithApplicationName_err(ApplicationName)
+
+	stopapp.GetWaitGroup_Main().Add(1)
+	go WaitStop()
+
+	stopapp.GetWaitGroup_Main().Add(1)
+	go ping_go()
+
+}
+
 // FillSettings загружает переменные окружения в структуру из файла или из переменных окружения
 func FillSettings() {
 	Settings = SettingsINI{}
@@ -298,12 +319,15 @@ func FillSettings() {
 }
 
 // GetDSN - возвращает строку соединения к базе данных
-func GetDSN() string {
+func GetDSN(ApplicationName string) string {
+	ApplicationName = strings.ReplaceAll(ApplicationName, " ", "_")
+
 	dsn := "host=" + Settings.DB_HOST + " "
 	dsn += "user=" + Settings.DB_USER + " "
 	dsn += "password=" + Settings.DB_PASSWORD + " "
 	dsn += "dbname=" + Settings.DB_NAME + " "
-	dsn += "port=" + Settings.DB_PORT + " sslmode=disable TimeZone=UTC"
+	dsn += "port=" + Settings.DB_PORT + " sslmode=disable TimeZone=UTC "
+	dsn += "application_name=" + ApplicationName
 
 	return dsn
 }

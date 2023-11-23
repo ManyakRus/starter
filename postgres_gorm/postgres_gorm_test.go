@@ -15,9 +15,6 @@ import (
 )
 
 func TestConnect_err(t *testing.T) {
-	//Connect_Panic()
-
-	//ProgramDir := micro.ProgramDir_Common()
 	config.LoadEnv()
 	err := Connect_err()
 	if err != nil {
@@ -105,4 +102,20 @@ func TestGetConnection(t *testing.T) {
 	GetConnection()
 
 	CloseConnection()
+}
+
+func TestConnect_WithApplicationName_err(t *testing.T) {
+
+	config.LoadEnv()
+	err := Connect_WithApplicationName_err("starter test")
+	if err != nil {
+		t.Error("TestConnect_WithApplicationName_err error: ", err)
+	}
+
+	//micro.Pause(60 * 1000)
+
+	err = CloseConnection_err()
+	if err != nil {
+		t.Error("TestConnect_WithApplicationName_err() error: ", err)
+	}
 }
