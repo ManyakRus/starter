@@ -110,29 +110,6 @@ func FindDateFromTo(Connection connections.Connection) (date1_balances, date2_ba
 
 	date1_balances, date2_balances, date1_doc, date2_doc = FindDates_from_DateClosed(date_closed)
 
-	//// 2 месяца разделим по 1 месяцу
-	//carbon.SetLocation(constants.Loc)
-	//Date1_balance := DateNow1
-	//Date2_balance := carbon.Time2Carbon(DateNow1).EndOfMonth().Carbon2Time()
-	//if Date2_balance.After(DateNow2) {
-	//	Date2_balance = DateNow2
-	//}
-	//Date1_doc := carbon.Time2Carbon(DateNow2).StartOfMonth().Carbon2Time()
-	//Date2_doc := DateNow2
-	//
-	//
-	////now := time.Now()
-	//now_start := carbon.Now().StartOfMonth().Carbon2Time()
-	//closed_start := carbon.Time2Carbon(date_closed).AddMonth().StartOfMonth().Carbon2Time()
-	////closed_start := carbon.Time2Carbon(date_closed).StartOfMonth().Carbon2Time()
-	//if now_start == closed_start { //дата закрытия в этом же месяце
-	//	date_from = now_start
-	//	date_to = carbon.Now().EndOfMonth().Carbon2Time()
-	//} else {
-	//	date_from = closed_start
-	//	date_to = carbon.Now().EndOfMonth().Carbon2Time()
-	//}
-
 	return date1_balances, date2_balances, date1_doc, date2_doc, nil
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/ManyakRus/starter/logger"
 	"github.com/ManyakRus/starter/ping"
 	"github.com/jackc/pgx/v4"
+	"strings"
 	"time"
 
 	//"github.com/jackc/pgconn"
@@ -72,6 +73,14 @@ func Connect() {
 // Connect_err - подключается к базе данных
 func Connect_err() error {
 	var err error
+	err = Connect_WithApplicationName_err("")
+
+	return err
+}
+
+// Connect_WithApplicationName_err - подключается к базе данных, с указанием имени приложения
+func Connect_WithApplicationName_err(ApplicationName string) error {
+	var err error
 
 	if Settings.DB_HOST == "" {
 		FillSettings()
@@ -83,10 +92,10 @@ func Connect_err() error {
 	defer cancel()
 
 	// get the database connection URL.
-	databaseUrl := "postgres://" + Settings.DB_USER + ":" + Settings.DB_PASSWORD
-	databaseUrl += "@" + Settings.DB_HOST + ":" + Settings.DB_PORT + "/" + Settings.DB_NAME
+	//databaseUrl := "postgres://" + Settings.DB_USER + ":" + Settings.DB_PASSWORD
+	//databaseUrl += "@" + Settings.DB_HOST + ":" + Settings.DB_PORT + "/" + Settings.DB_NAME
 
-	//log.Info("BD_ADDRESS: ", Settings.DB_HOST, " BD_BASENAME: ", Settings.DB_NAME, " BD_SCHEMA: ", Settings.DB_SCHEMA)
+	databaseUrl := GetConnectionString(ApplicationName)
 
 	//
 	config, err := pgx.ParseConfig(databaseUrl)
@@ -97,21 +106,25 @@ func Connect_err() error {
 		log.Panicln("Unable to connect to database host: ", Settings.DB_HOST, " Error: ", err)
 	}
 
-	//// get the database connection URL.
-	//databaseUrl := "postgres://" + Settings.DB_USER + ":" + Settings.DB_PASSWORD
-	//databaseUrl += "@" + Settings.DB_HOST + ":5432/" + Settings.DB_NAME + "?sslmode=disable"
-	//
-	////
-	////Conn, err = pgx.Connect(ctx, databaseUrl)
-	//Conn, err = sqlx.Connect(
-	//	"postgres",
-	//	databaseUrl,
-	//)
 	if err == nil {
 		err = Conn.Ping(ctx)
 	}
 
 	return err
+}
+
+// GetConnectionString - возвращает строку соединения к базе данных
+func GetConnectionString(ApplicationName string) string {
+	ApplicationName = strings.ReplaceAll(ApplicationName, " ", "_")
+
+	dsn := "host=" + Settings.DB_HOST + " "
+	dsn += "user=" + Settings.DB_USER + " "
+	dsn += "password=" + Settings.DB_PASSWORD + " "
+	dsn += "dbname=" + Settings.DB_NAME + " "
+	dsn += "port=" + Settings.DB_PORT + " sslmode=disable TimeZone=UTC "
+	dsn += "application_name=" + ApplicationName
+
+	return dsn
 }
 
 // IsClosed проверка что база данных закрыта
@@ -173,13 +186,6 @@ func Reconnect(err error) {
 		return
 	}
 
-	//PgError, ok := err.(*pgconn.PgError)
-	//if ok {
-	//	if PgError.Code == "P0001" { // Class P0 — PL/pgSQL Error, RaiseException
-	//		return //нужен
-	//	}
-	//}
-
 	//остановим программу т.к. она не должна работать при неработающеё БД
 	log.Error("STOP app. Error: ", err)
 	stopapp.StopApp()
@@ -234,6 +240,18 @@ func WaitStop() {
 // StartDB - делает соединение с БД, отключение и др.
 func StartDB() {
 	Connect()
+
+	stopapp.GetWaitGroup_Main().Add(1)
+	go WaitStop()
+
+	stopapp.GetWaitGroup_Main().Add(1)
+	go ping_go()
+
+}
+
+// Start - делает соединение с БД, отключение и др.
+func Start(ApplicationName string) {
+	Connect_WithApplicationName_err(ApplicationName)
 
 	stopapp.GetWaitGroup_Main().Add(1)
 	go WaitStop()

@@ -99,3 +99,15 @@ func TestConnect(t *testing.T) {
 
 	CloseConnection()
 }
+
+func TestConnect_WithApplicationName_err(t *testing.T) {
+
+	config.LoadEnv()
+	err := Connect_WithApplicationName_err("test_starter_postgres_pgx")
+	if err != nil {
+		t.Error("TestConnect_WithApplicationName_err error: ", err)
+	}
+
+	CloseConnection()
+
+}
