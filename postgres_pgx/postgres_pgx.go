@@ -327,3 +327,21 @@ loop:
 
 	stopapp.GetWaitGroup_Main().Done()
 }
+
+// GetConnection - возвращает соединение к нужной базе данных
+func GetConnection() *pgx.Conn {
+	if Conn == nil {
+		Connect()
+	}
+
+	return Conn
+}
+
+// GetConnection_WithApplicationName - возвращает соединение к нужной базе данных, с указанием имени приложения
+func GetConnection_WithApplicationName(ApplicationName string) *pgx.Conn {
+	if Conn == nil {
+		Connect_WithApplicationName_err(ApplicationName)
+	}
+
+	return Conn
+}
