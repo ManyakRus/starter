@@ -341,6 +341,15 @@ func GetConnection() *gorm.DB {
 	return Conn
 }
 
+// GetConnection_WithApplicationName - возвращает соединение к нужной базе данных, с указанием имени приложения
+func GetConnection_WithApplicationName(ApplicationName string) *gorm.DB {
+	if Conn == nil {
+		Connect_WithApplicationName_err(ApplicationName)
+	}
+
+	return Conn
+}
+
 // ping_go - делает пинг каждые 60 секунд, и реконнект
 func ping_go() {
 
