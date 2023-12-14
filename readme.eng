@@ -6,7 +6,7 @@ A set of components for the golang language is made to facilitate the work of th
 so that any component can be connected with one line of code.
 
 Components to run any microservers (kernel):
-1. logger - component for logging information to the console (logrus)
+1. log - component for logging information to the console (logrus logger)
 2. contextmain - context common to the entire application
 3. stopapp - waiting for the application to complete Gracefull shutdown (CTRL+C), WaitGroup
 4. config - loading parameters from .env file or from environment variables
@@ -36,7 +36,6 @@ Minimal kernel example:
 
 func main() {
 	config.LoadEnv()
-	contextmain.GetContext()
 	stopapp.StartWaitStop()
 
 	//your code
@@ -52,6 +51,7 @@ var log = logger.GetLog()
 
 func main() {
 	config.LoadEnv()
+
 	contextmain.GetContext()
 
 	stopapp.StartWaitStop()

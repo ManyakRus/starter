@@ -6,7 +6,7 @@ Skype login: Travianbot
 чтобы любой компонент можно было подключить одной строкой кода.
 
 Компоненты для запуска любых микросерверов (ядро):
-1. logger - компонент для логирования информации в консоль (logrus)
+1. log - компонент для логирования информации в консоль (логгер logrus)
 2. contextmain - контекст общий на всё приложение
 3. stopapp - ожидание завершения работы приложения Gracefull shutdown (CTRL+C), WaitGroup
 4. config - загрузка параметров из файла .env или из переменных окружения
@@ -36,7 +36,6 @@ config, и свою структуру Settings с параметрами
 
 func main() {
 	config.LoadEnv()
-	contextmain.GetContext()
 	stopapp.StartWaitStop()
 
 	//ваш код
@@ -48,10 +47,9 @@ func main() {
 
 Пример с разными подключениями:
 
-var log = logger.GetLog()
-
 func main() {
 	config.LoadEnv()
+
 	contextmain.GetContext()
 
 	stopapp.StartWaitStop()
@@ -67,4 +65,6 @@ func main() {
 	liveness.Start()
 
 	stopapp.GetWaitGroup_Main().Wait()
+
+	log.Info("App stopped")
 }
