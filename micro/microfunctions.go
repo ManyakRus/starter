@@ -792,3 +792,13 @@ func DeleteEndSlash(Text string) string {
 
 	return Otvet
 }
+
+// Int64FromString - возвращает int64 из строки
+func Int64FromString(s string) (int64, error) {
+	var Otvet int64
+	var err error
+
+	Otvet, err = strconv.ParseInt(s, 10, 64)
+
+	return Otvet, err
+}
