@@ -98,8 +98,15 @@ func Connect_WithApplicationName_err(ApplicationName string) error {
 
 	//
 	conf := &gorm.Config{}
-	conn := postgres.Open(dsn)
-	Conn, err = gorm.Open(conn, conf)
+	//conn := postgres.Open(dsn)
+
+	dialect := postgres.New(postgres.Config{
+		DSN:                  dsn,
+		PreferSimpleProtocol: true, //для запуска мультизапросов
+	})
+	Conn, err = gorm.Open(dialect, conf)
+
+	//Conn, err = gorm.Open(conn, conf)
 	Conn.Config.NamingStrategy = schema.NamingStrategy{TablePrefix: Settings.DB_SCHEMA + "."}
 	Conn.Config.Logger = gormlogger.Default.LogMode(gormlogger.Warn)
 
