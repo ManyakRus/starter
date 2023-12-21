@@ -5,6 +5,7 @@ package postgres_gorm
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/ManyakRus/starter/logger"
 	"github.com/ManyakRus/starter/ping"
 	"strings"
@@ -380,4 +381,34 @@ loop:
 	}
 
 	stopapp.GetWaitGroup_Main().Done()
+}
+
+// RawMultipleSQL - выполняет текст запроса, отдельно для каждого запроса
+func RawMultipleSQL(db *gorm.DB, TextSQL string) (*gorm.DB, error) {
+	var tx *gorm.DB
+	var err error
+
+	// запустим все запросы отдельно
+	sqlSlice := strings.Split(TextSQL, ";")
+	len1 := len(sqlSlice)
+	for i, v := range sqlSlice {
+		if i == len1-1 {
+			tx = db.Raw(v)
+			err = tx.Error
+		} else {
+			tx = db.Raw(v)
+			err = tx.Error
+		}
+		if err != nil {
+			TextError := fmt.Sprint("db.Raw() error: ", err, ", TextSQL: \n", v)
+			err = errors.New(TextError)
+			break
+		}
+	}
+
+	if tx == nil {
+		log.Panic("db.Raw() error: rows =nil")
+	}
+
+	return tx, err
 }
