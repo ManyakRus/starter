@@ -403,7 +403,7 @@ func RawMultipleSQL(db *gorm.DB, TextSQL string) *gorm.DB {
 			tx = db.Raw(v)
 			err = tx.Error
 		} else {
-			tx = db.Raw(v)
+			tx = db.Exec(v)
 			err = tx.Error
 		}
 		if err != nil {
