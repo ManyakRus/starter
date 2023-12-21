@@ -384,7 +384,7 @@ loop:
 }
 
 // RawMultipleSQL - выполняет текст запроса, отдельно для каждого запроса
-func RawMultipleSQL(db *gorm.DB, TextSQL string) (*gorm.DB, error) {
+func RawMultipleSQL(db *gorm.DB, TextSQL string) *gorm.DB {
 	var tx *gorm.DB
 	var err error
 
@@ -410,5 +410,5 @@ func RawMultipleSQL(db *gorm.DB, TextSQL string) (*gorm.DB, error) {
 		log.Panic("db.Raw() error: rows =nil")
 	}
 
-	return tx, err
+	return tx
 }

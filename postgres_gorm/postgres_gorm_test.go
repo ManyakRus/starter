@@ -126,7 +126,8 @@ func TestRawMultipleSQL(t *testing.T) {
 	defer CloseConnection()
 
 	TextSQL := "SELECT 1; SELECT 2"
-	_, err := RawMultipleSQL(Conn, TextSQL)
+	tx := RawMultipleSQL(Conn, TextSQL)
+	err := tx.Error
 	if err != nil {
 		t.Error("TestRawMultipleSQL() error: ", err)
 	}
