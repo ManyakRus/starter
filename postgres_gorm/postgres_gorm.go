@@ -394,16 +394,17 @@ loop:
 func RawMultipleSQL(db *gorm.DB, TextSQL string) *gorm.DB {
 	var tx *gorm.DB
 	var err error
+	tx = db
 
 	// запустим все запросы отдельно
 	sqlSlice := strings.Split(TextSQL, ";")
 	len1 := len(sqlSlice)
 	for i, v := range sqlSlice {
 		if i == len1-1 {
-			tx = db.Raw(v)
+			tx = tx.Raw(v)
 			err = tx.Error
 		} else {
-			tx = db.Exec(v)
+			tx = tx.Exec(v)
 			err = tx.Error
 		}
 		if err != nil {
