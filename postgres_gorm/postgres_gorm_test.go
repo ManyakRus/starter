@@ -119,3 +119,16 @@ func TestConnect_WithApplicationName_err(t *testing.T) {
 		t.Error("TestConnect_WithApplicationName_err() error: ", err)
 	}
 }
+
+func TestRawMultipleSQL(t *testing.T) {
+	config.LoadEnv()
+	GetConnection()
+	defer CloseConnection()
+
+	TextSQL := "SELECT 1; SELECT 2"
+	_, err := RawMultipleSQL(Conn, TextSQL)
+	if err != nil {
+		t.Error("TestRawMultipleSQL() error: ", err)
+	}
+
+}
