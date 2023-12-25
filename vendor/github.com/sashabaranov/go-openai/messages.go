@@ -29,6 +29,11 @@ type Message struct {
 type MessagesList struct {
 	Messages []Message `json:"data"`
 
+	Object  string  `json:"object"`
+	FirstID *string `json:"first_id"`
+	LastID  *string `json:"last_id"`
+	HasMore bool    `json:"has_more"`
+
 	httpHeader
 }
 
@@ -71,7 +76,7 @@ type MessageFilesList struct {
 // CreateMessage creates a new message.
 func (c *Client) CreateMessage(ctx context.Context, threadID string, request MessageRequest) (msg Message, err error) {
 	urlSuffix := fmt.Sprintf("/threads/%s/%s", threadID, messagesSuffix)
-	req, err := c.newRequest(ctx, http.MethodPost, c.fullURL(urlSuffix), withBody(request))
+	req, err := c.newRequest(ctx, http.MethodPost, c.fullURL(urlSuffix), withBody(request), withBetaAssistantV1())
 	if err != nil {
 		return
 	}

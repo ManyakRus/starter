@@ -32,22 +32,27 @@ var (
 )
 
 // MediaAreaVenue represents TL type `mediaAreaVenue#be82db9c`.
+// Represents a location tag attached to a story¹, with additional venue information.
+//
+// Links:
+//  1. https://core.telegram.org/api/stories
 //
 // See https://core.telegram.org/constructor/mediaAreaVenue for reference.
 type MediaAreaVenue struct {
-	// Coordinates field of MediaAreaVenue.
+	// The size and location of the media area corresponding to the location sticker on top
+	// of the story media.
 	Coordinates MediaAreaCoordinates
-	// Geo field of MediaAreaVenue.
+	// Coordinates of the venue
 	Geo GeoPointClass
-	// Title field of MediaAreaVenue.
+	// Venue name
 	Title string
-	// Address field of MediaAreaVenue.
+	// Address
 	Address string
-	// Provider field of MediaAreaVenue.
+	// Venue provider: currently only "foursquare" needs to be supported.
 	Provider string
-	// VenueID field of MediaAreaVenue.
+	// Venue ID in the provider's database
 	VenueID string
-	// VenueType field of MediaAreaVenue.
+	// Venue type in the provider's database
 	VenueType string
 }
 
@@ -333,14 +338,27 @@ func (m *MediaAreaVenue) GetVenueType() (value string) {
 }
 
 // InputMediaAreaVenue represents TL type `inputMediaAreaVenue#b282217f`.
+// Represents a location tag¹ attached to a story², with additional venue information.
+//
+// Links:
+//  1. https://core.telegram.org/api/stories#media-areas
+//  2. https://core.telegram.org/api/stories
 //
 // See https://core.telegram.org/constructor/inputMediaAreaVenue for reference.
 type InputMediaAreaVenue struct {
-	// Coordinates field of InputMediaAreaVenue.
+	// The size and location of the media area corresponding to the location sticker on top
+	// of the story media.
 	Coordinates MediaAreaCoordinates
-	// QueryID field of InputMediaAreaVenue.
+	// The query_id from messages.botResults¹, see here »² for more info.
+	//
+	// Links:
+	//  1) https://core.telegram.org/constructor/messages.botResults
+	//  2) https://core.telegram.org/api/stories#media-areas
 	QueryID int64
-	// ResultID field of InputMediaAreaVenue.
+	// The id of the chosen result, see here »¹ for more info.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/stories#media-areas
 	ResultID string
 }
 
@@ -521,12 +539,17 @@ func (i *InputMediaAreaVenue) GetResultID() (value string) {
 }
 
 // MediaAreaGeoPoint represents TL type `mediaAreaGeoPoint#df8b3b22`.
+// Represents a geolocation tag attached to a story¹.
+//
+// Links:
+//  1. https://core.telegram.org/api/stories
 //
 // See https://core.telegram.org/constructor/mediaAreaGeoPoint for reference.
 type MediaAreaGeoPoint struct {
-	// Coordinates field of MediaAreaGeoPoint.
+	// The size and position of the media area corresponding to the location sticker on top
+	// of the story media.
 	Coordinates MediaAreaCoordinates
-	// Geo field of MediaAreaGeoPoint.
+	// Coordinates of the geolocation tag.
 	Geo GeoPointClass
 }
 
@@ -687,18 +710,25 @@ func (m *MediaAreaGeoPoint) GetGeo() (value GeoPointClass) {
 }
 
 // MediaAreaSuggestedReaction represents TL type `mediaAreaSuggestedReaction#14455871`.
+// Represents a reaction bubble.
 //
 // See https://core.telegram.org/constructor/mediaAreaSuggestedReaction for reference.
 type MediaAreaSuggestedReaction struct {
-	// Flags field of MediaAreaSuggestedReaction.
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// Dark field of MediaAreaSuggestedReaction.
+	// Whether the reaction bubble has a dark background.
 	Dark bool
-	// Flipped field of MediaAreaSuggestedReaction.
+	// Whether the reaction bubble is mirrored (see here »¹ for more info).
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/stories#reactions
 	Flipped bool
-	// Coordinates field of MediaAreaSuggestedReaction.
+	// The coordinates of the media area corresponding to the reaction button.
 	Coordinates MediaAreaCoordinates
-	// Reaction field of MediaAreaSuggestedReaction.
+	// The reaction that should be sent when this area is clicked.
 	Reaction ReactionClass
 }
 
@@ -940,6 +970,387 @@ func (m *MediaAreaSuggestedReaction) GetReaction() (value ReactionClass) {
 	return m.Reaction
 }
 
+// MediaAreaChannelPost represents TL type `mediaAreaChannelPost#770416af`.
+//
+// See https://core.telegram.org/constructor/mediaAreaChannelPost for reference.
+type MediaAreaChannelPost struct {
+	// Coordinates field of MediaAreaChannelPost.
+	Coordinates MediaAreaCoordinates
+	// ChannelID field of MediaAreaChannelPost.
+	ChannelID int64
+	// MsgID field of MediaAreaChannelPost.
+	MsgID int
+}
+
+// MediaAreaChannelPostTypeID is TL type id of MediaAreaChannelPost.
+const MediaAreaChannelPostTypeID = 0x770416af
+
+// construct implements constructor of MediaAreaClass.
+func (m MediaAreaChannelPost) construct() MediaAreaClass { return &m }
+
+// Ensuring interfaces in compile-time for MediaAreaChannelPost.
+var (
+	_ bin.Encoder     = &MediaAreaChannelPost{}
+	_ bin.Decoder     = &MediaAreaChannelPost{}
+	_ bin.BareEncoder = &MediaAreaChannelPost{}
+	_ bin.BareDecoder = &MediaAreaChannelPost{}
+
+	_ MediaAreaClass = &MediaAreaChannelPost{}
+)
+
+func (m *MediaAreaChannelPost) Zero() bool {
+	if m == nil {
+		return true
+	}
+	if !(m.Coordinates.Zero()) {
+		return false
+	}
+	if !(m.ChannelID == 0) {
+		return false
+	}
+	if !(m.MsgID == 0) {
+		return false
+	}
+
+	return true
+}
+
+// String implements fmt.Stringer.
+func (m *MediaAreaChannelPost) String() string {
+	if m == nil {
+		return "MediaAreaChannelPost(nil)"
+	}
+	type Alias MediaAreaChannelPost
+	return fmt.Sprintf("MediaAreaChannelPost%+v", Alias(*m))
+}
+
+// FillFrom fills MediaAreaChannelPost from given interface.
+func (m *MediaAreaChannelPost) FillFrom(from interface {
+	GetCoordinates() (value MediaAreaCoordinates)
+	GetChannelID() (value int64)
+	GetMsgID() (value int)
+}) {
+	m.Coordinates = from.GetCoordinates()
+	m.ChannelID = from.GetChannelID()
+	m.MsgID = from.GetMsgID()
+}
+
+// TypeID returns type id in TL schema.
+//
+// See https://core.telegram.org/mtproto/TL-tl#remarks.
+func (*MediaAreaChannelPost) TypeID() uint32 {
+	return MediaAreaChannelPostTypeID
+}
+
+// TypeName returns name of type in TL schema.
+func (*MediaAreaChannelPost) TypeName() string {
+	return "mediaAreaChannelPost"
+}
+
+// TypeInfo returns info about TL type.
+func (m *MediaAreaChannelPost) TypeInfo() tdp.Type {
+	typ := tdp.Type{
+		Name: "mediaAreaChannelPost",
+		ID:   MediaAreaChannelPostTypeID,
+	}
+	if m == nil {
+		typ.Null = true
+		return typ
+	}
+	typ.Fields = []tdp.Field{
+		{
+			Name:       "Coordinates",
+			SchemaName: "coordinates",
+		},
+		{
+			Name:       "ChannelID",
+			SchemaName: "channel_id",
+		},
+		{
+			Name:       "MsgID",
+			SchemaName: "msg_id",
+		},
+	}
+	return typ
+}
+
+// Encode implements bin.Encoder.
+func (m *MediaAreaChannelPost) Encode(b *bin.Buffer) error {
+	if m == nil {
+		return fmt.Errorf("can't encode mediaAreaChannelPost#770416af as nil")
+	}
+	b.PutID(MediaAreaChannelPostTypeID)
+	return m.EncodeBare(b)
+}
+
+// EncodeBare implements bin.BareEncoder.
+func (m *MediaAreaChannelPost) EncodeBare(b *bin.Buffer) error {
+	if m == nil {
+		return fmt.Errorf("can't encode mediaAreaChannelPost#770416af as nil")
+	}
+	if err := m.Coordinates.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode mediaAreaChannelPost#770416af: field coordinates: %w", err)
+	}
+	b.PutLong(m.ChannelID)
+	b.PutInt(m.MsgID)
+	return nil
+}
+
+// Decode implements bin.Decoder.
+func (m *MediaAreaChannelPost) Decode(b *bin.Buffer) error {
+	if m == nil {
+		return fmt.Errorf("can't decode mediaAreaChannelPost#770416af to nil")
+	}
+	if err := b.ConsumeID(MediaAreaChannelPostTypeID); err != nil {
+		return fmt.Errorf("unable to decode mediaAreaChannelPost#770416af: %w", err)
+	}
+	return m.DecodeBare(b)
+}
+
+// DecodeBare implements bin.BareDecoder.
+func (m *MediaAreaChannelPost) DecodeBare(b *bin.Buffer) error {
+	if m == nil {
+		return fmt.Errorf("can't decode mediaAreaChannelPost#770416af to nil")
+	}
+	{
+		if err := m.Coordinates.Decode(b); err != nil {
+			return fmt.Errorf("unable to decode mediaAreaChannelPost#770416af: field coordinates: %w", err)
+		}
+	}
+	{
+		value, err := b.Long()
+		if err != nil {
+			return fmt.Errorf("unable to decode mediaAreaChannelPost#770416af: field channel_id: %w", err)
+		}
+		m.ChannelID = value
+	}
+	{
+		value, err := b.Int()
+		if err != nil {
+			return fmt.Errorf("unable to decode mediaAreaChannelPost#770416af: field msg_id: %w", err)
+		}
+		m.MsgID = value
+	}
+	return nil
+}
+
+// GetCoordinates returns value of Coordinates field.
+func (m *MediaAreaChannelPost) GetCoordinates() (value MediaAreaCoordinates) {
+	if m == nil {
+		return
+	}
+	return m.Coordinates
+}
+
+// GetChannelID returns value of ChannelID field.
+func (m *MediaAreaChannelPost) GetChannelID() (value int64) {
+	if m == nil {
+		return
+	}
+	return m.ChannelID
+}
+
+// GetMsgID returns value of MsgID field.
+func (m *MediaAreaChannelPost) GetMsgID() (value int) {
+	if m == nil {
+		return
+	}
+	return m.MsgID
+}
+
+// InputMediaAreaChannelPost represents TL type `inputMediaAreaChannelPost#2271f2bf`.
+//
+// See https://core.telegram.org/constructor/inputMediaAreaChannelPost for reference.
+type InputMediaAreaChannelPost struct {
+	// Coordinates field of InputMediaAreaChannelPost.
+	Coordinates MediaAreaCoordinates
+	// Channel field of InputMediaAreaChannelPost.
+	Channel InputChannelClass
+	// MsgID field of InputMediaAreaChannelPost.
+	MsgID int
+}
+
+// InputMediaAreaChannelPostTypeID is TL type id of InputMediaAreaChannelPost.
+const InputMediaAreaChannelPostTypeID = 0x2271f2bf
+
+// construct implements constructor of MediaAreaClass.
+func (i InputMediaAreaChannelPost) construct() MediaAreaClass { return &i }
+
+// Ensuring interfaces in compile-time for InputMediaAreaChannelPost.
+var (
+	_ bin.Encoder     = &InputMediaAreaChannelPost{}
+	_ bin.Decoder     = &InputMediaAreaChannelPost{}
+	_ bin.BareEncoder = &InputMediaAreaChannelPost{}
+	_ bin.BareDecoder = &InputMediaAreaChannelPost{}
+
+	_ MediaAreaClass = &InputMediaAreaChannelPost{}
+)
+
+func (i *InputMediaAreaChannelPost) Zero() bool {
+	if i == nil {
+		return true
+	}
+	if !(i.Coordinates.Zero()) {
+		return false
+	}
+	if !(i.Channel == nil) {
+		return false
+	}
+	if !(i.MsgID == 0) {
+		return false
+	}
+
+	return true
+}
+
+// String implements fmt.Stringer.
+func (i *InputMediaAreaChannelPost) String() string {
+	if i == nil {
+		return "InputMediaAreaChannelPost(nil)"
+	}
+	type Alias InputMediaAreaChannelPost
+	return fmt.Sprintf("InputMediaAreaChannelPost%+v", Alias(*i))
+}
+
+// FillFrom fills InputMediaAreaChannelPost from given interface.
+func (i *InputMediaAreaChannelPost) FillFrom(from interface {
+	GetCoordinates() (value MediaAreaCoordinates)
+	GetChannel() (value InputChannelClass)
+	GetMsgID() (value int)
+}) {
+	i.Coordinates = from.GetCoordinates()
+	i.Channel = from.GetChannel()
+	i.MsgID = from.GetMsgID()
+}
+
+// TypeID returns type id in TL schema.
+//
+// See https://core.telegram.org/mtproto/TL-tl#remarks.
+func (*InputMediaAreaChannelPost) TypeID() uint32 {
+	return InputMediaAreaChannelPostTypeID
+}
+
+// TypeName returns name of type in TL schema.
+func (*InputMediaAreaChannelPost) TypeName() string {
+	return "inputMediaAreaChannelPost"
+}
+
+// TypeInfo returns info about TL type.
+func (i *InputMediaAreaChannelPost) TypeInfo() tdp.Type {
+	typ := tdp.Type{
+		Name: "inputMediaAreaChannelPost",
+		ID:   InputMediaAreaChannelPostTypeID,
+	}
+	if i == nil {
+		typ.Null = true
+		return typ
+	}
+	typ.Fields = []tdp.Field{
+		{
+			Name:       "Coordinates",
+			SchemaName: "coordinates",
+		},
+		{
+			Name:       "Channel",
+			SchemaName: "channel",
+		},
+		{
+			Name:       "MsgID",
+			SchemaName: "msg_id",
+		},
+	}
+	return typ
+}
+
+// Encode implements bin.Encoder.
+func (i *InputMediaAreaChannelPost) Encode(b *bin.Buffer) error {
+	if i == nil {
+		return fmt.Errorf("can't encode inputMediaAreaChannelPost#2271f2bf as nil")
+	}
+	b.PutID(InputMediaAreaChannelPostTypeID)
+	return i.EncodeBare(b)
+}
+
+// EncodeBare implements bin.BareEncoder.
+func (i *InputMediaAreaChannelPost) EncodeBare(b *bin.Buffer) error {
+	if i == nil {
+		return fmt.Errorf("can't encode inputMediaAreaChannelPost#2271f2bf as nil")
+	}
+	if err := i.Coordinates.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode inputMediaAreaChannelPost#2271f2bf: field coordinates: %w", err)
+	}
+	if i.Channel == nil {
+		return fmt.Errorf("unable to encode inputMediaAreaChannelPost#2271f2bf: field channel is nil")
+	}
+	if err := i.Channel.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode inputMediaAreaChannelPost#2271f2bf: field channel: %w", err)
+	}
+	b.PutInt(i.MsgID)
+	return nil
+}
+
+// Decode implements bin.Decoder.
+func (i *InputMediaAreaChannelPost) Decode(b *bin.Buffer) error {
+	if i == nil {
+		return fmt.Errorf("can't decode inputMediaAreaChannelPost#2271f2bf to nil")
+	}
+	if err := b.ConsumeID(InputMediaAreaChannelPostTypeID); err != nil {
+		return fmt.Errorf("unable to decode inputMediaAreaChannelPost#2271f2bf: %w", err)
+	}
+	return i.DecodeBare(b)
+}
+
+// DecodeBare implements bin.BareDecoder.
+func (i *InputMediaAreaChannelPost) DecodeBare(b *bin.Buffer) error {
+	if i == nil {
+		return fmt.Errorf("can't decode inputMediaAreaChannelPost#2271f2bf to nil")
+	}
+	{
+		if err := i.Coordinates.Decode(b); err != nil {
+			return fmt.Errorf("unable to decode inputMediaAreaChannelPost#2271f2bf: field coordinates: %w", err)
+		}
+	}
+	{
+		value, err := DecodeInputChannel(b)
+		if err != nil {
+			return fmt.Errorf("unable to decode inputMediaAreaChannelPost#2271f2bf: field channel: %w", err)
+		}
+		i.Channel = value
+	}
+	{
+		value, err := b.Int()
+		if err != nil {
+			return fmt.Errorf("unable to decode inputMediaAreaChannelPost#2271f2bf: field msg_id: %w", err)
+		}
+		i.MsgID = value
+	}
+	return nil
+}
+
+// GetCoordinates returns value of Coordinates field.
+func (i *InputMediaAreaChannelPost) GetCoordinates() (value MediaAreaCoordinates) {
+	if i == nil {
+		return
+	}
+	return i.Coordinates
+}
+
+// GetChannel returns value of Channel field.
+func (i *InputMediaAreaChannelPost) GetChannel() (value InputChannelClass) {
+	if i == nil {
+		return
+	}
+	return i.Channel
+}
+
+// GetMsgID returns value of MsgID field.
+func (i *InputMediaAreaChannelPost) GetMsgID() (value int) {
+	if i == nil {
+		return
+	}
+	return i.MsgID
+}
+
 // MediaAreaClassName is schema name of MediaAreaClass.
 const MediaAreaClassName = "MediaArea"
 
@@ -958,6 +1369,8 @@ const MediaAreaClassName = "MediaArea"
 //	case *tg.InputMediaAreaVenue: // inputMediaAreaVenue#b282217f
 //	case *tg.MediaAreaGeoPoint: // mediaAreaGeoPoint#df8b3b22
 //	case *tg.MediaAreaSuggestedReaction: // mediaAreaSuggestedReaction#14455871
+//	case *tg.MediaAreaChannelPost: // mediaAreaChannelPost#770416af
+//	case *tg.InputMediaAreaChannelPost: // inputMediaAreaChannelPost#2271f2bf
 //	default: panic(v)
 //	}
 type MediaAreaClass interface {
@@ -978,7 +1391,8 @@ type MediaAreaClass interface {
 	// Zero returns true if current object has a zero value.
 	Zero() bool
 
-	// Coordinates field of MediaAreaVenue.
+	// The size and location of the media area corresponding to the location sticker on top
+	// of the story media.
 	GetCoordinates() (value MediaAreaCoordinates)
 }
 
@@ -1013,6 +1427,20 @@ func DecodeMediaArea(buf *bin.Buffer) (MediaAreaClass, error) {
 	case MediaAreaSuggestedReactionTypeID:
 		// Decoding mediaAreaSuggestedReaction#14455871.
 		v := MediaAreaSuggestedReaction{}
+		if err := v.Decode(buf); err != nil {
+			return nil, fmt.Errorf("unable to decode MediaAreaClass: %w", err)
+		}
+		return &v, nil
+	case MediaAreaChannelPostTypeID:
+		// Decoding mediaAreaChannelPost#770416af.
+		v := MediaAreaChannelPost{}
+		if err := v.Decode(buf); err != nil {
+			return nil, fmt.Errorf("unable to decode MediaAreaClass: %w", err)
+		}
+		return &v, nil
+	case InputMediaAreaChannelPostTypeID:
+		// Decoding inputMediaAreaChannelPost#2271f2bf.
+		v := InputMediaAreaChannelPost{}
 		if err := v.Decode(buf); err != nil {
 			return nil, fmt.Errorf("unable to decode MediaAreaClass: %w", err)
 		}

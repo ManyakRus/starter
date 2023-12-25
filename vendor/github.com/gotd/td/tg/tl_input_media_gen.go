@@ -1880,7 +1880,8 @@ type InputMediaVenue struct {
 	Title string
 	// Physical address of the venue
 	Address string
-	// Venue provider: currently only "foursquare" needs to be supported
+	// Venue provider: currently only "foursquare" and "gplaces" (Google Places) need to be
+	// supported
 	Provider string
 	// Venue ID in the provider's database
 	VenueID string
@@ -4050,12 +4051,13 @@ func (i *InputMediaDice) GetEmoticon() (value string) {
 }
 
 // InputMediaStory represents TL type `inputMediaStory#89fdd778`.
+// Forwarded story
 //
 // See https://core.telegram.org/constructor/inputMediaStory for reference.
 type InputMediaStory struct {
-	// Peer field of InputMediaStory.
+	// Peer where the story was posted
 	Peer InputPeerClass
-	// ID field of InputMediaStory.
+	// Story ID
 	ID int
 }
 
@@ -4216,18 +4218,26 @@ func (i *InputMediaStory) GetID() (value int) {
 }
 
 // InputMediaWebPage represents TL type `inputMediaWebPage#c21b8849`.
+// Specifies options that will be used to generate the link preview for the caption, or
+// even a standalone link preview without an attached message.
 //
 // See https://core.telegram.org/constructor/inputMediaWebPage for reference.
 type InputMediaWebPage struct {
-	// Flags field of InputMediaWebPage.
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// ForceLargeMedia field of InputMediaWebPage.
+	// If set, specifies that a large media preview should be used.
 	ForceLargeMedia bool
-	// ForceSmallMedia field of InputMediaWebPage.
+	// If set, specifies that a small media preview should be used.
 	ForceSmallMedia bool
-	// Optional field of InputMediaWebPage.
+	// If not set, a WEBPAGE_NOT_FOUND RPC error will be emitted if a webpage preview cannot
+	// be generated for the specified url; otherwise, no error will be emitted (unless the
+	// provided message is also empty, in which case a MESSAGE_EMPTY will be emitted,
+	// instead).
 	Optional bool
-	// URL field of InputMediaWebPage.
+	// The URL to use for the link preview.
 	URL string
 }
 

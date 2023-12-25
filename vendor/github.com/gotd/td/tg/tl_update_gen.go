@@ -1515,24 +1515,34 @@ func (u *UpdateUserName) GetUsernames() (value []Username) {
 }
 
 // UpdateNewAuthorization represents TL type `updateNewAuthorization#8951abef`.
+// A new session logged into the current user's account through an unknown device.
 //
 // See https://core.telegram.org/constructor/updateNewAuthorization for reference.
 type UpdateNewAuthorization struct {
-	// Flags field of UpdateNewAuthorization.
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// Unconfirmed field of UpdateNewAuthorization.
+	// Whether the session is unconfirmed, see here »¹ for more info.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/auth#confirming-login
 	Unconfirmed bool
-	// Hash field of UpdateNewAuthorization.
+	// Hash for pagination, for more info click here¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/offsets#hash-generation
 	Hash int64
-	// Date field of UpdateNewAuthorization.
+	// Authorization date
 	//
 	// Use SetDate and GetDate helpers.
 	Date int
-	// Device field of UpdateNewAuthorization.
+	// Name of device, for example Android
 	//
 	// Use SetDevice and GetDevice helpers.
 	Device string
-	// Location field of UpdateNewAuthorization.
+	// Location, for example USA, NY (IP=1.2.3.4)
 	//
 	// Use SetLocation and GetLocation helpers.
 	Location string
@@ -3275,7 +3285,8 @@ type UpdateServiceNotification struct {
 	Flags bin.Fields
 	// If set, the message must be displayed in a popup.
 	Popup bool
-	// InvertMedia field of UpdateServiceNotification.
+	// If set, any eventual webpage preview will be shown on top of the message instead of at
+	// the bottom.
 	InvertMedia bool
 	// When was the notification receivedThe message must also be stored locally as part of
 	// the message history with the user id 777000 (Telegram Notifications).
@@ -4771,7 +4782,10 @@ func (u *UpdateWebPage) GetPtsCount() (value int) {
 //
 // See https://core.telegram.org/constructor/updateReadMessagesContents for reference.
 type UpdateReadMessagesContents struct {
-	// Flags field of UpdateReadMessagesContents.
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
 	// IDs of read messages
 	Messages []int
@@ -4785,7 +4799,7 @@ type UpdateReadMessagesContents struct {
 	// Links:
 	//  1) https://core.telegram.org/api/updates
 	PtsCount int
-	// Date field of UpdateReadMessagesContents.
+	// When was the last message in messages marked as read.
 	//
 	// Use SetDate and GetDate helpers.
 	Date int
@@ -5250,7 +5264,8 @@ func (u *UpdateChannelTooLong) GetPts() (value int, ok bool) {
 }
 
 // UpdateChannel represents TL type `updateChannel#635b4c09`.
-// A new channel is available
+// A new channel or supergroup is available, or info about an existing channel has
+// changed and must be refeteched.
 //
 // See https://core.telegram.org/constructor/updateChannel for reference.
 type UpdateChannel struct {
@@ -14399,13 +14414,13 @@ func (u *UpdateLoginToken) DecodeBare(b *bin.Buffer) error {
 }
 
 // UpdateMessagePollVote represents TL type `updateMessagePollVote#24f40e77`.
-// A specific user has voted in a poll
+// A specific peer has voted in a poll
 //
 // See https://core.telegram.org/constructor/updateMessagePollVote for reference.
 type UpdateMessagePollVote struct {
 	// Poll ID
 	PollID int64
-	// Peer field of UpdateMessagePollVote.
+	// The peer that voted in the poll
 	Peer PeerClass
 	// Chosen option(s)
 	Options [][]byte
@@ -15991,17 +16006,27 @@ func (u *UpdateReadChannelDiscussionOutbox) GetReadMaxID() (value int) {
 }
 
 // UpdatePeerBlocked represents TL type `updatePeerBlocked#ebe07752`.
-// A peer was blocked
+// We blocked a peer, see here »¹ for more info on blocklists.
+//
+// Links:
+//  1. https://core.telegram.org/api/block
 //
 // See https://core.telegram.org/constructor/updatePeerBlocked for reference.
 type UpdatePeerBlocked struct {
-	// Flags field of UpdatePeerBlocked.
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
 	// Whether the peer was blocked or unblocked
 	Blocked bool
-	// BlockedMyStoriesFrom field of UpdatePeerBlocked.
+	// Whether the peer was added/removed to/from the story blocklist; if not set, this
+	// update affects the main blocklist, see here »¹ for more info.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/block
 	BlockedMyStoriesFrom bool
-	// The blocked peer
+	// The (un)blocked peer
 	PeerID PeerClass
 }
 
@@ -22656,12 +22681,13 @@ func (u *UpdateGroupInvitePrivacyForbidden) GetUserID() (value int64) {
 }
 
 // UpdateStory represents TL type `updateStory#75b3b798`.
+// A new story was posted.
 //
 // See https://core.telegram.org/constructor/updateStory for reference.
 type UpdateStory struct {
-	// Peer field of UpdateStory.
+	// ID of the poster.
 	Peer PeerClass
-	// Story field of UpdateStory.
+	// The story that was posted.
 	Story StoryItemClass
 }
 
@@ -22827,12 +22853,13 @@ func (u *UpdateStory) GetStory() (value StoryItemClass) {
 }
 
 // UpdateReadStories represents TL type `updateReadStories#f74e932b`.
+// Stories of a specific peer were marked as read.
 //
 // See https://core.telegram.org/constructor/updateReadStories for reference.
 type UpdateReadStories struct {
-	// Peer field of UpdateReadStories.
+	// The peer
 	Peer PeerClass
-	// MaxID field of UpdateReadStories.
+	// ID of the last story that was marked as read
 	MaxID int
 }
 
@@ -22993,12 +23020,26 @@ func (u *UpdateReadStories) GetMaxID() (value int) {
 }
 
 // UpdateStoryID represents TL type `updateStoryID#1bf335b9`.
+// A story was successfully uploaded.
+// Once a story is successfully uploaded, an updateStoryID¹ will be returned, indicating
+// the story ID (id) that was attributed to the story (like for messages, random_id
+// indicates the random_id that was passed to stories.sendStory²: this way, you can tell
+// which story was assigned a specific id by checking which stories.sendStory³ call has
+// the returned random_id).
+//
+// Links:
+//  1. https://core.telegram.org/constructor/updateStoryID
+//  2. https://core.telegram.org/method/stories.sendStory
+//  3. https://core.telegram.org/method/stories.sendStory
 //
 // See https://core.telegram.org/constructor/updateStoryID for reference.
 type UpdateStoryID struct {
-	// ID field of UpdateStoryID.
+	// The id that was attributed to the story.
 	ID int
-	// RandomID field of UpdateStoryID.
+	// The random_id that was passed to stories.sendStory¹.
+	//
+	// Links:
+	//  1) https://core.telegram.org/method/stories.sendStory
 	RandomID int64
 }
 
@@ -23154,10 +23195,17 @@ func (u *UpdateStoryID) GetRandomID() (value int64) {
 }
 
 // UpdateStoriesStealthMode represents TL type `updateStoriesStealthMode#2c084dc1`.
+// Indicates that stories stealth mode¹ was activated.
+//
+// Links:
+//  1. https://core.telegram.org/api/stories#stealth-mode
 //
 // See https://core.telegram.org/constructor/updateStoriesStealthMode for reference.
 type UpdateStoriesStealthMode struct {
-	// StealthMode field of UpdateStoriesStealthMode.
+	// Information about the current stealth mode¹ session.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/stories#stealth-mode
 	StealthMode StoriesStealthMode
 }
 
@@ -23288,14 +23336,18 @@ func (u *UpdateStoriesStealthMode) GetStealthMode() (value StoriesStealthMode) {
 }
 
 // UpdateSentStoryReaction represents TL type `updateSentStoryReaction#7d627683`.
+// Indicates we reacted to a story »¹.
+//
+// Links:
+//  1. https://core.telegram.org/api/stories#reactions
 //
 // See https://core.telegram.org/constructor/updateSentStoryReaction for reference.
 type UpdateSentStoryReaction struct {
-	// Peer field of UpdateSentStoryReaction.
+	// The peer that sent the story
 	Peer PeerClass
-	// StoryID field of UpdateSentStoryReaction.
+	// ID of the story we reacted to
 	StoryID int
-	// Reaction field of UpdateSentStoryReaction.
+	// The reaction that was sent
 	Reaction ReactionClass
 }
 
@@ -23485,6 +23537,1251 @@ func (u *UpdateSentStoryReaction) GetReaction() (value ReactionClass) {
 	return u.Reaction
 }
 
+// UpdateBotChatBoost represents TL type `updateBotChatBoost#904dd49c`.
+// A channel boost¹ has changed (bots only)
+//
+// Links:
+//  1. https://core.telegram.org/api/boost
+//
+// See https://core.telegram.org/constructor/updateBotChatBoost for reference.
+type UpdateBotChatBoost struct {
+	// Channel
+	Peer PeerClass
+	// New boost information
+	Boost Boost
+	// QTS¹ event sequence identifier
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/updates
+	Qts int
+}
+
+// UpdateBotChatBoostTypeID is TL type id of UpdateBotChatBoost.
+const UpdateBotChatBoostTypeID = 0x904dd49c
+
+// construct implements constructor of UpdateClass.
+func (u UpdateBotChatBoost) construct() UpdateClass { return &u }
+
+// Ensuring interfaces in compile-time for UpdateBotChatBoost.
+var (
+	_ bin.Encoder     = &UpdateBotChatBoost{}
+	_ bin.Decoder     = &UpdateBotChatBoost{}
+	_ bin.BareEncoder = &UpdateBotChatBoost{}
+	_ bin.BareDecoder = &UpdateBotChatBoost{}
+
+	_ UpdateClass = &UpdateBotChatBoost{}
+)
+
+func (u *UpdateBotChatBoost) Zero() bool {
+	if u == nil {
+		return true
+	}
+	if !(u.Peer == nil) {
+		return false
+	}
+	if !(u.Boost.Zero()) {
+		return false
+	}
+	if !(u.Qts == 0) {
+		return false
+	}
+
+	return true
+}
+
+// String implements fmt.Stringer.
+func (u *UpdateBotChatBoost) String() string {
+	if u == nil {
+		return "UpdateBotChatBoost(nil)"
+	}
+	type Alias UpdateBotChatBoost
+	return fmt.Sprintf("UpdateBotChatBoost%+v", Alias(*u))
+}
+
+// FillFrom fills UpdateBotChatBoost from given interface.
+func (u *UpdateBotChatBoost) FillFrom(from interface {
+	GetPeer() (value PeerClass)
+	GetBoost() (value Boost)
+	GetQts() (value int)
+}) {
+	u.Peer = from.GetPeer()
+	u.Boost = from.GetBoost()
+	u.Qts = from.GetQts()
+}
+
+// TypeID returns type id in TL schema.
+//
+// See https://core.telegram.org/mtproto/TL-tl#remarks.
+func (*UpdateBotChatBoost) TypeID() uint32 {
+	return UpdateBotChatBoostTypeID
+}
+
+// TypeName returns name of type in TL schema.
+func (*UpdateBotChatBoost) TypeName() string {
+	return "updateBotChatBoost"
+}
+
+// TypeInfo returns info about TL type.
+func (u *UpdateBotChatBoost) TypeInfo() tdp.Type {
+	typ := tdp.Type{
+		Name: "updateBotChatBoost",
+		ID:   UpdateBotChatBoostTypeID,
+	}
+	if u == nil {
+		typ.Null = true
+		return typ
+	}
+	typ.Fields = []tdp.Field{
+		{
+			Name:       "Peer",
+			SchemaName: "peer",
+		},
+		{
+			Name:       "Boost",
+			SchemaName: "boost",
+		},
+		{
+			Name:       "Qts",
+			SchemaName: "qts",
+		},
+	}
+	return typ
+}
+
+// Encode implements bin.Encoder.
+func (u *UpdateBotChatBoost) Encode(b *bin.Buffer) error {
+	if u == nil {
+		return fmt.Errorf("can't encode updateBotChatBoost#904dd49c as nil")
+	}
+	b.PutID(UpdateBotChatBoostTypeID)
+	return u.EncodeBare(b)
+}
+
+// EncodeBare implements bin.BareEncoder.
+func (u *UpdateBotChatBoost) EncodeBare(b *bin.Buffer) error {
+	if u == nil {
+		return fmt.Errorf("can't encode updateBotChatBoost#904dd49c as nil")
+	}
+	if u.Peer == nil {
+		return fmt.Errorf("unable to encode updateBotChatBoost#904dd49c: field peer is nil")
+	}
+	if err := u.Peer.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode updateBotChatBoost#904dd49c: field peer: %w", err)
+	}
+	if err := u.Boost.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode updateBotChatBoost#904dd49c: field boost: %w", err)
+	}
+	b.PutInt(u.Qts)
+	return nil
+}
+
+// Decode implements bin.Decoder.
+func (u *UpdateBotChatBoost) Decode(b *bin.Buffer) error {
+	if u == nil {
+		return fmt.Errorf("can't decode updateBotChatBoost#904dd49c to nil")
+	}
+	if err := b.ConsumeID(UpdateBotChatBoostTypeID); err != nil {
+		return fmt.Errorf("unable to decode updateBotChatBoost#904dd49c: %w", err)
+	}
+	return u.DecodeBare(b)
+}
+
+// DecodeBare implements bin.BareDecoder.
+func (u *UpdateBotChatBoost) DecodeBare(b *bin.Buffer) error {
+	if u == nil {
+		return fmt.Errorf("can't decode updateBotChatBoost#904dd49c to nil")
+	}
+	{
+		value, err := DecodePeer(b)
+		if err != nil {
+			return fmt.Errorf("unable to decode updateBotChatBoost#904dd49c: field peer: %w", err)
+		}
+		u.Peer = value
+	}
+	{
+		if err := u.Boost.Decode(b); err != nil {
+			return fmt.Errorf("unable to decode updateBotChatBoost#904dd49c: field boost: %w", err)
+		}
+	}
+	{
+		value, err := b.Int()
+		if err != nil {
+			return fmt.Errorf("unable to decode updateBotChatBoost#904dd49c: field qts: %w", err)
+		}
+		u.Qts = value
+	}
+	return nil
+}
+
+// GetPeer returns value of Peer field.
+func (u *UpdateBotChatBoost) GetPeer() (value PeerClass) {
+	if u == nil {
+		return
+	}
+	return u.Peer
+}
+
+// GetBoost returns value of Boost field.
+func (u *UpdateBotChatBoost) GetBoost() (value Boost) {
+	if u == nil {
+		return
+	}
+	return u.Boost
+}
+
+// GetQts returns value of Qts field.
+func (u *UpdateBotChatBoost) GetQts() (value int) {
+	if u == nil {
+		return
+	}
+	return u.Qts
+}
+
+// UpdateChannelViewForumAsMessages represents TL type `updateChannelViewForumAsMessages#7b68920`.
+// Users may also choose to display messages from all topics as if they were sent to a
+// normal group, using a "View as messages" setting in the local client.
+// This setting only affects the current account, and is synced to other logged in
+// sessions using the channels.toggleViewForumAsMessages¹ method; invoking this method
+// will update the value of the view_forum_as_messages flag of channelFull² or dialog³
+// and emit an updateChannelViewForumAsMessages⁴.
+//
+// Links:
+//  1. https://core.telegram.org/method/channels.toggleViewForumAsMessages
+//  2. https://core.telegram.org/constructor/channelFull
+//  3. https://core.telegram.org/constructor/dialog
+//  4. https://core.telegram.org/constructor/updateChannelViewForumAsMessages
+//
+// See https://core.telegram.org/constructor/updateChannelViewForumAsMessages for reference.
+type UpdateChannelViewForumAsMessages struct {
+	// The forum ID
+	ChannelID int64
+	// The new value of the toggle.
+	Enabled bool
+}
+
+// UpdateChannelViewForumAsMessagesTypeID is TL type id of UpdateChannelViewForumAsMessages.
+const UpdateChannelViewForumAsMessagesTypeID = 0x7b68920
+
+// construct implements constructor of UpdateClass.
+func (u UpdateChannelViewForumAsMessages) construct() UpdateClass { return &u }
+
+// Ensuring interfaces in compile-time for UpdateChannelViewForumAsMessages.
+var (
+	_ bin.Encoder     = &UpdateChannelViewForumAsMessages{}
+	_ bin.Decoder     = &UpdateChannelViewForumAsMessages{}
+	_ bin.BareEncoder = &UpdateChannelViewForumAsMessages{}
+	_ bin.BareDecoder = &UpdateChannelViewForumAsMessages{}
+
+	_ UpdateClass = &UpdateChannelViewForumAsMessages{}
+)
+
+func (u *UpdateChannelViewForumAsMessages) Zero() bool {
+	if u == nil {
+		return true
+	}
+	if !(u.ChannelID == 0) {
+		return false
+	}
+	if !(u.Enabled == false) {
+		return false
+	}
+
+	return true
+}
+
+// String implements fmt.Stringer.
+func (u *UpdateChannelViewForumAsMessages) String() string {
+	if u == nil {
+		return "UpdateChannelViewForumAsMessages(nil)"
+	}
+	type Alias UpdateChannelViewForumAsMessages
+	return fmt.Sprintf("UpdateChannelViewForumAsMessages%+v", Alias(*u))
+}
+
+// FillFrom fills UpdateChannelViewForumAsMessages from given interface.
+func (u *UpdateChannelViewForumAsMessages) FillFrom(from interface {
+	GetChannelID() (value int64)
+	GetEnabled() (value bool)
+}) {
+	u.ChannelID = from.GetChannelID()
+	u.Enabled = from.GetEnabled()
+}
+
+// TypeID returns type id in TL schema.
+//
+// See https://core.telegram.org/mtproto/TL-tl#remarks.
+func (*UpdateChannelViewForumAsMessages) TypeID() uint32 {
+	return UpdateChannelViewForumAsMessagesTypeID
+}
+
+// TypeName returns name of type in TL schema.
+func (*UpdateChannelViewForumAsMessages) TypeName() string {
+	return "updateChannelViewForumAsMessages"
+}
+
+// TypeInfo returns info about TL type.
+func (u *UpdateChannelViewForumAsMessages) TypeInfo() tdp.Type {
+	typ := tdp.Type{
+		Name: "updateChannelViewForumAsMessages",
+		ID:   UpdateChannelViewForumAsMessagesTypeID,
+	}
+	if u == nil {
+		typ.Null = true
+		return typ
+	}
+	typ.Fields = []tdp.Field{
+		{
+			Name:       "ChannelID",
+			SchemaName: "channel_id",
+		},
+		{
+			Name:       "Enabled",
+			SchemaName: "enabled",
+		},
+	}
+	return typ
+}
+
+// Encode implements bin.Encoder.
+func (u *UpdateChannelViewForumAsMessages) Encode(b *bin.Buffer) error {
+	if u == nil {
+		return fmt.Errorf("can't encode updateChannelViewForumAsMessages#7b68920 as nil")
+	}
+	b.PutID(UpdateChannelViewForumAsMessagesTypeID)
+	return u.EncodeBare(b)
+}
+
+// EncodeBare implements bin.BareEncoder.
+func (u *UpdateChannelViewForumAsMessages) EncodeBare(b *bin.Buffer) error {
+	if u == nil {
+		return fmt.Errorf("can't encode updateChannelViewForumAsMessages#7b68920 as nil")
+	}
+	b.PutLong(u.ChannelID)
+	b.PutBool(u.Enabled)
+	return nil
+}
+
+// Decode implements bin.Decoder.
+func (u *UpdateChannelViewForumAsMessages) Decode(b *bin.Buffer) error {
+	if u == nil {
+		return fmt.Errorf("can't decode updateChannelViewForumAsMessages#7b68920 to nil")
+	}
+	if err := b.ConsumeID(UpdateChannelViewForumAsMessagesTypeID); err != nil {
+		return fmt.Errorf("unable to decode updateChannelViewForumAsMessages#7b68920: %w", err)
+	}
+	return u.DecodeBare(b)
+}
+
+// DecodeBare implements bin.BareDecoder.
+func (u *UpdateChannelViewForumAsMessages) DecodeBare(b *bin.Buffer) error {
+	if u == nil {
+		return fmt.Errorf("can't decode updateChannelViewForumAsMessages#7b68920 to nil")
+	}
+	{
+		value, err := b.Long()
+		if err != nil {
+			return fmt.Errorf("unable to decode updateChannelViewForumAsMessages#7b68920: field channel_id: %w", err)
+		}
+		u.ChannelID = value
+	}
+	{
+		value, err := b.Bool()
+		if err != nil {
+			return fmt.Errorf("unable to decode updateChannelViewForumAsMessages#7b68920: field enabled: %w", err)
+		}
+		u.Enabled = value
+	}
+	return nil
+}
+
+// GetChannelID returns value of ChannelID field.
+func (u *UpdateChannelViewForumAsMessages) GetChannelID() (value int64) {
+	if u == nil {
+		return
+	}
+	return u.ChannelID
+}
+
+// GetEnabled returns value of Enabled field.
+func (u *UpdateChannelViewForumAsMessages) GetEnabled() (value bool) {
+	if u == nil {
+		return
+	}
+	return u.Enabled
+}
+
+// UpdatePeerWallpaper represents TL type `updatePeerWallpaper#ae3f101d`.
+// The wallpaper »¹ of a given peer has changed.
+//
+// Links:
+//  1. https://core.telegram.org/api/wallpapers
+//
+// See https://core.telegram.org/constructor/updatePeerWallpaper for reference.
+type UpdatePeerWallpaper struct {
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
+	Flags bin.Fields
+	// Whether the other user has chosen a custom wallpaper for us using messages
+	// setChatWallPaper¹ and the for_both flag, see here »² for more info.
+	//
+	// Links:
+	//  1) https://core.telegram.org/method/messages.setChatWallPaper
+	//  2) https://core.telegram.org/api/wallpapers#installing-wallpapers-in-a-specific-chat
+	WallpaperOverridden bool
+	// The peer where the wallpaper has changed.
+	Peer PeerClass
+	// The new wallpaper, if none the wallpaper was removed and the default wallpaper should
+	// be used.
+	//
+	// Use SetWallpaper and GetWallpaper helpers.
+	Wallpaper WallPaperClass
+}
+
+// UpdatePeerWallpaperTypeID is TL type id of UpdatePeerWallpaper.
+const UpdatePeerWallpaperTypeID = 0xae3f101d
+
+// construct implements constructor of UpdateClass.
+func (u UpdatePeerWallpaper) construct() UpdateClass { return &u }
+
+// Ensuring interfaces in compile-time for UpdatePeerWallpaper.
+var (
+	_ bin.Encoder     = &UpdatePeerWallpaper{}
+	_ bin.Decoder     = &UpdatePeerWallpaper{}
+	_ bin.BareEncoder = &UpdatePeerWallpaper{}
+	_ bin.BareDecoder = &UpdatePeerWallpaper{}
+
+	_ UpdateClass = &UpdatePeerWallpaper{}
+)
+
+func (u *UpdatePeerWallpaper) Zero() bool {
+	if u == nil {
+		return true
+	}
+	if !(u.Flags.Zero()) {
+		return false
+	}
+	if !(u.WallpaperOverridden == false) {
+		return false
+	}
+	if !(u.Peer == nil) {
+		return false
+	}
+	if !(u.Wallpaper == nil) {
+		return false
+	}
+
+	return true
+}
+
+// String implements fmt.Stringer.
+func (u *UpdatePeerWallpaper) String() string {
+	if u == nil {
+		return "UpdatePeerWallpaper(nil)"
+	}
+	type Alias UpdatePeerWallpaper
+	return fmt.Sprintf("UpdatePeerWallpaper%+v", Alias(*u))
+}
+
+// FillFrom fills UpdatePeerWallpaper from given interface.
+func (u *UpdatePeerWallpaper) FillFrom(from interface {
+	GetWallpaperOverridden() (value bool)
+	GetPeer() (value PeerClass)
+	GetWallpaper() (value WallPaperClass, ok bool)
+}) {
+	u.WallpaperOverridden = from.GetWallpaperOverridden()
+	u.Peer = from.GetPeer()
+	if val, ok := from.GetWallpaper(); ok {
+		u.Wallpaper = val
+	}
+
+}
+
+// TypeID returns type id in TL schema.
+//
+// See https://core.telegram.org/mtproto/TL-tl#remarks.
+func (*UpdatePeerWallpaper) TypeID() uint32 {
+	return UpdatePeerWallpaperTypeID
+}
+
+// TypeName returns name of type in TL schema.
+func (*UpdatePeerWallpaper) TypeName() string {
+	return "updatePeerWallpaper"
+}
+
+// TypeInfo returns info about TL type.
+func (u *UpdatePeerWallpaper) TypeInfo() tdp.Type {
+	typ := tdp.Type{
+		Name: "updatePeerWallpaper",
+		ID:   UpdatePeerWallpaperTypeID,
+	}
+	if u == nil {
+		typ.Null = true
+		return typ
+	}
+	typ.Fields = []tdp.Field{
+		{
+			Name:       "WallpaperOverridden",
+			SchemaName: "wallpaper_overridden",
+			Null:       !u.Flags.Has(1),
+		},
+		{
+			Name:       "Peer",
+			SchemaName: "peer",
+		},
+		{
+			Name:       "Wallpaper",
+			SchemaName: "wallpaper",
+			Null:       !u.Flags.Has(0),
+		},
+	}
+	return typ
+}
+
+// SetFlags sets flags for non-zero fields.
+func (u *UpdatePeerWallpaper) SetFlags() {
+	if !(u.WallpaperOverridden == false) {
+		u.Flags.Set(1)
+	}
+	if !(u.Wallpaper == nil) {
+		u.Flags.Set(0)
+	}
+}
+
+// Encode implements bin.Encoder.
+func (u *UpdatePeerWallpaper) Encode(b *bin.Buffer) error {
+	if u == nil {
+		return fmt.Errorf("can't encode updatePeerWallpaper#ae3f101d as nil")
+	}
+	b.PutID(UpdatePeerWallpaperTypeID)
+	return u.EncodeBare(b)
+}
+
+// EncodeBare implements bin.BareEncoder.
+func (u *UpdatePeerWallpaper) EncodeBare(b *bin.Buffer) error {
+	if u == nil {
+		return fmt.Errorf("can't encode updatePeerWallpaper#ae3f101d as nil")
+	}
+	u.SetFlags()
+	if err := u.Flags.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode updatePeerWallpaper#ae3f101d: field flags: %w", err)
+	}
+	if u.Peer == nil {
+		return fmt.Errorf("unable to encode updatePeerWallpaper#ae3f101d: field peer is nil")
+	}
+	if err := u.Peer.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode updatePeerWallpaper#ae3f101d: field peer: %w", err)
+	}
+	if u.Flags.Has(0) {
+		if u.Wallpaper == nil {
+			return fmt.Errorf("unable to encode updatePeerWallpaper#ae3f101d: field wallpaper is nil")
+		}
+		if err := u.Wallpaper.Encode(b); err != nil {
+			return fmt.Errorf("unable to encode updatePeerWallpaper#ae3f101d: field wallpaper: %w", err)
+		}
+	}
+	return nil
+}
+
+// Decode implements bin.Decoder.
+func (u *UpdatePeerWallpaper) Decode(b *bin.Buffer) error {
+	if u == nil {
+		return fmt.Errorf("can't decode updatePeerWallpaper#ae3f101d to nil")
+	}
+	if err := b.ConsumeID(UpdatePeerWallpaperTypeID); err != nil {
+		return fmt.Errorf("unable to decode updatePeerWallpaper#ae3f101d: %w", err)
+	}
+	return u.DecodeBare(b)
+}
+
+// DecodeBare implements bin.BareDecoder.
+func (u *UpdatePeerWallpaper) DecodeBare(b *bin.Buffer) error {
+	if u == nil {
+		return fmt.Errorf("can't decode updatePeerWallpaper#ae3f101d to nil")
+	}
+	{
+		if err := u.Flags.Decode(b); err != nil {
+			return fmt.Errorf("unable to decode updatePeerWallpaper#ae3f101d: field flags: %w", err)
+		}
+	}
+	u.WallpaperOverridden = u.Flags.Has(1)
+	{
+		value, err := DecodePeer(b)
+		if err != nil {
+			return fmt.Errorf("unable to decode updatePeerWallpaper#ae3f101d: field peer: %w", err)
+		}
+		u.Peer = value
+	}
+	if u.Flags.Has(0) {
+		value, err := DecodeWallPaper(b)
+		if err != nil {
+			return fmt.Errorf("unable to decode updatePeerWallpaper#ae3f101d: field wallpaper: %w", err)
+		}
+		u.Wallpaper = value
+	}
+	return nil
+}
+
+// SetWallpaperOverridden sets value of WallpaperOverridden conditional field.
+func (u *UpdatePeerWallpaper) SetWallpaperOverridden(value bool) {
+	if value {
+		u.Flags.Set(1)
+		u.WallpaperOverridden = true
+	} else {
+		u.Flags.Unset(1)
+		u.WallpaperOverridden = false
+	}
+}
+
+// GetWallpaperOverridden returns value of WallpaperOverridden conditional field.
+func (u *UpdatePeerWallpaper) GetWallpaperOverridden() (value bool) {
+	if u == nil {
+		return
+	}
+	return u.Flags.Has(1)
+}
+
+// GetPeer returns value of Peer field.
+func (u *UpdatePeerWallpaper) GetPeer() (value PeerClass) {
+	if u == nil {
+		return
+	}
+	return u.Peer
+}
+
+// SetWallpaper sets value of Wallpaper conditional field.
+func (u *UpdatePeerWallpaper) SetWallpaper(value WallPaperClass) {
+	u.Flags.Set(0)
+	u.Wallpaper = value
+}
+
+// GetWallpaper returns value of Wallpaper conditional field and
+// boolean which is true if field was set.
+func (u *UpdatePeerWallpaper) GetWallpaper() (value WallPaperClass, ok bool) {
+	if u == nil {
+		return
+	}
+	if !u.Flags.Has(0) {
+		return value, false
+	}
+	return u.Wallpaper, true
+}
+
+// UpdateBotMessageReaction represents TL type `updateBotMessageReaction#ac21d3ce`.
+//
+// See https://core.telegram.org/constructor/updateBotMessageReaction for reference.
+type UpdateBotMessageReaction struct {
+	// Peer field of UpdateBotMessageReaction.
+	Peer PeerClass
+	// MsgID field of UpdateBotMessageReaction.
+	MsgID int
+	// Date field of UpdateBotMessageReaction.
+	Date int
+	// Actor field of UpdateBotMessageReaction.
+	Actor PeerClass
+	// OldReactions field of UpdateBotMessageReaction.
+	OldReactions []ReactionClass
+	// NewReactions field of UpdateBotMessageReaction.
+	NewReactions []ReactionClass
+	// Qts field of UpdateBotMessageReaction.
+	Qts int
+}
+
+// UpdateBotMessageReactionTypeID is TL type id of UpdateBotMessageReaction.
+const UpdateBotMessageReactionTypeID = 0xac21d3ce
+
+// construct implements constructor of UpdateClass.
+func (u UpdateBotMessageReaction) construct() UpdateClass { return &u }
+
+// Ensuring interfaces in compile-time for UpdateBotMessageReaction.
+var (
+	_ bin.Encoder     = &UpdateBotMessageReaction{}
+	_ bin.Decoder     = &UpdateBotMessageReaction{}
+	_ bin.BareEncoder = &UpdateBotMessageReaction{}
+	_ bin.BareDecoder = &UpdateBotMessageReaction{}
+
+	_ UpdateClass = &UpdateBotMessageReaction{}
+)
+
+func (u *UpdateBotMessageReaction) Zero() bool {
+	if u == nil {
+		return true
+	}
+	if !(u.Peer == nil) {
+		return false
+	}
+	if !(u.MsgID == 0) {
+		return false
+	}
+	if !(u.Date == 0) {
+		return false
+	}
+	if !(u.Actor == nil) {
+		return false
+	}
+	if !(u.OldReactions == nil) {
+		return false
+	}
+	if !(u.NewReactions == nil) {
+		return false
+	}
+	if !(u.Qts == 0) {
+		return false
+	}
+
+	return true
+}
+
+// String implements fmt.Stringer.
+func (u *UpdateBotMessageReaction) String() string {
+	if u == nil {
+		return "UpdateBotMessageReaction(nil)"
+	}
+	type Alias UpdateBotMessageReaction
+	return fmt.Sprintf("UpdateBotMessageReaction%+v", Alias(*u))
+}
+
+// FillFrom fills UpdateBotMessageReaction from given interface.
+func (u *UpdateBotMessageReaction) FillFrom(from interface {
+	GetPeer() (value PeerClass)
+	GetMsgID() (value int)
+	GetDate() (value int)
+	GetActor() (value PeerClass)
+	GetOldReactions() (value []ReactionClass)
+	GetNewReactions() (value []ReactionClass)
+	GetQts() (value int)
+}) {
+	u.Peer = from.GetPeer()
+	u.MsgID = from.GetMsgID()
+	u.Date = from.GetDate()
+	u.Actor = from.GetActor()
+	u.OldReactions = from.GetOldReactions()
+	u.NewReactions = from.GetNewReactions()
+	u.Qts = from.GetQts()
+}
+
+// TypeID returns type id in TL schema.
+//
+// See https://core.telegram.org/mtproto/TL-tl#remarks.
+func (*UpdateBotMessageReaction) TypeID() uint32 {
+	return UpdateBotMessageReactionTypeID
+}
+
+// TypeName returns name of type in TL schema.
+func (*UpdateBotMessageReaction) TypeName() string {
+	return "updateBotMessageReaction"
+}
+
+// TypeInfo returns info about TL type.
+func (u *UpdateBotMessageReaction) TypeInfo() tdp.Type {
+	typ := tdp.Type{
+		Name: "updateBotMessageReaction",
+		ID:   UpdateBotMessageReactionTypeID,
+	}
+	if u == nil {
+		typ.Null = true
+		return typ
+	}
+	typ.Fields = []tdp.Field{
+		{
+			Name:       "Peer",
+			SchemaName: "peer",
+		},
+		{
+			Name:       "MsgID",
+			SchemaName: "msg_id",
+		},
+		{
+			Name:       "Date",
+			SchemaName: "date",
+		},
+		{
+			Name:       "Actor",
+			SchemaName: "actor",
+		},
+		{
+			Name:       "OldReactions",
+			SchemaName: "old_reactions",
+		},
+		{
+			Name:       "NewReactions",
+			SchemaName: "new_reactions",
+		},
+		{
+			Name:       "Qts",
+			SchemaName: "qts",
+		},
+	}
+	return typ
+}
+
+// Encode implements bin.Encoder.
+func (u *UpdateBotMessageReaction) Encode(b *bin.Buffer) error {
+	if u == nil {
+		return fmt.Errorf("can't encode updateBotMessageReaction#ac21d3ce as nil")
+	}
+	b.PutID(UpdateBotMessageReactionTypeID)
+	return u.EncodeBare(b)
+}
+
+// EncodeBare implements bin.BareEncoder.
+func (u *UpdateBotMessageReaction) EncodeBare(b *bin.Buffer) error {
+	if u == nil {
+		return fmt.Errorf("can't encode updateBotMessageReaction#ac21d3ce as nil")
+	}
+	if u.Peer == nil {
+		return fmt.Errorf("unable to encode updateBotMessageReaction#ac21d3ce: field peer is nil")
+	}
+	if err := u.Peer.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode updateBotMessageReaction#ac21d3ce: field peer: %w", err)
+	}
+	b.PutInt(u.MsgID)
+	b.PutInt(u.Date)
+	if u.Actor == nil {
+		return fmt.Errorf("unable to encode updateBotMessageReaction#ac21d3ce: field actor is nil")
+	}
+	if err := u.Actor.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode updateBotMessageReaction#ac21d3ce: field actor: %w", err)
+	}
+	b.PutVectorHeader(len(u.OldReactions))
+	for idx, v := range u.OldReactions {
+		if v == nil {
+			return fmt.Errorf("unable to encode updateBotMessageReaction#ac21d3ce: field old_reactions element with index %d is nil", idx)
+		}
+		if err := v.Encode(b); err != nil {
+			return fmt.Errorf("unable to encode updateBotMessageReaction#ac21d3ce: field old_reactions element with index %d: %w", idx, err)
+		}
+	}
+	b.PutVectorHeader(len(u.NewReactions))
+	for idx, v := range u.NewReactions {
+		if v == nil {
+			return fmt.Errorf("unable to encode updateBotMessageReaction#ac21d3ce: field new_reactions element with index %d is nil", idx)
+		}
+		if err := v.Encode(b); err != nil {
+			return fmt.Errorf("unable to encode updateBotMessageReaction#ac21d3ce: field new_reactions element with index %d: %w", idx, err)
+		}
+	}
+	b.PutInt(u.Qts)
+	return nil
+}
+
+// Decode implements bin.Decoder.
+func (u *UpdateBotMessageReaction) Decode(b *bin.Buffer) error {
+	if u == nil {
+		return fmt.Errorf("can't decode updateBotMessageReaction#ac21d3ce to nil")
+	}
+	if err := b.ConsumeID(UpdateBotMessageReactionTypeID); err != nil {
+		return fmt.Errorf("unable to decode updateBotMessageReaction#ac21d3ce: %w", err)
+	}
+	return u.DecodeBare(b)
+}
+
+// DecodeBare implements bin.BareDecoder.
+func (u *UpdateBotMessageReaction) DecodeBare(b *bin.Buffer) error {
+	if u == nil {
+		return fmt.Errorf("can't decode updateBotMessageReaction#ac21d3ce to nil")
+	}
+	{
+		value, err := DecodePeer(b)
+		if err != nil {
+			return fmt.Errorf("unable to decode updateBotMessageReaction#ac21d3ce: field peer: %w", err)
+		}
+		u.Peer = value
+	}
+	{
+		value, err := b.Int()
+		if err != nil {
+			return fmt.Errorf("unable to decode updateBotMessageReaction#ac21d3ce: field msg_id: %w", err)
+		}
+		u.MsgID = value
+	}
+	{
+		value, err := b.Int()
+		if err != nil {
+			return fmt.Errorf("unable to decode updateBotMessageReaction#ac21d3ce: field date: %w", err)
+		}
+		u.Date = value
+	}
+	{
+		value, err := DecodePeer(b)
+		if err != nil {
+			return fmt.Errorf("unable to decode updateBotMessageReaction#ac21d3ce: field actor: %w", err)
+		}
+		u.Actor = value
+	}
+	{
+		headerLen, err := b.VectorHeader()
+		if err != nil {
+			return fmt.Errorf("unable to decode updateBotMessageReaction#ac21d3ce: field old_reactions: %w", err)
+		}
+
+		if headerLen > 0 {
+			u.OldReactions = make([]ReactionClass, 0, headerLen%bin.PreallocateLimit)
+		}
+		for idx := 0; idx < headerLen; idx++ {
+			value, err := DecodeReaction(b)
+			if err != nil {
+				return fmt.Errorf("unable to decode updateBotMessageReaction#ac21d3ce: field old_reactions: %w", err)
+			}
+			u.OldReactions = append(u.OldReactions, value)
+		}
+	}
+	{
+		headerLen, err := b.VectorHeader()
+		if err != nil {
+			return fmt.Errorf("unable to decode updateBotMessageReaction#ac21d3ce: field new_reactions: %w", err)
+		}
+
+		if headerLen > 0 {
+			u.NewReactions = make([]ReactionClass, 0, headerLen%bin.PreallocateLimit)
+		}
+		for idx := 0; idx < headerLen; idx++ {
+			value, err := DecodeReaction(b)
+			if err != nil {
+				return fmt.Errorf("unable to decode updateBotMessageReaction#ac21d3ce: field new_reactions: %w", err)
+			}
+			u.NewReactions = append(u.NewReactions, value)
+		}
+	}
+	{
+		value, err := b.Int()
+		if err != nil {
+			return fmt.Errorf("unable to decode updateBotMessageReaction#ac21d3ce: field qts: %w", err)
+		}
+		u.Qts = value
+	}
+	return nil
+}
+
+// GetPeer returns value of Peer field.
+func (u *UpdateBotMessageReaction) GetPeer() (value PeerClass) {
+	if u == nil {
+		return
+	}
+	return u.Peer
+}
+
+// GetMsgID returns value of MsgID field.
+func (u *UpdateBotMessageReaction) GetMsgID() (value int) {
+	if u == nil {
+		return
+	}
+	return u.MsgID
+}
+
+// GetDate returns value of Date field.
+func (u *UpdateBotMessageReaction) GetDate() (value int) {
+	if u == nil {
+		return
+	}
+	return u.Date
+}
+
+// GetActor returns value of Actor field.
+func (u *UpdateBotMessageReaction) GetActor() (value PeerClass) {
+	if u == nil {
+		return
+	}
+	return u.Actor
+}
+
+// GetOldReactions returns value of OldReactions field.
+func (u *UpdateBotMessageReaction) GetOldReactions() (value []ReactionClass) {
+	if u == nil {
+		return
+	}
+	return u.OldReactions
+}
+
+// GetNewReactions returns value of NewReactions field.
+func (u *UpdateBotMessageReaction) GetNewReactions() (value []ReactionClass) {
+	if u == nil {
+		return
+	}
+	return u.NewReactions
+}
+
+// GetQts returns value of Qts field.
+func (u *UpdateBotMessageReaction) GetQts() (value int) {
+	if u == nil {
+		return
+	}
+	return u.Qts
+}
+
+// MapOldReactions returns field OldReactions wrapped in ReactionClassArray helper.
+func (u *UpdateBotMessageReaction) MapOldReactions() (value ReactionClassArray) {
+	return ReactionClassArray(u.OldReactions)
+}
+
+// MapNewReactions returns field NewReactions wrapped in ReactionClassArray helper.
+func (u *UpdateBotMessageReaction) MapNewReactions() (value ReactionClassArray) {
+	return ReactionClassArray(u.NewReactions)
+}
+
+// UpdateBotMessageReactions represents TL type `updateBotMessageReactions#9cb7759`.
+//
+// See https://core.telegram.org/constructor/updateBotMessageReactions for reference.
+type UpdateBotMessageReactions struct {
+	// Peer field of UpdateBotMessageReactions.
+	Peer PeerClass
+	// MsgID field of UpdateBotMessageReactions.
+	MsgID int
+	// Date field of UpdateBotMessageReactions.
+	Date int
+	// Reactions field of UpdateBotMessageReactions.
+	Reactions []ReactionCount
+	// Qts field of UpdateBotMessageReactions.
+	Qts int
+}
+
+// UpdateBotMessageReactionsTypeID is TL type id of UpdateBotMessageReactions.
+const UpdateBotMessageReactionsTypeID = 0x9cb7759
+
+// construct implements constructor of UpdateClass.
+func (u UpdateBotMessageReactions) construct() UpdateClass { return &u }
+
+// Ensuring interfaces in compile-time for UpdateBotMessageReactions.
+var (
+	_ bin.Encoder     = &UpdateBotMessageReactions{}
+	_ bin.Decoder     = &UpdateBotMessageReactions{}
+	_ bin.BareEncoder = &UpdateBotMessageReactions{}
+	_ bin.BareDecoder = &UpdateBotMessageReactions{}
+
+	_ UpdateClass = &UpdateBotMessageReactions{}
+)
+
+func (u *UpdateBotMessageReactions) Zero() bool {
+	if u == nil {
+		return true
+	}
+	if !(u.Peer == nil) {
+		return false
+	}
+	if !(u.MsgID == 0) {
+		return false
+	}
+	if !(u.Date == 0) {
+		return false
+	}
+	if !(u.Reactions == nil) {
+		return false
+	}
+	if !(u.Qts == 0) {
+		return false
+	}
+
+	return true
+}
+
+// String implements fmt.Stringer.
+func (u *UpdateBotMessageReactions) String() string {
+	if u == nil {
+		return "UpdateBotMessageReactions(nil)"
+	}
+	type Alias UpdateBotMessageReactions
+	return fmt.Sprintf("UpdateBotMessageReactions%+v", Alias(*u))
+}
+
+// FillFrom fills UpdateBotMessageReactions from given interface.
+func (u *UpdateBotMessageReactions) FillFrom(from interface {
+	GetPeer() (value PeerClass)
+	GetMsgID() (value int)
+	GetDate() (value int)
+	GetReactions() (value []ReactionCount)
+	GetQts() (value int)
+}) {
+	u.Peer = from.GetPeer()
+	u.MsgID = from.GetMsgID()
+	u.Date = from.GetDate()
+	u.Reactions = from.GetReactions()
+	u.Qts = from.GetQts()
+}
+
+// TypeID returns type id in TL schema.
+//
+// See https://core.telegram.org/mtproto/TL-tl#remarks.
+func (*UpdateBotMessageReactions) TypeID() uint32 {
+	return UpdateBotMessageReactionsTypeID
+}
+
+// TypeName returns name of type in TL schema.
+func (*UpdateBotMessageReactions) TypeName() string {
+	return "updateBotMessageReactions"
+}
+
+// TypeInfo returns info about TL type.
+func (u *UpdateBotMessageReactions) TypeInfo() tdp.Type {
+	typ := tdp.Type{
+		Name: "updateBotMessageReactions",
+		ID:   UpdateBotMessageReactionsTypeID,
+	}
+	if u == nil {
+		typ.Null = true
+		return typ
+	}
+	typ.Fields = []tdp.Field{
+		{
+			Name:       "Peer",
+			SchemaName: "peer",
+		},
+		{
+			Name:       "MsgID",
+			SchemaName: "msg_id",
+		},
+		{
+			Name:       "Date",
+			SchemaName: "date",
+		},
+		{
+			Name:       "Reactions",
+			SchemaName: "reactions",
+		},
+		{
+			Name:       "Qts",
+			SchemaName: "qts",
+		},
+	}
+	return typ
+}
+
+// Encode implements bin.Encoder.
+func (u *UpdateBotMessageReactions) Encode(b *bin.Buffer) error {
+	if u == nil {
+		return fmt.Errorf("can't encode updateBotMessageReactions#9cb7759 as nil")
+	}
+	b.PutID(UpdateBotMessageReactionsTypeID)
+	return u.EncodeBare(b)
+}
+
+// EncodeBare implements bin.BareEncoder.
+func (u *UpdateBotMessageReactions) EncodeBare(b *bin.Buffer) error {
+	if u == nil {
+		return fmt.Errorf("can't encode updateBotMessageReactions#9cb7759 as nil")
+	}
+	if u.Peer == nil {
+		return fmt.Errorf("unable to encode updateBotMessageReactions#9cb7759: field peer is nil")
+	}
+	if err := u.Peer.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode updateBotMessageReactions#9cb7759: field peer: %w", err)
+	}
+	b.PutInt(u.MsgID)
+	b.PutInt(u.Date)
+	b.PutVectorHeader(len(u.Reactions))
+	for idx, v := range u.Reactions {
+		if err := v.Encode(b); err != nil {
+			return fmt.Errorf("unable to encode updateBotMessageReactions#9cb7759: field reactions element with index %d: %w", idx, err)
+		}
+	}
+	b.PutInt(u.Qts)
+	return nil
+}
+
+// Decode implements bin.Decoder.
+func (u *UpdateBotMessageReactions) Decode(b *bin.Buffer) error {
+	if u == nil {
+		return fmt.Errorf("can't decode updateBotMessageReactions#9cb7759 to nil")
+	}
+	if err := b.ConsumeID(UpdateBotMessageReactionsTypeID); err != nil {
+		return fmt.Errorf("unable to decode updateBotMessageReactions#9cb7759: %w", err)
+	}
+	return u.DecodeBare(b)
+}
+
+// DecodeBare implements bin.BareDecoder.
+func (u *UpdateBotMessageReactions) DecodeBare(b *bin.Buffer) error {
+	if u == nil {
+		return fmt.Errorf("can't decode updateBotMessageReactions#9cb7759 to nil")
+	}
+	{
+		value, err := DecodePeer(b)
+		if err != nil {
+			return fmt.Errorf("unable to decode updateBotMessageReactions#9cb7759: field peer: %w", err)
+		}
+		u.Peer = value
+	}
+	{
+		value, err := b.Int()
+		if err != nil {
+			return fmt.Errorf("unable to decode updateBotMessageReactions#9cb7759: field msg_id: %w", err)
+		}
+		u.MsgID = value
+	}
+	{
+		value, err := b.Int()
+		if err != nil {
+			return fmt.Errorf("unable to decode updateBotMessageReactions#9cb7759: field date: %w", err)
+		}
+		u.Date = value
+	}
+	{
+		headerLen, err := b.VectorHeader()
+		if err != nil {
+			return fmt.Errorf("unable to decode updateBotMessageReactions#9cb7759: field reactions: %w", err)
+		}
+
+		if headerLen > 0 {
+			u.Reactions = make([]ReactionCount, 0, headerLen%bin.PreallocateLimit)
+		}
+		for idx := 0; idx < headerLen; idx++ {
+			var value ReactionCount
+			if err := value.Decode(b); err != nil {
+				return fmt.Errorf("unable to decode updateBotMessageReactions#9cb7759: field reactions: %w", err)
+			}
+			u.Reactions = append(u.Reactions, value)
+		}
+	}
+	{
+		value, err := b.Int()
+		if err != nil {
+			return fmt.Errorf("unable to decode updateBotMessageReactions#9cb7759: field qts: %w", err)
+		}
+		u.Qts = value
+	}
+	return nil
+}
+
+// GetPeer returns value of Peer field.
+func (u *UpdateBotMessageReactions) GetPeer() (value PeerClass) {
+	if u == nil {
+		return
+	}
+	return u.Peer
+}
+
+// GetMsgID returns value of MsgID field.
+func (u *UpdateBotMessageReactions) GetMsgID() (value int) {
+	if u == nil {
+		return
+	}
+	return u.MsgID
+}
+
+// GetDate returns value of Date field.
+func (u *UpdateBotMessageReactions) GetDate() (value int) {
+	if u == nil {
+		return
+	}
+	return u.Date
+}
+
+// GetReactions returns value of Reactions field.
+func (u *UpdateBotMessageReactions) GetReactions() (value []ReactionCount) {
+	if u == nil {
+		return
+	}
+	return u.Reactions
+}
+
+// GetQts returns value of Qts field.
+func (u *UpdateBotMessageReactions) GetQts() (value int) {
+	if u == nil {
+		return
+	}
+	return u.Qts
+}
+
 // UpdateClassName is schema name of UpdateClass.
 const UpdateClassName = "Update"
 
@@ -23616,6 +24913,11 @@ const UpdateClassName = "Update"
 //	case *tg.UpdateStoryID: // updateStoryID#1bf335b9
 //	case *tg.UpdateStoriesStealthMode: // updateStoriesStealthMode#2c084dc1
 //	case *tg.UpdateSentStoryReaction: // updateSentStoryReaction#7d627683
+//	case *tg.UpdateBotChatBoost: // updateBotChatBoost#904dd49c
+//	case *tg.UpdateChannelViewForumAsMessages: // updateChannelViewForumAsMessages#7b68920
+//	case *tg.UpdatePeerWallpaper: // updatePeerWallpaper#ae3f101d
+//	case *tg.UpdateBotMessageReaction: // updateBotMessageReaction#ac21d3ce
+//	case *tg.UpdateBotMessageReactions: // updateBotMessageReactions#9cb7759
 //	default: panic(v)
 //	}
 type UpdateClass interface {
@@ -24459,6 +25761,41 @@ func DecodeUpdate(buf *bin.Buffer) (UpdateClass, error) {
 	case UpdateSentStoryReactionTypeID:
 		// Decoding updateSentStoryReaction#7d627683.
 		v := UpdateSentStoryReaction{}
+		if err := v.Decode(buf); err != nil {
+			return nil, fmt.Errorf("unable to decode UpdateClass: %w", err)
+		}
+		return &v, nil
+	case UpdateBotChatBoostTypeID:
+		// Decoding updateBotChatBoost#904dd49c.
+		v := UpdateBotChatBoost{}
+		if err := v.Decode(buf); err != nil {
+			return nil, fmt.Errorf("unable to decode UpdateClass: %w", err)
+		}
+		return &v, nil
+	case UpdateChannelViewForumAsMessagesTypeID:
+		// Decoding updateChannelViewForumAsMessages#7b68920.
+		v := UpdateChannelViewForumAsMessages{}
+		if err := v.Decode(buf); err != nil {
+			return nil, fmt.Errorf("unable to decode UpdateClass: %w", err)
+		}
+		return &v, nil
+	case UpdatePeerWallpaperTypeID:
+		// Decoding updatePeerWallpaper#ae3f101d.
+		v := UpdatePeerWallpaper{}
+		if err := v.Decode(buf); err != nil {
+			return nil, fmt.Errorf("unable to decode UpdateClass: %w", err)
+		}
+		return &v, nil
+	case UpdateBotMessageReactionTypeID:
+		// Decoding updateBotMessageReaction#ac21d3ce.
+		v := UpdateBotMessageReaction{}
+		if err := v.Decode(buf); err != nil {
+			return nil, fmt.Errorf("unable to decode UpdateClass: %w", err)
+		}
+		return &v, nil
+	case UpdateBotMessageReactionsTypeID:
+		// Decoding updateBotMessageReactions#9cb7759.
+		v := UpdateBotMessageReactions{}
 		if err := v.Decode(buf); err != nil {
 			return nil, fmt.Errorf("unable to decode UpdateClass: %w", err)
 		}

@@ -31,24 +31,39 @@ var (
 	_ = tdjson.Encoder{}
 )
 
-// ChannelsUpdateColorRequest represents TL type `channels.updateColor#621a201f`.
+// ChannelsUpdateColorRequest represents TL type `channels.updateColor#d8aa3671`.
+// Update the accent color and background custom emoji »¹ of a channel.
+//
+// Links:
+//  1. https://core.telegram.org/api/colors
 //
 // See https://core.telegram.org/method/channels.updateColor for reference.
 type ChannelsUpdateColorRequest struct {
-	// Flags field of ChannelsUpdateColorRequest.
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// Channel field of ChannelsUpdateColorRequest.
+	// ForProfile field of ChannelsUpdateColorRequest.
+	ForProfile bool
+	// Channel whose accent color should be changed.
 	Channel InputChannelClass
-	// Color field of ChannelsUpdateColorRequest.
+	// ID of the accent color palette »¹ to use (not RGB24, see here »² for more info).
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/colors
+	//  2) https://core.telegram.org/api/colors
+	//
+	// Use SetColor and GetColor helpers.
 	Color int
-	// BackgroundEmojiID field of ChannelsUpdateColorRequest.
+	// Custom emoji ID used in the accent color pattern.
 	//
 	// Use SetBackgroundEmojiID and GetBackgroundEmojiID helpers.
 	BackgroundEmojiID int64
 }
 
 // ChannelsUpdateColorRequestTypeID is TL type id of ChannelsUpdateColorRequest.
-const ChannelsUpdateColorRequestTypeID = 0x621a201f
+const ChannelsUpdateColorRequestTypeID = 0xd8aa3671
 
 // Ensuring interfaces in compile-time for ChannelsUpdateColorRequest.
 var (
@@ -63,6 +78,9 @@ func (u *ChannelsUpdateColorRequest) Zero() bool {
 		return true
 	}
 	if !(u.Flags.Zero()) {
+		return false
+	}
+	if !(u.ForProfile == false) {
 		return false
 	}
 	if !(u.Channel == nil) {
@@ -89,12 +107,17 @@ func (u *ChannelsUpdateColorRequest) String() string {
 
 // FillFrom fills ChannelsUpdateColorRequest from given interface.
 func (u *ChannelsUpdateColorRequest) FillFrom(from interface {
+	GetForProfile() (value bool)
 	GetChannel() (value InputChannelClass)
-	GetColor() (value int)
+	GetColor() (value int, ok bool)
 	GetBackgroundEmojiID() (value int64, ok bool)
 }) {
+	u.ForProfile = from.GetForProfile()
 	u.Channel = from.GetChannel()
-	u.Color = from.GetColor()
+	if val, ok := from.GetColor(); ok {
+		u.Color = val
+	}
+
 	if val, ok := from.GetBackgroundEmojiID(); ok {
 		u.BackgroundEmojiID = val
 	}
@@ -125,12 +148,18 @@ func (u *ChannelsUpdateColorRequest) TypeInfo() tdp.Type {
 	}
 	typ.Fields = []tdp.Field{
 		{
+			Name:       "ForProfile",
+			SchemaName: "for_profile",
+			Null:       !u.Flags.Has(1),
+		},
+		{
 			Name:       "Channel",
 			SchemaName: "channel",
 		},
 		{
 			Name:       "Color",
 			SchemaName: "color",
+			Null:       !u.Flags.Has(2),
 		},
 		{
 			Name:       "BackgroundEmojiID",
@@ -143,6 +172,12 @@ func (u *ChannelsUpdateColorRequest) TypeInfo() tdp.Type {
 
 // SetFlags sets flags for non-zero fields.
 func (u *ChannelsUpdateColorRequest) SetFlags() {
+	if !(u.ForProfile == false) {
+		u.Flags.Set(1)
+	}
+	if !(u.Color == 0) {
+		u.Flags.Set(2)
+	}
 	if !(u.BackgroundEmojiID == 0) {
 		u.Flags.Set(0)
 	}
@@ -151,7 +186,7 @@ func (u *ChannelsUpdateColorRequest) SetFlags() {
 // Encode implements bin.Encoder.
 func (u *ChannelsUpdateColorRequest) Encode(b *bin.Buffer) error {
 	if u == nil {
-		return fmt.Errorf("can't encode channels.updateColor#621a201f as nil")
+		return fmt.Errorf("can't encode channels.updateColor#d8aa3671 as nil")
 	}
 	b.PutID(ChannelsUpdateColorRequestTypeID)
 	return u.EncodeBare(b)
@@ -160,19 +195,21 @@ func (u *ChannelsUpdateColorRequest) Encode(b *bin.Buffer) error {
 // EncodeBare implements bin.BareEncoder.
 func (u *ChannelsUpdateColorRequest) EncodeBare(b *bin.Buffer) error {
 	if u == nil {
-		return fmt.Errorf("can't encode channels.updateColor#621a201f as nil")
+		return fmt.Errorf("can't encode channels.updateColor#d8aa3671 as nil")
 	}
 	u.SetFlags()
 	if err := u.Flags.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode channels.updateColor#621a201f: field flags: %w", err)
+		return fmt.Errorf("unable to encode channels.updateColor#d8aa3671: field flags: %w", err)
 	}
 	if u.Channel == nil {
-		return fmt.Errorf("unable to encode channels.updateColor#621a201f: field channel is nil")
+		return fmt.Errorf("unable to encode channels.updateColor#d8aa3671: field channel is nil")
 	}
 	if err := u.Channel.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode channels.updateColor#621a201f: field channel: %w", err)
+		return fmt.Errorf("unable to encode channels.updateColor#d8aa3671: field channel: %w", err)
 	}
-	b.PutInt(u.Color)
+	if u.Flags.Has(2) {
+		b.PutInt(u.Color)
+	}
 	if u.Flags.Has(0) {
 		b.PutLong(u.BackgroundEmojiID)
 	}
@@ -182,10 +219,10 @@ func (u *ChannelsUpdateColorRequest) EncodeBare(b *bin.Buffer) error {
 // Decode implements bin.Decoder.
 func (u *ChannelsUpdateColorRequest) Decode(b *bin.Buffer) error {
 	if u == nil {
-		return fmt.Errorf("can't decode channels.updateColor#621a201f to nil")
+		return fmt.Errorf("can't decode channels.updateColor#d8aa3671 to nil")
 	}
 	if err := b.ConsumeID(ChannelsUpdateColorRequestTypeID); err != nil {
-		return fmt.Errorf("unable to decode channels.updateColor#621a201f: %w", err)
+		return fmt.Errorf("unable to decode channels.updateColor#d8aa3671: %w", err)
 	}
 	return u.DecodeBare(b)
 }
@@ -193,35 +230,55 @@ func (u *ChannelsUpdateColorRequest) Decode(b *bin.Buffer) error {
 // DecodeBare implements bin.BareDecoder.
 func (u *ChannelsUpdateColorRequest) DecodeBare(b *bin.Buffer) error {
 	if u == nil {
-		return fmt.Errorf("can't decode channels.updateColor#621a201f to nil")
+		return fmt.Errorf("can't decode channels.updateColor#d8aa3671 to nil")
 	}
 	{
 		if err := u.Flags.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode channels.updateColor#621a201f: field flags: %w", err)
+			return fmt.Errorf("unable to decode channels.updateColor#d8aa3671: field flags: %w", err)
 		}
 	}
+	u.ForProfile = u.Flags.Has(1)
 	{
 		value, err := DecodeInputChannel(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode channels.updateColor#621a201f: field channel: %w", err)
+			return fmt.Errorf("unable to decode channels.updateColor#d8aa3671: field channel: %w", err)
 		}
 		u.Channel = value
 	}
-	{
+	if u.Flags.Has(2) {
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode channels.updateColor#621a201f: field color: %w", err)
+			return fmt.Errorf("unable to decode channels.updateColor#d8aa3671: field color: %w", err)
 		}
 		u.Color = value
 	}
 	if u.Flags.Has(0) {
 		value, err := b.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode channels.updateColor#621a201f: field background_emoji_id: %w", err)
+			return fmt.Errorf("unable to decode channels.updateColor#d8aa3671: field background_emoji_id: %w", err)
 		}
 		u.BackgroundEmojiID = value
 	}
 	return nil
+}
+
+// SetForProfile sets value of ForProfile conditional field.
+func (u *ChannelsUpdateColorRequest) SetForProfile(value bool) {
+	if value {
+		u.Flags.Set(1)
+		u.ForProfile = true
+	} else {
+		u.Flags.Unset(1)
+		u.ForProfile = false
+	}
+}
+
+// GetForProfile returns value of ForProfile conditional field.
+func (u *ChannelsUpdateColorRequest) GetForProfile() (value bool) {
+	if u == nil {
+		return
+	}
+	return u.Flags.Has(1)
 }
 
 // GetChannel returns value of Channel field.
@@ -232,12 +289,22 @@ func (u *ChannelsUpdateColorRequest) GetChannel() (value InputChannelClass) {
 	return u.Channel
 }
 
-// GetColor returns value of Color field.
-func (u *ChannelsUpdateColorRequest) GetColor() (value int) {
+// SetColor sets value of Color conditional field.
+func (u *ChannelsUpdateColorRequest) SetColor(value int) {
+	u.Flags.Set(2)
+	u.Color = value
+}
+
+// GetColor returns value of Color conditional field and
+// boolean which is true if field was set.
+func (u *ChannelsUpdateColorRequest) GetColor() (value int, ok bool) {
 	if u == nil {
 		return
 	}
-	return u.Color
+	if !u.Flags.Has(2) {
+		return value, false
+	}
+	return u.Color, true
 }
 
 // SetBackgroundEmojiID sets value of BackgroundEmojiID conditional field.
@@ -263,7 +330,16 @@ func (u *ChannelsUpdateColorRequest) GetChannelAsNotEmpty() (NotEmptyInputChanne
 	return u.Channel.AsNotEmpty()
 }
 
-// ChannelsUpdateColor invokes method channels.updateColor#621a201f returning error if any.
+// ChannelsUpdateColor invokes method channels.updateColor#d8aa3671 returning error if any.
+// Update the accent color and background custom emoji »¹ of a channel.
+//
+// Links:
+//  1. https://core.telegram.org/api/colors
+//
+// Possible errors:
+//
+//	400 BOOSTS_REQUIRED: The specified channel must first be boosted by its users in order to perform this action.
+//	400 CHANNEL_INVALID: The provided channel is invalid.
 //
 // See https://core.telegram.org/method/channels.updateColor for reference.
 func (c *Client) ChannelsUpdateColor(ctx context.Context, request *ChannelsUpdateColorRequest) (UpdatesClass, error) {

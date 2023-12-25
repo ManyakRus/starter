@@ -435,20 +435,49 @@ func (i *InputStorePaymentGiftPremium) GetAmount() (value int64) {
 }
 
 // InputStorePaymentPremiumGiftCode represents TL type `inputStorePaymentPremiumGiftCode#a3805f3f`.
+// Used to gift Telegram Premium¹ subscriptions only to some specific subscribers of a
+// channel or to some of our contacts, see here »² for more info on giveaways and gifts.
+//
+// Links:
+//  1. https://core.telegram.org/api/premium
+//  2. https://core.telegram.org/api/giveaways
 //
 // See https://core.telegram.org/constructor/inputStorePaymentPremiumGiftCode for reference.
 type InputStorePaymentPremiumGiftCode struct {
-	// Flags field of InputStorePaymentPremiumGiftCode.
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// Users field of InputStorePaymentPremiumGiftCode.
+	// The users that will receive the Telegram Premium¹ subscriptions.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/premium
 	Users []InputUserClass
-	// BoostPeer field of InputStorePaymentPremiumGiftCode.
+	// If set, the gifts will be sent on behalf of a channel we are an admin of, which will
+	// also assign some boosts¹ to it. Otherwise, the gift will be sent directly from the
+	// currently logged in users, and we will gain some extra boost slots². See here »³
+	// for more info on giveaways and gifts.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/boost
+	//  2) https://core.telegram.org/api/boost
+	//  3) https://core.telegram.org/api/giveaways
 	//
 	// Use SetBoostPeer and GetBoostPeer helpers.
 	BoostPeer InputPeerClass
-	// Currency field of InputStorePaymentPremiumGiftCode.
+	// Three-letter ISO 4217 currency¹ code
+	//
+	// Links:
+	//  1) https://core.telegram.org/bots/payments#supported-currencies
 	Currency string
-	// Amount field of InputStorePaymentPremiumGiftCode.
+	// Total price in the smallest units of the currency (integer, not float/double). For
+	// example, for a price of US$ 1.45 pass amount = 145. See the exp parameter in
+	// currencies.json¹, it shows the number of digits past the decimal point for each
+	// currency (2 for the majority of currencies).
+	//
+	// Links:
+	//  1) https://core.telegram.org/bots/payments/currencies.json
 	Amount int64
 }
 
@@ -716,36 +745,75 @@ func (i *InputStorePaymentPremiumGiftCode) MapUsers() (value InputUserClassArray
 	return InputUserClassArray(i.Users)
 }
 
-// InputStorePaymentPremiumGiveaway represents TL type `inputStorePaymentPremiumGiveaway#7c9375e6`.
+// InputStorePaymentPremiumGiveaway represents TL type `inputStorePaymentPremiumGiveaway#160544ca`.
+// Used to pay for a giveaway, see here »¹ for more info.
+//
+// Links:
+//  1. https://core.telegram.org/api/giveaways
 //
 // See https://core.telegram.org/constructor/inputStorePaymentPremiumGiveaway for reference.
 type InputStorePaymentPremiumGiveaway struct {
-	// Flags field of InputStorePaymentPremiumGiveaway.
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// OnlyNewSubscribers field of InputStorePaymentPremiumGiveaway.
+	// If set, only new subscribers starting from the giveaway creation date will be able to
+	// participate to the giveaway.
 	OnlyNewSubscribers bool
-	// BoostPeer field of InputStorePaymentPremiumGiveaway.
+	// WinnersAreVisible field of InputStorePaymentPremiumGiveaway.
+	WinnersAreVisible bool
+	// The channel starting the giveaway, that the user must join to participate, that will
+	// receive the giveaway boosts¹; see here »² for more info on giveaways.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/boost
+	//  2) https://core.telegram.org/api/giveaways
 	BoostPeer InputPeerClass
-	// AdditionalPeers field of InputStorePaymentPremiumGiveaway.
+	// Additional channels that the user must join to participate to the giveaway can be
+	// specified here.
 	//
 	// Use SetAdditionalPeers and GetAdditionalPeers helpers.
 	AdditionalPeers []InputPeerClass
-	// CountriesISO2 field of InputStorePaymentPremiumGiveaway.
+	// The set of users that can participate to the giveaway can be restricted by passing
+	// here an explicit whitelist of up to giveaway_countries_max¹ countries, specified as
+	// two-letter ISO 3166-1 alpha-2 country codes.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/config#giveaway-countries-max
 	//
 	// Use SetCountriesISO2 and GetCountriesISO2 helpers.
 	CountriesISO2 []string
-	// RandomID field of InputStorePaymentPremiumGiveaway.
+	// PrizeDescription field of InputStorePaymentPremiumGiveaway.
+	//
+	// Use SetPrizeDescription and GetPrizeDescription helpers.
+	PrizeDescription string
+	// Random ID to avoid resending the giveaway
 	RandomID int64
-	// UntilDate field of InputStorePaymentPremiumGiveaway.
+	// The end date of the giveaway, must be at most giveaway_period_max¹ seconds in the
+	// future; see here »² for more info on giveaways.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/config#giveaway-period-max
+	//  2) https://core.telegram.org/api/giveaways
 	UntilDate int
-	// Currency field of InputStorePaymentPremiumGiveaway.
+	// Three-letter ISO 4217 currency¹ code
+	//
+	// Links:
+	//  1) https://core.telegram.org/bots/payments#supported-currencies
 	Currency string
-	// Amount field of InputStorePaymentPremiumGiveaway.
+	// Total price in the smallest units of the currency (integer, not float/double). For
+	// example, for a price of US$ 1.45 pass amount = 145. See the exp parameter in
+	// currencies.json¹, it shows the number of digits past the decimal point for each
+	// currency (2 for the majority of currencies).
+	//
+	// Links:
+	//  1) https://core.telegram.org/bots/payments/currencies.json
 	Amount int64
 }
 
 // InputStorePaymentPremiumGiveawayTypeID is TL type id of InputStorePaymentPremiumGiveaway.
-const InputStorePaymentPremiumGiveawayTypeID = 0x7c9375e6
+const InputStorePaymentPremiumGiveawayTypeID = 0x160544ca
 
 // construct implements constructor of InputStorePaymentPurposeClass.
 func (i InputStorePaymentPremiumGiveaway) construct() InputStorePaymentPurposeClass { return &i }
@@ -770,6 +838,9 @@ func (i *InputStorePaymentPremiumGiveaway) Zero() bool {
 	if !(i.OnlyNewSubscribers == false) {
 		return false
 	}
+	if !(i.WinnersAreVisible == false) {
+		return false
+	}
 	if !(i.BoostPeer == nil) {
 		return false
 	}
@@ -777,6 +848,9 @@ func (i *InputStorePaymentPremiumGiveaway) Zero() bool {
 		return false
 	}
 	if !(i.CountriesISO2 == nil) {
+		return false
+	}
+	if !(i.PrizeDescription == "") {
 		return false
 	}
 	if !(i.RandomID == 0) {
@@ -807,15 +881,18 @@ func (i *InputStorePaymentPremiumGiveaway) String() string {
 // FillFrom fills InputStorePaymentPremiumGiveaway from given interface.
 func (i *InputStorePaymentPremiumGiveaway) FillFrom(from interface {
 	GetOnlyNewSubscribers() (value bool)
+	GetWinnersAreVisible() (value bool)
 	GetBoostPeer() (value InputPeerClass)
 	GetAdditionalPeers() (value []InputPeerClass, ok bool)
 	GetCountriesISO2() (value []string, ok bool)
+	GetPrizeDescription() (value string, ok bool)
 	GetRandomID() (value int64)
 	GetUntilDate() (value int)
 	GetCurrency() (value string)
 	GetAmount() (value int64)
 }) {
 	i.OnlyNewSubscribers = from.GetOnlyNewSubscribers()
+	i.WinnersAreVisible = from.GetWinnersAreVisible()
 	i.BoostPeer = from.GetBoostPeer()
 	if val, ok := from.GetAdditionalPeers(); ok {
 		i.AdditionalPeers = val
@@ -823,6 +900,10 @@ func (i *InputStorePaymentPremiumGiveaway) FillFrom(from interface {
 
 	if val, ok := from.GetCountriesISO2(); ok {
 		i.CountriesISO2 = val
+	}
+
+	if val, ok := from.GetPrizeDescription(); ok {
+		i.PrizeDescription = val
 	}
 
 	i.RandomID = from.GetRandomID()
@@ -860,6 +941,11 @@ func (i *InputStorePaymentPremiumGiveaway) TypeInfo() tdp.Type {
 			Null:       !i.Flags.Has(0),
 		},
 		{
+			Name:       "WinnersAreVisible",
+			SchemaName: "winners_are_visible",
+			Null:       !i.Flags.Has(3),
+		},
+		{
 			Name:       "BoostPeer",
 			SchemaName: "boost_peer",
 		},
@@ -872,6 +958,11 @@ func (i *InputStorePaymentPremiumGiveaway) TypeInfo() tdp.Type {
 			Name:       "CountriesISO2",
 			SchemaName: "countries_iso2",
 			Null:       !i.Flags.Has(2),
+		},
+		{
+			Name:       "PrizeDescription",
+			SchemaName: "prize_description",
+			Null:       !i.Flags.Has(4),
 		},
 		{
 			Name:       "RandomID",
@@ -898,18 +989,24 @@ func (i *InputStorePaymentPremiumGiveaway) SetFlags() {
 	if !(i.OnlyNewSubscribers == false) {
 		i.Flags.Set(0)
 	}
+	if !(i.WinnersAreVisible == false) {
+		i.Flags.Set(3)
+	}
 	if !(i.AdditionalPeers == nil) {
 		i.Flags.Set(1)
 	}
 	if !(i.CountriesISO2 == nil) {
 		i.Flags.Set(2)
 	}
+	if !(i.PrizeDescription == "") {
+		i.Flags.Set(4)
+	}
 }
 
 // Encode implements bin.Encoder.
 func (i *InputStorePaymentPremiumGiveaway) Encode(b *bin.Buffer) error {
 	if i == nil {
-		return fmt.Errorf("can't encode inputStorePaymentPremiumGiveaway#7c9375e6 as nil")
+		return fmt.Errorf("can't encode inputStorePaymentPremiumGiveaway#160544ca as nil")
 	}
 	b.PutID(InputStorePaymentPremiumGiveawayTypeID)
 	return i.EncodeBare(b)
@@ -918,26 +1015,26 @@ func (i *InputStorePaymentPremiumGiveaway) Encode(b *bin.Buffer) error {
 // EncodeBare implements bin.BareEncoder.
 func (i *InputStorePaymentPremiumGiveaway) EncodeBare(b *bin.Buffer) error {
 	if i == nil {
-		return fmt.Errorf("can't encode inputStorePaymentPremiumGiveaway#7c9375e6 as nil")
+		return fmt.Errorf("can't encode inputStorePaymentPremiumGiveaway#160544ca as nil")
 	}
 	i.SetFlags()
 	if err := i.Flags.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode inputStorePaymentPremiumGiveaway#7c9375e6: field flags: %w", err)
+		return fmt.Errorf("unable to encode inputStorePaymentPremiumGiveaway#160544ca: field flags: %w", err)
 	}
 	if i.BoostPeer == nil {
-		return fmt.Errorf("unable to encode inputStorePaymentPremiumGiveaway#7c9375e6: field boost_peer is nil")
+		return fmt.Errorf("unable to encode inputStorePaymentPremiumGiveaway#160544ca: field boost_peer is nil")
 	}
 	if err := i.BoostPeer.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode inputStorePaymentPremiumGiveaway#7c9375e6: field boost_peer: %w", err)
+		return fmt.Errorf("unable to encode inputStorePaymentPremiumGiveaway#160544ca: field boost_peer: %w", err)
 	}
 	if i.Flags.Has(1) {
 		b.PutVectorHeader(len(i.AdditionalPeers))
 		for idx, v := range i.AdditionalPeers {
 			if v == nil {
-				return fmt.Errorf("unable to encode inputStorePaymentPremiumGiveaway#7c9375e6: field additional_peers element with index %d is nil", idx)
+				return fmt.Errorf("unable to encode inputStorePaymentPremiumGiveaway#160544ca: field additional_peers element with index %d is nil", idx)
 			}
 			if err := v.Encode(b); err != nil {
-				return fmt.Errorf("unable to encode inputStorePaymentPremiumGiveaway#7c9375e6: field additional_peers element with index %d: %w", idx, err)
+				return fmt.Errorf("unable to encode inputStorePaymentPremiumGiveaway#160544ca: field additional_peers element with index %d: %w", idx, err)
 			}
 		}
 	}
@@ -946,6 +1043,9 @@ func (i *InputStorePaymentPremiumGiveaway) EncodeBare(b *bin.Buffer) error {
 		for _, v := range i.CountriesISO2 {
 			b.PutString(v)
 		}
+	}
+	if i.Flags.Has(4) {
+		b.PutString(i.PrizeDescription)
 	}
 	b.PutLong(i.RandomID)
 	b.PutInt(i.UntilDate)
@@ -957,10 +1057,10 @@ func (i *InputStorePaymentPremiumGiveaway) EncodeBare(b *bin.Buffer) error {
 // Decode implements bin.Decoder.
 func (i *InputStorePaymentPremiumGiveaway) Decode(b *bin.Buffer) error {
 	if i == nil {
-		return fmt.Errorf("can't decode inputStorePaymentPremiumGiveaway#7c9375e6 to nil")
+		return fmt.Errorf("can't decode inputStorePaymentPremiumGiveaway#160544ca to nil")
 	}
 	if err := b.ConsumeID(InputStorePaymentPremiumGiveawayTypeID); err != nil {
-		return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#7c9375e6: %w", err)
+		return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#160544ca: %w", err)
 	}
 	return i.DecodeBare(b)
 }
@@ -968,25 +1068,26 @@ func (i *InputStorePaymentPremiumGiveaway) Decode(b *bin.Buffer) error {
 // DecodeBare implements bin.BareDecoder.
 func (i *InputStorePaymentPremiumGiveaway) DecodeBare(b *bin.Buffer) error {
 	if i == nil {
-		return fmt.Errorf("can't decode inputStorePaymentPremiumGiveaway#7c9375e6 to nil")
+		return fmt.Errorf("can't decode inputStorePaymentPremiumGiveaway#160544ca to nil")
 	}
 	{
 		if err := i.Flags.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#7c9375e6: field flags: %w", err)
+			return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#160544ca: field flags: %w", err)
 		}
 	}
 	i.OnlyNewSubscribers = i.Flags.Has(0)
+	i.WinnersAreVisible = i.Flags.Has(3)
 	{
 		value, err := DecodeInputPeer(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#7c9375e6: field boost_peer: %w", err)
+			return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#160544ca: field boost_peer: %w", err)
 		}
 		i.BoostPeer = value
 	}
 	if i.Flags.Has(1) {
 		headerLen, err := b.VectorHeader()
 		if err != nil {
-			return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#7c9375e6: field additional_peers: %w", err)
+			return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#160544ca: field additional_peers: %w", err)
 		}
 
 		if headerLen > 0 {
@@ -995,7 +1096,7 @@ func (i *InputStorePaymentPremiumGiveaway) DecodeBare(b *bin.Buffer) error {
 		for idx := 0; idx < headerLen; idx++ {
 			value, err := DecodeInputPeer(b)
 			if err != nil {
-				return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#7c9375e6: field additional_peers: %w", err)
+				return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#160544ca: field additional_peers: %w", err)
 			}
 			i.AdditionalPeers = append(i.AdditionalPeers, value)
 		}
@@ -1003,7 +1104,7 @@ func (i *InputStorePaymentPremiumGiveaway) DecodeBare(b *bin.Buffer) error {
 	if i.Flags.Has(2) {
 		headerLen, err := b.VectorHeader()
 		if err != nil {
-			return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#7c9375e6: field countries_iso2: %w", err)
+			return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#160544ca: field countries_iso2: %w", err)
 		}
 
 		if headerLen > 0 {
@@ -1012,36 +1113,43 @@ func (i *InputStorePaymentPremiumGiveaway) DecodeBare(b *bin.Buffer) error {
 		for idx := 0; idx < headerLen; idx++ {
 			value, err := b.String()
 			if err != nil {
-				return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#7c9375e6: field countries_iso2: %w", err)
+				return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#160544ca: field countries_iso2: %w", err)
 			}
 			i.CountriesISO2 = append(i.CountriesISO2, value)
 		}
 	}
+	if i.Flags.Has(4) {
+		value, err := b.String()
+		if err != nil {
+			return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#160544ca: field prize_description: %w", err)
+		}
+		i.PrizeDescription = value
+	}
 	{
 		value, err := b.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#7c9375e6: field random_id: %w", err)
+			return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#160544ca: field random_id: %w", err)
 		}
 		i.RandomID = value
 	}
 	{
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#7c9375e6: field until_date: %w", err)
+			return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#160544ca: field until_date: %w", err)
 		}
 		i.UntilDate = value
 	}
 	{
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#7c9375e6: field currency: %w", err)
+			return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#160544ca: field currency: %w", err)
 		}
 		i.Currency = value
 	}
 	{
 		value, err := b.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#7c9375e6: field amount: %w", err)
+			return fmt.Errorf("unable to decode inputStorePaymentPremiumGiveaway#160544ca: field amount: %w", err)
 		}
 		i.Amount = value
 	}
@@ -1065,6 +1173,25 @@ func (i *InputStorePaymentPremiumGiveaway) GetOnlyNewSubscribers() (value bool) 
 		return
 	}
 	return i.Flags.Has(0)
+}
+
+// SetWinnersAreVisible sets value of WinnersAreVisible conditional field.
+func (i *InputStorePaymentPremiumGiveaway) SetWinnersAreVisible(value bool) {
+	if value {
+		i.Flags.Set(3)
+		i.WinnersAreVisible = true
+	} else {
+		i.Flags.Unset(3)
+		i.WinnersAreVisible = false
+	}
+}
+
+// GetWinnersAreVisible returns value of WinnersAreVisible conditional field.
+func (i *InputStorePaymentPremiumGiveaway) GetWinnersAreVisible() (value bool) {
+	if i == nil {
+		return
+	}
+	return i.Flags.Has(3)
 }
 
 // GetBoostPeer returns value of BoostPeer field.
@@ -1109,6 +1236,24 @@ func (i *InputStorePaymentPremiumGiveaway) GetCountriesISO2() (value []string, o
 		return value, false
 	}
 	return i.CountriesISO2, true
+}
+
+// SetPrizeDescription sets value of PrizeDescription conditional field.
+func (i *InputStorePaymentPremiumGiveaway) SetPrizeDescription(value string) {
+	i.Flags.Set(4)
+	i.PrizeDescription = value
+}
+
+// GetPrizeDescription returns value of PrizeDescription conditional field and
+// boolean which is true if field was set.
+func (i *InputStorePaymentPremiumGiveaway) GetPrizeDescription() (value string, ok bool) {
+	if i == nil {
+		return
+	}
+	if !i.Flags.Has(4) {
+		return value, false
+	}
+	return i.PrizeDescription, true
 }
 
 // GetRandomID returns value of RandomID field.
@@ -1168,7 +1313,7 @@ const InputStorePaymentPurposeClassName = "InputStorePaymentPurpose"
 //	case *tg.InputStorePaymentPremiumSubscription: // inputStorePaymentPremiumSubscription#a6751e66
 //	case *tg.InputStorePaymentGiftPremium: // inputStorePaymentGiftPremium#616f7fe8
 //	case *tg.InputStorePaymentPremiumGiftCode: // inputStorePaymentPremiumGiftCode#a3805f3f
-//	case *tg.InputStorePaymentPremiumGiveaway: // inputStorePaymentPremiumGiveaway#7c9375e6
+//	case *tg.InputStorePaymentPremiumGiveaway: // inputStorePaymentPremiumGiveaway#160544ca
 //	default: panic(v)
 //	}
 type InputStorePaymentPurposeClass interface {
@@ -1219,7 +1364,7 @@ func DecodeInputStorePaymentPurpose(buf *bin.Buffer) (InputStorePaymentPurposeCl
 		}
 		return &v, nil
 	case InputStorePaymentPremiumGiveawayTypeID:
-		// Decoding inputStorePaymentPremiumGiveaway#7c9375e6.
+		// Decoding inputStorePaymentPremiumGiveaway#160544ca.
 		v := InputStorePaymentPremiumGiveaway{}
 		if err := v.Decode(buf); err != nil {
 			return nil, fmt.Errorf("unable to decode InputStorePaymentPurposeClass: %w", err)

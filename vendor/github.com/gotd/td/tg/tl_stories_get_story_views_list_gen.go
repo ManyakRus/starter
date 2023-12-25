@@ -32,26 +32,50 @@ var (
 )
 
 // StoriesGetStoryViewsListRequest represents TL type `stories.getStoryViewsList#7ed23c57`.
+// Obtain the list of users that have viewed a specific story we posted¹
+//
+// Links:
+//  1. https://core.telegram.org/api/stories
 //
 // See https://core.telegram.org/method/stories.getStoryViewsList for reference.
 type StoriesGetStoryViewsListRequest struct {
-	// Flags field of StoriesGetStoryViewsListRequest.
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// JustContacts field of StoriesGetStoryViewsListRequest.
+	// Whether to only fetch view reaction/views made by our contacts¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/contacts
 	JustContacts bool
-	// ReactionsFirst field of StoriesGetStoryViewsListRequest.
+	// Whether to return storyView¹ info about users that reacted to the story (i.e. if set,
+	// the server will first sort results by view date as usual, and then also additionally
+	// sort the list by putting storyView²s with an associated reaction first in the list).
+	//
+	// Links:
+	//  1) https://core.telegram.org/constructor/storyView
+	//  2) https://core.telegram.org/constructor/storyView
 	ReactionsFirst bool
-	// Peer field of StoriesGetStoryViewsListRequest.
+	// ForwardsFirst field of StoriesGetStoryViewsListRequest.
+	ForwardsFirst bool
+	// Peer where the story was posted
 	Peer InputPeerClass
-	// Q field of StoriesGetStoryViewsListRequest.
+	// Search for specific peers
 	//
 	// Use SetQ and GetQ helpers.
 	Q string
-	// ID field of StoriesGetStoryViewsListRequest.
+	// Story ID
 	ID int
-	// Offset field of StoriesGetStoryViewsListRequest.
+	// Offset for pagination, obtained from stories.storyViewsList¹.next_offset
+	//
+	// Links:
+	//  1) https://core.telegram.org/constructor/stories.storyViewsList
 	Offset string
-	// Limit field of StoriesGetStoryViewsListRequest.
+	// Maximum number of results to return, see pagination¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/offsets
 	Limit int
 }
 
@@ -77,6 +101,9 @@ func (g *StoriesGetStoryViewsListRequest) Zero() bool {
 		return false
 	}
 	if !(g.ReactionsFirst == false) {
+		return false
+	}
+	if !(g.ForwardsFirst == false) {
 		return false
 	}
 	if !(g.Peer == nil) {
@@ -111,6 +138,7 @@ func (g *StoriesGetStoryViewsListRequest) String() string {
 func (g *StoriesGetStoryViewsListRequest) FillFrom(from interface {
 	GetJustContacts() (value bool)
 	GetReactionsFirst() (value bool)
+	GetForwardsFirst() (value bool)
 	GetPeer() (value InputPeerClass)
 	GetQ() (value string, ok bool)
 	GetID() (value int)
@@ -119,6 +147,7 @@ func (g *StoriesGetStoryViewsListRequest) FillFrom(from interface {
 }) {
 	g.JustContacts = from.GetJustContacts()
 	g.ReactionsFirst = from.GetReactionsFirst()
+	g.ForwardsFirst = from.GetForwardsFirst()
 	g.Peer = from.GetPeer()
 	if val, ok := from.GetQ(); ok {
 		g.Q = val
@@ -163,6 +192,11 @@ func (g *StoriesGetStoryViewsListRequest) TypeInfo() tdp.Type {
 			Null:       !g.Flags.Has(2),
 		},
 		{
+			Name:       "ForwardsFirst",
+			SchemaName: "forwards_first",
+			Null:       !g.Flags.Has(3),
+		},
+		{
 			Name:       "Peer",
 			SchemaName: "peer",
 		},
@@ -194,6 +228,9 @@ func (g *StoriesGetStoryViewsListRequest) SetFlags() {
 	}
 	if !(g.ReactionsFirst == false) {
 		g.Flags.Set(2)
+	}
+	if !(g.ForwardsFirst == false) {
+		g.Flags.Set(3)
 	}
 	if !(g.Q == "") {
 		g.Flags.Set(1)
@@ -256,6 +293,7 @@ func (g *StoriesGetStoryViewsListRequest) DecodeBare(b *bin.Buffer) error {
 	}
 	g.JustContacts = g.Flags.Has(0)
 	g.ReactionsFirst = g.Flags.Has(2)
+	g.ForwardsFirst = g.Flags.Has(3)
 	{
 		value, err := DecodeInputPeer(b)
 		if err != nil {
@@ -332,6 +370,25 @@ func (g *StoriesGetStoryViewsListRequest) GetReactionsFirst() (value bool) {
 	return g.Flags.Has(2)
 }
 
+// SetForwardsFirst sets value of ForwardsFirst conditional field.
+func (g *StoriesGetStoryViewsListRequest) SetForwardsFirst(value bool) {
+	if value {
+		g.Flags.Set(3)
+		g.ForwardsFirst = true
+	} else {
+		g.Flags.Unset(3)
+		g.ForwardsFirst = false
+	}
+}
+
+// GetForwardsFirst returns value of ForwardsFirst conditional field.
+func (g *StoriesGetStoryViewsListRequest) GetForwardsFirst() (value bool) {
+	if g == nil {
+		return
+	}
+	return g.Flags.Has(3)
+}
+
 // GetPeer returns value of Peer field.
 func (g *StoriesGetStoryViewsListRequest) GetPeer() (value InputPeerClass) {
 	if g == nil {
@@ -383,6 +440,15 @@ func (g *StoriesGetStoryViewsListRequest) GetLimit() (value int) {
 }
 
 // StoriesGetStoryViewsList invokes method stories.getStoryViewsList#7ed23c57 returning error if any.
+// Obtain the list of users that have viewed a specific story we posted¹
+//
+// Links:
+//  1. https://core.telegram.org/api/stories
+//
+// Possible errors:
+//
+//	400 PEER_ID_INVALID: The provided peer id is invalid.
+//	400 STORY_ID_INVALID: The specified story ID is invalid.
 //
 // See https://core.telegram.org/method/stories.getStoryViewsList for reference.
 func (c *Client) StoriesGetStoryViewsList(ctx context.Context, request *StoriesGetStoryViewsListRequest) (*StoriesStoryViewsList, error) {

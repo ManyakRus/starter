@@ -64,11 +64,13 @@ type MessagesSendMultiMediaRequest struct {
 	// Links:
 	//  1) https://core.telegram.org/api/stickers#recent-stickersets
 	UpdateStickersetsOrder bool
-	// InvertMedia field of MessagesSendMultiMediaRequest.
+	// If set, any eventual webpage preview will be shown on top of the message instead of at
+	// the bottom.
 	InvertMedia bool
 	// The destination chat
 	Peer InputPeerClass
-	// ReplyTo field of MessagesSendMultiMediaRequest.
+	// If set, indicates that the message should be sent in reply to the specified message or
+	// story.
 	//
 	// Use SetReplyTo and GetReplyTo helpers.
 	ReplyTo InputReplyToClass
@@ -637,6 +639,7 @@ func (s *MessagesSendMultiMediaRequest) GetSendAs() (value InputPeerClass, ok bo
 //	400 SCHEDULE_TOO_MUCH: There are too many scheduled messages.
 //	400 SEND_AS_PEER_INVALID: You can't send messages as the specified peer.
 //	420 SLOWMODE_WAIT_%d: Slowmode is enabled in this chat: wait %d seconds before sending another message to this chat.
+//	400 TOPIC_CLOSED: This topic was closed, you can't send messages to it anymore.
 //	400 TOPIC_DELETED: The specified topic was deleted.
 //	400 USER_BANNED_IN_CHANNEL: You're banned from sending messages in supergroups/channels.
 //

@@ -31,44 +31,82 @@ var (
 	_ = tdjson.Encoder{}
 )
 
-// StoriesSendStoryRequest represents TL type `stories.sendStory#bcb73644`.
+// StoriesSendStoryRequest represents TL type `stories.sendStory#e4e6694b`.
+// Uploads a Telegram Story¹.
+//
+// Links:
+//  1. https://core.telegram.org/api/stories
 //
 // See https://core.telegram.org/method/stories.sendStory for reference.
 type StoriesSendStoryRequest struct {
-	// Flags field of StoriesSendStoryRequest.
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// Pinned field of StoriesSendStoryRequest.
+	// Whether to add the story to the profile automatically upon expiration. If not set, the
+	// story will only be added to the archive, see here »¹ for more info.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/stories
 	Pinned bool
-	// Noforwards field of StoriesSendStoryRequest.
+	// If set, disables forwards, screenshots, and downloads.
 	Noforwards bool
-	// Peer field of StoriesSendStoryRequest.
+	// Set this flag when reposting stories with fwd_from_id+fwd_from_id, if the media was
+	// modified before reposting.
+	FwdModified bool
+	// The peer to send the story as.
 	Peer InputPeerClass
-	// Media field of StoriesSendStoryRequest.
+	// The story media.
 	Media InputMediaClass
-	// MediaAreas field of StoriesSendStoryRequest.
+	// Media areas¹ associated to the story, see here »² for more info.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/stories#media-areas
+	//  2) https://core.telegram.org/api/stories#media-areas
 	//
 	// Use SetMediaAreas and GetMediaAreas helpers.
 	MediaAreas []MediaAreaClass
-	// Caption field of StoriesSendStoryRequest.
+	// Story caption.
 	//
 	// Use SetCaption and GetCaption helpers.
 	Caption string
-	// Entities field of StoriesSendStoryRequest.
+	// Message entities for styled text¹, if allowed by the stories_entities client
+	// configuration parameter »².
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/entities
+	//  2) https://core.telegram.org/api/config#stories-entities
 	//
 	// Use SetEntities and GetEntities helpers.
 	Entities []MessageEntityClass
-	// PrivacyRules field of StoriesSendStoryRequest.
+	// Privacy rules¹ for the story, indicating who can or can't view the story.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/privacy
 	PrivacyRules []InputPrivacyRuleClass
-	// RandomID field of StoriesSendStoryRequest.
+	// Unique client message ID required to prevent message resending.
 	RandomID int64
-	// Period field of StoriesSendStoryRequest.
+	// Period after which the story is moved to archive (and to the profile if pinned is set)
+	// in seconds; must be one of 6 * 3600, 12 * 3600, 86400, or 2 * 86400 for Telegram
+	// Premium users, and 86400 otherwise.
 	//
 	// Use SetPeriod and GetPeriod helpers.
 	Period int
+	// If set, indicates that this story is a repost of story with ID fwd_from_story posted
+	// by the peer in fwd_from_id.
+	//
+	// Use SetFwdFromID and GetFwdFromID helpers.
+	FwdFromID InputPeerClass
+	// If set, indicates that this story is a repost of story with ID fwd_from_story posted
+	// by the peer in fwd_from_id.
+	//
+	// Use SetFwdFromStory and GetFwdFromStory helpers.
+	FwdFromStory int
 }
 
 // StoriesSendStoryRequestTypeID is TL type id of StoriesSendStoryRequest.
-const StoriesSendStoryRequestTypeID = 0xbcb73644
+const StoriesSendStoryRequestTypeID = 0xe4e6694b
 
 // Ensuring interfaces in compile-time for StoriesSendStoryRequest.
 var (
@@ -89,6 +127,9 @@ func (s *StoriesSendStoryRequest) Zero() bool {
 		return false
 	}
 	if !(s.Noforwards == false) {
+		return false
+	}
+	if !(s.FwdModified == false) {
 		return false
 	}
 	if !(s.Peer == nil) {
@@ -115,6 +156,12 @@ func (s *StoriesSendStoryRequest) Zero() bool {
 	if !(s.Period == 0) {
 		return false
 	}
+	if !(s.FwdFromID == nil) {
+		return false
+	}
+	if !(s.FwdFromStory == 0) {
+		return false
+	}
 
 	return true
 }
@@ -132,6 +179,7 @@ func (s *StoriesSendStoryRequest) String() string {
 func (s *StoriesSendStoryRequest) FillFrom(from interface {
 	GetPinned() (value bool)
 	GetNoforwards() (value bool)
+	GetFwdModified() (value bool)
 	GetPeer() (value InputPeerClass)
 	GetMedia() (value InputMediaClass)
 	GetMediaAreas() (value []MediaAreaClass, ok bool)
@@ -140,9 +188,12 @@ func (s *StoriesSendStoryRequest) FillFrom(from interface {
 	GetPrivacyRules() (value []InputPrivacyRuleClass)
 	GetRandomID() (value int64)
 	GetPeriod() (value int, ok bool)
+	GetFwdFromID() (value InputPeerClass, ok bool)
+	GetFwdFromStory() (value int, ok bool)
 }) {
 	s.Pinned = from.GetPinned()
 	s.Noforwards = from.GetNoforwards()
+	s.FwdModified = from.GetFwdModified()
 	s.Peer = from.GetPeer()
 	s.Media = from.GetMedia()
 	if val, ok := from.GetMediaAreas(); ok {
@@ -161,6 +212,14 @@ func (s *StoriesSendStoryRequest) FillFrom(from interface {
 	s.RandomID = from.GetRandomID()
 	if val, ok := from.GetPeriod(); ok {
 		s.Period = val
+	}
+
+	if val, ok := from.GetFwdFromID(); ok {
+		s.FwdFromID = val
+	}
+
+	if val, ok := from.GetFwdFromStory(); ok {
+		s.FwdFromStory = val
 	}
 
 }
@@ -199,6 +258,11 @@ func (s *StoriesSendStoryRequest) TypeInfo() tdp.Type {
 			Null:       !s.Flags.Has(4),
 		},
 		{
+			Name:       "FwdModified",
+			SchemaName: "fwd_modified",
+			Null:       !s.Flags.Has(7),
+		},
+		{
 			Name:       "Peer",
 			SchemaName: "peer",
 		},
@@ -234,6 +298,16 @@ func (s *StoriesSendStoryRequest) TypeInfo() tdp.Type {
 			SchemaName: "period",
 			Null:       !s.Flags.Has(3),
 		},
+		{
+			Name:       "FwdFromID",
+			SchemaName: "fwd_from_id",
+			Null:       !s.Flags.Has(6),
+		},
+		{
+			Name:       "FwdFromStory",
+			SchemaName: "fwd_from_story",
+			Null:       !s.Flags.Has(6),
+		},
 	}
 	return typ
 }
@@ -245,6 +319,9 @@ func (s *StoriesSendStoryRequest) SetFlags() {
 	}
 	if !(s.Noforwards == false) {
 		s.Flags.Set(4)
+	}
+	if !(s.FwdModified == false) {
+		s.Flags.Set(7)
 	}
 	if !(s.MediaAreas == nil) {
 		s.Flags.Set(5)
@@ -258,12 +335,18 @@ func (s *StoriesSendStoryRequest) SetFlags() {
 	if !(s.Period == 0) {
 		s.Flags.Set(3)
 	}
+	if !(s.FwdFromID == nil) {
+		s.Flags.Set(6)
+	}
+	if !(s.FwdFromStory == 0) {
+		s.Flags.Set(6)
+	}
 }
 
 // Encode implements bin.Encoder.
 func (s *StoriesSendStoryRequest) Encode(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't encode stories.sendStory#bcb73644 as nil")
+		return fmt.Errorf("can't encode stories.sendStory#e4e6694b as nil")
 	}
 	b.PutID(StoriesSendStoryRequestTypeID)
 	return s.EncodeBare(b)
@@ -272,32 +355,32 @@ func (s *StoriesSendStoryRequest) Encode(b *bin.Buffer) error {
 // EncodeBare implements bin.BareEncoder.
 func (s *StoriesSendStoryRequest) EncodeBare(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't encode stories.sendStory#bcb73644 as nil")
+		return fmt.Errorf("can't encode stories.sendStory#e4e6694b as nil")
 	}
 	s.SetFlags()
 	if err := s.Flags.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode stories.sendStory#bcb73644: field flags: %w", err)
+		return fmt.Errorf("unable to encode stories.sendStory#e4e6694b: field flags: %w", err)
 	}
 	if s.Peer == nil {
-		return fmt.Errorf("unable to encode stories.sendStory#bcb73644: field peer is nil")
+		return fmt.Errorf("unable to encode stories.sendStory#e4e6694b: field peer is nil")
 	}
 	if err := s.Peer.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode stories.sendStory#bcb73644: field peer: %w", err)
+		return fmt.Errorf("unable to encode stories.sendStory#e4e6694b: field peer: %w", err)
 	}
 	if s.Media == nil {
-		return fmt.Errorf("unable to encode stories.sendStory#bcb73644: field media is nil")
+		return fmt.Errorf("unable to encode stories.sendStory#e4e6694b: field media is nil")
 	}
 	if err := s.Media.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode stories.sendStory#bcb73644: field media: %w", err)
+		return fmt.Errorf("unable to encode stories.sendStory#e4e6694b: field media: %w", err)
 	}
 	if s.Flags.Has(5) {
 		b.PutVectorHeader(len(s.MediaAreas))
 		for idx, v := range s.MediaAreas {
 			if v == nil {
-				return fmt.Errorf("unable to encode stories.sendStory#bcb73644: field media_areas element with index %d is nil", idx)
+				return fmt.Errorf("unable to encode stories.sendStory#e4e6694b: field media_areas element with index %d is nil", idx)
 			}
 			if err := v.Encode(b); err != nil {
-				return fmt.Errorf("unable to encode stories.sendStory#bcb73644: field media_areas element with index %d: %w", idx, err)
+				return fmt.Errorf("unable to encode stories.sendStory#e4e6694b: field media_areas element with index %d: %w", idx, err)
 			}
 		}
 	}
@@ -308,25 +391,36 @@ func (s *StoriesSendStoryRequest) EncodeBare(b *bin.Buffer) error {
 		b.PutVectorHeader(len(s.Entities))
 		for idx, v := range s.Entities {
 			if v == nil {
-				return fmt.Errorf("unable to encode stories.sendStory#bcb73644: field entities element with index %d is nil", idx)
+				return fmt.Errorf("unable to encode stories.sendStory#e4e6694b: field entities element with index %d is nil", idx)
 			}
 			if err := v.Encode(b); err != nil {
-				return fmt.Errorf("unable to encode stories.sendStory#bcb73644: field entities element with index %d: %w", idx, err)
+				return fmt.Errorf("unable to encode stories.sendStory#e4e6694b: field entities element with index %d: %w", idx, err)
 			}
 		}
 	}
 	b.PutVectorHeader(len(s.PrivacyRules))
 	for idx, v := range s.PrivacyRules {
 		if v == nil {
-			return fmt.Errorf("unable to encode stories.sendStory#bcb73644: field privacy_rules element with index %d is nil", idx)
+			return fmt.Errorf("unable to encode stories.sendStory#e4e6694b: field privacy_rules element with index %d is nil", idx)
 		}
 		if err := v.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode stories.sendStory#bcb73644: field privacy_rules element with index %d: %w", idx, err)
+			return fmt.Errorf("unable to encode stories.sendStory#e4e6694b: field privacy_rules element with index %d: %w", idx, err)
 		}
 	}
 	b.PutLong(s.RandomID)
 	if s.Flags.Has(3) {
 		b.PutInt(s.Period)
+	}
+	if s.Flags.Has(6) {
+		if s.FwdFromID == nil {
+			return fmt.Errorf("unable to encode stories.sendStory#e4e6694b: field fwd_from_id is nil")
+		}
+		if err := s.FwdFromID.Encode(b); err != nil {
+			return fmt.Errorf("unable to encode stories.sendStory#e4e6694b: field fwd_from_id: %w", err)
+		}
+	}
+	if s.Flags.Has(6) {
+		b.PutInt(s.FwdFromStory)
 	}
 	return nil
 }
@@ -334,10 +428,10 @@ func (s *StoriesSendStoryRequest) EncodeBare(b *bin.Buffer) error {
 // Decode implements bin.Decoder.
 func (s *StoriesSendStoryRequest) Decode(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't decode stories.sendStory#bcb73644 to nil")
+		return fmt.Errorf("can't decode stories.sendStory#e4e6694b to nil")
 	}
 	if err := b.ConsumeID(StoriesSendStoryRequestTypeID); err != nil {
-		return fmt.Errorf("unable to decode stories.sendStory#bcb73644: %w", err)
+		return fmt.Errorf("unable to decode stories.sendStory#e4e6694b: %w", err)
 	}
 	return s.DecodeBare(b)
 }
@@ -345,33 +439,34 @@ func (s *StoriesSendStoryRequest) Decode(b *bin.Buffer) error {
 // DecodeBare implements bin.BareDecoder.
 func (s *StoriesSendStoryRequest) DecodeBare(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't decode stories.sendStory#bcb73644 to nil")
+		return fmt.Errorf("can't decode stories.sendStory#e4e6694b to nil")
 	}
 	{
 		if err := s.Flags.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode stories.sendStory#bcb73644: field flags: %w", err)
+			return fmt.Errorf("unable to decode stories.sendStory#e4e6694b: field flags: %w", err)
 		}
 	}
 	s.Pinned = s.Flags.Has(2)
 	s.Noforwards = s.Flags.Has(4)
+	s.FwdModified = s.Flags.Has(7)
 	{
 		value, err := DecodeInputPeer(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode stories.sendStory#bcb73644: field peer: %w", err)
+			return fmt.Errorf("unable to decode stories.sendStory#e4e6694b: field peer: %w", err)
 		}
 		s.Peer = value
 	}
 	{
 		value, err := DecodeInputMedia(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode stories.sendStory#bcb73644: field media: %w", err)
+			return fmt.Errorf("unable to decode stories.sendStory#e4e6694b: field media: %w", err)
 		}
 		s.Media = value
 	}
 	if s.Flags.Has(5) {
 		headerLen, err := b.VectorHeader()
 		if err != nil {
-			return fmt.Errorf("unable to decode stories.sendStory#bcb73644: field media_areas: %w", err)
+			return fmt.Errorf("unable to decode stories.sendStory#e4e6694b: field media_areas: %w", err)
 		}
 
 		if headerLen > 0 {
@@ -380,7 +475,7 @@ func (s *StoriesSendStoryRequest) DecodeBare(b *bin.Buffer) error {
 		for idx := 0; idx < headerLen; idx++ {
 			value, err := DecodeMediaArea(b)
 			if err != nil {
-				return fmt.Errorf("unable to decode stories.sendStory#bcb73644: field media_areas: %w", err)
+				return fmt.Errorf("unable to decode stories.sendStory#e4e6694b: field media_areas: %w", err)
 			}
 			s.MediaAreas = append(s.MediaAreas, value)
 		}
@@ -388,14 +483,14 @@ func (s *StoriesSendStoryRequest) DecodeBare(b *bin.Buffer) error {
 	if s.Flags.Has(0) {
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode stories.sendStory#bcb73644: field caption: %w", err)
+			return fmt.Errorf("unable to decode stories.sendStory#e4e6694b: field caption: %w", err)
 		}
 		s.Caption = value
 	}
 	if s.Flags.Has(1) {
 		headerLen, err := b.VectorHeader()
 		if err != nil {
-			return fmt.Errorf("unable to decode stories.sendStory#bcb73644: field entities: %w", err)
+			return fmt.Errorf("unable to decode stories.sendStory#e4e6694b: field entities: %w", err)
 		}
 
 		if headerLen > 0 {
@@ -404,7 +499,7 @@ func (s *StoriesSendStoryRequest) DecodeBare(b *bin.Buffer) error {
 		for idx := 0; idx < headerLen; idx++ {
 			value, err := DecodeMessageEntity(b)
 			if err != nil {
-				return fmt.Errorf("unable to decode stories.sendStory#bcb73644: field entities: %w", err)
+				return fmt.Errorf("unable to decode stories.sendStory#e4e6694b: field entities: %w", err)
 			}
 			s.Entities = append(s.Entities, value)
 		}
@@ -412,7 +507,7 @@ func (s *StoriesSendStoryRequest) DecodeBare(b *bin.Buffer) error {
 	{
 		headerLen, err := b.VectorHeader()
 		if err != nil {
-			return fmt.Errorf("unable to decode stories.sendStory#bcb73644: field privacy_rules: %w", err)
+			return fmt.Errorf("unable to decode stories.sendStory#e4e6694b: field privacy_rules: %w", err)
 		}
 
 		if headerLen > 0 {
@@ -421,7 +516,7 @@ func (s *StoriesSendStoryRequest) DecodeBare(b *bin.Buffer) error {
 		for idx := 0; idx < headerLen; idx++ {
 			value, err := DecodeInputPrivacyRule(b)
 			if err != nil {
-				return fmt.Errorf("unable to decode stories.sendStory#bcb73644: field privacy_rules: %w", err)
+				return fmt.Errorf("unable to decode stories.sendStory#e4e6694b: field privacy_rules: %w", err)
 			}
 			s.PrivacyRules = append(s.PrivacyRules, value)
 		}
@@ -429,16 +524,30 @@ func (s *StoriesSendStoryRequest) DecodeBare(b *bin.Buffer) error {
 	{
 		value, err := b.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode stories.sendStory#bcb73644: field random_id: %w", err)
+			return fmt.Errorf("unable to decode stories.sendStory#e4e6694b: field random_id: %w", err)
 		}
 		s.RandomID = value
 	}
 	if s.Flags.Has(3) {
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode stories.sendStory#bcb73644: field period: %w", err)
+			return fmt.Errorf("unable to decode stories.sendStory#e4e6694b: field period: %w", err)
 		}
 		s.Period = value
+	}
+	if s.Flags.Has(6) {
+		value, err := DecodeInputPeer(b)
+		if err != nil {
+			return fmt.Errorf("unable to decode stories.sendStory#e4e6694b: field fwd_from_id: %w", err)
+		}
+		s.FwdFromID = value
+	}
+	if s.Flags.Has(6) {
+		value, err := b.Int()
+		if err != nil {
+			return fmt.Errorf("unable to decode stories.sendStory#e4e6694b: field fwd_from_story: %w", err)
+		}
+		s.FwdFromStory = value
 	}
 	return nil
 }
@@ -479,6 +588,25 @@ func (s *StoriesSendStoryRequest) GetNoforwards() (value bool) {
 		return
 	}
 	return s.Flags.Has(4)
+}
+
+// SetFwdModified sets value of FwdModified conditional field.
+func (s *StoriesSendStoryRequest) SetFwdModified(value bool) {
+	if value {
+		s.Flags.Set(7)
+		s.FwdModified = true
+	} else {
+		s.Flags.Unset(7)
+		s.FwdModified = false
+	}
+}
+
+// GetFwdModified returns value of FwdModified conditional field.
+func (s *StoriesSendStoryRequest) GetFwdModified() (value bool) {
+	if s == nil {
+		return
+	}
+	return s.Flags.Has(7)
 }
 
 // GetPeer returns value of Peer field.
@@ -585,6 +713,42 @@ func (s *StoriesSendStoryRequest) GetPeriod() (value int, ok bool) {
 	return s.Period, true
 }
 
+// SetFwdFromID sets value of FwdFromID conditional field.
+func (s *StoriesSendStoryRequest) SetFwdFromID(value InputPeerClass) {
+	s.Flags.Set(6)
+	s.FwdFromID = value
+}
+
+// GetFwdFromID returns value of FwdFromID conditional field and
+// boolean which is true if field was set.
+func (s *StoriesSendStoryRequest) GetFwdFromID() (value InputPeerClass, ok bool) {
+	if s == nil {
+		return
+	}
+	if !s.Flags.Has(6) {
+		return value, false
+	}
+	return s.FwdFromID, true
+}
+
+// SetFwdFromStory sets value of FwdFromStory conditional field.
+func (s *StoriesSendStoryRequest) SetFwdFromStory(value int) {
+	s.Flags.Set(6)
+	s.FwdFromStory = value
+}
+
+// GetFwdFromStory returns value of FwdFromStory conditional field and
+// boolean which is true if field was set.
+func (s *StoriesSendStoryRequest) GetFwdFromStory() (value int, ok bool) {
+	if s == nil {
+		return
+	}
+	if !s.Flags.Has(6) {
+		return value, false
+	}
+	return s.FwdFromStory, true
+}
+
 // MapMediaAreas returns field MediaAreas wrapped in MediaAreaClassArray helper.
 func (s *StoriesSendStoryRequest) MapMediaAreas() (value MediaAreaClassArray, ok bool) {
 	if !s.Flags.Has(5) {
@@ -606,7 +770,24 @@ func (s *StoriesSendStoryRequest) MapPrivacyRules() (value InputPrivacyRuleClass
 	return InputPrivacyRuleClassArray(s.PrivacyRules)
 }
 
-// StoriesSendStory invokes method stories.sendStory#bcb73644 returning error if any.
+// StoriesSendStory invokes method stories.sendStory#e4e6694b returning error if any.
+// Uploads a Telegram Story¹.
+//
+// Links:
+//  1. https://core.telegram.org/api/stories
+//
+// Possible errors:
+//
+//	400 IMAGE_PROCESS_FAILED: Failure while processing image.
+//	400 MEDIA_EMPTY: The provided media object is invalid.
+//	400 MEDIA_FILE_INVALID: The specified media file is invalid.
+//	400 MEDIA_TYPE_INVALID: The specified media type cannot be used in stories.
+//	400 MEDIA_VIDEO_STORY_MISSING:
+//	400 PEER_ID_INVALID: The provided peer id is invalid.
+//	400 PREMIUM_ACCOUNT_REQUIRED: A premium account is required to execute this action.
+//	400 STORIES_TOO_MUCH: You have hit the maximum active stories limit as specified by the story_expiring_limit_* client configuration parameters: you should buy a Premium subscription, delete an active story, or wait for the oldest story to expire.
+//	400 STORY_PERIOD_INVALID: The specified story period is invalid for this account.
+//	400 VENUE_ID_INVALID: The specified venue ID is invalid.
 //
 // See https://core.telegram.org/method/stories.sendStory for reference.
 func (c *Client) StoriesSendStory(ctx context.Context, request *StoriesSendStoryRequest) (UpdatesClass, error) {

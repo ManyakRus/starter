@@ -11,7 +11,7 @@ func (c Carbon) Parse(value string, timezone ...string) Carbon {
 		return c
 	}
 	if len(timezone) > 0 {
-		c.loc, c.Error = getLocationByTimezone(timezone[len(timezone)-1])
+		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
 	switch value {
 	case "now":
@@ -58,7 +58,7 @@ func ParseByFormat(value, format string, timezone ...string) Carbon {
 // 通过布局模板将时间字符串解析成 Carbon 实例
 func (c Carbon) ParseByLayout(value, layout string, timezone ...string) Carbon {
 	if len(timezone) > 0 {
-		c.loc, c.Error = getLocationByTimezone(timezone[len(timezone)-1])
+		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
 	if c.Error != nil {
 		return c

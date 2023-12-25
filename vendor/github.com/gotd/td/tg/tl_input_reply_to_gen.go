@@ -31,34 +31,53 @@ var (
 	_ = tdjson.Encoder{}
 )
 
-// InputReplyToMessage represents TL type `inputReplyToMessage#73ec805`.
+// InputReplyToMessage represents TL type `inputReplyToMessage#22c0f6d5`.
+// Reply to a message.
 //
 // See https://core.telegram.org/constructor/inputReplyToMessage for reference.
 type InputReplyToMessage struct {
-	// Flags field of InputReplyToMessage.
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// ReplyToMsgID field of InputReplyToMessage.
+	// The message ID to reply to.
 	ReplyToMsgID int
-	// TopMsgID field of InputReplyToMessage.
+	// This field must contain the topic ID only when replying to messages in forum topics
+	// different from the "General" topic (i.e. reply_to_msg_id is set and reply_to_msg_id !=
+	// topicID and topicID != 1).  If the replied-to message is deleted before the method
+	// finishes execution, the value in this field will be used to send the message to the
+	// correct topic, instead of the "General" topic.
 	//
 	// Use SetTopMsgID and GetTopMsgID helpers.
 	TopMsgID int
-	// ReplyToPeerID field of InputReplyToMessage.
+	// Used to reply to messages sent to another chat (specified here), can only be used for
+	// non-protected chats and messages.
 	//
 	// Use SetReplyToPeerID and GetReplyToPeerID helpers.
 	ReplyToPeerID InputPeerClass
-	// QuoteText field of InputReplyToMessage.
+	// Used to quote-reply to only a certain section (specified here) of the original message.
 	//
 	// Use SetQuoteText and GetQuoteText helpers.
 	QuoteText string
-	// QuoteEntities field of InputReplyToMessage.
+	// Message entities for styled text¹ from the quote_text field.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/entities
 	//
 	// Use SetQuoteEntities and GetQuoteEntities helpers.
 	QuoteEntities []MessageEntityClass
+	// Offset of the message quote_text within the original message (in UTF-16 code units¹).
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/entities#entity-length
+	//
+	// Use SetQuoteOffset and GetQuoteOffset helpers.
+	QuoteOffset int
 }
 
 // InputReplyToMessageTypeID is TL type id of InputReplyToMessage.
-const InputReplyToMessageTypeID = 0x73ec805
+const InputReplyToMessageTypeID = 0x22c0f6d5
 
 // construct implements constructor of InputReplyToClass.
 func (i InputReplyToMessage) construct() InputReplyToClass { return &i }
@@ -95,6 +114,9 @@ func (i *InputReplyToMessage) Zero() bool {
 	if !(i.QuoteEntities == nil) {
 		return false
 	}
+	if !(i.QuoteOffset == 0) {
+		return false
+	}
 
 	return true
 }
@@ -115,6 +137,7 @@ func (i *InputReplyToMessage) FillFrom(from interface {
 	GetReplyToPeerID() (value InputPeerClass, ok bool)
 	GetQuoteText() (value string, ok bool)
 	GetQuoteEntities() (value []MessageEntityClass, ok bool)
+	GetQuoteOffset() (value int, ok bool)
 }) {
 	i.ReplyToMsgID = from.GetReplyToMsgID()
 	if val, ok := from.GetTopMsgID(); ok {
@@ -131,6 +154,10 @@ func (i *InputReplyToMessage) FillFrom(from interface {
 
 	if val, ok := from.GetQuoteEntities(); ok {
 		i.QuoteEntities = val
+	}
+
+	if val, ok := from.GetQuoteOffset(); ok {
+		i.QuoteOffset = val
 	}
 
 }
@@ -182,6 +209,11 @@ func (i *InputReplyToMessage) TypeInfo() tdp.Type {
 			SchemaName: "quote_entities",
 			Null:       !i.Flags.Has(3),
 		},
+		{
+			Name:       "QuoteOffset",
+			SchemaName: "quote_offset",
+			Null:       !i.Flags.Has(4),
+		},
 	}
 	return typ
 }
@@ -200,12 +232,15 @@ func (i *InputReplyToMessage) SetFlags() {
 	if !(i.QuoteEntities == nil) {
 		i.Flags.Set(3)
 	}
+	if !(i.QuoteOffset == 0) {
+		i.Flags.Set(4)
+	}
 }
 
 // Encode implements bin.Encoder.
 func (i *InputReplyToMessage) Encode(b *bin.Buffer) error {
 	if i == nil {
-		return fmt.Errorf("can't encode inputReplyToMessage#73ec805 as nil")
+		return fmt.Errorf("can't encode inputReplyToMessage#22c0f6d5 as nil")
 	}
 	b.PutID(InputReplyToMessageTypeID)
 	return i.EncodeBare(b)
@@ -214,11 +249,11 @@ func (i *InputReplyToMessage) Encode(b *bin.Buffer) error {
 // EncodeBare implements bin.BareEncoder.
 func (i *InputReplyToMessage) EncodeBare(b *bin.Buffer) error {
 	if i == nil {
-		return fmt.Errorf("can't encode inputReplyToMessage#73ec805 as nil")
+		return fmt.Errorf("can't encode inputReplyToMessage#22c0f6d5 as nil")
 	}
 	i.SetFlags()
 	if err := i.Flags.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode inputReplyToMessage#73ec805: field flags: %w", err)
+		return fmt.Errorf("unable to encode inputReplyToMessage#22c0f6d5: field flags: %w", err)
 	}
 	b.PutInt(i.ReplyToMsgID)
 	if i.Flags.Has(0) {
@@ -226,10 +261,10 @@ func (i *InputReplyToMessage) EncodeBare(b *bin.Buffer) error {
 	}
 	if i.Flags.Has(1) {
 		if i.ReplyToPeerID == nil {
-			return fmt.Errorf("unable to encode inputReplyToMessage#73ec805: field reply_to_peer_id is nil")
+			return fmt.Errorf("unable to encode inputReplyToMessage#22c0f6d5: field reply_to_peer_id is nil")
 		}
 		if err := i.ReplyToPeerID.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode inputReplyToMessage#73ec805: field reply_to_peer_id: %w", err)
+			return fmt.Errorf("unable to encode inputReplyToMessage#22c0f6d5: field reply_to_peer_id: %w", err)
 		}
 	}
 	if i.Flags.Has(2) {
@@ -239,12 +274,15 @@ func (i *InputReplyToMessage) EncodeBare(b *bin.Buffer) error {
 		b.PutVectorHeader(len(i.QuoteEntities))
 		for idx, v := range i.QuoteEntities {
 			if v == nil {
-				return fmt.Errorf("unable to encode inputReplyToMessage#73ec805: field quote_entities element with index %d is nil", idx)
+				return fmt.Errorf("unable to encode inputReplyToMessage#22c0f6d5: field quote_entities element with index %d is nil", idx)
 			}
 			if err := v.Encode(b); err != nil {
-				return fmt.Errorf("unable to encode inputReplyToMessage#73ec805: field quote_entities element with index %d: %w", idx, err)
+				return fmt.Errorf("unable to encode inputReplyToMessage#22c0f6d5: field quote_entities element with index %d: %w", idx, err)
 			}
 		}
+	}
+	if i.Flags.Has(4) {
+		b.PutInt(i.QuoteOffset)
 	}
 	return nil
 }
@@ -252,10 +290,10 @@ func (i *InputReplyToMessage) EncodeBare(b *bin.Buffer) error {
 // Decode implements bin.Decoder.
 func (i *InputReplyToMessage) Decode(b *bin.Buffer) error {
 	if i == nil {
-		return fmt.Errorf("can't decode inputReplyToMessage#73ec805 to nil")
+		return fmt.Errorf("can't decode inputReplyToMessage#22c0f6d5 to nil")
 	}
 	if err := b.ConsumeID(InputReplyToMessageTypeID); err != nil {
-		return fmt.Errorf("unable to decode inputReplyToMessage#73ec805: %w", err)
+		return fmt.Errorf("unable to decode inputReplyToMessage#22c0f6d5: %w", err)
 	}
 	return i.DecodeBare(b)
 }
@@ -263,45 +301,45 @@ func (i *InputReplyToMessage) Decode(b *bin.Buffer) error {
 // DecodeBare implements bin.BareDecoder.
 func (i *InputReplyToMessage) DecodeBare(b *bin.Buffer) error {
 	if i == nil {
-		return fmt.Errorf("can't decode inputReplyToMessage#73ec805 to nil")
+		return fmt.Errorf("can't decode inputReplyToMessage#22c0f6d5 to nil")
 	}
 	{
 		if err := i.Flags.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode inputReplyToMessage#73ec805: field flags: %w", err)
+			return fmt.Errorf("unable to decode inputReplyToMessage#22c0f6d5: field flags: %w", err)
 		}
 	}
 	{
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode inputReplyToMessage#73ec805: field reply_to_msg_id: %w", err)
+			return fmt.Errorf("unable to decode inputReplyToMessage#22c0f6d5: field reply_to_msg_id: %w", err)
 		}
 		i.ReplyToMsgID = value
 	}
 	if i.Flags.Has(0) {
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode inputReplyToMessage#73ec805: field top_msg_id: %w", err)
+			return fmt.Errorf("unable to decode inputReplyToMessage#22c0f6d5: field top_msg_id: %w", err)
 		}
 		i.TopMsgID = value
 	}
 	if i.Flags.Has(1) {
 		value, err := DecodeInputPeer(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode inputReplyToMessage#73ec805: field reply_to_peer_id: %w", err)
+			return fmt.Errorf("unable to decode inputReplyToMessage#22c0f6d5: field reply_to_peer_id: %w", err)
 		}
 		i.ReplyToPeerID = value
 	}
 	if i.Flags.Has(2) {
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode inputReplyToMessage#73ec805: field quote_text: %w", err)
+			return fmt.Errorf("unable to decode inputReplyToMessage#22c0f6d5: field quote_text: %w", err)
 		}
 		i.QuoteText = value
 	}
 	if i.Flags.Has(3) {
 		headerLen, err := b.VectorHeader()
 		if err != nil {
-			return fmt.Errorf("unable to decode inputReplyToMessage#73ec805: field quote_entities: %w", err)
+			return fmt.Errorf("unable to decode inputReplyToMessage#22c0f6d5: field quote_entities: %w", err)
 		}
 
 		if headerLen > 0 {
@@ -310,10 +348,17 @@ func (i *InputReplyToMessage) DecodeBare(b *bin.Buffer) error {
 		for idx := 0; idx < headerLen; idx++ {
 			value, err := DecodeMessageEntity(b)
 			if err != nil {
-				return fmt.Errorf("unable to decode inputReplyToMessage#73ec805: field quote_entities: %w", err)
+				return fmt.Errorf("unable to decode inputReplyToMessage#22c0f6d5: field quote_entities: %w", err)
 			}
 			i.QuoteEntities = append(i.QuoteEntities, value)
 		}
+	}
+	if i.Flags.Has(4) {
+		value, err := b.Int()
+		if err != nil {
+			return fmt.Errorf("unable to decode inputReplyToMessage#22c0f6d5: field quote_offset: %w", err)
+		}
+		i.QuoteOffset = value
 	}
 	return nil
 }
@@ -398,6 +443,24 @@ func (i *InputReplyToMessage) GetQuoteEntities() (value []MessageEntityClass, ok
 	return i.QuoteEntities, true
 }
 
+// SetQuoteOffset sets value of QuoteOffset conditional field.
+func (i *InputReplyToMessage) SetQuoteOffset(value int) {
+	i.Flags.Set(4)
+	i.QuoteOffset = value
+}
+
+// GetQuoteOffset returns value of QuoteOffset conditional field and
+// boolean which is true if field was set.
+func (i *InputReplyToMessage) GetQuoteOffset() (value int, ok bool) {
+	if i == nil {
+		return
+	}
+	if !i.Flags.Has(4) {
+		return value, false
+	}
+	return i.QuoteOffset, true
+}
+
 // MapQuoteEntities returns field QuoteEntities wrapped in MessageEntityClassArray helper.
 func (i *InputReplyToMessage) MapQuoteEntities() (value MessageEntityClassArray, ok bool) {
 	if !i.Flags.Has(3) {
@@ -407,12 +470,13 @@ func (i *InputReplyToMessage) MapQuoteEntities() (value MessageEntityClassArray,
 }
 
 // InputReplyToStory represents TL type `inputReplyToStory#15b0f283`.
+// Reply to a story.
 //
 // See https://core.telegram.org/constructor/inputReplyToStory for reference.
 type InputReplyToStory struct {
-	// UserID field of InputReplyToStory.
+	// ID of the user that posted the story.
 	UserID InputUserClass
-	// StoryID field of InputReplyToStory.
+	// ID of the story to reply to.
 	StoryID int
 }
 
@@ -586,7 +650,7 @@ const InputReplyToClassName = "InputReplyTo"
 //	    panic(err)
 //	}
 //	switch v := g.(type) {
-//	case *tg.InputReplyToMessage: // inputReplyToMessage#73ec805
+//	case *tg.InputReplyToMessage: // inputReplyToMessage#22c0f6d5
 //	case *tg.InputReplyToStory: // inputReplyToStory#15b0f283
 //	default: panic(v)
 //	}
@@ -617,7 +681,7 @@ func DecodeInputReplyTo(buf *bin.Buffer) (InputReplyToClass, error) {
 	}
 	switch id {
 	case InputReplyToMessageTypeID:
-		// Decoding inputReplyToMessage#73ec805.
+		// Decoding inputReplyToMessage#22c0f6d5.
 		v := InputReplyToMessage{}
 		if err := v.Decode(buf); err != nil {
 			return nil, fmt.Errorf("unable to decode InputReplyToClass: %w", err)

@@ -8,7 +8,7 @@ import (
 // 当前
 func (c Carbon) Now(timezone ...string) Carbon {
 	if len(timezone) > 0 {
-		c.loc, c.Error = getLocationByTimezone(timezone[len(timezone)-1])
+		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
 	if c.Error != nil {
 		return c
@@ -30,7 +30,7 @@ func Now(timezone ...string) Carbon {
 // 明天
 func (c Carbon) Tomorrow(timezone ...string) Carbon {
 	if len(timezone) > 0 {
-		c.loc, c.Error = getLocationByTimezone(timezone[len(timezone)-1])
+		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
 	if c.Error != nil {
 		return c
@@ -54,7 +54,7 @@ func Tomorrow(timezone ...string) Carbon {
 // 昨天
 func (c Carbon) Yesterday(timezone ...string) Carbon {
 	if len(timezone) > 0 {
-		c.loc, c.Error = getLocationByTimezone(timezone[len(timezone)-1])
+		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
 	if c.Error != nil {
 		return c

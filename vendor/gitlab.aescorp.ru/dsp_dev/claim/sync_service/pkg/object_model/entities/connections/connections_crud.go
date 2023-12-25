@@ -1,12 +1,13 @@
-//File generated automatic with crud_generator app
-//Do not change anything here.
+//Файл создан автоматически кодогенератором crud_generator
+//Не изменяйте ничего здесь.
 
 package connections
 
 import (
 	"encoding/json"
 	"github.com/vmihailenco/msgpack/v5"
-	"gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/functions/calc_struct_version"
+	"gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/db/calc_struct_version"
+	"gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/db/constants"
 	"reflect"
 )
 
@@ -16,6 +17,7 @@ var versionConnection uint32
 // crud_Connection - объект контроллер crud операций
 var crud_Connection ICrud_Connection
 
+// интерфейс стандартных CRUD операций, для использования в DB или GRPC или NRPC
 type ICrud_Connection interface {
 	Read(*Connection) error
 	Save(*Connection) error
@@ -90,6 +92,10 @@ func (m Connection) GetJSON() (string, error) {
 
 // Read - находит запись в БД по ID, и заполняет в объект
 func (m *Connection) Read() error {
+	if crud_Connection == nil {
+		return constants.ErrorCrudIsNotInit
+	}
+
 	err := crud_Connection.Read(m)
 
 	return err
@@ -97,6 +103,10 @@ func (m *Connection) Read() error {
 
 // Save - записывает объект в БД по ID
 func (m *Connection) Save() error {
+	if crud_Connection == nil {
+		return constants.ErrorCrudIsNotInit
+	}
+
 	err := crud_Connection.Save(m)
 
 	return err
@@ -104,6 +114,10 @@ func (m *Connection) Save() error {
 
 // Update - обновляет объект в БД по ID
 func (m *Connection) Update() error {
+	if crud_Connection == nil {
+		return constants.ErrorCrudIsNotInit
+	}
+
 	err := crud_Connection.Update(m)
 
 	return err
@@ -111,6 +125,10 @@ func (m *Connection) Update() error {
 
 // Create - создаёт объект в БД с новым ID
 func (m *Connection) Create() error {
+	if crud_Connection == nil {
+		return constants.ErrorCrudIsNotInit
+	}
+
 	err := crud_Connection.Create(m)
 
 	return err

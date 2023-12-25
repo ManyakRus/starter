@@ -48,7 +48,7 @@ type MessagesSendReactionRequest struct {
 	Flags bin.Fields
 	// Whether a bigger and longer reaction should be shown
 	Big bool
-	// Add this reaction to the recent reactions list »¹.
+	// Whether to add this reaction to the recent reactions list »¹.
 	//
 	// Links:
 	//  1) https://core.telegram.org/api/reactions#recent-reactions
@@ -376,9 +376,11 @@ func (s *MessagesSendReactionRequest) MapReaction() (value ReactionClassArray, o
 //
 // Possible errors:
 //
+//	403 ANONYMOUS_REACTIONS_DISABLED:
 //	400 CHANNEL_INVALID: The provided channel is invalid.
 //	400 CHANNEL_PRIVATE: You haven't joined this channel/supergroup.
 //	403 CHAT_WRITE_FORBIDDEN: You can't write in this chat.
+//	400 CUSTOM_REACTIONS_TOO_MANY: Too many custom reactions were specified.
 //	400 MESSAGE_ID_INVALID: The provided message id is invalid.
 //	400 MESSAGE_NOT_MODIFIED: The provided message data is identical to the previous message data, the message wasn't modified.
 //	400 MSG_ID_INVALID: Invalid message ID provided.

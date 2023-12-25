@@ -69,11 +69,17 @@ type ChannelsCreateChannelRequest struct {
 	Title string
 	// Channel description
 	About string
-	// Geogroup location
+	// Geogroup location, see here »¹ for more info on geogroups.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/nearby
 	//
 	// Use SetGeoPoint and GetGeoPoint helpers.
 	GeoPoint InputGeoPointClass
-	// Geogroup address
+	// Geogroup address, see here »¹ for more info on geogroups.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/nearby
 	//
 	// Use SetAddress and GetAddress helpers.
 	Address string
@@ -537,10 +543,11 @@ func (c *ChannelsCreateChannelRequest) GetGeoPointAsNotEmpty() (*InputGeoPoint, 
 //
 // Possible errors:
 //
+//	400 ADDRESS_INVALID: The specified geopoint address is invalid.
 //	400 CHANNELS_ADMIN_LOCATED_TOO_MUCH: The user has reached the limit of public geogroups.
 //	400 CHANNELS_TOO_MUCH: You have joined too many channels/supergroups.
-//	500 CHANNEL_ID_GENERATE_FAILED:
 //	400 CHAT_ABOUT_TOO_LONG: Chat about too long.
+//	500 CHAT_INVALID: Invalid chat.
 //	400 CHAT_TITLE_EMPTY: No chat title provided.
 //	400 TTL_PERIOD_INVALID: The specified TTL period is invalid.
 //	406 USER_RESTRICTED: You're spamreported, you can't create channels or chats.

@@ -32,28 +32,39 @@ var (
 )
 
 // StoryViews represents TL type `storyViews#8d595cd6`.
+// Aggregated view and reaction information of a story¹.
+//
+// Links:
+//  1. https://core.telegram.org/api/stories
 //
 // See https://core.telegram.org/constructor/storyViews for reference.
 type StoryViews struct {
-	// Flags field of StoryViews.
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// HasViewers field of StoryViews.
+	// If set, indicates that the viewers list is currently viewable, and was not yet deleted
+	// because the story has expired while the user didn't have a Premium¹ account.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/premium
 	HasViewers bool
-	// ViewsCount field of StoryViews.
+	// View counter of the story
 	ViewsCount int
-	// ForwardsCount field of StoryViews.
+	// Forward counter of the story
 	//
 	// Use SetForwardsCount and GetForwardsCount helpers.
 	ForwardsCount int
-	// Reactions field of StoryViews.
+	// All reactions sent to this story
 	//
 	// Use SetReactions and GetReactions helpers.
 	Reactions []ReactionCount
-	// ReactionsCount field of StoryViews.
+	// Number of reactions added to the story
 	//
 	// Use SetReactionsCount and GetReactionsCount helpers.
 	ReactionsCount int
-	// RecentViewers field of StoryViews.
+	// User IDs of some recent viewers of the story
 	//
 	// Use SetRecentViewers and GetRecentViewers helpers.
 	RecentViewers []int64

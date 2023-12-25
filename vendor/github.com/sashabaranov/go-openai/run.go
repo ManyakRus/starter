@@ -142,20 +142,20 @@ const (
 type StepDetails struct {
 	Type            RunStepType                 `json:"type"`
 	MessageCreation *StepDetailsMessageCreation `json:"message_creation,omitempty"`
-	ToolCalls       *StepDetailsToolCalls       `json:"tool_calls,omitempty"`
+	ToolCalls       []ToolCall                  `json:"tool_calls,omitempty"`
 }
 
 type StepDetailsMessageCreation struct {
 	MessageID string `json:"message_id"`
 }
 
-type StepDetailsToolCalls struct {
-	ToolCalls []ToolCall `json:"tool_calls"`
-}
-
 // RunStepList is a list of steps.
 type RunStepList struct {
 	RunSteps []RunStep `json:"data"`
+
+	FirstID string `json:"first_id"`
+	LastID  string `json:"last_id"`
+	HasMore bool   `json:"has_more"`
 
 	httpHeader
 }

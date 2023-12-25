@@ -41,7 +41,8 @@ type InputBotInlineMessageMediaAuto struct {
 	// Links:
 	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// InvertMedia field of InputBotInlineMessageMediaAuto.
+	// If set, any eventual webpage preview will be shown on top of the message instead of at
+	// the bottom.
 	InvertMedia bool
 	// Caption
 	Message string
@@ -364,7 +365,8 @@ type InputBotInlineMessageText struct {
 	Flags bin.Fields
 	// Disable webpage preview
 	NoWebpage bool
-	// InvertMedia field of InputBotInlineMessageText.
+	// If set, any eventual webpage preview will be shown on top of the message instead of at
+	// the bottom.
 	InvertMedia bool
 	// Message
 	Message string
@@ -1089,7 +1091,8 @@ type InputBotInlineMessageMediaVenue struct {
 	Title string
 	// Address
 	Address string
-	// Venue provider: currently only "foursquare" needs to be supported
+	// Venue provider: currently only "foursquare" and "gplaces" (Google Places) need to be
+	// supported
 	Provider string
 	// Venue ID in the provider's database
 	VenueID string
@@ -2293,28 +2296,40 @@ func (i *InputBotInlineMessageMediaInvoice) GetReplyMarkup() (value ReplyMarkupC
 }
 
 // InputBotInlineMessageMediaWebPage represents TL type `inputBotInlineMessageMediaWebPage#bddcc510`.
+// Specifies options that will be used to generate the link preview for the message, or
+// even a standalone link preview without an attached message.
 //
 // See https://core.telegram.org/constructor/inputBotInlineMessageMediaWebPage for reference.
 type InputBotInlineMessageMediaWebPage struct {
-	// Flags field of InputBotInlineMessageMediaWebPage.
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// InvertMedia field of InputBotInlineMessageMediaWebPage.
+	// If set, any eventual webpage preview will be shown on top of the message instead of at
+	// the bottom.
 	InvertMedia bool
-	// ForceLargeMedia field of InputBotInlineMessageMediaWebPage.
+	// If set, specifies that a large media preview should be used.
 	ForceLargeMedia bool
-	// ForceSmallMedia field of InputBotInlineMessageMediaWebPage.
+	// If set, specifies that a small media preview should be used.
 	ForceSmallMedia bool
-	// Optional field of InputBotInlineMessageMediaWebPage.
+	// If not set, a WEBPAGE_NOT_FOUND RPC error will be emitted if a webpage preview cannot
+	// be generated for the specified url; otherwise, no error will be emitted (unless the
+	// provided message is also empty, in which case a MESSAGE_EMPTY will be emitted,
+	// instead).
 	Optional bool
-	// Message field of InputBotInlineMessageMediaWebPage.
+	// The message, can be empty.
 	Message string
-	// Entities field of InputBotInlineMessageMediaWebPage.
+	// Message entities for styled text¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/entities
 	//
 	// Use SetEntities and GetEntities helpers.
 	Entities []MessageEntityClass
-	// URL field of InputBotInlineMessageMediaWebPage.
+	// The URL to use for the link preview.
 	URL string
-	// ReplyMarkup field of InputBotInlineMessageMediaWebPage.
+	// Inline keyboard
 	//
 	// Use SetReplyMarkup and GetReplyMarkup helpers.
 	ReplyMarkup ReplyMarkupClass

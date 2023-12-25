@@ -23,3 +23,9 @@ func (c Carbon) Value() (driver.Value, error) {
 	}
 	return c.ToStdTime(), nil
 }
+
+// GormDataType implements the interface GormDataTypeInterface for Carbon struct.
+// 实现 GormDataTypeInterface 接口
+func (c Carbon) GormDataType() string {
+	return "time"
+}

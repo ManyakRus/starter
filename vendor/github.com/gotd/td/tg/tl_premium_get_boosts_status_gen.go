@@ -32,10 +32,14 @@ var (
 )
 
 // PremiumGetBoostsStatusRequest represents TL type `premium.getBoostsStatus#42f1f61`.
+// Gets the current number of boosts¹ of a channel.
+//
+// Links:
+//  1. https://core.telegram.org/api/boost
 //
 // See https://core.telegram.org/method/premium.getBoostsStatus for reference.
 type PremiumGetBoostsStatusRequest struct {
-	// Peer field of PremiumGetBoostsStatusRequest.
+	// The peer.
 	Peer InputPeerClass
 }
 
@@ -166,6 +170,14 @@ func (g *PremiumGetBoostsStatusRequest) GetPeer() (value InputPeerClass) {
 }
 
 // PremiumGetBoostsStatus invokes method premium.getBoostsStatus#42f1f61 returning error if any.
+// Gets the current number of boosts¹ of a channel.
+//
+// Links:
+//  1. https://core.telegram.org/api/boost
+//
+// Possible errors:
+//
+//	400 PEER_ID_INVALID: The provided peer id is invalid.
 //
 // See https://core.telegram.org/method/premium.getBoostsStatus for reference.
 func (c *Client) PremiumGetBoostsStatus(ctx context.Context, peer InputPeerClass) (*PremiumBoostsStatus, error) {

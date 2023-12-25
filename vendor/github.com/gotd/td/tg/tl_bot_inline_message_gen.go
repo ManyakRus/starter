@@ -44,7 +44,8 @@ type BotInlineMessageMediaAuto struct {
 	// Links:
 	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// InvertMedia field of BotInlineMessageMediaAuto.
+	// If set, any eventual webpage preview will be shown on top of the message instead of at
+	// the bottom.
 	InvertMedia bool
 	// Caption
 	Message string
@@ -367,7 +368,8 @@ type BotInlineMessageText struct {
 	Flags bin.Fields
 	// Disable webpage preview
 	NoWebpage bool
-	// InvertMedia field of BotInlineMessageText.
+	// If set, any eventual webpage preview will be shown on top of the message instead of at
+	// the bottom.
 	InvertMedia bool
 	// The message
 	Message string
@@ -1092,7 +1094,8 @@ type BotInlineMessageMediaVenue struct {
 	Title string
 	// Address
 	Address string
-	// Venue provider: currently only "foursquare" needs to be supported
+	// Venue provider: currently only "foursquare" and "gplaces" (Google Places) need to be
+	// supported
 	Provider string
 	// Venue ID in the provider's database
 	VenueID string
@@ -2138,30 +2141,44 @@ func (b *BotInlineMessageMediaInvoice) GetReplyMarkup() (value ReplyMarkupClass,
 }
 
 // BotInlineMessageMediaWebPage represents TL type `botInlineMessageMediaWebPage#809ad9a6`.
+// Specifies options that must be used to generate the link preview for the message, or
+// even a standalone link preview without an attached message.
 //
 // See https://core.telegram.org/constructor/botInlineMessageMediaWebPage for reference.
 type BotInlineMessageMediaWebPage struct {
-	// Flags field of BotInlineMessageMediaWebPage.
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// InvertMedia field of BotInlineMessageMediaWebPage.
+	// If set, any eventual webpage preview will be shown on top of the message instead of at
+	// the bottom.
 	InvertMedia bool
-	// ForceLargeMedia field of BotInlineMessageMediaWebPage.
+	// If set, specifies that a large media preview should be used.
 	ForceLargeMedia bool
-	// ForceSmallMedia field of BotInlineMessageMediaWebPage.
+	// If set, specifies that a small media preview should be used.
 	ForceSmallMedia bool
-	// Manual field of BotInlineMessageMediaWebPage.
+	// If set, indicates that the URL used for the webpage preview was specified manually
+	// using inputMediaWebPage¹, and may not be related to any of the URLs specified in the
+	// message.
+	//
+	// Links:
+	//  1) https://core.telegram.org/constructor/inputMediaWebPage
 	Manual bool
-	// Safe field of BotInlineMessageMediaWebPage.
+	// If set, the link can be opened directly without user confirmation.
 	Safe bool
-	// Message field of BotInlineMessageMediaWebPage.
+	// The message, can be empty.
 	Message string
-	// Entities field of BotInlineMessageMediaWebPage.
+	// Message entities for styled text¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/entities
 	//
 	// Use SetEntities and GetEntities helpers.
 	Entities []MessageEntityClass
-	// URL field of BotInlineMessageMediaWebPage.
+	// The URL to use for the link preview.
 	URL string
-	// ReplyMarkup field of BotInlineMessageMediaWebPage.
+	// Reply markup for sending bot buttons
 	//
 	// Use SetReplyMarkup and GetReplyMarkup helpers.
 	ReplyMarkup ReplyMarkupClass

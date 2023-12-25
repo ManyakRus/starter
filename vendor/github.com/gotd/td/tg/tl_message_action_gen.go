@@ -3181,7 +3181,10 @@ type MessageActionBotAllowed struct {
 	// Links:
 	//  1) https://core.telegram.org/api/bots/attach
 	AttachMenu bool
-	// FromRequest field of MessageActionBotAllowed.
+	// We have allowed the bot to send us messages using bots.allowSendMessage »¹.
+	//
+	// Links:
+	//  1) https://core.telegram.org/method/bots.allowSendMessage
 	FromRequest bool
 	// We have authorized the bot to send us messages by logging into a website via Telegram
 	// Login »¹; this field contains the domain name of the website on which the user has
@@ -3192,7 +3195,7 @@ type MessageActionBotAllowed struct {
 	//
 	// Use SetDomain and GetDomain helpers.
 	Domain string
-	// We have authorized the bot to send us messages by opening the specified bot web app¹.
+	// We have authorized the bot to send us messages by opening the specified bot mini app¹.
 	//
 	// Links:
 	//  1) https://core.telegram.org/api/bots/webapps
@@ -5113,7 +5116,7 @@ func (m *MessageActionChatJoinedByRequest) DecodeBare(b *bin.Buffer) error {
 }
 
 // MessageActionWebViewDataSentMe represents TL type `messageActionWebViewDataSentMe#47dd8079`.
-// Data from an opened reply keyboard bot web app¹ was relayed to the bot that owns it
+// Data from an opened reply keyboard bot mini app¹ was relayed to the bot that owns it
 // (bot side service message).
 //
 // Links:
@@ -5282,7 +5285,7 @@ func (m *MessageActionWebViewDataSentMe) GetData() (value string) {
 }
 
 // MessageActionWebViewDataSent represents TL type `messageActionWebViewDataSent#b4c38cb5`.
-// Data from an opened reply keyboard bot web app¹ was relayed to the bot that owns it
+// Data from an opened reply keyboard bot mini app¹ was relayed to the bot that owns it
 // (user side service message).
 // Clients should display a service message with the text Data from the «$text» button
 // was transferred to the bot.
@@ -6449,7 +6452,7 @@ func (m *MessageActionSuggestProfilePhoto) GetPhoto() (value PhotoClass) {
 	return m.Photo
 }
 
-// MessageActionRequestedPeer represents TL type `messageActionRequestedPeer#fe77345d`.
+// MessageActionRequestedPeer represents TL type `messageActionRequestedPeer#31518e9b`.
 // Contains info about a peer that the user shared with the bot after clicking on a
 // keyboardButtonRequestPeer¹ button.
 //
@@ -6463,12 +6466,12 @@ type MessageActionRequestedPeer struct {
 	// Links:
 	//  1) https://core.telegram.org/constructor/keyboardButtonRequestPeer
 	ButtonID int
-	// The shared peer
-	Peer PeerClass
+	// Peers field of MessageActionRequestedPeer.
+	Peers []PeerClass
 }
 
 // MessageActionRequestedPeerTypeID is TL type id of MessageActionRequestedPeer.
-const MessageActionRequestedPeerTypeID = 0xfe77345d
+const MessageActionRequestedPeerTypeID = 0x31518e9b
 
 // construct implements constructor of MessageActionClass.
 func (m MessageActionRequestedPeer) construct() MessageActionClass { return &m }
@@ -6490,7 +6493,7 @@ func (m *MessageActionRequestedPeer) Zero() bool {
 	if !(m.ButtonID == 0) {
 		return false
 	}
-	if !(m.Peer == nil) {
+	if !(m.Peers == nil) {
 		return false
 	}
 
@@ -6509,10 +6512,10 @@ func (m *MessageActionRequestedPeer) String() string {
 // FillFrom fills MessageActionRequestedPeer from given interface.
 func (m *MessageActionRequestedPeer) FillFrom(from interface {
 	GetButtonID() (value int)
-	GetPeer() (value PeerClass)
+	GetPeers() (value []PeerClass)
 }) {
 	m.ButtonID = from.GetButtonID()
-	m.Peer = from.GetPeer()
+	m.Peers = from.GetPeers()
 }
 
 // TypeID returns type id in TL schema.
@@ -6543,8 +6546,8 @@ func (m *MessageActionRequestedPeer) TypeInfo() tdp.Type {
 			SchemaName: "button_id",
 		},
 		{
-			Name:       "Peer",
-			SchemaName: "peer",
+			Name:       "Peers",
+			SchemaName: "peers",
 		},
 	}
 	return typ
@@ -6553,7 +6556,7 @@ func (m *MessageActionRequestedPeer) TypeInfo() tdp.Type {
 // Encode implements bin.Encoder.
 func (m *MessageActionRequestedPeer) Encode(b *bin.Buffer) error {
 	if m == nil {
-		return fmt.Errorf("can't encode messageActionRequestedPeer#fe77345d as nil")
+		return fmt.Errorf("can't encode messageActionRequestedPeer#31518e9b as nil")
 	}
 	b.PutID(MessageActionRequestedPeerTypeID)
 	return m.EncodeBare(b)
@@ -6562,14 +6565,17 @@ func (m *MessageActionRequestedPeer) Encode(b *bin.Buffer) error {
 // EncodeBare implements bin.BareEncoder.
 func (m *MessageActionRequestedPeer) EncodeBare(b *bin.Buffer) error {
 	if m == nil {
-		return fmt.Errorf("can't encode messageActionRequestedPeer#fe77345d as nil")
+		return fmt.Errorf("can't encode messageActionRequestedPeer#31518e9b as nil")
 	}
 	b.PutInt(m.ButtonID)
-	if m.Peer == nil {
-		return fmt.Errorf("unable to encode messageActionRequestedPeer#fe77345d: field peer is nil")
-	}
-	if err := m.Peer.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode messageActionRequestedPeer#fe77345d: field peer: %w", err)
+	b.PutVectorHeader(len(m.Peers))
+	for idx, v := range m.Peers {
+		if v == nil {
+			return fmt.Errorf("unable to encode messageActionRequestedPeer#31518e9b: field peers element with index %d is nil", idx)
+		}
+		if err := v.Encode(b); err != nil {
+			return fmt.Errorf("unable to encode messageActionRequestedPeer#31518e9b: field peers element with index %d: %w", idx, err)
+		}
 	}
 	return nil
 }
@@ -6577,10 +6583,10 @@ func (m *MessageActionRequestedPeer) EncodeBare(b *bin.Buffer) error {
 // Decode implements bin.Decoder.
 func (m *MessageActionRequestedPeer) Decode(b *bin.Buffer) error {
 	if m == nil {
-		return fmt.Errorf("can't decode messageActionRequestedPeer#fe77345d to nil")
+		return fmt.Errorf("can't decode messageActionRequestedPeer#31518e9b to nil")
 	}
 	if err := b.ConsumeID(MessageActionRequestedPeerTypeID); err != nil {
-		return fmt.Errorf("unable to decode messageActionRequestedPeer#fe77345d: %w", err)
+		return fmt.Errorf("unable to decode messageActionRequestedPeer#31518e9b: %w", err)
 	}
 	return m.DecodeBare(b)
 }
@@ -6588,21 +6594,31 @@ func (m *MessageActionRequestedPeer) Decode(b *bin.Buffer) error {
 // DecodeBare implements bin.BareDecoder.
 func (m *MessageActionRequestedPeer) DecodeBare(b *bin.Buffer) error {
 	if m == nil {
-		return fmt.Errorf("can't decode messageActionRequestedPeer#fe77345d to nil")
+		return fmt.Errorf("can't decode messageActionRequestedPeer#31518e9b to nil")
 	}
 	{
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode messageActionRequestedPeer#fe77345d: field button_id: %w", err)
+			return fmt.Errorf("unable to decode messageActionRequestedPeer#31518e9b: field button_id: %w", err)
 		}
 		m.ButtonID = value
 	}
 	{
-		value, err := DecodePeer(b)
+		headerLen, err := b.VectorHeader()
 		if err != nil {
-			return fmt.Errorf("unable to decode messageActionRequestedPeer#fe77345d: field peer: %w", err)
+			return fmt.Errorf("unable to decode messageActionRequestedPeer#31518e9b: field peers: %w", err)
 		}
-		m.Peer = value
+
+		if headerLen > 0 {
+			m.Peers = make([]PeerClass, 0, headerLen%bin.PreallocateLimit)
+		}
+		for idx := 0; idx < headerLen; idx++ {
+			value, err := DecodePeer(b)
+			if err != nil {
+				return fmt.Errorf("unable to decode messageActionRequestedPeer#31518e9b: field peers: %w", err)
+			}
+			m.Peers = append(m.Peers, value)
+		}
 	}
 	return nil
 }
@@ -6615,15 +6631,20 @@ func (m *MessageActionRequestedPeer) GetButtonID() (value int) {
 	return m.ButtonID
 }
 
-// GetPeer returns value of Peer field.
-func (m *MessageActionRequestedPeer) GetPeer() (value PeerClass) {
+// GetPeers returns value of Peers field.
+func (m *MessageActionRequestedPeer) GetPeers() (value []PeerClass) {
 	if m == nil {
 		return
 	}
-	return m.Peer
+	return m.Peers
 }
 
-// MessageActionSetChatWallPaper represents TL type `messageActionSetChatWallPaper#bc44a927`.
+// MapPeers returns field Peers wrapped in PeerClassArray helper.
+func (m *MessageActionRequestedPeer) MapPeers() (value PeerClassArray) {
+	return PeerClassArray(m.Peers)
+}
+
+// MessageActionSetChatWallPaper represents TL type `messageActionSetChatWallPaper#5060a3f4`.
 // The wallpaper »¹ of the current chat was changed.
 //
 // Links:
@@ -6631,6 +6652,27 @@ func (m *MessageActionRequestedPeer) GetPeer() (value PeerClass) {
 //
 // See https://core.telegram.org/constructor/messageActionSetChatWallPaper for reference.
 type MessageActionSetChatWallPaper struct {
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
+	Flags bin.Fields
+	// If set, indicates the user applied a wallpaper »¹ previously sent by the other user
+	// in a messageActionSetChatWallPaper² message.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/wallpapers
+	//  2) https://core.telegram.org/constructor/messageActionSetChatWallPaper
+	Same bool
+	// If set, indicates the wallpaper was forcefully applied for both sides, without
+	// explicit confirmation from the other side. If the message is incoming, and we did not
+	// like the new wallpaper the other user has chosen for us, we can re-set our previous
+	// wallpaper just on our side, by invoking messages.setChatWallPaper¹, providing only
+	// the revert flag (and obviously the peer parameter).
+	//
+	// Links:
+	//  1) https://core.telegram.org/method/messages.setChatWallPaper
+	ForBoth bool
 	// New wallpaper¹
 	//
 	// Links:
@@ -6639,7 +6681,7 @@ type MessageActionSetChatWallPaper struct {
 }
 
 // MessageActionSetChatWallPaperTypeID is TL type id of MessageActionSetChatWallPaper.
-const MessageActionSetChatWallPaperTypeID = 0xbc44a927
+const MessageActionSetChatWallPaperTypeID = 0x5060a3f4
 
 // construct implements constructor of MessageActionClass.
 func (m MessageActionSetChatWallPaper) construct() MessageActionClass { return &m }
@@ -6657,6 +6699,15 @@ var (
 func (m *MessageActionSetChatWallPaper) Zero() bool {
 	if m == nil {
 		return true
+	}
+	if !(m.Flags.Zero()) {
+		return false
+	}
+	if !(m.Same == false) {
+		return false
+	}
+	if !(m.ForBoth == false) {
+		return false
 	}
 	if !(m.Wallpaper == nil) {
 		return false
@@ -6676,8 +6727,12 @@ func (m *MessageActionSetChatWallPaper) String() string {
 
 // FillFrom fills MessageActionSetChatWallPaper from given interface.
 func (m *MessageActionSetChatWallPaper) FillFrom(from interface {
+	GetSame() (value bool)
+	GetForBoth() (value bool)
 	GetWallpaper() (value WallPaperClass)
 }) {
+	m.Same = from.GetSame()
+	m.ForBoth = from.GetForBoth()
 	m.Wallpaper = from.GetWallpaper()
 }
 
@@ -6705,6 +6760,16 @@ func (m *MessageActionSetChatWallPaper) TypeInfo() tdp.Type {
 	}
 	typ.Fields = []tdp.Field{
 		{
+			Name:       "Same",
+			SchemaName: "same",
+			Null:       !m.Flags.Has(0),
+		},
+		{
+			Name:       "ForBoth",
+			SchemaName: "for_both",
+			Null:       !m.Flags.Has(1),
+		},
+		{
 			Name:       "Wallpaper",
 			SchemaName: "wallpaper",
 		},
@@ -6712,10 +6777,20 @@ func (m *MessageActionSetChatWallPaper) TypeInfo() tdp.Type {
 	return typ
 }
 
+// SetFlags sets flags for non-zero fields.
+func (m *MessageActionSetChatWallPaper) SetFlags() {
+	if !(m.Same == false) {
+		m.Flags.Set(0)
+	}
+	if !(m.ForBoth == false) {
+		m.Flags.Set(1)
+	}
+}
+
 // Encode implements bin.Encoder.
 func (m *MessageActionSetChatWallPaper) Encode(b *bin.Buffer) error {
 	if m == nil {
-		return fmt.Errorf("can't encode messageActionSetChatWallPaper#bc44a927 as nil")
+		return fmt.Errorf("can't encode messageActionSetChatWallPaper#5060a3f4 as nil")
 	}
 	b.PutID(MessageActionSetChatWallPaperTypeID)
 	return m.EncodeBare(b)
@@ -6724,13 +6799,17 @@ func (m *MessageActionSetChatWallPaper) Encode(b *bin.Buffer) error {
 // EncodeBare implements bin.BareEncoder.
 func (m *MessageActionSetChatWallPaper) EncodeBare(b *bin.Buffer) error {
 	if m == nil {
-		return fmt.Errorf("can't encode messageActionSetChatWallPaper#bc44a927 as nil")
+		return fmt.Errorf("can't encode messageActionSetChatWallPaper#5060a3f4 as nil")
+	}
+	m.SetFlags()
+	if err := m.Flags.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode messageActionSetChatWallPaper#5060a3f4: field flags: %w", err)
 	}
 	if m.Wallpaper == nil {
-		return fmt.Errorf("unable to encode messageActionSetChatWallPaper#bc44a927: field wallpaper is nil")
+		return fmt.Errorf("unable to encode messageActionSetChatWallPaper#5060a3f4: field wallpaper is nil")
 	}
 	if err := m.Wallpaper.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode messageActionSetChatWallPaper#bc44a927: field wallpaper: %w", err)
+		return fmt.Errorf("unable to encode messageActionSetChatWallPaper#5060a3f4: field wallpaper: %w", err)
 	}
 	return nil
 }
@@ -6738,10 +6817,10 @@ func (m *MessageActionSetChatWallPaper) EncodeBare(b *bin.Buffer) error {
 // Decode implements bin.Decoder.
 func (m *MessageActionSetChatWallPaper) Decode(b *bin.Buffer) error {
 	if m == nil {
-		return fmt.Errorf("can't decode messageActionSetChatWallPaper#bc44a927 to nil")
+		return fmt.Errorf("can't decode messageActionSetChatWallPaper#5060a3f4 to nil")
 	}
 	if err := b.ConsumeID(MessageActionSetChatWallPaperTypeID); err != nil {
-		return fmt.Errorf("unable to decode messageActionSetChatWallPaper#bc44a927: %w", err)
+		return fmt.Errorf("unable to decode messageActionSetChatWallPaper#5060a3f4: %w", err)
 	}
 	return m.DecodeBare(b)
 }
@@ -6749,16 +6828,61 @@ func (m *MessageActionSetChatWallPaper) Decode(b *bin.Buffer) error {
 // DecodeBare implements bin.BareDecoder.
 func (m *MessageActionSetChatWallPaper) DecodeBare(b *bin.Buffer) error {
 	if m == nil {
-		return fmt.Errorf("can't decode messageActionSetChatWallPaper#bc44a927 to nil")
+		return fmt.Errorf("can't decode messageActionSetChatWallPaper#5060a3f4 to nil")
 	}
+	{
+		if err := m.Flags.Decode(b); err != nil {
+			return fmt.Errorf("unable to decode messageActionSetChatWallPaper#5060a3f4: field flags: %w", err)
+		}
+	}
+	m.Same = m.Flags.Has(0)
+	m.ForBoth = m.Flags.Has(1)
 	{
 		value, err := DecodeWallPaper(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode messageActionSetChatWallPaper#bc44a927: field wallpaper: %w", err)
+			return fmt.Errorf("unable to decode messageActionSetChatWallPaper#5060a3f4: field wallpaper: %w", err)
 		}
 		m.Wallpaper = value
 	}
 	return nil
+}
+
+// SetSame sets value of Same conditional field.
+func (m *MessageActionSetChatWallPaper) SetSame(value bool) {
+	if value {
+		m.Flags.Set(0)
+		m.Same = true
+	} else {
+		m.Flags.Unset(0)
+		m.Same = false
+	}
+}
+
+// GetSame returns value of Same conditional field.
+func (m *MessageActionSetChatWallPaper) GetSame() (value bool) {
+	if m == nil {
+		return
+	}
+	return m.Flags.Has(0)
+}
+
+// SetForBoth sets value of ForBoth conditional field.
+func (m *MessageActionSetChatWallPaper) SetForBoth(value bool) {
+	if value {
+		m.Flags.Set(1)
+		m.ForBoth = true
+	} else {
+		m.Flags.Unset(1)
+		m.ForBoth = false
+	}
+}
+
+// GetForBoth returns value of ForBoth conditional field.
+func (m *MessageActionSetChatWallPaper) GetForBoth() (value bool) {
+	if m == nil {
+		return
+	}
+	return m.Flags.Has(1)
 }
 
 // GetWallpaper returns value of Wallpaper field.
@@ -6769,176 +6893,70 @@ func (m *MessageActionSetChatWallPaper) GetWallpaper() (value WallPaperClass) {
 	return m.Wallpaper
 }
 
-// MessageActionSetSameChatWallPaper represents TL type `messageActionSetSameChatWallPaper#c0787d6d`.
-// The user applied a wallpaper »¹ previously sent by the other user in a
-// messageActionSetChatWallPaper² message.
+// MessageActionGiftCode represents TL type `messageActionGiftCode#678c2e09`.
+// Contains a Telegram Premium giftcode link¹.
 //
 // Links:
-//  1. https://core.telegram.org/api/wallpapers
-//  2. https://core.telegram.org/constructor/messageActionSetChatWallPaper
-//
-// See https://core.telegram.org/constructor/messageActionSetSameChatWallPaper for reference.
-type MessageActionSetSameChatWallPaper struct {
-	// The wallpaper¹
-	//
-	// Links:
-	//  1) https://core.telegram.org/api/wallpapers
-	Wallpaper WallPaperClass
-}
-
-// MessageActionSetSameChatWallPaperTypeID is TL type id of MessageActionSetSameChatWallPaper.
-const MessageActionSetSameChatWallPaperTypeID = 0xc0787d6d
-
-// construct implements constructor of MessageActionClass.
-func (m MessageActionSetSameChatWallPaper) construct() MessageActionClass { return &m }
-
-// Ensuring interfaces in compile-time for MessageActionSetSameChatWallPaper.
-var (
-	_ bin.Encoder     = &MessageActionSetSameChatWallPaper{}
-	_ bin.Decoder     = &MessageActionSetSameChatWallPaper{}
-	_ bin.BareEncoder = &MessageActionSetSameChatWallPaper{}
-	_ bin.BareDecoder = &MessageActionSetSameChatWallPaper{}
-
-	_ MessageActionClass = &MessageActionSetSameChatWallPaper{}
-)
-
-func (m *MessageActionSetSameChatWallPaper) Zero() bool {
-	if m == nil {
-		return true
-	}
-	if !(m.Wallpaper == nil) {
-		return false
-	}
-
-	return true
-}
-
-// String implements fmt.Stringer.
-func (m *MessageActionSetSameChatWallPaper) String() string {
-	if m == nil {
-		return "MessageActionSetSameChatWallPaper(nil)"
-	}
-	type Alias MessageActionSetSameChatWallPaper
-	return fmt.Sprintf("MessageActionSetSameChatWallPaper%+v", Alias(*m))
-}
-
-// FillFrom fills MessageActionSetSameChatWallPaper from given interface.
-func (m *MessageActionSetSameChatWallPaper) FillFrom(from interface {
-	GetWallpaper() (value WallPaperClass)
-}) {
-	m.Wallpaper = from.GetWallpaper()
-}
-
-// TypeID returns type id in TL schema.
-//
-// See https://core.telegram.org/mtproto/TL-tl#remarks.
-func (*MessageActionSetSameChatWallPaper) TypeID() uint32 {
-	return MessageActionSetSameChatWallPaperTypeID
-}
-
-// TypeName returns name of type in TL schema.
-func (*MessageActionSetSameChatWallPaper) TypeName() string {
-	return "messageActionSetSameChatWallPaper"
-}
-
-// TypeInfo returns info about TL type.
-func (m *MessageActionSetSameChatWallPaper) TypeInfo() tdp.Type {
-	typ := tdp.Type{
-		Name: "messageActionSetSameChatWallPaper",
-		ID:   MessageActionSetSameChatWallPaperTypeID,
-	}
-	if m == nil {
-		typ.Null = true
-		return typ
-	}
-	typ.Fields = []tdp.Field{
-		{
-			Name:       "Wallpaper",
-			SchemaName: "wallpaper",
-		},
-	}
-	return typ
-}
-
-// Encode implements bin.Encoder.
-func (m *MessageActionSetSameChatWallPaper) Encode(b *bin.Buffer) error {
-	if m == nil {
-		return fmt.Errorf("can't encode messageActionSetSameChatWallPaper#c0787d6d as nil")
-	}
-	b.PutID(MessageActionSetSameChatWallPaperTypeID)
-	return m.EncodeBare(b)
-}
-
-// EncodeBare implements bin.BareEncoder.
-func (m *MessageActionSetSameChatWallPaper) EncodeBare(b *bin.Buffer) error {
-	if m == nil {
-		return fmt.Errorf("can't encode messageActionSetSameChatWallPaper#c0787d6d as nil")
-	}
-	if m.Wallpaper == nil {
-		return fmt.Errorf("unable to encode messageActionSetSameChatWallPaper#c0787d6d: field wallpaper is nil")
-	}
-	if err := m.Wallpaper.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode messageActionSetSameChatWallPaper#c0787d6d: field wallpaper: %w", err)
-	}
-	return nil
-}
-
-// Decode implements bin.Decoder.
-func (m *MessageActionSetSameChatWallPaper) Decode(b *bin.Buffer) error {
-	if m == nil {
-		return fmt.Errorf("can't decode messageActionSetSameChatWallPaper#c0787d6d to nil")
-	}
-	if err := b.ConsumeID(MessageActionSetSameChatWallPaperTypeID); err != nil {
-		return fmt.Errorf("unable to decode messageActionSetSameChatWallPaper#c0787d6d: %w", err)
-	}
-	return m.DecodeBare(b)
-}
-
-// DecodeBare implements bin.BareDecoder.
-func (m *MessageActionSetSameChatWallPaper) DecodeBare(b *bin.Buffer) error {
-	if m == nil {
-		return fmt.Errorf("can't decode messageActionSetSameChatWallPaper#c0787d6d to nil")
-	}
-	{
-		value, err := DecodeWallPaper(b)
-		if err != nil {
-			return fmt.Errorf("unable to decode messageActionSetSameChatWallPaper#c0787d6d: field wallpaper: %w", err)
-		}
-		m.Wallpaper = value
-	}
-	return nil
-}
-
-// GetWallpaper returns value of Wallpaper field.
-func (m *MessageActionSetSameChatWallPaper) GetWallpaper() (value WallPaperClass) {
-	if m == nil {
-		return
-	}
-	return m.Wallpaper
-}
-
-// MessageActionGiftCode represents TL type `messageActionGiftCode#d2cfdb0e`.
+//  1. https://core.telegram.org/api/links#premium-giftcode-links
 //
 // See https://core.telegram.org/constructor/messageActionGiftCode for reference.
 type MessageActionGiftCode struct {
-	// Flags field of MessageActionGiftCode.
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// ViaGiveaway field of MessageActionGiftCode.
+	// If set, this gift code was received from a giveaway »¹ started by a channel we're
+	// subscribed to.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/giveaways
 	ViaGiveaway bool
-	// Unclaimed field of MessageActionGiftCode.
+	// If set, the link was not redeemed¹ yet.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/links#premium-giftcode-links
 	Unclaimed bool
-	// BoostPeer field of MessageActionGiftCode.
+	// Identifier of the channel that created the gift code either directly or through a
+	// giveaway¹: if we import this giftcode link, we will also automatically boost² this
+	// channel.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/giveaways
+	//  2) https://core.telegram.org/api/boost
 	//
 	// Use SetBoostPeer and GetBoostPeer helpers.
 	BoostPeer PeerClass
-	// Months field of MessageActionGiftCode.
+	// Duration in months of the gifted Telegram Premium subscription¹.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/premium
 	Months int
-	// Slug field of MessageActionGiftCode.
+	// Slug of the Telegram Premium giftcode link¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/links#premium-giftcode-links
 	Slug string
+	// Currency field of MessageActionGiftCode.
+	//
+	// Use SetCurrency and GetCurrency helpers.
+	Currency string
+	// Amount field of MessageActionGiftCode.
+	//
+	// Use SetAmount and GetAmount helpers.
+	Amount int64
+	// CryptoCurrency field of MessageActionGiftCode.
+	//
+	// Use SetCryptoCurrency and GetCryptoCurrency helpers.
+	CryptoCurrency string
+	// CryptoAmount field of MessageActionGiftCode.
+	//
+	// Use SetCryptoAmount and GetCryptoAmount helpers.
+	CryptoAmount int64
 }
 
 // MessageActionGiftCodeTypeID is TL type id of MessageActionGiftCode.
-const MessageActionGiftCodeTypeID = 0xd2cfdb0e
+const MessageActionGiftCodeTypeID = 0x678c2e09
 
 // construct implements constructor of MessageActionClass.
 func (m MessageActionGiftCode) construct() MessageActionClass { return &m }
@@ -6975,6 +6993,18 @@ func (m *MessageActionGiftCode) Zero() bool {
 	if !(m.Slug == "") {
 		return false
 	}
+	if !(m.Currency == "") {
+		return false
+	}
+	if !(m.Amount == 0) {
+		return false
+	}
+	if !(m.CryptoCurrency == "") {
+		return false
+	}
+	if !(m.CryptoAmount == 0) {
+		return false
+	}
 
 	return true
 }
@@ -6995,6 +7025,10 @@ func (m *MessageActionGiftCode) FillFrom(from interface {
 	GetBoostPeer() (value PeerClass, ok bool)
 	GetMonths() (value int)
 	GetSlug() (value string)
+	GetCurrency() (value string, ok bool)
+	GetAmount() (value int64, ok bool)
+	GetCryptoCurrency() (value string, ok bool)
+	GetCryptoAmount() (value int64, ok bool)
 }) {
 	m.ViaGiveaway = from.GetViaGiveaway()
 	m.Unclaimed = from.GetUnclaimed()
@@ -7004,6 +7038,22 @@ func (m *MessageActionGiftCode) FillFrom(from interface {
 
 	m.Months = from.GetMonths()
 	m.Slug = from.GetSlug()
+	if val, ok := from.GetCurrency(); ok {
+		m.Currency = val
+	}
+
+	if val, ok := from.GetAmount(); ok {
+		m.Amount = val
+	}
+
+	if val, ok := from.GetCryptoCurrency(); ok {
+		m.CryptoCurrency = val
+	}
+
+	if val, ok := from.GetCryptoAmount(); ok {
+		m.CryptoAmount = val
+	}
+
 }
 
 // TypeID returns type id in TL schema.
@@ -7052,6 +7102,26 @@ func (m *MessageActionGiftCode) TypeInfo() tdp.Type {
 			Name:       "Slug",
 			SchemaName: "slug",
 		},
+		{
+			Name:       "Currency",
+			SchemaName: "currency",
+			Null:       !m.Flags.Has(2),
+		},
+		{
+			Name:       "Amount",
+			SchemaName: "amount",
+			Null:       !m.Flags.Has(2),
+		},
+		{
+			Name:       "CryptoCurrency",
+			SchemaName: "crypto_currency",
+			Null:       !m.Flags.Has(3),
+		},
+		{
+			Name:       "CryptoAmount",
+			SchemaName: "crypto_amount",
+			Null:       !m.Flags.Has(3),
+		},
 	}
 	return typ
 }
@@ -7067,12 +7137,24 @@ func (m *MessageActionGiftCode) SetFlags() {
 	if !(m.BoostPeer == nil) {
 		m.Flags.Set(1)
 	}
+	if !(m.Currency == "") {
+		m.Flags.Set(2)
+	}
+	if !(m.Amount == 0) {
+		m.Flags.Set(2)
+	}
+	if !(m.CryptoCurrency == "") {
+		m.Flags.Set(3)
+	}
+	if !(m.CryptoAmount == 0) {
+		m.Flags.Set(3)
+	}
 }
 
 // Encode implements bin.Encoder.
 func (m *MessageActionGiftCode) Encode(b *bin.Buffer) error {
 	if m == nil {
-		return fmt.Errorf("can't encode messageActionGiftCode#d2cfdb0e as nil")
+		return fmt.Errorf("can't encode messageActionGiftCode#678c2e09 as nil")
 	}
 	b.PutID(MessageActionGiftCodeTypeID)
 	return m.EncodeBare(b)
@@ -7081,32 +7163,44 @@ func (m *MessageActionGiftCode) Encode(b *bin.Buffer) error {
 // EncodeBare implements bin.BareEncoder.
 func (m *MessageActionGiftCode) EncodeBare(b *bin.Buffer) error {
 	if m == nil {
-		return fmt.Errorf("can't encode messageActionGiftCode#d2cfdb0e as nil")
+		return fmt.Errorf("can't encode messageActionGiftCode#678c2e09 as nil")
 	}
 	m.SetFlags()
 	if err := m.Flags.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode messageActionGiftCode#d2cfdb0e: field flags: %w", err)
+		return fmt.Errorf("unable to encode messageActionGiftCode#678c2e09: field flags: %w", err)
 	}
 	if m.Flags.Has(1) {
 		if m.BoostPeer == nil {
-			return fmt.Errorf("unable to encode messageActionGiftCode#d2cfdb0e: field boost_peer is nil")
+			return fmt.Errorf("unable to encode messageActionGiftCode#678c2e09: field boost_peer is nil")
 		}
 		if err := m.BoostPeer.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode messageActionGiftCode#d2cfdb0e: field boost_peer: %w", err)
+			return fmt.Errorf("unable to encode messageActionGiftCode#678c2e09: field boost_peer: %w", err)
 		}
 	}
 	b.PutInt(m.Months)
 	b.PutString(m.Slug)
+	if m.Flags.Has(2) {
+		b.PutString(m.Currency)
+	}
+	if m.Flags.Has(2) {
+		b.PutLong(m.Amount)
+	}
+	if m.Flags.Has(3) {
+		b.PutString(m.CryptoCurrency)
+	}
+	if m.Flags.Has(3) {
+		b.PutLong(m.CryptoAmount)
+	}
 	return nil
 }
 
 // Decode implements bin.Decoder.
 func (m *MessageActionGiftCode) Decode(b *bin.Buffer) error {
 	if m == nil {
-		return fmt.Errorf("can't decode messageActionGiftCode#d2cfdb0e to nil")
+		return fmt.Errorf("can't decode messageActionGiftCode#678c2e09 to nil")
 	}
 	if err := b.ConsumeID(MessageActionGiftCodeTypeID); err != nil {
-		return fmt.Errorf("unable to decode messageActionGiftCode#d2cfdb0e: %w", err)
+		return fmt.Errorf("unable to decode messageActionGiftCode#678c2e09: %w", err)
 	}
 	return m.DecodeBare(b)
 }
@@ -7114,11 +7208,11 @@ func (m *MessageActionGiftCode) Decode(b *bin.Buffer) error {
 // DecodeBare implements bin.BareDecoder.
 func (m *MessageActionGiftCode) DecodeBare(b *bin.Buffer) error {
 	if m == nil {
-		return fmt.Errorf("can't decode messageActionGiftCode#d2cfdb0e to nil")
+		return fmt.Errorf("can't decode messageActionGiftCode#678c2e09 to nil")
 	}
 	{
 		if err := m.Flags.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode messageActionGiftCode#d2cfdb0e: field flags: %w", err)
+			return fmt.Errorf("unable to decode messageActionGiftCode#678c2e09: field flags: %w", err)
 		}
 	}
 	m.ViaGiveaway = m.Flags.Has(0)
@@ -7126,23 +7220,51 @@ func (m *MessageActionGiftCode) DecodeBare(b *bin.Buffer) error {
 	if m.Flags.Has(1) {
 		value, err := DecodePeer(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode messageActionGiftCode#d2cfdb0e: field boost_peer: %w", err)
+			return fmt.Errorf("unable to decode messageActionGiftCode#678c2e09: field boost_peer: %w", err)
 		}
 		m.BoostPeer = value
 	}
 	{
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode messageActionGiftCode#d2cfdb0e: field months: %w", err)
+			return fmt.Errorf("unable to decode messageActionGiftCode#678c2e09: field months: %w", err)
 		}
 		m.Months = value
 	}
 	{
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode messageActionGiftCode#d2cfdb0e: field slug: %w", err)
+			return fmt.Errorf("unable to decode messageActionGiftCode#678c2e09: field slug: %w", err)
 		}
 		m.Slug = value
+	}
+	if m.Flags.Has(2) {
+		value, err := b.String()
+		if err != nil {
+			return fmt.Errorf("unable to decode messageActionGiftCode#678c2e09: field currency: %w", err)
+		}
+		m.Currency = value
+	}
+	if m.Flags.Has(2) {
+		value, err := b.Long()
+		if err != nil {
+			return fmt.Errorf("unable to decode messageActionGiftCode#678c2e09: field amount: %w", err)
+		}
+		m.Amount = value
+	}
+	if m.Flags.Has(3) {
+		value, err := b.String()
+		if err != nil {
+			return fmt.Errorf("unable to decode messageActionGiftCode#678c2e09: field crypto_currency: %w", err)
+		}
+		m.CryptoCurrency = value
+	}
+	if m.Flags.Has(3) {
+		value, err := b.Long()
+		if err != nil {
+			return fmt.Errorf("unable to decode messageActionGiftCode#678c2e09: field crypto_amount: %w", err)
+		}
+		m.CryptoAmount = value
 	}
 	return nil
 }
@@ -7219,7 +7341,83 @@ func (m *MessageActionGiftCode) GetSlug() (value string) {
 	return m.Slug
 }
 
+// SetCurrency sets value of Currency conditional field.
+func (m *MessageActionGiftCode) SetCurrency(value string) {
+	m.Flags.Set(2)
+	m.Currency = value
+}
+
+// GetCurrency returns value of Currency conditional field and
+// boolean which is true if field was set.
+func (m *MessageActionGiftCode) GetCurrency() (value string, ok bool) {
+	if m == nil {
+		return
+	}
+	if !m.Flags.Has(2) {
+		return value, false
+	}
+	return m.Currency, true
+}
+
+// SetAmount sets value of Amount conditional field.
+func (m *MessageActionGiftCode) SetAmount(value int64) {
+	m.Flags.Set(2)
+	m.Amount = value
+}
+
+// GetAmount returns value of Amount conditional field and
+// boolean which is true if field was set.
+func (m *MessageActionGiftCode) GetAmount() (value int64, ok bool) {
+	if m == nil {
+		return
+	}
+	if !m.Flags.Has(2) {
+		return value, false
+	}
+	return m.Amount, true
+}
+
+// SetCryptoCurrency sets value of CryptoCurrency conditional field.
+func (m *MessageActionGiftCode) SetCryptoCurrency(value string) {
+	m.Flags.Set(3)
+	m.CryptoCurrency = value
+}
+
+// GetCryptoCurrency returns value of CryptoCurrency conditional field and
+// boolean which is true if field was set.
+func (m *MessageActionGiftCode) GetCryptoCurrency() (value string, ok bool) {
+	if m == nil {
+		return
+	}
+	if !m.Flags.Has(3) {
+		return value, false
+	}
+	return m.CryptoCurrency, true
+}
+
+// SetCryptoAmount sets value of CryptoAmount conditional field.
+func (m *MessageActionGiftCode) SetCryptoAmount(value int64) {
+	m.Flags.Set(3)
+	m.CryptoAmount = value
+}
+
+// GetCryptoAmount returns value of CryptoAmount conditional field and
+// boolean which is true if field was set.
+func (m *MessageActionGiftCode) GetCryptoAmount() (value int64, ok bool) {
+	if m == nil {
+		return
+	}
+	if !m.Flags.Has(3) {
+		return value, false
+	}
+	return m.CryptoAmount, true
+}
+
 // MessageActionGiveawayLaunch represents TL type `messageActionGiveawayLaunch#332ba9ed`.
+// A giveaway¹ was started.
+//
+// Links:
+//  1. https://core.telegram.org/api/giveaways
 //
 // See https://core.telegram.org/constructor/messageActionGiveawayLaunch for reference.
 type MessageActionGiveawayLaunch struct {
@@ -7320,6 +7518,171 @@ func (m *MessageActionGiveawayLaunch) DecodeBare(b *bin.Buffer) error {
 	return nil
 }
 
+// MessageActionGiveawayResults represents TL type `messageActionGiveawayResults#2a9fadc5`.
+// A giveaway¹ has ended.
+//
+// Links:
+//  1. https://core.telegram.org/api/giveaways
+//
+// See https://core.telegram.org/constructor/messageActionGiveawayResults for reference.
+type MessageActionGiveawayResults struct {
+	// Number of winners in the giveaway
+	WinnersCount int
+	// Number of undistributed prizes
+	UnclaimedCount int
+}
+
+// MessageActionGiveawayResultsTypeID is TL type id of MessageActionGiveawayResults.
+const MessageActionGiveawayResultsTypeID = 0x2a9fadc5
+
+// construct implements constructor of MessageActionClass.
+func (m MessageActionGiveawayResults) construct() MessageActionClass { return &m }
+
+// Ensuring interfaces in compile-time for MessageActionGiveawayResults.
+var (
+	_ bin.Encoder     = &MessageActionGiveawayResults{}
+	_ bin.Decoder     = &MessageActionGiveawayResults{}
+	_ bin.BareEncoder = &MessageActionGiveawayResults{}
+	_ bin.BareDecoder = &MessageActionGiveawayResults{}
+
+	_ MessageActionClass = &MessageActionGiveawayResults{}
+)
+
+func (m *MessageActionGiveawayResults) Zero() bool {
+	if m == nil {
+		return true
+	}
+	if !(m.WinnersCount == 0) {
+		return false
+	}
+	if !(m.UnclaimedCount == 0) {
+		return false
+	}
+
+	return true
+}
+
+// String implements fmt.Stringer.
+func (m *MessageActionGiveawayResults) String() string {
+	if m == nil {
+		return "MessageActionGiveawayResults(nil)"
+	}
+	type Alias MessageActionGiveawayResults
+	return fmt.Sprintf("MessageActionGiveawayResults%+v", Alias(*m))
+}
+
+// FillFrom fills MessageActionGiveawayResults from given interface.
+func (m *MessageActionGiveawayResults) FillFrom(from interface {
+	GetWinnersCount() (value int)
+	GetUnclaimedCount() (value int)
+}) {
+	m.WinnersCount = from.GetWinnersCount()
+	m.UnclaimedCount = from.GetUnclaimedCount()
+}
+
+// TypeID returns type id in TL schema.
+//
+// See https://core.telegram.org/mtproto/TL-tl#remarks.
+func (*MessageActionGiveawayResults) TypeID() uint32 {
+	return MessageActionGiveawayResultsTypeID
+}
+
+// TypeName returns name of type in TL schema.
+func (*MessageActionGiveawayResults) TypeName() string {
+	return "messageActionGiveawayResults"
+}
+
+// TypeInfo returns info about TL type.
+func (m *MessageActionGiveawayResults) TypeInfo() tdp.Type {
+	typ := tdp.Type{
+		Name: "messageActionGiveawayResults",
+		ID:   MessageActionGiveawayResultsTypeID,
+	}
+	if m == nil {
+		typ.Null = true
+		return typ
+	}
+	typ.Fields = []tdp.Field{
+		{
+			Name:       "WinnersCount",
+			SchemaName: "winners_count",
+		},
+		{
+			Name:       "UnclaimedCount",
+			SchemaName: "unclaimed_count",
+		},
+	}
+	return typ
+}
+
+// Encode implements bin.Encoder.
+func (m *MessageActionGiveawayResults) Encode(b *bin.Buffer) error {
+	if m == nil {
+		return fmt.Errorf("can't encode messageActionGiveawayResults#2a9fadc5 as nil")
+	}
+	b.PutID(MessageActionGiveawayResultsTypeID)
+	return m.EncodeBare(b)
+}
+
+// EncodeBare implements bin.BareEncoder.
+func (m *MessageActionGiveawayResults) EncodeBare(b *bin.Buffer) error {
+	if m == nil {
+		return fmt.Errorf("can't encode messageActionGiveawayResults#2a9fadc5 as nil")
+	}
+	b.PutInt(m.WinnersCount)
+	b.PutInt(m.UnclaimedCount)
+	return nil
+}
+
+// Decode implements bin.Decoder.
+func (m *MessageActionGiveawayResults) Decode(b *bin.Buffer) error {
+	if m == nil {
+		return fmt.Errorf("can't decode messageActionGiveawayResults#2a9fadc5 to nil")
+	}
+	if err := b.ConsumeID(MessageActionGiveawayResultsTypeID); err != nil {
+		return fmt.Errorf("unable to decode messageActionGiveawayResults#2a9fadc5: %w", err)
+	}
+	return m.DecodeBare(b)
+}
+
+// DecodeBare implements bin.BareDecoder.
+func (m *MessageActionGiveawayResults) DecodeBare(b *bin.Buffer) error {
+	if m == nil {
+		return fmt.Errorf("can't decode messageActionGiveawayResults#2a9fadc5 to nil")
+	}
+	{
+		value, err := b.Int()
+		if err != nil {
+			return fmt.Errorf("unable to decode messageActionGiveawayResults#2a9fadc5: field winners_count: %w", err)
+		}
+		m.WinnersCount = value
+	}
+	{
+		value, err := b.Int()
+		if err != nil {
+			return fmt.Errorf("unable to decode messageActionGiveawayResults#2a9fadc5: field unclaimed_count: %w", err)
+		}
+		m.UnclaimedCount = value
+	}
+	return nil
+}
+
+// GetWinnersCount returns value of WinnersCount field.
+func (m *MessageActionGiveawayResults) GetWinnersCount() (value int) {
+	if m == nil {
+		return
+	}
+	return m.WinnersCount
+}
+
+// GetUnclaimedCount returns value of UnclaimedCount field.
+func (m *MessageActionGiveawayResults) GetUnclaimedCount() (value int) {
+	if m == nil {
+		return
+	}
+	return m.UnclaimedCount
+}
+
 // MessageActionClassName is schema name of MessageActionClass.
 const MessageActionClassName = "MessageAction"
 
@@ -7370,11 +7733,11 @@ const MessageActionClassName = "MessageAction"
 //	case *tg.MessageActionTopicCreate: // messageActionTopicCreate#d999256
 //	case *tg.MessageActionTopicEdit: // messageActionTopicEdit#c0944820
 //	case *tg.MessageActionSuggestProfilePhoto: // messageActionSuggestProfilePhoto#57de635e
-//	case *tg.MessageActionRequestedPeer: // messageActionRequestedPeer#fe77345d
-//	case *tg.MessageActionSetChatWallPaper: // messageActionSetChatWallPaper#bc44a927
-//	case *tg.MessageActionSetSameChatWallPaper: // messageActionSetSameChatWallPaper#c0787d6d
-//	case *tg.MessageActionGiftCode: // messageActionGiftCode#d2cfdb0e
+//	case *tg.MessageActionRequestedPeer: // messageActionRequestedPeer#31518e9b
+//	case *tg.MessageActionSetChatWallPaper: // messageActionSetChatWallPaper#5060a3f4
+//	case *tg.MessageActionGiftCode: // messageActionGiftCode#678c2e09
 //	case *tg.MessageActionGiveawayLaunch: // messageActionGiveawayLaunch#332ba9ed
+//	case *tg.MessageActionGiveawayResults: // messageActionGiveawayResults#2a9fadc5
 //	default: panic(v)
 //	}
 type MessageActionClass interface {
@@ -7656,28 +8019,21 @@ func DecodeMessageAction(buf *bin.Buffer) (MessageActionClass, error) {
 		}
 		return &v, nil
 	case MessageActionRequestedPeerTypeID:
-		// Decoding messageActionRequestedPeer#fe77345d.
+		// Decoding messageActionRequestedPeer#31518e9b.
 		v := MessageActionRequestedPeer{}
 		if err := v.Decode(buf); err != nil {
 			return nil, fmt.Errorf("unable to decode MessageActionClass: %w", err)
 		}
 		return &v, nil
 	case MessageActionSetChatWallPaperTypeID:
-		// Decoding messageActionSetChatWallPaper#bc44a927.
+		// Decoding messageActionSetChatWallPaper#5060a3f4.
 		v := MessageActionSetChatWallPaper{}
 		if err := v.Decode(buf); err != nil {
 			return nil, fmt.Errorf("unable to decode MessageActionClass: %w", err)
 		}
 		return &v, nil
-	case MessageActionSetSameChatWallPaperTypeID:
-		// Decoding messageActionSetSameChatWallPaper#c0787d6d.
-		v := MessageActionSetSameChatWallPaper{}
-		if err := v.Decode(buf); err != nil {
-			return nil, fmt.Errorf("unable to decode MessageActionClass: %w", err)
-		}
-		return &v, nil
 	case MessageActionGiftCodeTypeID:
-		// Decoding messageActionGiftCode#d2cfdb0e.
+		// Decoding messageActionGiftCode#678c2e09.
 		v := MessageActionGiftCode{}
 		if err := v.Decode(buf); err != nil {
 			return nil, fmt.Errorf("unable to decode MessageActionClass: %w", err)
@@ -7686,6 +8042,13 @@ func DecodeMessageAction(buf *bin.Buffer) (MessageActionClass, error) {
 	case MessageActionGiveawayLaunchTypeID:
 		// Decoding messageActionGiveawayLaunch#332ba9ed.
 		v := MessageActionGiveawayLaunch{}
+		if err := v.Decode(buf); err != nil {
+			return nil, fmt.Errorf("unable to decode MessageActionClass: %w", err)
+		}
+		return &v, nil
+	case MessageActionGiveawayResultsTypeID:
+		// Decoding messageActionGiveawayResults#2a9fadc5.
+		v := MessageActionGiveawayResults{}
 		if err := v.Decode(buf); err != nil {
 			return nil, fmt.Errorf("unable to decode MessageActionClass: %w", err)
 		}
