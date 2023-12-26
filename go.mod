@@ -26,10 +26,10 @@ require (
 	github.com/segmentio/kafka-go v0.4.47
 	github.com/xhit/go-simple-mail/v2 v2.16.0
 	gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange v0.0.16
-	gitlab.aescorp.ru/dsp_dev/claim/sync_service v1.2.35
+	gitlab.aescorp.ru/dsp_dev/claim/sync_service v1.2.37
 	go.mau.fi/whatsmeow v0.0.0-20231216213200-9d803dd92735
 	golang.org/x/crypto v0.17.0
-	golang.org/x/exp v0.0.0-20231219180239-dc181d75b848
+	golang.org/x/exp v0.0.0-20231226003508-02704c960a9b
 	gorm.io/driver/postgres v1.5.4
 	gorm.io/driver/sqlserver v1.5.2
 	gorm.io/gorm v1.25.5
