@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ManyakRus/starter/logger"
-	"github.com/ManyakRus/starter/ping"
+	"github.com/ManyakRus/starter/port_checker"
 	"strings"
 	"time"
 
@@ -61,7 +61,7 @@ func Connect() {
 		FillSettings()
 	}
 
-	ping.Ping(Settings.DB_HOST, Settings.DB_PORT)
+	port_checker.CheckPort(Settings.DB_HOST, Settings.DB_PORT)
 
 	err := Connect_err()
 	if err != nil {
@@ -138,7 +138,7 @@ func IsClosed() bool {
 
 	err = DB.Ping()
 	if err != nil {
-		log.Error("DB.Ping() error: ", err)
+		log.Error("DB.CheckPort() error: ", err)
 		return true
 	}
 	return otvet
@@ -374,13 +374,13 @@ loop:
 			log.Warn("Context app is canceled. postgres_gorm.ping")
 			break loop
 		case <-ticker.C:
-			err := ping.Ping_err(Settings.DB_HOST, Settings.DB_PORT)
+			err := port_checker.CheckPort_err(Settings.DB_HOST, Settings.DB_PORT)
 			//log.Debug("ticker, ping err: ", err) //удалить
 			if err != nil {
 				NeedReconnect = true
-				log.Warn("postgres_gorm Ping(", addr, ") error: ", err)
+				log.Warn("postgres_gorm CheckPort(", addr, ") error: ", err)
 			} else if NeedReconnect == true {
-				log.Warn("postgres_gorm Ping(", addr, ") OK. Start Reconnect()")
+				log.Warn("postgres_gorm CheckPort(", addr, ") OK. Start Reconnect()")
 				NeedReconnect = false
 				Connect()
 			}

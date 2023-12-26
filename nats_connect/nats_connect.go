@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/ManyakRus/starter/logger"
 	"github.com/ManyakRus/starter/micro"
-	"github.com/ManyakRus/starter/ping"
+	"github.com/ManyakRus/starter/port_checker"
 	"github.com/nats-io/nats.go"
 	"os"
 	//"github.com/ManyakRus/starter/common/v0/micro"
@@ -49,7 +49,7 @@ func Connect_err() error {
 		FillSettings()
 	}
 
-	ping.Ping(Settings.NATS_HOST, Settings.NATS_PORT)
+	port_checker.CheckPort(Settings.NATS_HOST, Settings.NATS_PORT)
 
 	sNATS_PORT := Settings.NATS_PORT
 	URL := "nats://" + Settings.NATS_HOST + ":" + sNATS_PORT

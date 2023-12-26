@@ -7,7 +7,7 @@ import (
 
 	//log "github.com/sirupsen/logrus"
 
-	"github.com/ManyakRus/starter/config"
+	"github.com/ManyakRus/starter/config_main"
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/micro"
 
@@ -19,7 +19,7 @@ func TestConnect_err(t *testing.T) {
 	//Connect_Panic()
 
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	err := Connect_err()
 	if err != nil {
 		t.Error("TestConnect() error: ", err)
@@ -33,7 +33,7 @@ func TestConnect_err(t *testing.T) {
 
 func TestIsClosed(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 
 	err := Connect_err()
 	if err != nil {
@@ -54,7 +54,7 @@ func TestIsClosed(t *testing.T) {
 
 func TestReconnect(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	err := Connect_err()
 	if err != nil {
 		t.Error("TestReconnect() Connect_err() error: ", err)
@@ -84,7 +84,7 @@ func TestWaitStop(t *testing.T) {
 
 func TestStartMinio(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	StartMinio()
 	err := CloseConnection_err()
 	if err != nil {
@@ -93,7 +93,7 @@ func TestStartMinio(t *testing.T) {
 }
 
 func TestConnect(t *testing.T) {
-	config.LoadEnv()
+	config_main.LoadEnv()
 	Connect()
 	defer CloseConnection()
 }
@@ -101,7 +101,7 @@ func TestConnect(t *testing.T) {
 func TestCreateBucketCtx(t *testing.T) {
 	//t.SkipNow()
 
-	config.LoadEnv()
+	config_main.LoadEnv()
 	Connect()
 	defer CloseConnection()
 
@@ -113,7 +113,7 @@ func TestCreateBucketCtx(t *testing.T) {
 }
 
 func TestUploadFileCtx(t *testing.T) {
-	config.LoadEnv()
+	config_main.LoadEnv()
 	Connect()
 	defer CloseConnection()
 
@@ -132,7 +132,7 @@ func TestUploadFileCtx(t *testing.T) {
 }
 
 func TestDownloadFileCtx(t *testing.T) {
-	config.LoadEnv()
+	config_main.LoadEnv()
 	Connect()
 	defer CloseConnection()
 

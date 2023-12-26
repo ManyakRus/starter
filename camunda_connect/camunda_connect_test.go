@@ -10,14 +10,14 @@ import (
 	"github.com/camunda/zeebe/clients/go/v8/pkg/pb"
 	//"github.com/camunda_connect/zeebe/clients/go/v8/pkg/worker"
 
-	"github.com/ManyakRus/starter/config"
+	"github.com/ManyakRus/starter/config_main"
 	//"gitlab.aescorp.ru/dsp_dev/claim/stack_exchange/internal/v0/app/programdir"
 	"testing"
 )
 
 func TestFillSettings(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	FillSettings()
 
 	if Settings.CAMUNDA_HOST == "" {
@@ -28,7 +28,7 @@ func TestFillSettings(t *testing.T) {
 
 func TestConnect(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	FillSettings()
 
 	Connect()
@@ -45,7 +45,7 @@ func TestConnect(t *testing.T) {
 
 func TestCloseConnection(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	FillSettings()
 
 	Connect()
@@ -60,7 +60,7 @@ func TestCloseConnection(t *testing.T) {
 
 func TestGetURL(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	FillSettings()
 
 	URL := GetURL()
@@ -98,7 +98,7 @@ func createJob() entities.Job {
 
 func Test_workComplete(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	FillSettings()
 
 	Connect()
@@ -115,7 +115,7 @@ func Test_workComplete(t *testing.T) {
 
 func Test_workFails(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	FillSettings()
 
 	Connect()

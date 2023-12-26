@@ -1,13 +1,13 @@
 package email
 
 import (
-	"github.com/ManyakRus/starter/config"
+	"github.com/ManyakRus/starter/config_main"
 	mail "github.com/xhit/go-simple-mail/v2"
 	"testing"
 )
 
 func TestSendMessage(t *testing.T) {
-	config.LoadEnv()
+	config_main.LoadEnv()
 	Connect()
 	EMAIL_SEND_TO_TEST := Settings.EMAIL_SEND_TO_TEST
 	text := "TEST ТЕСТ utf8 русский язык"
@@ -21,7 +21,7 @@ func TestSendMessage(t *testing.T) {
 }
 
 func TestSendEmail(t *testing.T) {
-	config.LoadEnv()
+	config_main.LoadEnv()
 	Connect()
 	EMAIL_SEND_TO_TEST := Settings.EMAIL_SEND_TO_TEST
 	//EMAIL_SEND_TO_TEST = EMAIL_SEND_TO_TEST + ",noreply@note.atomsbt.ru"

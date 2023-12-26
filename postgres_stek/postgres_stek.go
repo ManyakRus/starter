@@ -6,7 +6,7 @@ import (
 	"context"
 	"errors"
 	"github.com/ManyakRus/starter/logger"
-	"github.com/ManyakRus/starter/ping"
+	"github.com/ManyakRus/starter/port_checker"
 	"gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/object_model/entities/connections"
 	"time"
 
@@ -54,7 +54,7 @@ func Connect(Connection connections.Connection) {
 		log.Panicln("Need fill Connection.Server")
 	}
 
-	ping.Ping(Connection.Server, Connection.Port)
+	port_checker.CheckPort(Connection.Server, Connection.Port)
 
 	err := Connect_err(Connection)
 	if err != nil {
@@ -125,7 +125,7 @@ func IsClosed(Connection connections.Connection) bool {
 
 	err = DB.Ping()
 	if err != nil {
-		log.Error("DB.Ping() error: ", err)
+		log.Error("DB.CheckPort() error: ", err)
 		return true
 	}
 	return otvet
@@ -322,13 +322,13 @@ loop:
 				log.Warn("Context app is canceled. postgres_stek.ping")
 				break loop
 			case <-ticker.C:
-				err := ping.Ping_err(Connection.Server, Connection.Port)
+				err := port_checker.CheckPort_err(Connection.Server, Connection.Port)
 				//log.Debug("ticker, ping err: ", err) //удалить
 				if err != nil {
 					NeedReconnect = true
-					log.Warn("postgres_stek Ping(", addr, ") error: ", err)
+					log.Warn("postgres_stek CheckPort(", addr, ") error: ", err)
 				} else if NeedReconnect == true {
-					log.Warn("postgres_stek Ping(", addr, ") OK. Start Reconnect()")
+					log.Warn("postgres_stek CheckPort(", addr, ") OK. Start Reconnect()")
 					NeedReconnect = false
 					Connect(Connection)
 				}

@@ -9,7 +9,7 @@ import (
 
 	"github.com/gotd/td/tg"
 
-	"github.com/ManyakRus/starter/config"
+	"github.com/ManyakRus/starter/config_main"
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/micro"
 	"github.com/ManyakRus/starter/stopapp"
@@ -19,7 +19,7 @@ import (
 
 func TestCreateTelegramClient(t *testing.T) {
 
-	config.LoadEnv()
+	config_main.LoadEnv()
 
 	//ctx := contextmain.GetContext()
 	CreateTelegramClient(nil)
@@ -36,7 +36,7 @@ func TestTimeLimit(t *testing.T) {
 
 func TestSendMessage(t *testing.T) {
 	var err error
-	config.LoadEnv()
+	config_main.LoadEnv()
 	//stopapp.StartWaitStop()
 
 	ctx := contextmain.GetContext()
@@ -91,7 +91,7 @@ func TestSendMessage(t *testing.T) {
 //}
 
 func TestConnectTelegram(t *testing.T) {
-	config.LoadEnv()
+	config_main.LoadEnv()
 
 	//ctx := contextmain.GetContext()
 
@@ -117,7 +117,7 @@ func Test_termAuth_Phone(t *testing.T) {
 
 func TestSendMessage_Many(t *testing.T) {
 	t.SkipNow() //убрать комментарий
-	config.LoadEnv()
+	config_main.LoadEnv()
 	stopapp.StartWaitStop()
 
 	CreateTelegramClient(nil)

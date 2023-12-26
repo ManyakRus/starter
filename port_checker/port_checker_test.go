@@ -1,24 +1,24 @@
-package ping
+package port_checker
 
 import (
 	"testing"
 	"time"
 )
 
-func TestPingPort(t *testing.T) {
+func TestCheckPort(t *testing.T) {
 
 	IP := "10.1.9.151"
 	Port := "26500"
 	TimeStart := time.Now()
 
-	err := Ping_err(IP, Port)
+	err := CheckPort_err(IP, Port)
 
 	t.Log("Прошло время: ", time.Since(TimeStart))
 
 	if err != nil {
-		t.Error("PingPort() error: ", err)
+		t.Error("TestCheckPort() error: ", err)
 	} else {
-		t.Log("PingPort() OK.")
+		t.Log("TestCheckPort() OK.")
 	}
 
 }

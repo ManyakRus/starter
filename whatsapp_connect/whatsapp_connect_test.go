@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ManyakRus/starter/config"
+	"github.com/ManyakRus/starter/config_main"
 	"github.com/ManyakRus/starter/micro"
 )
 
@@ -13,7 +13,7 @@ func TestCreateClient(t *testing.T) {
 
 	//ProgramDir := programdir.ProgramDir()
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	FillSettings()
 
 	err := Connect_err(eventHandler_test)
@@ -29,7 +29,7 @@ func TestSendMessage(t *testing.T) {
 
 	//ProgramDir := programdir.ProgramDir()
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	FillSettings()
 
 	err := Connect_err(eventHandler_test)
@@ -65,7 +65,7 @@ func TestParseJID(t *testing.T) {
 
 func TestMessageWhatsapp_String(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	FillSettings()
 
 	m := MessageWhatsapp{}

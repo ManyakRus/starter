@@ -7,7 +7,7 @@ import (
 
 	//log "github.com/sirupsen/logrus"
 
-	"github.com/ManyakRus/starter/config"
+	"github.com/ManyakRus/starter/config_main"
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/micro"
 
@@ -19,7 +19,7 @@ func TestConnect_err(t *testing.T) {
 	//Connect_Panic()
 
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	err := Connect_err(constants.CONNECTION)
 	if err != nil {
 		t.Error("TestConnect error: ", err)
@@ -33,7 +33,7 @@ func TestConnect_err(t *testing.T) {
 
 func TestIsClosed(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 
 	err := Connect_err(constants.CONNECTION)
 	if err != nil {
@@ -54,7 +54,7 @@ func TestIsClosed(t *testing.T) {
 
 func TestReconnect(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	err := Connect_err(constants.CONNECTION)
 	if err != nil {
 		t.Error("TestIsClosed Connect() error: ", err)
@@ -84,7 +84,7 @@ func TestWaitStop(t *testing.T) {
 
 func TestStartDB(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	StartDB(constants.CONNECTION)
 	err := CloseConnection_err(constants.CONNECTION)
 	if err != nil {
@@ -94,7 +94,7 @@ func TestStartDB(t *testing.T) {
 
 func TestConnect(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	Connect(constants.CONNECTION)
 
 	CloseConnection(constants.CONNECTION)
@@ -102,7 +102,7 @@ func TestConnect(t *testing.T) {
 
 func TestGetConnection(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	GetConnection(constants.CONNECTION)
 
 	CloseConnection(constants.CONNECTION)

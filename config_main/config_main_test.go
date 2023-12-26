@@ -1,4 +1,4 @@
-package config
+package config_main
 
 import (
 	"github.com/ManyakRus/starter/micro"

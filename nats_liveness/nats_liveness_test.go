@@ -1,7 +1,7 @@
 package nats_liveness
 
 import (
-	"github.com/ManyakRus/starter/config"
+	"github.com/ManyakRus/starter/config_main"
 	"github.com/ManyakRus/starter/micro"
 	"testing"
 )
@@ -9,7 +9,7 @@ import (
 var SERVICE_NAME_TEST = "NIKITIN"
 
 func TestConnect(t *testing.T) {
-	config.LoadEnv()
+	config_main.LoadEnv()
 	FillSettings(SERVICE_NAME_TEST)
 	Connect()
 	CloseConnection()
@@ -17,7 +17,7 @@ func TestConnect(t *testing.T) {
 }
 
 func TestSendMessage(t *testing.T) {
-	config.LoadEnv()
+	config_main.LoadEnv()
 	FillSettings(SERVICE_NAME_TEST)
 	Connect()
 	SendMessage()
@@ -27,7 +27,7 @@ func TestSendMessage(t *testing.T) {
 func TestStart(t *testing.T) {
 	//t.SkipNow() //убрать
 
-	config.LoadEnv()
+	config_main.LoadEnv()
 	Start(SERVICE_NAME_TEST)
 
 	micro.Pause(60000)

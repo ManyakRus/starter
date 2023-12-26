@@ -12,7 +12,7 @@ import (
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/logger"
 	"github.com/ManyakRus/starter/micro"
-	"github.com/ManyakRus/starter/ping"
+	"github.com/ManyakRus/starter/port_checker"
 	"github.com/ManyakRus/starter/stopapp"
 
 	miniogo "github.com/minio/minio-go/v7"
@@ -49,7 +49,7 @@ func Connect() {
 		FillSettings()
 	}
 
-	//ping.Ping(Settings.MINIO_HOST, Settings.MINIO_PORT)
+	//ping.CheckPort(Settings.MINIO_HOST, Settings.MINIO_PORT)
 
 	err := Connect_err()
 	if err != nil {
@@ -80,7 +80,7 @@ func Connect_err() error {
 	}
 	Conn, err = miniogo.New(addr, options)
 	if err == nil {
-		ping.Ping(Settings.MINIO_HOST, Settings.MINIO_PORT)
+		port_checker.CheckPort(Settings.MINIO_HOST, Settings.MINIO_PORT)
 	}
 
 	return err
@@ -246,13 +246,13 @@ loop:
 			log.Warn("Context app is canceled. minio_connect.ping")
 			break loop
 		case <-ticker.C:
-			err := ping.Ping_err(Settings.MINIO_HOST, Settings.MINIO_PORT)
+			err := port_checker.CheckPort_err(Settings.MINIO_HOST, Settings.MINIO_PORT)
 			//log.Debug("ticker, ping err: ", err) //удалить
 			if err != nil {
 				NeedReconnect = true
-				log.Warn("minio_connect Ping(", addr, ") error: ", err)
+				log.Warn("minio_connect CheckPort(", addr, ") error: ", err)
 			} else if NeedReconnect == true {
-				log.Warn("minio_connect Ping(", addr, ") OK. Start Reconnect()")
+				log.Warn("minio_connect CheckPort(", addr, ") OK. Start Reconnect()")
 				NeedReconnect = false
 				Connect()
 			}

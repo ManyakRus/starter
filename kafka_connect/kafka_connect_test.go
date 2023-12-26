@@ -2,7 +2,7 @@ package kafka_connect
 
 import (
 	"context"
-	"github.com/ManyakRus/starter/config"
+	"github.com/ManyakRus/starter/config_main"
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/micro"
 	"testing"
@@ -16,7 +16,7 @@ var TEXT_CONTEXT_DEADLINE = "context deadline exceeded"
 
 func TestConnect_err(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	err := Connect_err()
 	if err != nil {
 		t.Error("nats_connect.TestConnect_err() error: ", err)
@@ -26,14 +26,14 @@ func TestConnect_err(t *testing.T) {
 
 func TestCloseConnection(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	Connect()
 	CloseConnection()
 }
 
 func TestStartNats(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	StartKafka()
 	micro.Pause(20)
 
@@ -60,13 +60,13 @@ func TestWaitStop(t *testing.T) {
 
 func TestConnect(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	Connect()
 	defer CloseConnection()
 }
 
 func TestReadTopic(t *testing.T) {
-	config.LoadEnv()
+	config_main.LoadEnv()
 	FillSettings()
 	//Connect()
 	//defer CloseConnection()

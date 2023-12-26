@@ -6,7 +6,7 @@ import (
 	"context"
 	"errors"
 	"github.com/ManyakRus/starter/logger"
-	"github.com/ManyakRus/starter/ping"
+	"github.com/ManyakRus/starter/port_checker"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"os"
@@ -50,7 +50,7 @@ func Connect() {
 		FillSettings()
 	}
 
-	ping.Ping(Settings.DB_HOST, Settings.DB_PORT)
+	port_checker.CheckPort(Settings.DB_HOST, Settings.DB_PORT)
 
 	err := Connect_err()
 	if err != nil {
@@ -274,13 +274,13 @@ loop:
 			log.Warn("Context app is canceled. postgres_connect.ping")
 			break loop
 		case <-ticker.C:
-			err := ping.Ping_err(Settings.DB_HOST, Settings.DB_PORT)
+			err := port_checker.CheckPort_err(Settings.DB_HOST, Settings.DB_PORT)
 			//log.Debug("ticker, ping err: ", err) //удалить
 			if err != nil {
 				NeedReconnect = true
-				log.Warn("postgres_connect Ping(", addr, ") error: ", err)
+				log.Warn("postgres_connect CheckPort(", addr, ") error: ", err)
 			} else if NeedReconnect == true {
-				log.Warn("postgres_connect Ping(", addr, ") OK. Start Reconnect()")
+				log.Warn("postgres_connect CheckPort(", addr, ") OK. Start Reconnect()")
 				NeedReconnect = false
 				Connect()
 			}

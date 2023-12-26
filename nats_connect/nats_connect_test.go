@@ -2,7 +2,7 @@ package nats_connect
 
 import (
 	"context"
-	"github.com/ManyakRus/starter/config"
+	"github.com/ManyakRus/starter/config_main"
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/micro"
 	"testing"
@@ -14,7 +14,7 @@ import (
 
 func TestConnect_err(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	err := Connect_err()
 	if err != nil {
 		t.Error("nats_connect.TestConnect_err() error: ", err)
@@ -24,14 +24,14 @@ func TestConnect_err(t *testing.T) {
 
 func TestCloseConnection(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	Connect()
 	CloseConnection()
 }
 
 func TestStartNats(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
-	config.LoadEnv()
+	config_main.LoadEnv()
 	StartNats()
 	micro.Pause(20)
 
@@ -57,14 +57,14 @@ func TestWaitStop(t *testing.T) {
 }
 
 func TestConnect(t *testing.T) {
-	config.LoadEnv()
+	config_main.LoadEnv()
 	Connect()
 	defer CloseConnection()
 }
 
 func TestSendMessageCtx(t *testing.T) {
 
-	config.LoadEnv()
+	config_main.LoadEnv()
 	Connect()
 	defer CloseConnection()
 

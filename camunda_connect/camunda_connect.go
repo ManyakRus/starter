@@ -6,7 +6,7 @@ import (
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/logger"
 	"github.com/ManyakRus/starter/micro"
-	"github.com/ManyakRus/starter/ping"
+	"github.com/ManyakRus/starter/port_checker"
 	"github.com/ManyakRus/starter/stopapp"
 	"github.com/camunda/zeebe/clients/go/v8/pkg/entities"
 	"github.com/camunda/zeebe/clients/go/v8/pkg/worker"
@@ -81,7 +81,7 @@ func Connect() {
 		FillSettings()
 	}
 
-	ping.Ping(Settings.CAMUNDA_HOST, Settings.CAMUNDA_PORT)
+	port_checker.CheckPort(Settings.CAMUNDA_HOST, Settings.CAMUNDA_PORT)
 
 	Client, err = zbc.NewClient(&zbc.ClientConfig{
 		GatewayAddress:         GetURL(),
@@ -256,13 +256,13 @@ loop:
 			log.Warn("Context app is canceled. camunda_connect.ping")
 			break loop
 		case <-ticker.C:
-			err := ping.Ping_err(Settings.CAMUNDA_HOST, Settings.CAMUNDA_PORT)
+			err := port_checker.CheckPort_err(Settings.CAMUNDA_HOST, Settings.CAMUNDA_PORT)
 			// log.Debug("ticker, ping err: ", err) //удалить
 			if err != nil {
 				NeedReconnect = true
-				log.Warn("CAMUNDA Ping(", addr, ") error: ", err)
+				log.Warn("CAMUNDA CheckPort(", addr, ") error: ", err)
 			} else if NeedReconnect == true {
-				log.Warn("CAMUNDA Ping(", addr, ") OK. Start Reconnect()")
+				log.Warn("CAMUNDA CheckPort(", addr, ") OK. Start Reconnect()")
 				NeedReconnect = false
 				Connect()
 			}

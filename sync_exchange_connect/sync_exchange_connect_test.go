@@ -1,7 +1,7 @@
 package sync_exchange_connect
 
 import (
-	"github.com/ManyakRus/starter/config"
+	"github.com/ManyakRus/starter/config_main"
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/micro"
 	"github.com/ManyakRus/starter/stopapp"
@@ -11,7 +11,7 @@ import (
 var SERVICE_NAME_TEST = "test_nikitin"
 
 func TestConnect(t *testing.T) {
-	config.LoadEnv()
+	config_main.LoadEnv()
 	Connect(SERVICE_NAME_TEST)
 	defer CloseConnection()
 
@@ -20,7 +20,7 @@ func TestConnect(t *testing.T) {
 }
 
 func TestStartNats(t *testing.T) {
-	config.LoadEnv()
+	config_main.LoadEnv()
 	Start(SERVICE_NAME_TEST)
 	defer CloseConnection()
 
@@ -31,7 +31,7 @@ func TestStartNats(t *testing.T) {
 }
 
 func TestCloseConnection(t *testing.T) {
-	config.LoadEnv()
+	config_main.LoadEnv()
 	Connect(SERVICE_NAME_TEST)
 	defer CloseConnection()
 }
