@@ -2,6 +2,7 @@
 package constants
 
 import (
+	"gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/db/tables/table_connections"
 	"gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/object_model/entities/connections"
 	"time"
 )
@@ -15,4 +16,4 @@ var CONNECTION_ID int64 = 3 //7
 var BRANCH_ID int64 = 2 //20954
 
 // CONNECTION - объект Соединение, настроенный
-var CONNECTION = connections.Connection{ID: CONNECTION_ID, BranchID: BRANCH_ID, IsLegal: true, Server: "10.1.9.153", Port: "5432", DbName: "kol_atom_ul_uni", DbScheme: "stack", Login: "", Password: ""}
+var CONNECTION = connections.Connection{Table_Connection: table_connections.Table_Connection{ID: CONNECTION_ID, BranchID: BRANCH_ID, IsLegal: true, Server: "10.1.9.153", Port: "5432", DbName: "kol_atom_ul_uni", DbScheme: "stack", Login: "", Password: ""}}
