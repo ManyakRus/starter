@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/ManyakRus/starter/constants"
 	"github.com/ManyakRus/starter/logger"
 	"github.com/ManyakRus/starter/port_checker"
 	"strings"
@@ -334,7 +335,8 @@ func GetDSN(ApplicationName string) string {
 	dsn += "user=" + Settings.DB_USER + " "
 	dsn += "password=" + Settings.DB_PASSWORD + " "
 	dsn += "dbname=" + Settings.DB_NAME + " "
-	dsn += "port=" + Settings.DB_PORT + " sslmode=disable TimeZone=UTC "
+	dsn += "port=" + Settings.DB_PORT + " "
+	dsn += "sslmode=disable TimeZone=" + constants.TIME_ZONE + " "
 	dsn += "application_name=" + ApplicationName
 
 	return dsn

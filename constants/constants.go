@@ -17,3 +17,5 @@ var BRANCH_ID int64 = 2 //20954
 
 // CONNECTION - объект Соединение, настроенный
 var CONNECTION = connections.Connection{Table_Connection: table_connections.Table_Connection{ID: CONNECTION_ID, BranchID: BRANCH_ID, IsLegal: true, Server: "10.1.9.153", Port: "5432", DbName: "kol_atom_ul_uni", DbScheme: "stack", Login: "", Password: ""}}
+
+var TIME_ZONE = "Europe/Moscow"
