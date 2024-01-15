@@ -27,7 +27,7 @@ func (c Carbon) Season() string {
 	}
 	if seasons, ok := c.lang.resources["seasons"]; ok {
 		slice := strings.Split(seasons, "|")
-		if len(slice) == 4 {
+		if len(slice) == QuartersPerYear {
 			return slice[index]
 		}
 	}

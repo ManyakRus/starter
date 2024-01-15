@@ -1,6 +1,7 @@
 package carbon
 
 import (
+	"strconv"
 	"time"
 )
 
@@ -65,6 +66,22 @@ func (c Carbon) ParseByLayout(value, layout string, timezone ...string) Carbon {
 	}
 	if value == "" || value == "0" || value == "0000-00-00 00:00:00" || value == "0000-00-00" || value == "00:00:00" {
 		return c
+	}
+	if layout == "timestamp" {
+		timestamp, _ := strconv.ParseInt(value, 10, 64)
+		return c.CreateFromTimestamp(timestamp)
+	}
+	if layout == "timestampMilli" {
+		timestamp, _ := strconv.ParseInt(value, 10, 64)
+		return c.CreateFromTimestampMilli(timestamp)
+	}
+	if layout == "timestampMicro" {
+		timestamp, _ := strconv.ParseInt(value, 10, 64)
+		return c.CreateFromTimestampMicro(timestamp)
+	}
+	if layout == "timestampNano" {
+		timestamp, _ := strconv.ParseInt(value, 10, 64)
+		return c.CreateFromTimestampNano(timestamp)
 	}
 	tt, err := time.ParseInLocation(layout, value, c.loc)
 	if err != nil {

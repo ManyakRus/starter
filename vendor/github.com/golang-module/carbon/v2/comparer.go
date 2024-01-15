@@ -31,6 +31,18 @@ func (c Carbon) IsInvalid() bool {
 	return !c.IsValid()
 }
 
+// IsAM reports whether is before noon.
+// 是否是上午
+func (c Carbon) IsAM() bool {
+	return c.Format("a") == "am"
+}
+
+// IsPM reports whether is after noon.
+// 是否是下午
+func (c Carbon) IsPM() bool {
+	return c.Format("a") == "pm"
+}
+
 // IsNow reports whether is now time.
 // 是否是当前时间
 func (c Carbon) IsNow() bool {

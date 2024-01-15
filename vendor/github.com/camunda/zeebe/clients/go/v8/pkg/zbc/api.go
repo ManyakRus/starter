@@ -38,9 +38,11 @@ type Client interface {
 	NewBroadcastSignalCommand() commands.BroadcastSignalCommandStep1
 
 	NewActivateJobsCommand() commands.ActivateJobsCommandStep1
+	NewStreamJobsCommand() commands.StreamJobsCommandStep1
 	NewCompleteJobCommand() commands.CompleteJobCommandStep1
 	NewFailJobCommand() commands.FailJobCommandStep1
 	NewUpdateJobRetriesCommand() commands.UpdateJobRetriesCommandStep1
+	NewUpdateJobTimeoutCommand() commands.UpdateJobTimeoutCommandStep1
 	NewThrowErrorCommand() commands.ThrowErrorCommandStep1
 	NewDeleteResourceCommand() commands.DeleteResourceCommandStep1
 

@@ -11,14 +11,14 @@ import (
 // String implements the interface Stringer for Carbon struct.
 // 实现 Stringer 接口
 func (c Carbon) String() string {
-	key, value := c.parseTag()
+	key, value, tz := c.parseTag()
 	if key == "layout" {
-		return c.Layout(value)
+		return c.Layout(value, tz)
 	}
 	if key == "format" {
-		return c.Format(value)
+		return c.Format(value, tz)
 	}
-	return c.ToDateTimeString()
+	return c.ToDateTimeString(c.Location())
 }
 
 // ToString outputs a string in "2006-01-02 15:04:05.999999999 -0700 MST" layout.
@@ -420,7 +420,13 @@ func (c Carbon) ToShortTimeNanoString(timezone ...string) string {
 // ToAtomString outputs a string in "2006-01-02T15:04:05Z07:00" layout.
 // 输出 "2006-01-02T15:04:05Z07:00" 格式字符串
 func (c Carbon) ToAtomString(timezone ...string) string {
-	return c.ToRfc3339String(timezone...)
+	if len(timezone) > 0 {
+		c.loc, c.Error = getLocationByTimezone(timezone[0])
+	}
+	if c.IsInvalid() {
+		return ""
+	}
+	return c.ToStdTime().Format(AtomLayout)
 }
 
 // ToAnsicString outputs a string in "Mon Jan _2 15:04:05 2006" layout.
@@ -733,6 +739,14 @@ func (c Carbon) ToFormatString(format string, timezone ...string) string {
 				buffer.WriteString(c.ToMonthString())
 			case 'M': // short month, such as Jan
 				buffer.WriteString(c.ToShortMonthString())
+			case 'U': // timestamp with second, such as 1596604455
+				buffer.WriteString(strconv.FormatInt(c.Timestamp(), 10))
+			case 'V': // timestamp with millisecond, such as 1596604455000
+				buffer.WriteString(strconv.FormatInt(c.TimestampMilli(), 10))
+			case 'X': // timestamp with microsecond, such as 1596604455000000
+				buffer.WriteString(strconv.FormatInt(c.TimestampMicro(), 10))
+			case 'Z': // timestamp with nanoseconds, such as 1596604455000000000
+				buffer.WriteString(strconv.FormatInt(c.TimestampNano(), 10))
 			default: // common symbols
 				buffer.WriteString(c.ToStdTime().Format(layout))
 			}
@@ -767,10 +781,15 @@ func (c Carbon) ToFormatString(format string, timezone ...string) string {
 				}
 			case 'G': // 24-hour format, no padding, ranging from 0-23
 				buffer.WriteString(strconv.Itoa(c.Hour()))
-			case 'U': // timestamp with second, such as 1611818268
-				buffer.WriteString(strconv.FormatInt(c.Timestamp(), 10))
-			case 'u': // current millisecond, such as 999
-				buffer.WriteString(strconv.Itoa(c.Millisecond()))
+			case 'v': // current millisecond, such as 999
+				s := c.Layout(".999")
+				buffer.WriteString(strings.Trim(s, "."))
+			case 'u': // current microsecond, such as 999999
+				s := c.Layout(".999999")
+				buffer.WriteString(strings.Trim(s, "."))
+			case 'x': // current nanosecond, such as 999999999
+				s := c.Layout(".999999999")
+				buffer.WriteString(strings.Trim(s, "."))
 			case 'w': // day of the week represented by the number, ranging from 0-6
 				buffer.WriteString(strconv.Itoa(c.DayOfWeek() - 1))
 			case 't': // number of days in the month, ranging from 28-31

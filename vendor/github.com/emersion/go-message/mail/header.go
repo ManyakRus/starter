@@ -250,14 +250,23 @@ func (h *Header) SetAddressList(key string, addrs []*Address) {
 	}
 }
 
-// Date parses the Date header field.
+// Date parses the Date header field. If the header field is missing, it
+// returns the zero time.
 func (h *Header) Date() (time.Time, error) {
-	return mail.ParseDate(h.Get("Date"))
+	v := h.Get("Date")
+	if v == "" {
+		return time.Time{}, nil
+	}
+	return mail.ParseDate(v)
 }
 
 // SetDate formats the Date header field.
 func (h *Header) SetDate(t time.Time) {
-	h.Set("Date", t.Format(dateLayout))
+	if !t.IsZero() {
+		h.Set("Date", t.Format(dateLayout))
+	} else {
+		h.Del("Date")
+	}
 }
 
 // Subject parses the Subject header field. If there is an error, the raw field
@@ -347,7 +356,11 @@ func base36(input uint64) string {
 // SetMessageID sets the Message-ID field. id is the message identifier,
 // without the angle brackets.
 func (h *Header) SetMessageID(id string) {
-	h.Set("Message-Id", "<"+id+">")
+	if id != "" {
+		h.Set("Message-Id", "<"+id+">")
+	} else {
+		h.Del("Message-Id")
+	}
 }
 
 // SetMsgIDList formats a list of message identifiers. Message identifiers

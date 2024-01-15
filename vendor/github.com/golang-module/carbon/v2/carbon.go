@@ -14,7 +14,7 @@ import (
 
 // Version current version
 // 当前版本号
-const Version = "2.3.0"
+const Version = "2.3.5"
 
 // timezone constants
 // 时区常量
@@ -53,13 +53,22 @@ const (
 	Macao      = "Asia/Macao"          // 澳门
 	Taipei     = "Asia/Taipei"         // 台北
 	Tokyo      = "Asia/Tokyo"          // 东京
+	HoChiMinh  = "Asia/Ho_Chi_Minh"    // 胡志明
+	Hanoi      = "Asia/Hanoi"          // 河内
 	Saigon     = "Asia/Saigon"         // 西贡
 	Seoul      = "Asia/Seoul"          // 首尔
+	Pyongyang  = "Asia/Pyongyang"      // 平壤
 	Bangkok    = "Asia/Bangkok"        // 曼谷
 	Dubai      = "Asia/Dubai"          // 迪拜
+	Qatar      = "Asia/Qatar"          // 卡塔尔
+	Bangalore  = "Asia/Bangalore"      // 班加罗尔
+	Kolkata    = "Asia/Kolkata"        // 加尔各答
+	Mumbai     = "Asia/Mumbai"         // 孟买
+	MexicoCity = "America/Mexico_City" // 墨西哥
 	NewYork    = "America/New_York"    // 纽约
 	LosAngeles = "America/Los_Angeles" // 洛杉矶
 	Chicago    = "America/Chicago"     // 芝加哥
+	SaoPaulo   = "America/Sao_Paulo"   // 圣保罗
 	Moscow     = "Europe/Moscow"       // 莫斯科
 	London     = "Europe/London"       // 伦敦
 	Berlin     = "Europe/Berlin"       // 柏林
@@ -127,6 +136,7 @@ const (
 // layout constants
 // 布局模板常量
 const (
+	AtomLayout     = RFC3339Layout
 	ANSICLayout    = time.ANSIC
 	CookieLayout   = "Monday, 02-Jan-2006 15:04:05 MST"
 	KitchenLayout  = time.Kitchen
@@ -181,13 +191,71 @@ const (
 	ShortTimeNanoLayout  = "150405.999999999"
 )
 
+// format constants
+// 格式模板常量
+const (
+	AtomFormat     = "Y-m-d\\TH:i:sP"
+	ANSICFormat    = "D M j H:i:s Y"
+	CookieFormat   = "l, d-M-Y H:i:s T"
+	KitchenFormat  = "g:iA"
+	RssFormat      = "D, d M Y H:i:s O"
+	RubyDateFormat = "D M d H:i:s O Y"
+	UnixDateFormat = "D M j H:i:s T Y"
+
+	RFC1036Format      = "D, d M y H:i:s O"
+	RFC1123Format      = "D, d M Y H:i:s T"
+	RFC1123ZFormat     = "D, d M Y H:i:s O"
+	RFC2822Format      = "D, d M Y H:i:s O"
+	RFC3339Format      = "Y-m-d\\TH:i:sP"
+	RFC3339MilliFormat = "Y-m-d\\TH:i:s.vP"
+	RFC3339MicroFormat = "Y-m-d\\TH:i:s.uP"
+	RFC3339NanoFormat  = "Y-m-d\\TH:i:s.xP"
+	RFC7231Format      = "D, d M Y H:i:s T"
+	RFC822Format       = "d M y H:i T"
+	RFC822ZFormat      = "d M y H:i O"
+	RFC850Format       = "l, d-M-y H:i:s T"
+
+	ISO8601Format      = "Y-m-d\\TH:i:sP"
+	ISO8601MilliFormat = "Y-m-d\\TH:i:s.vP"
+	ISO8601MicroFormat = "Y-m-d\\TH:i:s.uP"
+	ISO8601NanoFormat  = "Y-m-d\\TH:i:s.xP"
+
+	DayDateTimeFormat        = "D, M j, Y g:i A"
+	DateTimeFormat           = "Y-m-d H:i:s"
+	DateTimeMilliFormat      = "Y-m-d H:i:s.v"
+	DateTimeMicroFormat      = "Y-m-d H:i:s.u"
+	DateTimeNanoFormat       = "Y-m-d H:i:s.x"
+	ShortDateTimeFormat      = "YmdHis"
+	ShortDateTimeMilliFormat = "YmdHis.v"
+	ShortDateTimeMicroFormat = "YmdHis.u"
+	ShortDateTimeNanoFormat  = "YmdHis.x"
+
+	DateFormat           = "Y-m-d"
+	DateMilliFormat      = "Y-m-d.v"
+	DateMicroFormat      = "Y-m-d.u"
+	DateNanoFormat       = "Y-m-d.x"
+	ShortDateFormat      = "Ymd"
+	ShortDateMilliFormat = "Ymd.v"
+	ShortDateMicroFormat = "Ymd.u"
+	ShortDateNanoFormat  = "Ymd.x"
+
+	TimeFormat           = "H:i:s"
+	TimeMilliFormat      = "H:i:s.v"
+	TimeMicroFormat      = "H:i:s.u"
+	TimeNanoFormat       = "H:i:s.x"
+	ShortTimeFormat      = "His"
+	ShortTimeMilliFormat = "His.v"
+	ShortTimeMicroFormat = "His.u"
+	ShortTimeNanoFormat  = "His.x"
+)
+
 // Carbon defines a Carbon struct.
 // 定义 Carbon 结构体
 type Carbon struct {
 	time         time.Time
-	testNow      int64 // timestamp with nanosecond of test now time
-	tag          string
+	testNow      int64 // nanosecond timestamp of test now time
 	weekStartsAt time.Weekday
+	tag          *tag
 	loc          *time.Location
 	lang         *Language
 	Error        error
@@ -196,8 +264,10 @@ type Carbon struct {
 // NewCarbon returns a new Carbon instance.
 // 初始化 Carbon 结构体
 func NewCarbon() Carbon {
-	c := Carbon{testNow: 0, weekStartsAt: time.Sunday, loc: time.Local, lang: NewLanguage()}
-	c.lang.rw.Lock()
-	defer c.lang.rw.Unlock()
+	c := Carbon{lang: NewLanguage()}
+	c.loc, c.Error = getLocationByTimezone(defaultTimezone)
+	if weekday, ok := weekdays[defaultWeekStartsAt]; ok {
+		c.weekStartsAt = weekday
+	}
 	return c
 }

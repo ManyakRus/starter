@@ -14,8 +14,8 @@ import (
 // versionConnection - версия структуры модели, с учётом имен и типов полей
 var versionConnection uint32
 
-// crud_Connection - объект контроллер crud операций
-var crud_Connection ICrud_Connection
+// Crud_Connection - объект контроллер crud операций
+var Crud_Connection ICrud_Connection
 
 // интерфейс стандартных CRUD операций, для использования в DB или GRPC или NRPC
 type ICrud_Connection interface {
@@ -92,51 +92,51 @@ func (m Connection) GetJSON() (string, error) {
 
 // Read - находит запись в БД по ID, и заполняет в объект
 func (m *Connection) Read() error {
-	if crud_Connection == nil {
+	if Crud_Connection == nil {
 		return constants.ErrorCrudIsNotInit
 	}
 
-	err := crud_Connection.Read(m)
+	err := Crud_Connection.Read(m)
 
 	return err
 }
 
 // Save - записывает объект в БД по ID
 func (m *Connection) Save() error {
-	if crud_Connection == nil {
+	if Crud_Connection == nil {
 		return constants.ErrorCrudIsNotInit
 	}
 
-	err := crud_Connection.Save(m)
+	err := Crud_Connection.Save(m)
 
 	return err
 }
 
 // Update - обновляет объект в БД по ID
 func (m *Connection) Update() error {
-	if crud_Connection == nil {
+	if Crud_Connection == nil {
 		return constants.ErrorCrudIsNotInit
 	}
 
-	err := crud_Connection.Update(m)
+	err := Crud_Connection.Update(m)
 
 	return err
 }
 
 // Create - создаёт объект в БД с новым ID
 func (m *Connection) Create() error {
-	if crud_Connection == nil {
+	if Crud_Connection == nil {
 		return constants.ErrorCrudIsNotInit
 	}
 
-	err := crud_Connection.Create(m)
+	err := Crud_Connection.Create(m)
 
 	return err
 }
 
 // SetCrudInterface - заполняет интерфейс crud: DB, GRPC, NRPC
 func (m Connection) SetCrudInterface(crud ICrud_Connection) {
-	crud_Connection = crud
+	Crud_Connection = crud
 
 	return
 }

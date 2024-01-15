@@ -402,7 +402,7 @@ func (c Carbon) Age() int {
 		return 0
 	}
 	now := c.Now()
-	if c.HasTestNow() {
+	if c.IsSetTestNow() {
 		now = CreateFromTimestampNano(c.testNow, c.Location())
 	}
 	if c.TimestampNano() > now.TimestampNano() {

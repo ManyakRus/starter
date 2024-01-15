@@ -3,6 +3,8 @@ package postgres_stek
 import (
 	"errors"
 	"github.com/ManyakRus/starter/constants"
+	"gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/db/tables/table_connections"
+	"gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/object_model/entities/connections"
 	"testing"
 
 	//log "github.com/sirupsen/logrus"
@@ -15,17 +17,20 @@ import (
 	"github.com/ManyakRus/starter/stopapp"
 )
 
+// CONNECTION - объект Соединение, настроенный
+var CONNECTION = connections.Connection{Table_Connection: table_connections.Table_Connection{ID: constants.CONNECTION_ID, BranchID: constants.BRANCH_ID, IsLegal: true, Server: "10.1.9.153", Port: "5432", DbName: "kol_atom_ul_uni", DbScheme: "stack", Login: "", Password: ""}}
+
 func TestConnect_err(t *testing.T) {
 	//Connect_Panic()
 
 	//ProgramDir := micro.ProgramDir_Common()
 	config_main.LoadEnv()
-	err := Connect_err(constants.CONNECTION)
+	err := Connect_err(CONNECTION)
 	if err != nil {
 		t.Error("TestConnect error: ", err)
 	}
 
-	err = CloseConnection_err(constants.CONNECTION)
+	err = CloseConnection_err(CONNECTION)
 	if err != nil {
 		t.Error("TestConnect() error: ", err)
 	}
@@ -35,17 +40,17 @@ func TestIsClosed(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
 	config_main.LoadEnv()
 
-	err := Connect_err(constants.CONNECTION)
+	err := Connect_err(CONNECTION)
 	if err != nil {
 		t.Error("TestIsClosed Connect() error: ", err)
 	}
 
-	isClosed := IsClosed(constants.CONNECTION)
+	isClosed := IsClosed(CONNECTION)
 	if isClosed == true {
 		t.Error("TestIsClosed() isClosed = true ")
 	}
 
-	err = CloseConnection_err(constants.CONNECTION)
+	err = CloseConnection_err(CONNECTION)
 	if err != nil {
 		t.Error("TestIsClosed() CloseConnection() error: ", err)
 	}
@@ -55,15 +60,15 @@ func TestIsClosed(t *testing.T) {
 func TestReconnect(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
 	config_main.LoadEnv()
-	err := Connect_err(constants.CONNECTION)
+	err := Connect_err(CONNECTION)
 	if err != nil {
 		t.Error("TestIsClosed Connect() error: ", err)
 	}
 
 	//ctx := context.Background()
-	Reconnect(constants.CONNECTION, errors.New(""))
+	Reconnect(CONNECTION, errors.New(""))
 
-	err = CloseConnection_err(constants.CONNECTION)
+	err = CloseConnection_err(CONNECTION)
 	if err != nil {
 		t.Error("TestReconnect() CloseConnection() error: ", err)
 	}
@@ -85,8 +90,8 @@ func TestWaitStop(t *testing.T) {
 func TestStartDB(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
 	config_main.LoadEnv()
-	StartDB(constants.CONNECTION)
-	err := CloseConnection_err(constants.CONNECTION)
+	StartDB(CONNECTION)
+	err := CloseConnection_err(CONNECTION)
 	if err != nil {
 		t.Error("db_test.TestStartDB() CloseConnection() error: ", err)
 	}
@@ -95,15 +100,15 @@ func TestStartDB(t *testing.T) {
 func TestConnect(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
 	config_main.LoadEnv()
-	Connect(constants.CONNECTION)
+	Connect(CONNECTION)
 
-	CloseConnection(constants.CONNECTION)
+	CloseConnection(CONNECTION)
 }
 
 func TestGetConnection(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
 	config_main.LoadEnv()
-	GetConnection(constants.CONNECTION)
+	GetConnection(CONNECTION)
 
-	CloseConnection(constants.CONNECTION)
+	CloseConnection(CONNECTION)
 }

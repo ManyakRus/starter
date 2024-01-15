@@ -5,14 +5,14 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/golang-module/carbon/v2)](https://goreportcard.com/report/github.com/golang-module/carbon/v2)
 [![Go Coverage](https://codecov.io/gh/golang-module/carbon/branch/master/graph/badge.svg)](https://codecov.io/gh/golang-module/carbon)
 [![Goproxy.cn](https://goproxy.cn/stats/github.com/golang-module/carbon/badges/download-count.svg)](https://goproxy.cn)
-[![Carbon Doc](https://img.shields.io/badge/go.dev-reference-brightgreen?logo=go&logoColor=white&style=flat)](https://pkg.go.dev/github.com/golang-module/carbon)
+[![Carbon Doc](https://img.shields.io/badge/go.dev-reference-brightgreen?logo=go&logoColor=white&style=flat)](https://pkg.go.dev/github.com/golang-module/carbon/v2)
 [![License](https://img.shields.io/github/license/golang-module/carbon)](https://github.com/golang-module/carbon/blob/master/LICENSE)
 
 English | [简体中文](README.cn.md) | [日本語](README.jp.md)
 
 #### Introduction
 
-A simple, semantic and developer-friendly golang package for datetime, has been included
+A simple, semantic and developer-friendly golang package for time, has been included
 by [awesome-go](https://github.com/avelino/awesome-go#date-and-time "awesome-go")
 
 [github.com/golang-module/carbon](https://github.com/golang-module/carbon "github.com/golang-module/carbon")
@@ -53,13 +53,26 @@ import "gitee.com/golang-module/carbon"
 
 #### Usage and example
 
-> The default timezone is Local, assuming the current time is 2020-08-05 13:14:15.999999999 +0800 CST
+> Assuming the current time is 2020-08-05 13:14:15.999999999 +0800 CST
+
+##### Set default values (globally effective)
+
+```go
+carbon.SetDefault(carbon.Default{
+  Layout: carbon.DateTimeLayout,
+  Timezone: carbon.Local,
+  WeekStartsAt: carbon.Sunday,
+  Locale: "en",
+})
+```
+
+> If not set, the default layout is `2006-01-02 15:04:05`, the default timezone is `Local`, the default week start date is `Sunday` and the default language locale is `en`
 
 ##### Yesterday, today and tomorrow
 
 ```go
 // Return datetime of today
-fmt.Sprintf("%s", carbon.Now()) // 2020-08-05 13:14:15
+fmt.Printf("%s", carbon.Now()) // 2020-08-05 13:14:15
 carbon.Now().String() // 2020-08-05 13:14:15
 carbon.Now().ToString() // 2020-08-05 13:14:15 +0800 CST
 carbon.Now().ToDateTimeString() // 2020-08-05 13:14:15
@@ -79,7 +92,7 @@ carbon.Now().TimestampMicro() // 1596604455999999
 carbon.Now().TimestampNano() // 1596604455999999999
 
 // Return datetime of yesterday
-fmt.Sprintf("%s", carbon.Yesterday()) // 2020-08-04 13:14:15
+fmt.Printf("%s", carbon.Yesterday()) // 2020-08-04 13:14:15
 carbon.Yesterday().String() // 2020-08-04 13:14:15
 carbon.Yesterday().ToString() // 2020-08-04 13:14:15 +0800 CST
 carbon.Yesterday().ToDateTimeString() // 2020-08-04 13:14:15
@@ -101,7 +114,7 @@ carbon.Yesterday().TimestampMicro() // 1596518055999999
 carbon.Yesterday().TimestampNano() // 1596518055999999999
 
 // Return datetime of tomorrow
-fmt.Sprintf("%s", carbon.Tomorrow()) // 2020-08-06 13:14:15
+fmt.Printf("%s", carbon.Tomorrow()) // 2020-08-06 13:14:15
 carbon.Tomorrow().String() // 2020-08-06 13:14:15
 carbon.Tomorrow().ToString() // 2020-08-06 13:14:15 +0800 CST
 carbon.Tomorrow().ToDateTimeString() // 2020-08-06 13:14:15
@@ -148,7 +161,7 @@ carbon.CreateFromDateTimeMicro(2020, 8, 5, 13, 14, 15, 999999).ToString() // 202
 carbon.CreateFromDateTimeNano(2020, 8, 5, 13, 14, 15, 999999999).ToString() // 2020-08-05 13:14:15.999999999 +0800 CST
 
 // Create a Carbon instance from a given year, month and day
-carbon.CreateFromDate(2020, 8, 5).ToString() // // 2020-08-05 00:00:00 +0800 CST
+carbon.CreateFromDate(2020, 8, 5).ToString() // 2020-08-05 00:00:00 +0800 CST
 // Create a Carbon instance from a given year, month and day with millisecond
 carbon.CreateFromDateMilli(2020, 8, 5, 999).ToString() // 2020-08-05 00:00:00.999 +0800 CST
 // Create a Carbon instance from a given year, month and day with microsecond
@@ -233,26 +246,13 @@ carbon.ParseByLayout("今天是 2020年08月05日13时14分15秒", "今天是 20
 ##### Convert between Carbon and Time
 
 ```go
-// Convert Time.time into Carbon
+// Convert standard Time.time into Carbon
 carbon.CreateFromStdTime(time.Now())
-// Convert Carbon into Time.time
+// Convert Carbon into standard Time.time
 carbon.Now().ToStdTime()
 ```
 
-##### Closest and farthest
-
-```go
-c := carbon.Parse("2023-04-01")
-c1 := carbon.Parse("2023-03-28")
-c2 := carbon.Parse("2023-04-16")
-
-// Return the closest Carbon instance
-c.Closest(c1, c2) // c1
-// Return the farthest Carbon instance
-c.Farthest(c1, c2) // c2
-```
-
-##### Start and end
+##### Boundary
 
 ```go
 // Start of the century
@@ -314,7 +314,7 @@ carbon.Parse("2020-08-05 13:14:15").StartOfSecond().ToString() // 2020-08-05 13:
 carbon.Parse("2020-08-05 13:14:15").EndOfSecond().ToString() // 2020-08-05 13:14:15.999999999 +0800 CST
 ```
 
-##### Addition and subtraction
+##### Traveler
 
 ```go
 // Add three centuries
@@ -550,10 +550,30 @@ carbon.Parse("2018-08-05 13:14:15").DiffForHumans(carbon.Now()) // 1 year after
 carbon.Parse("2022-08-05 13:14:15").DiffForHumans(carbon.Now()) // 2 years after
 ```
 
+##### Extremum
+
+```go
+c0 := carbon.Parse("2023-04-01")
+c1 := carbon.Parse("2023-03-28")
+c2 := carbon.Parse("2023-04-16")
+// Return the closest Carbon instance
+c0.Closest(c1, c2) // c1
+// Return the farthest Carbon instance
+c0.Farthest(c1, c2) // c2
+
+yesterday := carbon.Yesterday()
+today     := carbon.Now()
+tomorrow  := carbon.Tomorrow()
+// Return the maximum Carbon instance
+carbon.Max(yesterday, today, tomorrow) // tomorrow
+// Return the minimum Carbon instance
+carbon.Min(yesterday, today, tomorrow) // yesterday
+```
+
 ##### Comparison
 
 ```go
-// whether is daylight saving time
+// Whether is daylight saving time
 carbon.Parse("").IsDST() // false
 carbon.Parse("0").IsDST() // false
 carbon.Parse("0000-00-00 00:00:00").IsDST() // false
@@ -591,6 +611,17 @@ carbon.Parse("00:00:00").IsInvalid() // true
 carbon.Parse("2020-08-05 00:00:00").IsInvalid() // false
 carbon.Parse("2020-08-05").IsInvalid() // false
 carbon.Parse("2020-08-05").SetTimezone("xxx").IsInvalid() // true
+
+// Whether is before noon
+carbon.Parse("2020-08-05 00:00:00").IsAM() // true
+carbon.Parse("2020-08-05 08:00:00").IsAM() // true
+carbon.Parse("2020-08-05 12:00:00").IsAM() // false
+carbon.Parse("2020-08-05 13:00:00").IsAM() // false
+// Whether is after noon
+carbon.Parse("2020-08-05 00:00:00").IsPM() // false
+carbon.Parse("2020-08-05 08:00:00").IsPM() // false
+carbon.Parse("2020-08-05 12:00:00").IsPM() // true
+carbon.Parse("2020-08-05 13:00:00").IsPM() // true
 
 // Whether is now time
 carbon.Now().IsNow() // true
@@ -1075,7 +1106,7 @@ carbon.Parse("2020-08-05T13:14:15.999999999+08:00").ToRfc3339MicroString() // 20
 carbon.Parse("2020-08-05T13:14:15.999999999+08:00").ToRfc3339NanoString() // 2020-08-05T13:14:15.999999999+08:00
 
 // Output datetime format string
-fmt.Sprintf("%s", carbon.Parse("2020-08-05 13:14:15")) // 2020-08-05 13:14:15
+fmt.Printf("%s", carbon.Parse("2020-08-05 13:14:15")) // 2020-08-05 13:14:15
 
 // Output "2006-01-02 15:04:05.999999999 -0700 MST" format string
 carbon.Parse("2020-08-05 13:14:15").ToString() // 2020-08-05 13:14:15.999999 +0800 CST
@@ -1150,7 +1181,7 @@ carbon.Parse("2020-08-05 13:14:15").IsAutumn() // false
 carbon.Parse("2020-08-05 13:14:15").IsWinter() // false
 ```
 
-##### Chinese Lunar
+##### Lunar
 
 > Currently only `200` years from `1900` to `2100` are supported
 
@@ -1177,7 +1208,7 @@ carbon.Parse("2020-08-05 13:14:15").Lunar().LeapMonth() // 4
 // Get Chinese lunar day
 carbon.Parse("2020-08-05 13:14:15").Lunar().Day() // 16
 // Get Chinese lunar date as YYYY-MM-DD HH::ii::ss format string
-fmt.Sprintf("%s", carbon.Parse("2020-08-05 13:14:15").Lunar()) // 2020-06-16 13:14:15
+fmt.Printf("%s", carbon.Parse("2020-08-05 13:14:15").Lunar()) // 2020-06-16 13:14:15
 
 // Get Chinese lunar year as string
 carbon.Parse("2020-08-05 13:14:15").Lunar().ToYearString() // 二零二零
@@ -1247,95 +1278,174 @@ carbon.Parse("2020-03-21 19:00:00").Lunar().IsEleventhDoubleHour() // true
 carbon.Parse("2020-03-21 21:00:00").Lunar().IsTwelfthDoubleHour() // true
 ```
 
-##### JSON handling
+##### JSON
 
-###### Define model
-
+###### Scene one: all time fields have the same format
 ```go
+carbon.SetDefault(carbon.Default{
+  Layout: carbon.RFC3339Layout,
+})
+
 type Person struct {
   Name string `json:"name"`
-  Age int `json:"age"`
-  Birthday carbon.Carbon `json:"birthday" carbon:"layout:2006-01-02"`
-  GraduatedAt carbon.Carbon `json:"graduated_at" carbon:"layout:15:04:05"`
-  CreatedAt carbon.Carbon `json:"created_at" carbon:"layout:2006-01-02 15:04:05"`
+  Age  int    `json:"age"`
+  
+  Field1 Carbon `json:"field1"`
+  Field2 Carbon `json:"field2"`
+  Field3 Carbon `json:"field3"`
+  Field4 Carbon `json:"field4"`
+  
+  Field5 Carbon `json:"field5"`
+  Field6 Carbon `json:"field6"`
+  Field7 Carbon `json:"field7"`
+  Field8 Carbon `json:"field8"`
 }
-```
 
-or
-
-```go
-type Person struct {
-  Name string `json:"name"`
-  Age int `json:"age"`
-  Birthday carbon.Carbon `json:"birthday" carbon:"format:Y-m-d"`
-  GraduatedAt carbon.Carbon `json:"graduated_at" carbon:"format:H:i:s"`
-  CreatedAt carbon.Carbon `json:"created_at" carbon:"format:Y-m-d H:i:s"`
-}
-```
-
-###### Instantiate model
-```go
-now := Parse("2020-08-05 13:14:15", PRC)
+now := carbon.Parse("2020-08-05 13:14:15", carbon.PRC)
 person := Person {
-  Name:        "gouguoyin",
-  Age:         18,
-  Birthday:    now,
-  GraduatedAt: now,
-  CreatedAt:   now,
+  Name:   "gouguoyin",
+  Age:    18,
+  
+  Field1: now,
+  Field2: now,
+  Field3: now,
+  Field4: now,
+  Field5: now,
+  Field6: now,
+  Field7: now,
+  Field8: now,
 }
-```
 
-###### JSON encode
-
-```go
-err1 := carbon.LoadTag(&person)
-if err1 != nil {
+data, marshalErr := json.Marshal(person)
+if marshalErr != nil {
   // Error handle...
-  log.Fatal(err1)
-}
-data, err2 := json.Marshal(person)
-if err2 != nil {
-  // Error handle...
-  log.Fatal(err2)
+  log.Fatal(marshalErr)
 }
 fmt.Printf("%s", data)
 // Output
 {
   "name": "gouguoyin",
   "age": 18,
-  "birthday": "2020-08-05",
-  "graduated_at": "13:14:15",
-  "created_at": "2020-08-05 13:14:15"
+  "field1": "2020-08-05T13:14:15+08:00",
+  "field2": "2020-08-05T13:14:15+08:00",
+  "field3": "2020-08-05T13:14:15+08:00",
+  "field4": "2020-08-05T13:14:15+08:00",
+  "field5": "2020-08-05T13:14:15+08:00",
+  "field6": "2020-08-05T13:14:15+08:00",
+  "field7": "2020-08-05T13:14:15+08:00",
+  "field8": "2020-08-05T13:14:15+08:00"
 }
+
+var person Person
+unmarshalErr := json.Unmarshal(data, &person)
+if unmarshalErr != nil {
+  // Error handle...
+  log.Fatal(unmarshalErr)
+}
+
+fmt.Printf("%s", person.Field1) // 2020-08-05T13:14:15+08:00
+fmt.Printf("%s", person.Field2) // 2020-08-05T13:14:15+08:00
+fmt.Printf("%s", person.Field3) // 2020-08-05T13:14:15+08:00
+fmt.Printf("%s", person.Field4) // 2020-08-05T13:14:15+08:00
+
+fmt.Printf("%s", person.Field5) // 2020-08-05T13:14:15+08:00
+fmt.Printf("%s", person.Field6) // 2020-08-05T13:14:15+08:00
+fmt.Printf("%s", person.Field7) // 2020-08-05T13:14:15+08:00
+fmt.Printf("%s", person.Field8) // 2020-08-05T13:14:15+08:00
 ```
 
-###### JSON decode
+###### Scene two: different time fields have different formats
+> Please refer to <a href="https://github.com/golang-module/carbon/blob/master/tag.go#L24">here</a> for all supported type values. If the `carbon` tag is not set, the default is `layout:2006-01-02 15:04:05`, if the `tz` tag is not set, the default is `Local`
 
 ```go
-str := `{
+type Person struct {
+  Name string `json:"name"`
+  Age  int    `json:"age"`
+  
+  Field1 Carbon `json:"field1"`
+  
+  Field2 Carbon `json:"field2" carbon:"type:date" tz:"PRC"`
+  Field3 Carbon `json:"field3" carbon:"type:time" tz:"PRC"`
+  Field4 Carbon `json:"field4" carbon:"type:dateTime" tz:"PRC"`
+  // or
+  Field2 Carbon `json:"field2" carbon:"layout:2006-01-02" tz:"PRC"`
+  Field3 Carbon `json:"field3" carbon:"layout:15:04:05" tz:"PRC"`
+  Field4 Carbon `json:"field4" carbon:"layout:2006-01-02 15:04:05" tz:"PRC"`
+  // or
+  Field2 Carbon `json:"field2" carbon:"layout:2006-01-02" tz:"PRC"`
+  Field3 Carbon `json:"field3" carbon:"layout:15:04:05" tz:"PRC"`
+  Field4 Carbon `json:"field4" carbon:"layout:2006-01-02 15:04:05" tz:"PRC"`
+  
+  Field5 Carbon `json:"field5" carbon:"type:timestamp" tz:"PRC"`
+  Field6 Carbon `json:"field6" carbon:"type:timestampMilli" tz:"PRC"`
+  Field7 Carbon `json:"field7" carbon:"type:timestampMicro" tz:"PRC"`
+  Field8 Carbon `json:"field8" carbon:"type:timestampNano" tz:"PRC"`
+}
+
+now := Parse("2020-08-05 13:14:15", carbon.PRC)
+person := Person {
+  Name:   "gouguoyin",
+  Age:    18,
+  
+  Field1: now,
+  Field2: now,
+  Field3: now,
+  Field4: now,
+  Field5: now,
+  Field6: now,
+  Field7: now,
+  Field8: now,
+}
+
+loadErr := carbon.LoadTag(&person)
+if loadErr != nil {
+  // Error handle...
+  log.Fatal(loadErr)
+}
+data, marshalErr := json.Marshal(person)
+if marshalErr != nil {
+  // Error handle...
+  log.Fatal(marshalErr)
+}
+fmt.Printf("%s", data)
+// Output
+{
   "name": "gouguoyin",
   "age": 18,
-  "birthday": "2020-08-05",
-  "graduated_at": "13:14:15",
-  "created_at": "2020-08-05 13:14:15"
-}`
+  "field1": "2020-08-05 13:14:15",
+  "field2": "2020-08-05",
+  "field3": "13:14:15",
+  "field4": "2020-08-05 13:14:15",
+  "field5": 1596604455,
+  "field6": 1596604455999,
+  "field7": 1596604455999999,
+  "field8": 1596604455999999999
+}
+
 var person Person
 
-err1 := carbon.LoadTag(&person)
-if err1 != nil {
+loadErr := carbon.LoadTag(&person)
+if loadErr != nil {
   // Error handle...
-  log.Fatal(err1)
+  log.Fatal(loadErr)
 }
 
-err2 := json.Unmarshal([]byte(str), &person)
-if err2 != nil {
+unmarshalErr := json.Unmarshal(data, &person)
+if unmarshalErr != nil {
   // Error handle...
-  log.Fatal(err2)
+  log.Fatal(unmarshalErr)
 }
 
-fmt.Sprintf("%s", person.Birthday) // 2002-08-05
-fmt.Sprintf("%s", person.GraduatedAt) // 13:14:15
-fmt.Sprintf("%s", person.CreatedAt) // 2002-08-05 13:14:15
+fmt.Printf("%s", person.Field1) // 2002-08-05 13:14:15
+fmt.Printf("%s", person.Field2) // 2020-08-05
+fmt.Printf("%s", person.Field3) // 13:14:15
+fmt.Printf("%s", person.Field4) // 2002-08-05 13:14:15
+
+fmt.Printf("%d", person.Field5) // 1596604455
+fmt.Printf("%d", person.Field6) // 1596604455999
+fmt.Printf("%d", person.Field7) // 1596604455999999
+fmt.Printf("%d", person.Field8) // 1596604455999999999
+
 ```
 
 ##### I18n
@@ -1367,16 +1477,18 @@ The following languages are supported
 * [Swedish(se)](./lang/se.json "Swedish"): translated by [jwanglof](https://github.com/jwanglof "jwanglof")
 * [Iranian(fa)](./lang/fa.json "Iranian"): translated by [erfanMomeniii](https://github.com/erfanMomeniii "erfanMomeniii")
 * [Dutch(nl)](./lang/nl.json "Dutch"): translated by [RemcoE33](https://github.com/RemcoE33 "RemcoE33")
+* [VietNamese(vi)](./lang/vi.json "VietNam"): translated by [culy247](https://github.com/culy247 "culy247")
+* [Hindi(hi)](./lang/hi.json "India"): translated by [chauhan17nitin](https://github.com/chauhan17nitin "chauhan17nitin")
 
 The following methods are supported
 
-* `Constellation()`：get constellation name
-* `Season()`：get season name
-* `DiffForHumans()`：get the difference with human-readable format
-* `ToMonthString()`：output month format string
-* `ToShortMonthString()`：output short month format string
-* `ToWeekString()`：output week format string
-* `ToShortWeekString()`：output short week format string
+* `Constellation()`：get constellation name, like `Aries`
+* `Season()`：get season name, like `Spring`
+* `DiffForHumans()`：get the difference with human-readable format string, like `1 year from now`
+* `ToMonthString()`：output month format string, like `January`
+* `ToShortMonthString()`：output short month format string, like `Jan`
+* `ToWeekString()`：output week format string, like `Sunday`
+* `ToShortWeekString()`：output short week format string, like `Sun`
 
 ###### Set locale
 
@@ -1386,8 +1498,8 @@ lang.SetLocale("en")
 
 c := carbon.SetLanguage(lang)
 if c.Error != nil {
-    // Error handle...
-    log.Fatal(err)
+  // Error handle...
+  log.Fatal(c.Error)
 }
 
 c.Now().AddHours(1).DiffForHumans() // 1 hour from now
@@ -1403,17 +1515,16 @@ c.Now().AddHours(1).Season() // Summer
 
 ```go
 lang := carbon.NewLanguage()
-lang.SetLocale("en")
 
 resources := map[string]string {
-    "hour": "%dh",
+  "hour": "%dh",
 }
-lang.SetResources(resources)
+lang.SetLocale("en").SetResources(resources)
 
 c := carbon.SetLanguage(lang)
 if c.Error != nil {
-	// Error handle...
-	log.Fatal(err)
+  // Error handle...
+  log.Fatal(c.Error)
 }
 
 c.Now().AddYears(1).DiffForHumans() // 1 year from now
@@ -1431,24 +1542,24 @@ c.Now().Season() // Summer
 ```go
 lang := carbon.NewLanguage()
 resources := map[string]string {
-    "months": "january|february|march|april|may|june|july|august|september|october|november|december",
-    "short_months": "jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec",
-    "weeks": "sunday|monday|tuesday|wednesday|thursday|friday|saturday",
-    "short_weeks": "sun|mon|tue|wed|thu|fri|sat",
-    "seasons": "spring|summer|autumn|winter",
-    "constellations": "aries|taurus|gemini|cancer|leo|virgo|libra|scorpio|sagittarius|capricornus|aquarius|pisce",
-    "year": "1 yr|%d yrs",
-    "month": "1 mo|%d mos",
-    "week": "%dw",
-    "day": "%dd",
-    "hour": "%dh",
-    "minute": "%dm",
-    "second": "%ds",
-    "now": "just now",
-    "ago": "%s ago",
-    "from_now": "in %s",
-    "before": "%s before",
-    "after": "%s after",
+  "months": "january|february|march|april|may|june|july|august|september|october|november|december",
+  "short_months": "jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec",
+  "weeks": "sunday|monday|tuesday|wednesday|thursday|friday|saturday",
+  "short_weeks": "sun|mon|tue|wed|thu|fri|sat",
+  "seasons": "spring|summer|autumn|winter",
+  "constellations": "aries|taurus|gemini|cancer|leo|virgo|libra|scorpio|sagittarius|capricornus|aquarius|pisce",
+  "year": "1 yr|%d yrs",
+  "month": "1 mo|%d mos",
+  "week": "%dw",
+  "day": "%dd",
+  "hour": "%dh",
+  "minute": "%dm",
+  "second": "%ds",
+  "now": "just now",
+  "ago": "%s ago",
+  "from_now": "in %s",
+  "before": "%s before",
+  "after": "%s after",
 }
 lang.SetResources(resources)
 
@@ -1466,30 +1577,30 @@ c.Now().Season() // summer
 ##### Testing
 
 ```go
-testNow := carbon.Parse("2020-08-05")
+c := carbon.SetTimezone(carbon.UTC)
 
-carbon.SetTestNow(testNow).Yesterday().ToDateString() // 2020-08-04
-carbon.SetTestNow(testNow).Now().ToDateString() // 2020-08-05
-carbon.SetTestNow(testNow).Tomorrow().ToDateString() // 2020-08-06
-carbon.SetTestNow(testNow).Parse("2000-08-05").Age() // 30
+c.Now().ToDateString() // 2023-12-27
+c.Now().IsSetTestNow() // false
 
-carbon.Now().HasTestNow() // false
-carbon.SetTestNow(testNow).HasTestNow() // true
-carbon.SetTestNow(testNow).ClearTestNow().HasTestNow() // false
+c.SetTestNow(carbon.Parse("2020-08-05"))
+c.Now().ToDateString() // 2020-08-05
+c.Now().IsSetTestNow() // true
 
+c.UnSetTestNow()
+c.Now().ToDateString() // 2023-12-27
+c.Now().IsSetTestNow() // false
 ```
 
-##### Error handling
+##### Error
 
 > If more than one error occurs, only the first error is returned
 
 ```go
 c := carbon.SetTimezone("xxx").Parse("2020-08-05")
 if c.Error != nil {
-    // Error handle...
-    log.Fatal(c.Error)
+  // Error handle...
+  log.Fatal(c.Error)
 }
-fmt.Println(c.ToDateTimeString())
 // Output
 invalid timezone "xxx", please see the file "$GOROOT/lib/time/zoneinfo.zip" for all valid timezones
 ```
@@ -1498,43 +1609,46 @@ invalid timezone "xxx", please see the file "$GOROOT/lib/time/zoneinfo.zip" for 
 
 ##### <a id="format-sign-table">Format sign table</a>
 
-| sign |                                                        desc                                                        | length |      range       |             example             |
-| :------------: |:------------------------------------------------------------------------------------------------------------------:|:------:|:----------------:|:-------------------------------:|
-| d |                                           Day of the month, padded to 2                                            |   2    |      01-31       |               02                |
-| D |                                 Day of the week, as an abbreviate localized string                                 |   3    |     Mon-Sun      |               Mon               |
-| j |                                            Day of the month, no padding                                            |   -    |       1-31       |                2                |
-| S |       English ordinal suffix for the day of the month, 2 characters. Eg: st, nd, rd or th. Works well with j       |   2    |   st/nd/rd/th    |               th                |
-| l |                               Day of the week, as an unabbreviated localized string                                |   -    |  Monday-Sunday   |             Monday              |
-| F |                                     Month as an unabbreviated localized string                                     |   -    | January-December |             January             |
-| m |                                                 Month, padded to 2                                                 |   2    |      01-12       |               01                |
-| M |                                      Month as an abbreviated localized string                                      |   3    |     Jan-Dec      |               Jan               |
-| n |                                                 Month, no padding                                                  |   -    |       1-12       |                1                |
-| Y |                                                  Four-digit year                                                   |   4    |    0000-9999     |              2006               |
-| y |                                                   Two-digit year                                                   |   2    |      00-99       |               06                |
-| a |                                        Lowercase morning or afternoon sign                                         |   2    |      am/pm       |               pm                |
-| A |                                        Uppercase morning or afternoon sign                                         |   2    |      AM/PM       |               PM                |
-| g |                                         Hour in 12-hour format, no padding                                         |   -    |       1-12       |                3                |
-| G |                                         Hour in 24-hour format, no padding                                         |   -    |       0-23       |               15                |
-| h |                                        Hour in 12-hour format, padded to 2                                         |   2    |      00-11       |               03                |
-| H |                                        Hour in 24-hour format, padded to 2                                         |   2    |      00-23       |               15                |
-| i |                                                Minute, padded to 2                                                 |   2    |      01-59       |               04                |
-| s |                                                Second, padded to 2                                                 |   2    |      01-59       |               05                |
-| c |                                                    ISO8601 date                                                    |   -    |        -         |    2006-01-02T15:04:05-07:00    |
-| r |                                                    RFC2822 date                                                    |   -    |        -         | Mon, 02 Jan 2006 15:04:05 -0700 |
-| O |                     Difference to Greenwich time (GMT) without colon between hours and minutes                     |   -    |        -         |              +0700              |
-| P |                      Difference to Greenwich time (GMT) with colon between hours and minutes                       |   -    |        -         |             +07:00              |
-| T |                                                Abbreviated timezone                                                |   -    |        -         |               MST               |
-| W |                                       week of the year, padded to 2                                        |   2    |      01-52       |               01                |
-| N |                                        day of the week, padded to 2                                        |   2    |      01-07       |               02                |
-| L |                                              Whether it's a leap year                                              |   1    |       0-1        |                0                |
-| U |                                            Unix timestamp with seconds                                             |   10   |        -         |           1611818268            |
-| u |                                                    Millisecond                                                     |   -    |      1-999       |               999               |
-| w |                                                  Day of the week                                                   |   1    |       0-6        |                1                |
-| t |                                              Total days of the month                                               |   2    |      28-31       |               31                |
-| z |                                                  Day of the year                                                   |   -    |      1-365       |                2                |
-| e |                                                      Location                                                      |   -    |        -         |        America/New_York         |
-| Q |                                                      Quarter                                                       |   1    |       1-4        |                1                |
-| C |                                                      Century                                                       |   -    |       0-99       |               21                |
+| sign |                                                  desc                                                  | length |      range       |             example             |
+|:----:|:------------------------------------------------------------------------------------------------------:|:------:|:----------------:|:-------------------------------:|
+|  d   |                                     Day of the month, padded to 2                                      |   2    |      01-31       |               02                |
+|  D   |                           Day of the week, as an abbreviate localized string                           |   3    |     Mon-Sun      |               Mon               |
+|  j   |                                      Day of the month, no padding                                      |   -    |       1-31       |                2                |
+|  S   | English ordinal suffix for the day of the month, 2 characters. Eg: st, nd, rd or th. Works well with j |   2    |   st/nd/rd/th    |               th                |
+|  l   |                         Day of the week, as an unabbreviated localized string                          |   -    |  Monday-Sunday   |             Monday              |
+|  F   |                               Month as an unabbreviated localized string                               |   -    | January-December |             January             |
+|  m   |                                           Month, padded to 2                                           |   2    |      01-12       |               01                |
+|  M   |                                Month as an abbreviated localized string                                |   3    |     Jan-Dec      |               Jan               |
+|  n   |                                           Month, no padding                                            |   -    |       1-12       |                1                |
+|  Y   |                                            Four-digit year                                             |   4    |    0000-9999     |              2006               |
+|  y   |                                             Two-digit year                                             |   2    |      00-99       |               06                |
+|  a   |                                  Lowercase morning or afternoon sign                                   |   2    |      am/pm       |               pm                |
+|  A   |                                  Uppercase morning or afternoon sign                                   |   2    |      AM/PM       |               PM                |
+|  g   |                                   Hour in 12-hour format, no padding                                   |   -    |       1-12       |                3                |
+|  G   |                                   Hour in 24-hour format, no padding                                   |   -    |       0-23       |               15                |
+|  h   |                                  Hour in 12-hour format, padded to 2                                   |   2    |      00-11       |               03                |
+|  H   |                                  Hour in 24-hour format, padded to 2                                   |   2    |      00-23       |               15                |
+|  i   |                                          Minute, padded to 2                                           |   2    |      01-59       |               04                |
+|  s   |                                          Second, padded to 2                                           |   2    |      01-59       |               05                |
+|  O   |               Difference to Greenwich time (GMT) without colon between hours and minutes               |   -    |        -         |              -0700              |
+|  P   |                Difference to Greenwich time (GMT) with colon between hours and minutes                 |   -    |        -         |             -07:00              |
+|  T   |                                          Abbreviated timezone                                          |   -    |        -         |               MST               |
+|  W   |                                     week of the year, padded to 2                                      |   2    |      01-52       |               01                |
+|  N   |                                      day of the week, padded to 2                                      |   2    |      01-07       |               02                |
+|  L   |                                        Whether it's a leap year                                        |   1    |       0-1        |                0                |
+| U | Unix timestamp with seconds | - | - |           1596604455            |
+| V | Unix timestamp with millisecond | - | - |          1596604455666          |
+| X | Unix timestamp with microsecond | - | - |        1596604455666666         |
+| Z | Unix timestamp with nanoseconds | - | - |       1596604455666666666       |
+|  v   |                                              Millisecond                                               | - | 1-999 |               999               |
+|  u   |                                              Microsecond                                               | - | 1-999999 |             999999              |
+|  x   |                                               Nanosecond                                               | - | 1-999999999 |            999999999            |
+|  w   |                                            Day of the week                                             |   1    |       0-6        |                1                |
+|  t   |                                        Total days of the month                                         |   2    |      28-31       |               31                |
+|  z   |                                            Day of the year                                             |   -    |      1-365       |                2                |
+|  e   |                                                Location                                                |   -    |        -         |        America/New_York         |
+|  Q   |                                                Quarter                                                 |   1    |       1-4        |                1                |
+|  C   |                                                Century                                                 |   -    |       0-99       |               21                |
 
 #### FAQ
 
@@ -1565,4 +1679,4 @@ Thanks to all of the following who contributed to `Carbon`:
 `Carbon` had been being developed with GoLand under the free JetBrains Open Source license, I would like to express my
 thanks here.
 
-<a href="https://www.jetbrains.com"><img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/jetbrains/jetbrains-variant-4.png" height="100" alt="JetBrains"/></a>
+<a href="https://www.jetbrains.com"><img src="https://foruda.gitee.com/images/1704325523163241662/1bf21f86_544375.png" height="100" alt="JetBrains"/></a>

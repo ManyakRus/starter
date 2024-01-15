@@ -43,7 +43,7 @@ func (c Carbon) Constellation() string {
 	}
 	if constellations, ok := c.lang.resources["constellations"]; ok {
 		slice := strings.Split(constellations, "|")
-		if len(slice) == 12 {
+		if len(slice) == MonthsPerYear {
 			return slice[index]
 		}
 	}
