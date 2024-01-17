@@ -39,11 +39,11 @@ var log = logger.GetLog()
 // mutexReconnect - защита от многопоточности Reconnect()
 var mutexReconnect = &sync.Mutex{}
 
-// Settings хранит все нужные переменные окружения
-var Settings SettingsINI
-
 // NeedReconnect - флаг необходимости переподключения
 var NeedReconnect bool
+
+// Settings хранит все нужные переменные окружения
+var Settings SettingsINI
 
 // SettingsINI - структура для хранения всех нужных переменных окружения
 type SettingsINI struct {

@@ -1,8 +1,0 @@
-.env
-*.exe
-*.pdf
-/examples/basic-usage/basic-usage
-/examples/converter-callbacks/converter-callbacks
-/examples/http-server/http-server
-/examples/http-server-advanced/http-server-advanced
-/examples/json-input/json-input
