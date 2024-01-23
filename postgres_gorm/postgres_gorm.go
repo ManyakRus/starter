@@ -384,7 +384,11 @@ loop:
 			} else if NeedReconnect == true {
 				log.Warn("postgres_gorm CheckPort(", addr, ") OK. Start Reconnect()")
 				NeedReconnect = false
-				Connect()
+				err = Connect_err()
+				if err != nil {
+					NeedReconnect = true
+					log.Error("Connect_err() error: ", err)
+				}
 			}
 		}
 	}
