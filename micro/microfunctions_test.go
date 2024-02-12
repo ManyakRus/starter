@@ -546,3 +546,11 @@ func TestInt64FromString(t *testing.T) {
 		t.Errorf("Expected %d, but got: %d", expected3, result3)
 	}
 }
+
+func TestFindLastPos(t *testing.T) {
+	s := "Hello, World!"
+	pos1 := FindLastPos(s, " ")
+	if pos1 < 0 {
+		t.Error("microfunctions_test.TestFindLastPos() FindLastPos()=nil !")
+	}
+}

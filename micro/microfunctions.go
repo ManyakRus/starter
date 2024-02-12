@@ -802,3 +802,9 @@ func Int64FromString(s string) (int64, error) {
 
 	return Otvet, err
 }
+
+// FindLastPos - возвращает позицию последнего вхождения
+func FindLastPos(s, TextFind string) int {
+	Otvet := strings.LastIndex(s, TextFind)
+	return Otvet
+}
