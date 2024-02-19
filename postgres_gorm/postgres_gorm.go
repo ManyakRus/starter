@@ -99,7 +99,7 @@ func Connect_WithApplicationName_err(ApplicationName string) error {
 
 	//
 	conf := &gorm.Config{
-		Logger: gormlogger.Default.LogMode(gormlogger.Error),
+		Logger: gormlogger.Default.LogMode(gormlogger.Silent),
 	}
 	//conn := postgres.Open(dsn)
 
