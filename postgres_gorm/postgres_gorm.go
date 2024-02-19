@@ -98,7 +98,9 @@ func Connect_WithApplicationName_err(ApplicationName string) error {
 	dsn := GetDSN(ApplicationName)
 
 	//
-	conf := &gorm.Config{}
+	conf := &gorm.Config{
+		Logger: gormlogger.Default.LogMode(gormlogger.Error),
+	}
 	//conn := postgres.Open(dsn)
 
 	dialect := postgres.New(postgres.Config{
@@ -109,7 +111,7 @@ func Connect_WithApplicationName_err(ApplicationName string) error {
 
 	//Conn, err = gorm.Open(conn, conf)
 	Conn.Config.NamingStrategy = schema.NamingStrategy{TablePrefix: Settings.DB_SCHEMA + "."}
-	Conn.Config.Logger = gormlogger.Default.LogMode(gormlogger.Error)
+	//Conn.Config.Logger = gormlogger.Default.LogMode(gormlogger.Error)
 
 	if err == nil {
 		DB, err := Conn.DB()
