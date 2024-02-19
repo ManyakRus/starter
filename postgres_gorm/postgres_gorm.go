@@ -109,7 +109,7 @@ func Connect_WithApplicationName_err(ApplicationName string) error {
 
 	//Conn, err = gorm.Open(conn, conf)
 	Conn.Config.NamingStrategy = schema.NamingStrategy{TablePrefix: Settings.DB_SCHEMA + "."}
-	Conn.Config.Logger = gormlogger.Default.LogMode(gormlogger.Warn)
+	Conn.Config.Logger = gormlogger.Default.LogMode(gormlogger.Error)
 
 	if err == nil {
 		DB, err := Conn.DB()
