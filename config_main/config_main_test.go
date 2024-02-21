@@ -38,3 +38,7 @@ func TestLoadENV_or_SettingsTXT(t *testing.T) {
 
 	LoadENV_or_SettingsTXT()
 }
+
+func TestLoadEnvTest(t *testing.T) {
+	LoadEnvTest()
+}
