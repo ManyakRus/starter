@@ -3,6 +3,7 @@ package postgres_gorm
 import (
 	"errors"
 	"testing"
+	"time"
 
 	//log "github.com/sirupsen/logrus"
 
@@ -125,11 +126,52 @@ func TestRawMultipleSQL(t *testing.T) {
 	GetConnection()
 	defer CloseConnection()
 
-	TextSQL := "SELECT 1; SELECT 2"
+	TimeStart := time.Now()
+
+	TextSQL := `
+drop table if exists temp_TestRawMultipleSQL2; 
+CREATE TEMPORARY TABLE temp_TestRawMultipleSQL2 (id int);
+
+insert into temp_TestRawMultipleSQL2
+select 1;
+
+SELECT * FROM temp_TestRawMultipleSQL2
+`
+	//TextSQL := "SELECT 1; SELECT 2"
 	tx := RawMultipleSQL(Conn, TextSQL)
 	err := tx.Error
 	if err != nil {
 		t.Error("TestRawMultipleSQL() error: ", err)
 	}
 
+	t.Log("Прошло время: ", time.Since(TimeStart))
+}
+
+func TestRawMultipleSQL2(t *testing.T) {
+	config_main.LoadEnv()
+	GetConnection()
+	defer CloseConnection()
+
+	TimeStart := time.Now()
+
+	TextSQL := `
+drop table if exists temp_TestRawMultipleSQL2; 
+CREATE TEMPORARY TABLE temp_TestRawMultipleSQL2 (id int);
+
+insert into temp_TestRawMultipleSQL2
+select 1;
+
+SELECT * FROM temp_TestRawMultipleSQL2
+`
+	tx := RawMultipleSQL(Conn, TextSQL)
+	err := tx.Error
+	if err != nil {
+		t.Error("TestRawMultipleSQL() error: ", err)
+	}
+
+	if tx.RowsAffected != 1 {
+		t.Error("TestRawMultipleSQL() RowsAffected = ", tx.RowsAffected)
+	}
+
+	t.Log("Прошло время: ", time.Since(TimeStart))
 }
