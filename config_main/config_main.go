@@ -3,7 +3,7 @@
 package config_main
 
 import (
-	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/micro"
 	"github.com/joho/godotenv"
 	"os"
@@ -13,9 +13,6 @@ import (
 	//"gitlab.aescorp.ru/dsp_dev/notifier/notifier_adp_eml/internal/v0/app/types"
 	//"gitlab.aescorp.ru/dsp_dev/notifier/notifier_adp_eml/internal/v0/app/micro"
 )
-
-// log хранит используемый логгер
-var log = logger.GetLog()
 
 // LoadEnv - загружает из файла .env переменные в переменные окружения
 func LoadEnv() {
@@ -34,6 +31,7 @@ func LoadEnvTest() {
 	stage := os.Getenv("STAGE")
 	stage = strings.ToLower(stage)
 	stage = strings.TrimSpace(stage)
+	log.Info("STAGE: ", stage)
 	if stage == "dev" || stage == "prod" {
 		log.Info("LoadEnv() ignore STAGE: dev, filename: ", filename)
 		return
