@@ -7,6 +7,7 @@ import (
 	"github.com/ManyakRus/starter/micro"
 	"github.com/joho/godotenv"
 	"os"
+	"strings"
 	//log "github.com/sirupsen/logrus"
 	//log "github.com/sirupsen/logrus"
 	//"gitlab.aescorp.ru/dsp_dev/notifier/notifier_adp_eml/internal/v0/app/types"
@@ -31,6 +32,8 @@ func LoadEnvTest() {
 
 	//не загружаем для STAGE=dev, т.к. переменные окружения кубернетеса
 	stage := os.Getenv("STAGE")
+	stage = strings.ToLower(stage)
+	stage = strings.TrimSpace(stage)
 	if stage == "dev" || stage == "prod" {
 		log.Info("LoadEnv() ignore STAGE: dev, filename: ", filename)
 		return
