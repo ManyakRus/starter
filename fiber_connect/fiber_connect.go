@@ -28,7 +28,11 @@ type SettingsINI struct {
 	WEBSERVER_PORT string
 }
 
+// Client - клиент веб сервера
 var Client *fiber.App
+
+// WEBSERVER_PORT_DEFAULT - порт веб-сервера по умолчанию
+var WEBSERVER_PORT_DEFAULT = "3000"
 
 func Connect() {
 	if Settings.WEBSERVER_PORT == "" {
@@ -46,7 +50,7 @@ func FillSettings() {
 	Settings.WEBSERVER_HOST = os.Getenv("WEBSERVER_HOST")
 	Settings.WEBSERVER_PORT = os.Getenv("WEBSERVER_PORT")
 	if Settings.WEBSERVER_HOST == "" {
-		log.Info("Need fill WEBSERVER_HOST ! in OS Environment ")
+		log.Debug("Need fill WEBSERVER_HOST ! in OS Environment ")
 	}
 
 	if Settings.WEBSERVER_PORT == "" {
@@ -55,8 +59,8 @@ func FillSettings() {
 	}
 
 	if Settings.WEBSERVER_PORT == "" {
-		log.Warn("Need fill WEBSERVER_PORT ! in OS Environment ")
-		Settings.WEBSERVER_PORT = "3002"
+		log.Warn("Need fill WEBSERVER_PORT ! in OS Environment. Use default: ", WEBSERVER_PORT_DEFAULT)
+		Settings.WEBSERVER_PORT = WEBSERVER_PORT_DEFAULT
 	}
 
 	//
