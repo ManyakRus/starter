@@ -44,7 +44,7 @@ func Connect() {
 
 }
 
-// FillSettings загружает переменные окружения в структуру из файла или из переменных окружения
+// FillSettings загружает переменные окружения в структуру из переменных окружения
 func FillSettings() {
 	Settings = SettingsINI{}
 	Settings.WEBSERVER_HOST = os.Getenv("WEBSERVER_HOST")
