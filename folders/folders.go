@@ -25,7 +25,7 @@ func (f *Folder) String() string {
 }
 
 // FindFoldersTree - возвращает дерево каталогов и файлов, начиная с директории dir
-func FindFoldersTree(dir string, NeedFolders, NeedFiles, NeedDot bool, exclude string) *Folder {
+func FindFoldersTree(dir string, NeedFolders, NeedFiles, NeedDot bool, MassExclude []string) *Folder {
 	dir = path.Clean(dir)
 	var tree *Folder
 	var nodes = map[string]interface{}{}
@@ -57,11 +57,15 @@ func FindFoldersTree(dir string, NeedFolders, NeedFiles, NeedDot bool, exclude s
 
 		// найдём название Папки/Файла
 		var Name string
+		var FolderName string
 		switch value.(type) {
 		case *File:
 			Name = value.(*File).Name
 		case *Folder:
-			Name = value.(*Folder).Name
+			{
+				Name = value.(*Folder).Name
+				FolderName = value.(*Folder).FileName
+			}
 		}
 
 		// проверка скрытые файлы с точкой
@@ -69,10 +73,20 @@ func FindFoldersTree(dir string, NeedFolders, NeedFiles, NeedDot bool, exclude s
 			continue
 		}
 
-		// проверка кроме exclude
-		if exclude != "" && len(Name) >= len(exclude) && Name[0:len(exclude)] == exclude {
-			continue
+		// проверка кроме MassExclude
+		if len(MassExclude) > 0 {
+			for _, v := range MassExclude {
+				if Name == v {
+					continue
+				}
+				if FolderName == v {
+					continue
+				}
+			}
 		}
+		//if MassExclude != "" && len(Name) >= len(MassExclude) && Name[0:len(MassExclude)] == MassExclude {
+		//	continue
+		//}
 
 		//
 		switch v := value.(type) {
