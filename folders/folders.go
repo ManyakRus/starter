@@ -38,10 +38,10 @@ func FindFoldersTree(dir string, NeedFolders, NeedFiles, NeedDot bool, MassExclu
 		if len(MassExclude) > 0 {
 			for _, v := range MassExclude {
 				if info.Name() == v {
-					continue
+					return nil
 				}
 				if p == v {
-					continue
+					return nil
 				}
 			}
 		}
@@ -65,7 +65,11 @@ func FindFoldersTree(dir string, NeedFolders, NeedFiles, NeedDot bool, MassExclu
 			tree = value.(*Folder)
 			continue
 		} else {
-			parentFolder = nodes[path.Dir(key)].(*Folder)
+			var ok bool
+			parentFolder, ok = nodes[path.Dir(key)].(*Folder)
+			if !ok {
+				continue
+			}
 		}
 
 		// найдём название Папки/Файла
