@@ -34,6 +34,18 @@ func FindFoldersTree(dir string, NeedFolders, NeedFiles, NeedDot bool, MassExclu
 			return nil
 		}
 
+		// проверка кроме MassExclude
+		if len(MassExclude) > 0 {
+			for _, v := range MassExclude {
+				if info.Name() == v {
+					continue
+				}
+				if p == v {
+					continue
+				}
+			}
+		}
+
 		if info.IsDir() {
 			nodes[p] = &Folder{p, path.Base(p), []*File{}, map[string]*Folder{}}
 		} else {
@@ -41,6 +53,7 @@ func FindFoldersTree(dir string, NeedFolders, NeedFiles, NeedDot bool, MassExclu
 		}
 		return nil
 	}
+
 	err := filepath.Walk(dir, walkFun)
 	if err != nil {
 		log.Fatal(err)
@@ -57,14 +70,14 @@ func FindFoldersTree(dir string, NeedFolders, NeedFiles, NeedDot bool, MassExclu
 
 		// найдём название Папки/Файла
 		var Name string
-		var FolderName string
+		//var FolderName string
 		switch value.(type) {
 		case *File:
 			Name = value.(*File).Name
 		case *Folder:
 			{
 				Name = value.(*Folder).Name
-				FolderName = value.(*Folder).FileName
+				//FolderName = value.(*Folder).FileName
 			}
 		}
 
@@ -73,19 +86,16 @@ func FindFoldersTree(dir string, NeedFolders, NeedFiles, NeedDot bool, MassExclu
 			continue
 		}
 
-		// проверка кроме MassExclude
-		if len(MassExclude) > 0 {
-			for _, v := range MassExclude {
-				if Name == v {
-					continue
-				}
-				if FolderName == v {
-					continue
-				}
-			}
-		}
-		//if MassExclude != "" && len(Name) >= len(MassExclude) && Name[0:len(MassExclude)] == MassExclude {
-		//	continue
+		//// проверка кроме MassExclude
+		//if len(MassExclude) > 0 {
+		//	for _, v := range MassExclude {
+		//		if Name == v {
+		//			continue
+		//		}
+		//		if FolderName == v {
+		//			continue
+		//		}
+		//	}
 		//}
 
 		//
