@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 )
 
 type File struct {
@@ -86,7 +87,7 @@ func FindFoldersTree(dir string, NeedFolders, NeedFiles, NeedDot bool, MassExclu
 		}
 
 		// проверка скрытые файлы с точкой
-		if NeedDot == false && len(Name) > 0 && Name[0:1] == "." {
+		if NeedDot == false && strings.HasPrefix(Name, ".") {
 			continue
 		}
 
