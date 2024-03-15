@@ -1,6 +1,5 @@
 Набор компонент для языка Golang
 Автор: Александр Никитин
-Skype login: Travianbot
 
 Набор компонент для языка golang сделан для облегчения работы программиста,
 чтобы любой компонент можно было подключить одной строкой кода.
@@ -33,7 +32,7 @@ config, и свою структуру Settings с параметрами
 2. ping - функция для проверки работы порта на нужном хосте
 
 Пример минимального ядра:
-
+```
 func main() {
 	config.LoadEnv()
 	stopapp.StartWaitStop()
@@ -42,11 +41,11 @@ func main() {
 
 	stopapp.GetWaitGroup_Main().Wait()
 }
-
+```
 
 
 Пример с разными подключениями:
-
+```
 func main() {
 	config.LoadEnv()
 
@@ -68,3 +67,4 @@ func main() {
 
 	log.Info("App stopped")
 }
+```
