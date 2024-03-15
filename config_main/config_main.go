@@ -7,6 +7,7 @@ import (
 	"github.com/ManyakRus/starter/micro"
 	"github.com/joho/godotenv"
 	"os"
+	"path/filepath"
 	"strings"
 	//log "github.com/sirupsen/logrus"
 	//log "github.com/sirupsen/logrus"
@@ -80,7 +81,7 @@ func LoadSettingsTxt_err() error {
 // LoadEnv_from_file загружает из файла переменные в переменные окружения
 func LoadEnv_from_file(filename string) {
 
-	FilenameShort := micro.LastWord(filename)
+	FilenameShort := filepath.Base(filename)
 
 	err := LoadEnv_from_file_err(filename)
 	if err != nil {
