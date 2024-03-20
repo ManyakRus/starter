@@ -554,3 +554,43 @@ func TestFindLastPos(t *testing.T) {
 		t.Error("microfunctions_test.TestFindLastPos() FindLastPos()=nil !")
 	}
 }
+
+func TestStringFloat64_Dimension2(t *testing.T) {
+	// Testing for a positive float number
+	result := StringFloat64_Dimension2(3.14159)
+	if result != "3.14" {
+		t.Errorf("Expected '3.14' but got %s", result)
+	}
+
+	// Testing for a negative float number
+	result = StringFloat64_Dimension2(-123.456)
+	if result != "-123.46" {
+		t.Errorf("Expected '-123.46' but got %s", result)
+	}
+
+	// Testing for zero
+	result = StringFloat64_Dimension2(0.0)
+	if result != "0.00" {
+		t.Errorf("Expected '0.00' but got %s", result)
+	}
+}
+
+func TestStringFloat32_Dimension2(t *testing.T) {
+	// Testing for a positive float number
+	result := StringFloat32_Dimension2(3.14159)
+	if result != "3.14" {
+		t.Errorf("Expected '3.14' but got %s", result)
+	}
+
+	// Testing for a negative float number
+	result = StringFloat32_Dimension2(-123.456)
+	if result != "-123.46" {
+		t.Errorf("Expected '-123.46' but got %s", result)
+	}
+
+	// Testing for zero
+	result = StringFloat32_Dimension2(0.0)
+	if result != "0.00" {
+		t.Errorf("Expected '0.00' but got %s", result)
+	}
+}
