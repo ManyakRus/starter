@@ -175,3 +175,44 @@ SELECT * FROM temp_TestRawMultipleSQL2
 
 	t.Log("Прошло время: ", time.Since(TimeStart))
 }
+
+func TestRawMultipleSQL3(t *testing.T) {
+	config_main.LoadEnv()
+	GetConnection()
+	defer CloseConnection()
+
+	TimeStart := time.Now()
+
+	TextSQL := `
+drop table if exists temp_TestRawMultipleSQL2; 
+CREATE TEMPORARY TABLE temp_TestRawMultipleSQL2 (id int);
+
+insert into temp_TestRawMultipleSQL2
+select 1;
+
+SELECT * FROM temp_TestRawMultipleSQL2
+`
+	f := func(t *testing.T) {
+		tx := RawMultipleSQL(Conn, TextSQL)
+		err := tx.Error
+		if err != nil {
+			t.Error("TestRawMultipleSQL3() error: ", err)
+		}
+
+		if tx.RowsAffected != 1 {
+			t.Error("TestRawMultipleSQL3() RowsAffected = ", tx.RowsAffected)
+		}
+
+	}
+
+	//запустим 100 потоков
+	for i := 0; i < 100; i++ {
+		stopapp.GetWaitGroup_Main().Add(1)
+		go f(t)
+		stopapp.GetWaitGroup_Main().Done()
+	}
+
+	stopapp.GetWaitGroup_Main().Wait()
+
+	t.Log("Прошло время: ", time.Since(TimeStart))
+}
