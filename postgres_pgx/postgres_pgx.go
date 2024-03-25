@@ -5,6 +5,7 @@ package postgres_pgx
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/ManyakRus/starter/logger"
 	"github.com/ManyakRus/starter/port_checker"
 	"github.com/jackc/pgx/v4"
@@ -344,4 +345,56 @@ func GetConnection_WithApplicationName(ApplicationName string) *pgx.Conn {
 	}
 
 	return Conn
+}
+
+// RawMultipleSQL - выполняет текст запроса, отдельно для каждого запроса
+func RawMultipleSQL(db *pgx.Conn, TextSQL string) (pgx.Rows, error) {
+	var Rows pgx.Rows
+	var err error
+	Conn = db
+
+	if Conn == nil {
+		TextError := "RawMultipleSQL() error: db =nil"
+		log.Error(TextError)
+		err = errors.New(TextError)
+		return Rows, err
+	}
+
+	ctx := contextmain.GetContext()
+
+	//запустим транзакцию
+	tx, err := Conn.Begin(ctx)
+	if err != nil {
+		log.Error(err)
+		return Rows, err
+	}
+	//defer tx.Commit()
+
+	//
+	TextSQL1 := ""
+	TextSQL2 := TextSQL
+
+	//запустим все запросы, кроме последнего
+	pos1 := strings.LastIndex(TextSQL, ";")
+	if pos1 > 0 {
+		TextSQL1 = TextSQL[0:pos1]
+		TextSQL2 = TextSQL[pos1:]
+		_, err := tx.Exec(ctx, TextSQL1)
+		if err != nil {
+			TextError := fmt.Sprint("db.Exec() error: ", err, ", TextSQL: \n", TextSQL1)
+			err = errors.New(TextError)
+			log.Error(err)
+			return Rows, err
+		}
+	}
+
+	//запустим последний запрос, с возвратом результата
+	Rows, err = tx.Query(ctx, TextSQL2)
+	if err != nil {
+		TextError := fmt.Sprint("db.Raw() error: ", err, ", TextSQL: \n", TextSQL2)
+		err = errors.New(TextError)
+		return Rows, err
+	}
+
+	return Rows, err
 }

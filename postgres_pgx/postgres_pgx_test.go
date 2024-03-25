@@ -3,6 +3,7 @@ package postgres_pgx
 import (
 	"errors"
 	"testing"
+	"time"
 
 	//log "github.com/sirupsen/logrus"
 
@@ -110,4 +111,40 @@ func TestConnect_WithApplicationName_err(t *testing.T) {
 
 	CloseConnection()
 
+}
+
+func TestRawMultipleSQL(t *testing.T) {
+	config_main.LoadEnv()
+	GetConnection()
+	defer CloseConnection()
+
+	TimeStart := time.Now()
+
+	TextSQL := `
+drop table if exists temp_TestRawMultipleSQL2; 
+CREATE TEMPORARY TABLE temp_TestRawMultipleSQL2 (id int);
+
+insert into temp_TestRawMultipleSQL2
+select 1;
+
+SELECT * FROM temp_TestRawMultipleSQL2
+`
+	//TextSQL := "SELECT 1; SELECT 2"
+	Rows, err := RawMultipleSQL(Conn, TextSQL)
+	if err != nil {
+		t.Error("TestRawMultipleSQL() error: ", err)
+	}
+	if Rows == nil {
+
+	}
+
+	Otvet := 0
+	for Rows.Next() {
+		err := Rows.Scan(&Otvet)
+		if err != nil {
+			t.Error("TestRawMultipleSQL() Scan() error: ", err)
+		}
+	}
+
+	t.Log("Прошло время: ", time.Since(TimeStart))
 }
