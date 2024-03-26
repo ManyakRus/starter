@@ -4,6 +4,24 @@ import (
 	"strings"
 )
 
+var constellations = []struct {
+	startMonth, startDay int
+	endMonth, endDay     int
+}{
+	{3, 21, 4, 19},   // Aries
+	{4, 20, 5, 20},   // Taurus
+	{5, 21, 6, 21},   // Gemini
+	{6, 22, 7, 22},   // Cancer
+	{7, 23, 8, 22},   // Leo
+	{8, 23, 9, 22},   // Virgo
+	{9, 23, 10, 23},  // Libra
+	{10, 24, 11, 22}, // Scorpio
+	{11, 23, 12, 21}, // Sagittarius
+	{12, 22, 1, 19},  // Capricorn
+	{1, 20, 2, 18},   // Aquarius
+	{2, 19, 3, 20},   // Pisces
+}
+
 // Constellation gets constellation name like "Aries", i18n is supported.
 // 获取星座，支持i18n
 func (c Carbon) Constellation() string {
@@ -15,34 +33,19 @@ func (c Carbon) Constellation() string {
 	}
 	index := -1
 	_, month, day := c.Date()
-	switch {
-	case month == 3 && day >= 21, month == 4 && day <= 19:
-		index = 0 // Aries
-	case month == 4 && day >= 20, month == 5 && day <= 20:
-		index = 1 // Taurus
-	case month == 5 && day >= 21, month == 6 && day <= 21:
-		index = 2 // Gemini
-	case month == 6 && day >= 22, month == 7 && day <= 22:
-		index = 3 // Cancer
-	case month == 7 && day >= 23, month == 8 && day <= 22:
-		index = 4 // Leo
-	case month == 8 && day >= 23, month == 9 && day <= 22:
-		index = 5 // Virgo
-	case month == 9 && day >= 23, month == 10 && day <= 23:
-		index = 6 // Libra
-	case month == 10 && day >= 24, month == 11 && day <= 22:
-		index = 7 // Scorpio
-	case month == 11 && day >= 23, month == 12 && day <= 21:
-		index = 8 // Sagittarius
-	case month == 12 && day >= 22, month == 1 && day <= 19:
-		index = 9 // Capricorn
-	case month == 1 && day >= 20, month == 2 && day <= 18:
-		index = 10 // Aquarius
-	case month == 2 && day >= 19, month == 3 && day <= 20:
-		index = 11 // Aquarius
+	for i := 0; i < len(constellations); i++ {
+		constellation := constellations[i]
+		if month == constellation.startMonth && day >= constellation.startDay {
+			index = i
+		}
+		if month == constellation.endMonth && day <= constellation.endDay {
+			index = i
+		}
 	}
-	if constellations, ok := c.lang.resources["constellations"]; ok {
-		slice := strings.Split(constellations, "|")
+	c.lang.rw.Lock()
+	defer c.lang.rw.Unlock()
+	if resources, ok := c.lang.resources["constellations"]; ok {
+		slice := strings.Split(resources, "|")
 		if len(slice) == MonthsPerYear {
 			return slice[index]
 		}

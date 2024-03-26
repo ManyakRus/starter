@@ -32,22 +32,42 @@ var (
 )
 
 // MessagesGetSavedDialogsRequest represents TL type `messages.getSavedDialogs#5381d21a`.
+// Returns the current saved dialog list, see here »¹ for more info.
+//
+// Links:
+//  1. https://core.telegram.org/api/saved-messages
 //
 // See https://core.telegram.org/method/messages.getSavedDialogs for reference.
 type MessagesGetSavedDialogsRequest struct {
-	// Flags field of MessagesGetSavedDialogsRequest.
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// ExcludePinned field of MessagesGetSavedDialogsRequest.
+	// Exclude pinned dialogs
 	ExcludePinned bool
-	// OffsetDate field of MessagesGetSavedDialogsRequest.
+	// Offsets for pagination, for more info click here¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/offsets
 	OffsetDate int
-	// OffsetID field of MessagesGetSavedDialogsRequest.
+	// Offsets for pagination, for more info click here¹ (top_message ID used for
+	// pagination)
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/offsets
 	OffsetID int
-	// OffsetPeer field of MessagesGetSavedDialogsRequest.
+	// Offset peer for pagination¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/offsets
 	OffsetPeer InputPeerClass
-	// Limit field of MessagesGetSavedDialogsRequest.
+	// Number of list elements to be returned
 	Limit int
-	// Hash field of MessagesGetSavedDialogsRequest.
+	// Hash for pagination, for more info click here¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/offsets#hash-generation
 	Hash int64
 }
 
@@ -327,6 +347,10 @@ func (g *MessagesGetSavedDialogsRequest) GetHash() (value int64) {
 }
 
 // MessagesGetSavedDialogs invokes method messages.getSavedDialogs#5381d21a returning error if any.
+// Returns the current saved dialog list, see here »¹ for more info.
+//
+// Links:
+//  1. https://core.telegram.org/api/saved-messages
 //
 // See https://core.telegram.org/method/messages.getSavedDialogs for reference.
 func (c *Client) MessagesGetSavedDialogs(ctx context.Context, request *MessagesGetSavedDialogsRequest) (MessagesSavedDialogsClass, error) {

@@ -2,13 +2,13 @@
 test:
 	clear
 	go fmt ./...
-	go test -vet=all -race -count 1 -test.shuffle on -coverprofile cover.out -covermode atomic ./... ./data_packer/... ./sync_confirm/... ./sync_global/... ./sync_types/...
+	go test -timeout=30s -shuffle=on -vet=all -race -count 1 -test.shuffle on -coverprofile cover.out -covermode atomic ./... ./data_packer/... ./sync_confirm/... ./sync_global/... ./sync_types/...
 	go tool cover -func=cover.out
 
 ## mod
 mod:
 	clear
-	go mod tidy -compat=1.17
+	go mod tidy -compat=1.20
 	go mod vendor
 	go fmt ./...
 

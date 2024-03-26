@@ -1,78 +1,96 @@
 # sync_exchange
+
 Пакет для синхронного обмена данными через шину (NATS).
 
 ## Принцип обмена
-Сервис пишет в определённый топик шины, подписывается на другой топик (генерируется исходя из названия сервиса и идентификатора пакета) и ожидает сообщение. 
+
+Сервис пишет в определённый топик шины, подписывается на другой топик (генерируется исходя из названия сервиса и идентификатора пакета) и ожидает сообщение.
 Слушающий сервис вычитывает топик, после обработки пакета отправляет ответ.
 
 ## Команды для формирования пакетов
+
 ### SyncPackageToJSON
+
 View SyncPackage as JSON string
 
 ### SyncPackageFromJSON
+
 Make SyncPackage from JSON string
 
 ### MakeSyncCommand
+
 Create SyncPackage as command package
 
 ### MakeSyncResult
+
 Create SyncPackage as result package
 
 ### MakeSyncError
+
 Create SyncPackage as error package
 
 ## Команды для обмена
+
 ### InitSyncExchange
+
 Функция инициализации подключения к шине
 
 ### DeInitSyncExchange
+
 Функция деинициализации подключения к шине
 
 ### SendMessage
+
 Отправка сообщения в шину без ожидания ответа
 
 ### WaitMessage
+
 Ожидание сообщения из определённого топика
 
 ### SendRequest
+
 Отправка запроса с ожиданием ответа
 
 ### SendResponse
+
 Отправка ответа на запрос
 
 ## Пример использования
+
 ```go
 package main
 
 import (
-	"fmt"
-	"log"
-	"gitlab.aescorp.ru/dsp_dev/test_area/test_claim/pkg/sync_exchange"
-	"gitlab.aescorp.ru/dsp_dev/test_area/test_claim/pkg/sync_exchange/sync_types"
+  "fmt"
+  "log"
+  "gitlab.aescorp.ru/dsp_dev/test_area/test_claim/pkg/sync_exchange"
+  "gitlab.aescorp.ru/dsp_dev/test_area/test_claim/pkg/sync_exchange/sync_types"
 )
 
 func main()  {
-	err := sync_exchange.InitSyncExchange("localhost", "service_name")
-	if err != nil {
-		log.Fatal(err)
-	}
+  err := sync_exchange.InitSyncExchange("localhost", "service_name")
+  if err != nil {
+    log.Fatal(err)
+  }
 
-	params := make(map[string]string)
-	params["something"] = "sometime"
-	pack := sync_types.MakeSyncCommand("command_1", params)
-	resp, err := sync_exchange.SendRequest("service_new", pack, 10000)
+  params := make(map[string]string)
+  params["something"] = "sometime"
+  pack := sync_types.MakeSyncCommand("command_1", params)
+  resp, err := sync_exchange.SendRequest("service_new", pack, 10000)
 
-	fmt.Println(resp.Body.Result["state"])
+  fmt.Println(resp.Body.Result["state"])
 
-	err = sync_exchange.DeInitSyncExchange()
-	if err != nil {
-		log.Fatal(err)
-	}
+  err = sync_exchange.DeInitSyncExchange()
+  if err != nil {
+    log.Fatal(err)
+  }
 }
 ```
 
 ## Формат пакетов
+
 ### Команда MakeSyncCommand
+
 ```json
 {
   "head": {
@@ -96,7 +114,9 @@ func main()  {
   }
 }
 ```
+
 ### Команда MakeSyncResult
+
 ```json
 {
   "head": {
@@ -119,7 +139,9 @@ func main()  {
   }
 }
 ```
+
 ### Команда MakeSyncError
+
 ```json
 {
   "head": {

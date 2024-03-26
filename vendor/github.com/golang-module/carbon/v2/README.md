@@ -55,7 +55,7 @@ import "gitee.com/golang-module/carbon"
 
 > Assuming the current time is 2020-08-05 13:14:15.999999999 +0800 CST
 
-##### Set default values (globally effective)
+##### Set globally default values
 
 ```go
 carbon.SetDefault(carbon.Default{
@@ -67,6 +67,15 @@ carbon.SetDefault(carbon.Default{
 ```
 
 > If not set, the default layout is `2006-01-02 15:04:05`, the default timezone is `Local`, the default week start date is `Sunday` and the default language locale is `en`
+
+##### Convert between `Carbon` and `time.Time`
+
+```go
+// Convert standard Time.time to Carbon
+carbon.CreateFromStdTime(time.Now())
+// Convert Carbon to standard Time.time
+carbon.Now().StdTime()
+```
 
 ##### Yesterday, today and tomorrow
 
@@ -136,7 +145,7 @@ carbon.Tomorrow().TimestampMicro() // 1596690855999999
 carbon.Tomorrow().TimestampNano() // 1596690855999999999
 ```
 
-##### Create a Carbon instance
+##### Create a `Carbon` instance
 
 ```go
 // Create a Carbon instance from a given timestamp with second
@@ -179,7 +188,7 @@ carbon.CreateFromTimeMicro(13, 14, 15, 999999).ToString() // 2020-08-05 13:14:15
 carbon.CreateFromTimeNano(13, 14, 15, 999999999).ToString() // 2020-08-05 13:14:15.999999999 +0800 CST
 ```
 
-##### Parse a time string as a Carbon instance
+##### Parse a time string as a `Carbon` instance
 
 ```go
 carbon.Parse("").ToDateTimeString() // empty string
@@ -227,7 +236,7 @@ carbon.Parse("20200805131415.999999+08:00").ToString() // 2020-08-05 13:14:15.99
 carbon.Parse("20200805131415.999999999+08:00").ToString() // 2020-08-05 13:14:15.999999999 +0800 CST
 ```
 
-##### Parse a time string as a Carbon instance by format
+##### Parse a time string as a `Carbon` instance by format
 
 ```go
 carbon.ParseByFormat("2020|08|05 13|14|15", "Y|m|d H|i|s").ToDateTimeString() // 2020-08-05 13:14:15
@@ -235,21 +244,12 @@ carbon.ParseByFormat("It is 2020-08-05 13:14:15", "\\I\\t \\i\\s Y-m-d H:i:s").T
 carbon.ParseByFormat("今天是 2020年08月05日13时14分15秒", "今天是 Y年m月d日H时i分s秒").ToDateTimeString() // 2020-08-05 13:14:15
 ```
 
-##### Parse a time string as a Carbon instance by layout
+##### Parse a time string as a `Carbon` instance by layout
 
 ```go
 carbon.ParseByLayout("2020|08|05 13|14|15", "2006|01|02 15|04|05").ToDateTimeString() // 2020-08-05 13:14:15
 carbon.ParseByLayout("It is 2020-08-05 13:14:15", "It is 2006-01-02 15:04:05").ToDateTimeString() // 2020-08-05 13:14:15
 carbon.ParseByLayout("今天是 2020年08月05日13时14分15秒", "今天是 2006年01月02日15时04分05秒").ToDateTimeString() // 2020-08-05 13:14:15
-```
-
-##### Convert between Carbon and Time
-
-```go
-// Convert standard Time.time into Carbon
-carbon.CreateFromStdTime(time.Now())
-// Convert Carbon into standard Time.time
-carbon.Now().ToStdTime()
 ```
 
 ##### Boundary
@@ -369,9 +369,9 @@ carbon.Parse("2020-02-29 13:14:15").SubYear().ToDateTimeString() // 2019-03-01 1
 carbon.Parse("2020-02-29 13:14:15").SubYearNoOverflow().ToDateTimeString() // 2019-02-28 13:14:15
 
 // Add three quarters
-carbon.Parse("2019-08-31 13:14:15").AddQuarters(3).ToDateTimeString() // 2019-03-02 13:14:15
+carbon.Parse("2019-05-31 13:14:15").AddQuarters(3).ToDateTimeString() // 2020-03-02 13:14:15
 // Add three quarters without overflowing month
-carbon.Parse("2019-08-31 13:14:15").AddQuartersNoOverflow(3).ToDateTimeString() // 2019-02-29 13:14:15
+carbon.Parse("2019-05-31 13:14:15").AddQuartersNoOverflow(3).ToDateTimeString() // 2020-02-29 13:14:15
 // Add one quarter
 carbon.Parse("2019-11-30 13:14:15").AddQuarter().ToDateTimeString() // 2020-03-01 13:14:15
 // Add one quarter without overflowing month
@@ -536,6 +536,16 @@ carbon.Now().SubYearsNoOverflow(1).DiffInString() // 1 year
 carbon.Now().DiffAbsInString(carbon.Now()) // just now
 carbon.Now().AddYearsNoOverflow(1).DiffAbsInString(carbon.Now()) // 1 year
 carbon.Now().SubYearsNoOverflow(1).DiffAbsInString(carbon.Now()) // 1 year
+
+// Difference in duration
+now := carbon.Now()
+now.DiffInDuration(now).String() // 0s
+now.AddHour().DiffInDuration(now).String() // 1h0m0s
+now.SubHour().DiffInDuration(now).String() // -1h0m0s
+// Difference in duration with absolute value
+now.DiffAbsInDuration(now).String() // 0s
+now.AddHour().DiffAbsInDuration(now).String() // 1h0m0s
+now.SubHour().DiffAbsInDuration(now).String() // 1h0m0s
 
 // Difference in a human-readable format
 carbon.Parse("2020-08-05 13:14:15").DiffForHumans() // just now
@@ -1078,6 +1088,14 @@ carbon.Parse("2020-08-05 13:14:15.999999999").ToIso8601MilliString() // 2020-08-
 carbon.Parse("2020-08-05 13:14:15.999999999").ToIso8601MicroString() // 2020-08-05T13:14:15.999999+08:00
 // Output ISO8601 with nanosecond format string
 carbon.Parse("2020-08-05 13:14:15.999999999").ToIso8601NanoString() // 2020-08-05T13:14:15.999999999+08:00
+// Output ISO8601Zulu format string
+carbon.Parse("2020-08-05 13:14:15.999999999").ToIso8601ZuluString() // 2020-08-05T13:14:15Z
+// Output ISO8601Zulu with millisecond format string
+carbon.Parse("2020-08-05 13:14:15.999999999").ToIso8601ZuluMilliString() // 2020-08-05T13:14:15.999Z
+// Output ISO8601Zulu with microsecond format string
+carbon.Parse("2020-08-05 13:14:15.999999999").ToIso8601ZuluMicroString() // 2020-08-05T13:14:15.999999Z
+// Output ISO8601Zulu with nanosecond format string
+carbon.Parse("2020-08-05 13:14:15.999999999").ToIso8601ZuluNanoString() // 2020-08-05T13:14:15.999999999Z
 
 // Output RFC822 format string
 carbon.Parse("2020-08-05 13:14:15").ToRfc822String() // 05 Aug 20 13:14 CST
@@ -1100,7 +1118,7 @@ carbon.Parse("2020-08-05 13:14:15").ToRfc7231String() // Wed, 05 Aug 2020 13:14:
 carbon.Parse("2020-08-05T13:14:15.999999999+08:00").ToRfc3339String() // 2020-08-05T13:14:15+08:00
 // Output RFC3339 with millisecond format string
 carbon.Parse("2020-08-05T13:14:15.999999999+08:00").ToRfc3339MilliString() // 2020-08-05T13:14:15.999+08:00
-// Output RFC3339  with microsecond format string
+// Output RFC3339 with microsecond format string
 carbon.Parse("2020-08-05T13:14:15.999999999+08:00").ToRfc3339MicroString() // 2020-08-05T13:14:15.999999+08:00
 // Output RFC3339 with nanosecond format string
 carbon.Parse("2020-08-05T13:14:15.999999999+08:00").ToRfc3339NanoString() // 2020-08-05T13:14:15.999999999+08:00
@@ -1111,13 +1129,18 @@ fmt.Printf("%s", carbon.Parse("2020-08-05 13:14:15")) // 2020-08-05 13:14:15
 // Output "2006-01-02 15:04:05.999999999 -0700 MST" format string
 carbon.Parse("2020-08-05 13:14:15").ToString() // 2020-08-05 13:14:15.999999 +0800 CST
 
-// Output string by layout, Layout() is shorthand for ToLayoutString()
+// Output "Jan 2, 2006" format string
+carbon.Parse("2020-08-05 13:14:15").ToFormattedDateString() // Aug 5, 2020
+// Output "Mon, Jan 2, 2006" format string
+carbon.Parse("2020-08-05 13:14:15").ToFormattedDayDateString() // Wed, Aug 5, 2020
+
+// Output string by layout
 carbon.Parse("2020-08-05 13:14:15").Layout(carbon.ISO8601Layout) // 2020-08-05T13:14:15+08:00
 carbon.Parse("2020-08-05 13:14:15").Layout("20060102150405") // 20200805131415
 carbon.Parse("2020-08-05 13:14:15").Layout("2006年01月02日 15时04分05秒") // 2020年08月05日 13时14分15秒
 carbon.Parse("2020-08-05 13:14:15").Layout("It is 2006-01-02 15:04:05") // It is 2020-08-05 13:14:15
 
-// Output string by format, Format() is shorthand for ToFormatString()
+// Output string by format
 carbon.Parse("2020-08-05 13:14:15").Format("YmdHis") // 20200805131415
 carbon.Parse("2020-08-05 13:14:15").Format("Y年m月d日 H时i分s秒") // 2020年08月05日 13时14分15秒
 carbon.Parse("2020-08-05 13:14:15").Format("l jS \\o\\f F Y h:i:s A") // Wednesday 5th of August 2020 01:14:15 PM
@@ -1181,124 +1204,27 @@ carbon.Parse("2020-08-05 13:14:15").IsAutumn() // false
 carbon.Parse("2020-08-05 13:14:15").IsWinter() // false
 ```
 
-##### Lunar
-
-> Currently only `200` years from `1900` to `2100` are supported
-
-```go
-// Get Chinese Lunar year of animal
-carbon.Parse("2020-08-05 13:14:15").Lunar().Animal() // 鼠
-
-// Get Chinese lunar festival
-carbon.Parse("2021-02-12 13:14:15").Lunar().Festival() // 春节
-
-// Get Chinese lunar year, month, day, hour, minute and second
-carbon.Parse("2020-08-05 13:14:15").Lunar().DateTime() // 2020, 6, 16, 13, 14, 15
-// Get Chinese lunar year, month and day
-carbon.Parse("2020-08-05 13:14:15").Lunar().Date() // 2020, 6, 16
-// Get Chinese lunar hour, minute and second
-carbon.Parse("2020-08-05 13:14:15").Lunar().Time() // 13, 14, 15
-
-// Get Chinese lunar year
-carbon.Parse("2020-08-05 13:14:15").Lunar().Year() // 2020
-// Get Chinese lunar month
-carbon.Parse("2020-08-05 13:14:15").Lunar().Month() // 6
-// Get Chinese lunar leap month
-carbon.Parse("2020-08-05 13:14:15").Lunar().LeapMonth() // 4
-// Get Chinese lunar day
-carbon.Parse("2020-08-05 13:14:15").Lunar().Day() // 16
-// Get Chinese lunar date as YYYY-MM-DD HH::ii::ss format string
-fmt.Printf("%s", carbon.Parse("2020-08-05 13:14:15").Lunar()) // 2020-06-16 13:14:15
-
-// Get Chinese lunar year as string
-carbon.Parse("2020-08-05 13:14:15").Lunar().ToYearString() // 二零二零
-// Get Chinese lunar month as string
-carbon.Parse("2020-08-05 13:14:15").Lunar().ToMonthString() // 六月
-// Get Chinese lunar day as string
-carbon.Parse("2020-08-05 13:14:15").Lunar().ToDayString() // 十六
-// Get Chinese lunar date as string
-carbon.Parse("2020-08-05 13:14:15").Lunar().ToDateString() // 二零二零年六月十六
-
-// Whether is a leap year
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsLeapYear() // true
-// Whether is a leap month
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsLeapMonth() // false
-
-// Whether is a year of the rat
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsRatYear() // true
-// Whether is a year of the ox
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsOxYear() // false
-// Whether is a year of the tiger
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsTigerYear() // false
-// Whether is a year of the rabbit
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsRabbitYear() // false
-// Whether is a year of the dragon
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsDragonYear() // false
-// Whether is a year of the snake
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsSnakeYear() // false
-// Whether is a year of the horse
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsHorseYear() // false
-// Whether is a year of the goat
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsGoatYear() // false
-// Whether is a year of the monkey
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsMonkeyYear() // false
-// Whether is a year of the rooster
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsRoosterYear() // false
-// Whether is a year of the dog
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsDogYear() // false
-// Whether is a year of the dig
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsPigYear() // false
-
-// Get Chinese double-hour
-carbon.Parse("2020-02-05 21:00:00").Lunar().DoubleHour() // 亥时
-
-// Whether is FirstDoubleHour
-carbon.Parse("2020-03-21 00:00:00").Lunar().IsFirstDoubleHour() // true
-// Whether is SecondDoubleHour
-carbon.Parse("2020-03-21 01:00:00").Lunar().IsSecondDoubleHour() // true
-// Whether is ThirdDoubleHour
-carbon.Parse("2020-03-21 03:00:00").Lunar().IsThirdDoubleHour() // true
-// Whether is FourthDoubleHour
-carbon.Parse("2020-03-21 05:00:00").Lunar().IsFourthDoubleHour() // true
-// Whether is FifthDoubleHour
-carbon.Parse("2020-03-21 07:00:00").Lunar().IsFifthDoubleHour() // true
-// Whether is SixthDoubleHour
-carbon.Parse("2020-03-21 09:00:00").Lunar().IsSixthDoubleHour() // true
-// Whether is SeventhDoubleHour
-carbon.Parse("2020-03-21 11:00:00").Lunar().IsSeventhDoubleHour() // true
-// Whether is EighthDoubleHour
-carbon.Parse("2020-03-21 13:00:00").Lunar().IsEighthDoubleHour() // true
-// Whether is NinthDoubleHour
-carbon.Parse("2020-03-21 15:00:00").Lunar().IsNinthDoubleHour() // true
-// Whether is TenthDoubleHour
-carbon.Parse("2020-03-21 17:00:00").Lunar().IsTenthDoubleHour() // true
-// Whether is EleventhDoubleHour
-carbon.Parse("2020-03-21 19:00:00").Lunar().IsEleventhDoubleHour() // true
-// Whether is TwelfthDoubleHour
-carbon.Parse("2020-03-21 21:00:00").Lunar().IsTwelfthDoubleHour() // true
-```
-
 ##### JSON
 
 ###### Scene one: all time fields have the same format
 ```go
 carbon.SetDefault(carbon.Default{
-  Layout: carbon.RFC3339Layout,
+  Layout: carbon.DateTimeLayout,
 })
 
 type Person struct {
   Name string `json:"name"`
   Age  int    `json:"age"`
   
-  Field1 Carbon `json:"field1"`
-  Field2 Carbon `json:"field2"`
-  Field3 Carbon `json:"field3"`
-  Field4 Carbon `json:"field4"`
+  Field1 carbon.Carbon `json:"field1"`
+  Field2 carbon.Carbon `json:"field2"`
+  Field3 carbon.Carbon `json:"field3"`
+  Field4 carbon.Carbon `json:"field4"`
   
-  Field5 Carbon `json:"field5"`
-  Field6 Carbon `json:"field6"`
-  Field7 Carbon `json:"field7"`
-  Field8 Carbon `json:"field8"`
+  Field5 carbon.Carbon `json:"field5"`
+  Field6 carbon.Carbon `json:"field6"`
+  Field7 carbon.Carbon `json:"field7"`
+  Field8 carbon.Carbon `json:"field8"`
 }
 
 now := carbon.Parse("2020-08-05 13:14:15", carbon.PRC)
@@ -1326,14 +1252,14 @@ fmt.Printf("%s", data)
 {
   "name": "gouguoyin",
   "age": 18,
-  "field1": "2020-08-05T13:14:15+08:00",
-  "field2": "2020-08-05T13:14:15+08:00",
-  "field3": "2020-08-05T13:14:15+08:00",
-  "field4": "2020-08-05T13:14:15+08:00",
-  "field5": "2020-08-05T13:14:15+08:00",
-  "field6": "2020-08-05T13:14:15+08:00",
-  "field7": "2020-08-05T13:14:15+08:00",
-  "field8": "2020-08-05T13:14:15+08:00"
+  "field1": "2020-08-05 13:14:15",
+  "field2": "2020-08-05 13:14:15",
+  "field3": "2020-08-05 13:14:15",
+  "field4": "2020-08-05 13:14:15",
+  "field5": "2020-08-05 13:14:15",
+  "field6": "2020-08-05 13:14:15",
+  "field7": "2020-08-05 13:14:15",
+  "field8": "2020-08-05 13:14:15"
 }
 
 var person Person
@@ -1343,15 +1269,15 @@ if unmarshalErr != nil {
   log.Fatal(unmarshalErr)
 }
 
-fmt.Printf("%s", person.Field1) // 2020-08-05T13:14:15+08:00
-fmt.Printf("%s", person.Field2) // 2020-08-05T13:14:15+08:00
-fmt.Printf("%s", person.Field3) // 2020-08-05T13:14:15+08:00
-fmt.Printf("%s", person.Field4) // 2020-08-05T13:14:15+08:00
+fmt.Printf("%s", person.Field1) // 2020-08-05 13:14:15
+fmt.Printf("%s", person.Field2) // 2020-08-05 13:14:15
+fmt.Printf("%s", person.Field3) // 2020-08-05 13:14:15
+fmt.Printf("%s", person.Field4) // 2020-08-05 13:14:15
 
-fmt.Printf("%s", person.Field5) // 2020-08-05T13:14:15+08:00
-fmt.Printf("%s", person.Field6) // 2020-08-05T13:14:15+08:00
-fmt.Printf("%s", person.Field7) // 2020-08-05T13:14:15+08:00
-fmt.Printf("%s", person.Field8) // 2020-08-05T13:14:15+08:00
+fmt.Printf("%s", person.Field5) // 2020-08-05 13:14:15
+fmt.Printf("%s", person.Field6) // 2020-08-05 13:14:15
+fmt.Printf("%s", person.Field7) // 2020-08-05 13:14:15
+fmt.Printf("%s", person.Field8) // 2020-08-05 13:14:15
 ```
 
 ###### Scene two: different time fields have different formats
@@ -1362,24 +1288,24 @@ type Person struct {
   Name string `json:"name"`
   Age  int    `json:"age"`
   
-  Field1 Carbon `json:"field1"`
+  Field1 carbon.Carbon `json:"field1"`
   
-  Field2 Carbon `json:"field2" carbon:"type:date" tz:"PRC"`
-  Field3 Carbon `json:"field3" carbon:"type:time" tz:"PRC"`
-  Field4 Carbon `json:"field4" carbon:"type:dateTime" tz:"PRC"`
+  Field2 carbon.Carbon `json:"field2" carbon:"type:date" tz:"PRC"`
+  Field3 carbon.Carbon `json:"field3" carbon:"type:time" tz:"PRC"`
+  Field4 carbon.Carbon `json:"field4" carbon:"type:dateTime" tz:"PRC"`
   // or
-  Field2 Carbon `json:"field2" carbon:"layout:2006-01-02" tz:"PRC"`
-  Field3 Carbon `json:"field3" carbon:"layout:15:04:05" tz:"PRC"`
-  Field4 Carbon `json:"field4" carbon:"layout:2006-01-02 15:04:05" tz:"PRC"`
+  Field2 carbon.Carbon `json:"field2" carbon:"layout:2006-01-02" tz:"PRC"`
+  Field3 carbon.Carbon `json:"field3" carbon:"layout:15:04:05" tz:"PRC"`
+  Field4 carbon.Carbon `json:"field4" carbon:"layout:2006-01-02 15:04:05" tz:"PRC"`
   // or
-  Field2 Carbon `json:"field2" carbon:"layout:2006-01-02" tz:"PRC"`
-  Field3 Carbon `json:"field3" carbon:"layout:15:04:05" tz:"PRC"`
-  Field4 Carbon `json:"field4" carbon:"layout:2006-01-02 15:04:05" tz:"PRC"`
+  Field2 carbon.Carbon `json:"field2" carbon:"format:Y-m-d" tz:"PRC"`
+  Field3 carbon.Carbon `json:"field3" carbon:"format:H:i:s" tz:"PRC"`
+  Field4 carbon.Carbon `json:"field4" carbon:"format:Y-m-d H:i:s" tz:"PRC"`
   
-  Field5 Carbon `json:"field5" carbon:"type:timestamp" tz:"PRC"`
-  Field6 Carbon `json:"field6" carbon:"type:timestampMilli" tz:"PRC"`
-  Field7 Carbon `json:"field7" carbon:"type:timestampMicro" tz:"PRC"`
-  Field8 Carbon `json:"field8" carbon:"type:timestampNano" tz:"PRC"`
+  Field5 carbon.Carbon `json:"field5" carbon:"type:timestamp" tz:"PRC"`
+  Field6 carbon.Carbon `json:"field6" carbon:"type:timestampMilli" tz:"PRC"`
+  Field7 carbon.Carbon `json:"field7" carbon:"type:timestampMicro" tz:"PRC"`
+  Field8 carbon.Carbon `json:"field8" carbon:"type:timestampNano" tz:"PRC"`
 }
 
 now := Parse("2020-08-05 13:14:15", carbon.PRC)
@@ -1448,6 +1374,14 @@ fmt.Printf("%d", person.Field8) // 1596604455999999999
 
 ```
 
+##### Calendar
+
+The following calendars are supported
+
+* [Julian Day/Modified Julian Day](./calendar/julian/README.md "JD/MJD")
+* [Chinese Lunar](./calendar/lunar/README.md "Chinese Lunar")
+* [Persian/Jalaali](./calendar/persian/README.md "Persian/Jalaali")
+
 ##### I18n
 
 The following languages are supported
@@ -1469,16 +1403,18 @@ The following languages are supported
 * [Ukrainian(uk)](./lang/uk.json "Ukrainian"): translated by [open-git](https://github.com/open-git "open-git")
 * [Romanian(ro)](./lang/ro.json "Romanian"): translated by [DrOctavius](https://github.com/DrOctavius "DrOctavius")
 * [Indonesian(id)](./lang/id.json "Indonesian"): translated by [justpoypoy](https://github.com/justpoypoy "justpoypoy")
+* [Italian(it)](../blob/master/lang/it.json "Italian"): translated by [nicoloHevelop](https://github.com/nicoloHevelop "nicoloHevelop")
 * [Bahasa Malaysia(ms-MY)](./lang/ms-MY.json "Bahasa Malaysia"): translated
   by [hollowaykeanho](https://github.com/hollowaykeanho "hollowaykeanho")
 * [French(fr)](./lang/fr.json "French"): translated
   by [hollowaykeanho](https://github.com/hollowaykeanho "hollowaykeanho")
 * [Thailand(th)](./lang/th.json "Thailand"): translated by [izcream](https://github.com/izcream "izcream")
 * [Swedish(se)](./lang/se.json "Swedish"): translated by [jwanglof](https://github.com/jwanglof "jwanglof")
-* [Iranian(fa)](./lang/fa.json "Iranian"): translated by [erfanMomeniii](https://github.com/erfanMomeniii "erfanMomeniii")
+* [Farsi(fa)](./lang/fa.json "Farsi"): translated by [erfanMomeniii](https://github.com/erfanMomeniii "erfanMomeniii")
 * [Dutch(nl)](./lang/nl.json "Dutch"): translated by [RemcoE33](https://github.com/RemcoE33 "RemcoE33")
 * [VietNamese(vi)](./lang/vi.json "VietNam"): translated by [culy247](https://github.com/culy247 "culy247")
 * [Hindi(hi)](./lang/hi.json "India"): translated by [chauhan17nitin](https://github.com/chauhan17nitin "chauhan17nitin")
+* [Polish(pl)](./lang/pl.json "Polish"): translated by [gouguoyin](https://github.com/gouguoyin "gouguoyin")
 
 The following methods are supported
 

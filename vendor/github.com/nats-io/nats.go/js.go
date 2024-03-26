@@ -32,6 +32,11 @@ import (
 )
 
 // JetStream allows persistent messaging through JetStream.
+//
+// NOTE: JetStream is part of legacy API.
+// Users are encouraged to switch to the new JetStream API for enhanced capabilities and
+// simplified API. Please refer to the `jetstream` package.
+// See: https://github.com/nats-io/nats.go/blob/main/jetstream/README.md
 type JetStream interface {
 	// Publish publishes a message to JetStream.
 	Publish(subj string, data []byte, opts ...PubOpt) (*PubAck, error)
@@ -106,6 +111,11 @@ type JetStream interface {
 }
 
 // JetStreamContext allows JetStream messaging and stream management.
+//
+// NOTE: JetStreamContext is part of legacy API.
+// Users are encouraged to switch to the new JetStream API for enhanced capabilities and
+// simplified API. Please refer to the `jetstream` package.
+// See: https://github.com/nats-io/nats.go/blob/main/jetstream/README.md
 type JetStreamContext interface {
 	JetStream
 	JetStreamManager
@@ -276,6 +286,11 @@ const (
 
 // JetStream returns a JetStreamContext for messaging and stream management.
 // Errors are only returned if inconsistent options are provided.
+//
+// NOTE: JetStreamContext is part of legacy API.
+// Users are encouraged to switch to the new JetStream API for enhanced capabilities and
+// simplified API. Please refer to the `jetstream` package.
+// See: https://github.com/nats-io/nats.go/blob/main/jetstream/README.md
 func (nc *Conn) JetStream(opts ...JSOpt) (JetStreamContext, error) {
 	js := &js{
 		nc: nc,
@@ -2846,7 +2861,13 @@ func (sub *Subscription) Fetch(batch int, opts ...PullOpt) ([]*Msg, error) {
 	}
 	var hbTimer *time.Timer
 	var hbErr error
-	if err == nil && len(msgs) < batch {
+	sub.mu.Lock()
+	subClosed := sub.closed || sub.draining
+	sub.mu.Unlock()
+	if subClosed {
+		err = errors.Join(ErrBadSubscription, ErrSubscriptionClosed)
+	}
+	if err == nil && len(msgs) < batch && !subClosed {
 		// For batch real size of 1, it does not make sense to set no_wait in
 		// the request.
 		noWait := batch-len(msgs) > 1
@@ -3114,8 +3135,14 @@ func (sub *Subscription) FetchBatch(batch int, opts ...PullOpt) (MessageBatch, e
 			result.msgs <- msg
 		}
 	}
-	if len(result.msgs) == batch || result.err != nil {
+	sub.mu.Lock()
+	subClosed := sub.closed || sub.draining
+	sub.mu.Unlock()
+	if len(result.msgs) == batch || result.err != nil || subClosed {
 		close(result.msgs)
+		if subClosed && len(result.msgs) == 0 {
+			return nil, errors.Join(ErrBadSubscription, ErrSubscriptionClosed)
+		}
 		result.done <- struct{}{}
 		return result, nil
 	}

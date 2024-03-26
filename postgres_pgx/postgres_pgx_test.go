@@ -148,3 +148,37 @@ SELECT * FROM temp_TestRawMultipleSQL2
 
 	t.Log("Прошло время: ", time.Since(TimeStart))
 }
+
+func TestRawMultipleSQL2(t *testing.T) {
+	config_main.LoadEnv()
+	GetConnection()
+	defer CloseConnection()
+
+	TimeStart := time.Now()
+
+	TextSQL := `
+drop table if exists temp_TestRawMultipleSQL2; 
+CREATE TEMPORARY TABLE temp_TestRawMultipleSQL2 (id int);
+
+insert into temp_TestRawMultipleSQL2
+select 1;
+
+SELECT * FROM temp_TestRawMultipleSQL2
+`
+
+	ctx := contextmain.GetContext()
+	Rows, err := Conn.Query(ctx, TextSQL)
+	if err == nil {
+		t.Error("TestRawMultipleSQL2() Query() error: ", err)
+	}
+
+	Otvet := 0
+	for Rows.Next() {
+		err := Rows.Scan(&Otvet)
+		if err != nil {
+			t.Error("TestRawMultipleSQL2() Scan() error: ", err)
+		}
+	}
+
+	t.Log("Прошло время: ", time.Since(TimeStart))
+}

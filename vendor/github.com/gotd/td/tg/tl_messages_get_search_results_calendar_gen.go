@@ -39,11 +39,17 @@ var (
 //
 // See https://core.telegram.org/method/messages.getSearchResultsCalendar for reference.
 type MessagesGetSearchResultsCalendarRequest struct {
-	// Flags field of MessagesGetSearchResultsCalendarRequest.
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
 	// Peer where to search
 	Peer InputPeerClass
-	// SavedPeerID field of MessagesGetSearchResultsCalendarRequest.
+	// Search within the saved message dialog »¹ with this ID.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/saved-messages
 	//
 	// Use SetSavedPeerID and GetSavedPeerID helpers.
 	SavedPeerID InputPeerClass

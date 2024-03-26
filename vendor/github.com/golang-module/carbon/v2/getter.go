@@ -4,6 +4,12 @@ import (
 	"time"
 )
 
+// StdTime converts Carbon to standard time.Time.
+// 将 Carbon 转换成标准 time.Time
+func (c Carbon) StdTime() time.Time {
+	return c.time.In(c.loc)
+}
+
 // DaysInYear gets total days in year like 365.
 // 获取本年的总天数
 func (c Carbon) DaysInYear() int {
@@ -31,7 +37,7 @@ func (c Carbon) MonthOfYear() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	return int(c.ToStdTime().Month())
+	return int(c.StdTime().Month())
 }
 
 // DayOfYear gets day of year like 365.
@@ -40,7 +46,7 @@ func (c Carbon) DayOfYear() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	return c.ToStdTime().YearDay()
+	return c.StdTime().YearDay()
 }
 
 // DayOfMonth gets day of month like 30.
@@ -49,7 +55,7 @@ func (c Carbon) DayOfMonth() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	return c.ToStdTime().Day()
+	return c.StdTime().Day()
 }
 
 // DayOfWeek gets day of week like 6.
@@ -58,7 +64,7 @@ func (c Carbon) DayOfWeek() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	day := int(c.ToStdTime().Weekday())
+	day := int(c.StdTime().Weekday())
 	if day == 0 {
 		return DaysPerWeek
 	}
@@ -71,7 +77,7 @@ func (c Carbon) WeekOfYear() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	_, week := c.ToStdTime().ISOWeek()
+	_, week := c.StdTime().ISOWeek()
 	return week
 }
 
@@ -136,7 +142,7 @@ func (c Carbon) Date() (year, month, day int) {
 		return
 	}
 	var tm time.Month
-	year, tm, day = c.ToStdTime().Date()
+	year, tm, day = c.StdTime().Date()
 	return year, int(tm), day
 }
 
@@ -176,7 +182,7 @@ func (c Carbon) Time() (hour, minute, second int) {
 	if c.IsInvalid() {
 		return
 	}
-	return c.ToStdTime().Clock()
+	return c.StdTime().Clock()
 }
 
 // TimeMilli gets current hour, minute, second and millisecond like 13, 14, 15, 999.
@@ -233,7 +239,7 @@ func (c Carbon) Year() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	return c.ToStdTime().Year()
+	return c.StdTime().Year()
 }
 
 // Quarter gets current quarter like 3.
@@ -283,7 +289,7 @@ func (c Carbon) Hour() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	return c.ToStdTime().Hour()
+	return c.StdTime().Hour()
 }
 
 // Minute gets current minute like 14.
@@ -292,7 +298,7 @@ func (c Carbon) Minute() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	return c.ToStdTime().Minute()
+	return c.StdTime().Minute()
 }
 
 // Second gets current second like 15.
@@ -301,7 +307,7 @@ func (c Carbon) Second() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	return c.ToStdTime().Second()
+	return c.StdTime().Second()
 }
 
 // Millisecond gets current millisecond like 999.
@@ -310,7 +316,7 @@ func (c Carbon) Millisecond() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	return c.ToStdTime().Nanosecond() / 1e6
+	return c.StdTime().Nanosecond() / 1e6
 }
 
 // Microsecond gets current microsecond like 999999.
@@ -319,7 +325,7 @@ func (c Carbon) Microsecond() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	return c.ToStdTime().Nanosecond() / 1e3
+	return c.StdTime().Nanosecond() / 1e3
 }
 
 // Nanosecond gets current nanosecond like 999999999.
@@ -328,7 +334,7 @@ func (c Carbon) Nanosecond() int {
 	if c.IsInvalid() {
 		return 0
 	}
-	return c.ToStdTime().Nanosecond()
+	return c.StdTime().Nanosecond()
 }
 
 // Timestamp gets timestamp with second like 1596604455.
@@ -337,7 +343,7 @@ func (c Carbon) Timestamp() int64 {
 	if c.IsInvalid() {
 		return 0
 	}
-	return c.ToStdTime().Unix()
+	return c.StdTime().Unix()
 }
 
 // TimestampMilli gets timestamp with millisecond like 1596604455000.
@@ -346,7 +352,7 @@ func (c Carbon) TimestampMilli() int64 {
 	if c.IsInvalid() {
 		return 0
 	}
-	t := c.ToStdTime()
+	t := c.StdTime()
 	return t.Unix()*1e3 + int64(t.Nanosecond())/1e6
 }
 
@@ -356,7 +362,7 @@ func (c Carbon) TimestampMicro() int64 {
 	if c.IsInvalid() {
 		return 0
 	}
-	t := c.ToStdTime()
+	t := c.StdTime()
 	return t.Unix()*1e6 + int64(t.Nanosecond())/1e3
 }
 
@@ -366,7 +372,7 @@ func (c Carbon) TimestampNano() int64 {
 	if c.IsInvalid() {
 		return 0
 	}
-	return c.ToStdTime().UnixNano()
+	return c.StdTime().UnixNano()
 }
 
 // Location gets location name like "PRC".
@@ -378,14 +384,14 @@ func (c Carbon) Location() string {
 // Timezone gets timezone name like "CST".
 // 获取时区
 func (c Carbon) Timezone() string {
-	name, _ := c.ToStdTime().Zone()
+	name, _ := c.StdTime().Zone()
 	return name
 }
 
 // Offset gets offset seconds from the UTC timezone like 28800.
 // 获取距离UTC时区的偏移量，单位秒
 func (c Carbon) Offset() int {
-	_, offset := c.ToStdTime().Zone()
+	_, offset := c.StdTime().Zone()
 	return offset
 }
 

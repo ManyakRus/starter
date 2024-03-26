@@ -77,7 +77,7 @@ func (c Carbon) AddDuration(duration string) Carbon {
 		return c
 	}
 	td, err := parseByDuration(duration)
-	c.time, c.Error = c.ToStdTime().Add(td), err
+	c.time, c.Error = c.StdTime().Add(td), err
 	return c
 }
 
@@ -189,7 +189,7 @@ func (c Carbon) AddYears(years int) Carbon {
 	if c.IsInvalid() {
 		return c
 	}
-	c.time = c.ToStdTime().AddDate(years, 0, 0)
+	c.time = c.StdTime().AddDate(years, 0, 0)
 	return c
 }
 
@@ -302,7 +302,7 @@ func (c Carbon) AddMonths(months int) Carbon {
 	if c.IsInvalid() {
 		return c
 	}
-	c.time = c.ToStdTime().AddDate(0, months, 0)
+	c.time = c.StdTime().AddDate(0, months, 0)
 	return c
 }
 
@@ -388,7 +388,7 @@ func (c Carbon) AddDays(days int) Carbon {
 	if c.IsInvalid() {
 		return c
 	}
-	c.time = c.ToStdTime().AddDate(0, 0, days)
+	c.time = c.StdTime().AddDate(0, 0, days)
 	return c
 }
 
@@ -417,7 +417,7 @@ func (c Carbon) AddHours(hours int) Carbon {
 		return c
 	}
 	td := time.Duration(hours) * time.Hour
-	c.time = c.ToStdTime().Add(td)
+	c.time = c.StdTime().Add(td)
 	return c
 }
 
@@ -446,7 +446,7 @@ func (c Carbon) AddMinutes(minutes int) Carbon {
 		return c
 	}
 	td := time.Duration(minutes) * time.Minute
-	c.time = c.ToStdTime().Add(td)
+	c.time = c.StdTime().Add(td)
 	return c
 }
 
@@ -475,7 +475,7 @@ func (c Carbon) AddSeconds(seconds int) Carbon {
 		return c
 	}
 	td := time.Duration(seconds) * time.Second
-	c.time = c.ToStdTime().Add(td)
+	c.time = c.StdTime().Add(td)
 	return c
 }
 
@@ -504,7 +504,7 @@ func (c Carbon) AddMilliseconds(milliseconds int) Carbon {
 		return c
 	}
 	td := time.Duration(milliseconds) * time.Millisecond
-	c.time = c.ToStdTime().Add(td)
+	c.time = c.StdTime().Add(td)
 	return c
 }
 
@@ -533,7 +533,7 @@ func (c Carbon) AddMicroseconds(microseconds int) Carbon {
 		return c
 	}
 	td := time.Duration(microseconds) * time.Microsecond
-	c.time = c.ToStdTime().Add(td)
+	c.time = c.StdTime().Add(td)
 	return c
 }
 
@@ -562,7 +562,7 @@ func (c Carbon) AddNanoseconds(nanoseconds int) Carbon {
 		return c
 	}
 	td := time.Duration(nanoseconds) * time.Nanosecond
-	c.time = c.ToStdTime().Add(td)
+	c.time = c.StdTime().Add(td)
 	return c
 }
 

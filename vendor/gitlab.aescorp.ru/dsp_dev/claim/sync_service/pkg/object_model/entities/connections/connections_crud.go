@@ -23,9 +23,18 @@ type ICrud_Connection interface {
 	Save(*Connection) error
 	Update(*Connection) error
 	Create(*Connection) error
+	Update_BranchID(*Connection) error
+	Update_DbName(*Connection) error
+	Update_DbScheme(*Connection) error
+	Update_IsLegal(*Connection) error
+	Update_Login(*Connection) error
+	Update_Name(*Connection) error
+	Update_Password(*Connection) error
+	Update_Port(*Connection) error
+	Update_Server(*Connection) error
 }
 
-// TableName - возвращает имя таблицы в БД, нужен для gorm
+// TableName - возвращает имя таблицы в БД
 func (m Connection) TableNameDB() string {
 	return "connections"
 }

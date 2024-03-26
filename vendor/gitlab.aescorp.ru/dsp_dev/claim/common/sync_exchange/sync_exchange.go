@@ -9,6 +9,8 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/syndtr/goleveldb/leveldb"
 
+	"gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/bus_conn"
+	"gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/cons"
 	"gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/data_packer"
 	"gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/sync_confirm"
 	"gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/sync_global"
@@ -18,12 +20,11 @@ import (
 // PRIVATE
 
 var (
-	nc       *nats.Conn
-	packer   *data_packer.DataPacker
-	db       *leveldb.DB
-	block    sync.RWMutex
-	block1   sync.Mutex
-	isInited bool
+	nc      *nats.Conn
+	packer  *data_packer.DataPacker
+	db      *leveldb.DB
+	block1  sync.Mutex
+	busConn bus_conn.BusConn
 )
 
 func requestTopic(topic string) string {
@@ -32,18 +33,6 @@ func requestTopic(topic string) string {
 
 func responseTopic(pack *sync_types.SyncPackage) string {
 	return sync_global.SyncRoot + pack.Head.Sender + "/" + pack.Head.NetID + "/"
-}
-
-func setIsInited(b bool) {
-	block.Lock()
-	defer block.Unlock()
-	isInited = b
-}
-
-func getIsInited() bool {
-	block.RLock()
-	defer block.RUnlock()
-	return isInited
 }
 
 // doSendMessage Непосредственно отправка сообщения
@@ -152,13 +141,12 @@ type Callback func(pack *sync_types.SyncPackage)
 
 // InitSyncExchange Функция инициализации подключения к шине
 func InitSyncExchange(url string, serviceName string) error {
-	block1.Lock()
-	defer block1.Unlock()
-
-	if getIsInited() {
-		log.Println("[INFO] InitSyncExchange, already inited")
+	if busConn.IsConnect() {
+		log.Println("InitSyncExchange(): already inited")
 		return nil
 	}
+	block1.Lock()
+	defer block1.Unlock()
 
 	err := sync_global.SetSyncService(serviceName)
 	if err != nil {
@@ -182,17 +170,13 @@ func InitSyncExchange(url string, serviceName string) error {
 		log.Printf("[INFO] InitSyncExchange, NATS connection status: %v\n", status.String())
 	}
 
-	// TODO Вынести путь в параметр функции
-	storePath := "./store"
 	// TODO Тут обработать не подтверждённые пакеты
-	_db, err := sync_confirm.InitConfirm(storePath)
+	_db, err := sync_confirm.InitConfirm(cons.StorePath)
 	if err != nil {
-		return fmt.Errorf("InitSyncExchange, InitConfirm, path: %q, error: %v", storePath, err)
+		return fmt.Errorf("InitSyncExchange, InitConfirm, path: %q, error: %v", cons.StorePath, err)
 	}
 	db = _db
-
-	setIsInited(true)
-
+	busConn.Set()
 	return nil
 }
 
@@ -201,10 +185,10 @@ func DeInitSyncExchange() error {
 	block1.Lock()
 	defer block1.Unlock()
 
-	if !getIsInited() {
-		return fmt.Errorf("DeInitSyncExchange, not inited")
+	if !busConn.IsConnect() {
+		return fmt.Errorf("DeInitSyncExchange(): not inited")
 	}
-	defer setIsInited(false)
+	defer busConn.Reset()
 
 	nc.Close()
 
@@ -225,8 +209,8 @@ func SendMessage(topic string, pack sync_types.SyncPackage) error {
 	block1.Lock()
 	defer block1.Unlock()
 
-	if !getIsInited() {
-		return fmt.Errorf("SendMessage, not inited")
+	if !busConn.IsConnect() {
+		return fmt.Errorf("SendMessage(): not inited")
 	}
 	// log.Println("[DEBUG] SendMessage")
 	err := doSendMessage(topic, pack, false)
@@ -242,8 +226,8 @@ func WaitMessage(topic string, callback Callback) error {
 	// block1.Lock()
 	// defer block1.Unlock()
 
-	if !getIsInited() {
-		return fmt.Errorf("WaitMessage, not inited")
+	if !busConn.IsConnect() {
+		return fmt.Errorf("WaitMessage(): not inited")
 	}
 	// log.Println("[DEBUG] WaitMessage")
 
@@ -257,8 +241,8 @@ func SendRequest(receiver string, pack sync_types.SyncPackage, timeout int) (res
 
 	result = sync_types.MakeSyncError("", 0, "")
 
-	if !getIsInited() {
-		return result, fmt.Errorf("SendRequest, not inited")
+	if !busConn.IsConnect() {
+		return result, fmt.Errorf("SendRequest(): not inited")
 	}
 	// log.Println("[DEBUG] SendRequest")
 	// _time := time.Now()
@@ -356,8 +340,8 @@ func SendRequest(receiver string, pack sync_types.SyncPackage, timeout int) (res
 
 // SendResponse Отправка ответа на запрос
 func SendResponse(packIn *sync_types.SyncPackage, packOut sync_types.SyncPackage) error {
-	if !getIsInited() {
-		return fmt.Errorf("SendResponse, not inited")
+	if !busConn.IsConnect() {
+		return fmt.Errorf("SendResponse(): not inited")
 	}
 
 	// log.Println("[DEBUG] SendResponse")

@@ -13,11 +13,11 @@ import (
 
 	"github.com/gotd/td/bin"
 	"github.com/gotd/td/clock"
-	"github.com/gotd/td/internal/mtproto"
-	"github.com/gotd/td/internal/pool"
-	"github.com/gotd/td/internal/tdsync"
+	"github.com/gotd/td/mtproto"
 	"github.com/gotd/td/oteltg"
+	"github.com/gotd/td/pool"
 	"github.com/gotd/td/session"
+	"github.com/gotd/td/tdsync"
 	"github.com/gotd/td/telegram/dcs"
 	"github.com/gotd/td/telegram/internal/manager"
 	"github.com/gotd/td/telegram/internal/version"
@@ -128,6 +128,9 @@ type Client struct {
 
 	// Tracing.
 	tracer trace.Tracer
+
+	// onTransfer is called in transfer.
+	onTransfer AuthTransferHandler
 }
 
 // NewClient creates new unstarted client.
@@ -161,6 +164,7 @@ func NewClient(appID int, appHash string, opt Options) *Client {
 		migrationTimeout: opt.MigrationTimeout,
 		noUpdatesMode:    opt.NoUpdates,
 		mw:               opt.Middlewares,
+		onTransfer:       opt.OnTransfer,
 	}
 	if opt.TracerProvider != nil {
 		client.tracer = opt.TracerProvider.Tracer(oteltg.Name)

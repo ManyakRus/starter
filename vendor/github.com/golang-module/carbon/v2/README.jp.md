@@ -56,11 +56,11 @@ import "gitee.com/golang-module/carbon"
 
 > 現在時刻が 2020-08-05 13:14:15.999999999 +0800 CST であると仮定します。
 
-##### デフォルト値の設定 (グローバルに有効)
+##### グローバル・デフォルトの設定
 
 ```go
 carbon.SetDefault(carbon.Default{
-  Layout: carbon.RFC3339Layout,
+  Layout: carbon.DateTimeLayout,
   Timezone: carbon.PRC,
   WeekStartsAt: carbon.Sunday,
   Locale: "jp",
@@ -68,6 +68,15 @@ carbon.SetDefault(carbon.Default{
 ```
 
 > 設定されていない場合，デフォルトのレイアウト テンプレートは `2006-01-02 15:04:05`，デフォルトのタイムゾーンは `Local`，デフォルトの週の開始日は `日曜日`，デフォルトの言語は `en` です。
+
+##### Carbon と time.Time 交換
+
+```go
+// 標準の time.Time を Carbon に変換します
+carbon.CreateFromStdTime(time.Now())
+// Carbon を標準の time.Time に変換します
+carbon.Now().StdTime()
+```
 
 ##### 昨日、今日、明日
 
@@ -245,15 +254,6 @@ carbon.ParseByLayout("今天是 2020年08月05日13时14分15秒", "今天是 20
 carbon.ParseByLayout("2020-08-05 13:14:15", "2006-01-02 15:04:05", carbon.Tokyo).ToDateTimeString() // 2020-08-05 14:14:15
 ```
 
-##### Carbon と time.Time 交換
-
-```go
-// 標準の time.Time を Carbon に変換します
-carbon.CreateFromStdTime(time.Now())
-// Carbon を標準の time.Time に変換します
-carbon.Now().ToStdTime()
-```
-
 ##### 始まりと終わり
 
 ```go
@@ -371,9 +371,9 @@ carbon.Parse("2020-02-29 13:14:15").SubYear().ToDateTimeString() // 2019-03-01 1
 carbon.Parse("2020-02-29 13:14:15").SubYearNoOverflow().ToDateTimeString() // 2019-02-28 13:14:15
 
 // 三ヶ四半期を追加
-carbon.Parse("2019-08-31 13:14:15").AddQuarters(3).ToDateTimeString() // 2019-03-02 13:14:15
+carbon.Parse("2019-05-31 13:14:15").AddQuarters(3).ToDateTimeString() // 2020-03-02 13:14:15
 // 三ヶ四半期を追加(オーバーフローなし)
-carbon.Parse("2019-08-31 13:14:15").AddQuartersNoOverflow(3).ToDateTimeString() // 2019-02-29 13:14:15
+carbon.Parse("2019-05-31 13:14:15").AddQuartersNoOverflow(3).ToDateTimeString() // 2020-02-29 13:14:15
 // 一ヶ四半期を追加
 carbon.Parse("2019-11-30 13:14:15").AddQuarter().ToDateTimeString() // 2020-03-01 13:14:15
 // 一ヶ四半期を追加(オーバーフローなし)
@@ -539,6 +539,16 @@ carbon.Now().SubYearsNoOverflow(1).DiffInString() // 1 year
 carbon.Now().DiffAbsInString(carbon.Now()) // just now
 carbon.Now().AddYearsNoOverflow(1).DiffAbsInString(carbon.Now()) // 1 year
 carbon.Now().SubYearsNoOverflow(1).DiffAbsInString(carbon.Now()) // 1 year
+
+// 相差時間長
+now := carbon.Now()
+now.DiffInDuration(now).String() // 0s
+now.AddHour().DiffInDuration(now).String() // 1h0m0s
+now.SubHour().DiffInDuration(now).String() // -1h0m0s
+// 相差時間長（絶対値）
+now.DiffAbsInDuration(now).String() // 0s
+now.AddHour().DiffAbsInDuration(now).String() // 1h0m0s
+now.SubHour().DiffAbsInDuration(now).String() // 1h0m0s
 
 // 人間に優しい読み取り可能なフォーマットの時間差を取得します
 carbon.Parse("2020-08-05 13:14:15").DiffForHumans() // just now
@@ -1083,6 +1093,14 @@ carbon.Parse("2020-08-05 13:14:15.999999999").ToIso8601MilliString() // 2020-08-
 carbon.Parse("2020-08-05 13:14:15.999999999").ToIso8601MicroString() // 2020-08-05T13:14:15.999999+08:00
 // ISO8601Nano フォーマット文字列を出力
 carbon.Parse("2020-08-05 13:14:15.999999999").ToIso8601NanoString() // 2020-08-05T13:14:15.999999999+08:00
+// ISO8601Zulu フォーマット文字列を出力 
+carbon.Parse("2020-08-05 13:14:15.999999999").ToIso8601ZuluString() // 2020-08-05T13:14:15Z
+// ISO8601ZuluMilli フォーマット文字列を出力 
+carbon.Parse("2020-08-05 13:14:15.999999999").ToIso8601ZuluMilliString() // 2020-08-05T13:14:15.999Z
+// ISO8601ZuluMicro フォーマット文字列を出力 
+carbon.Parse("2020-08-05 13:14:15.999999999").ToIso8601ZuluMicroString() // 2020-08-05T13:14:15.999999Z
+// ISO8601ZuluNano フォーマット文字列を出力 
+carbon.Parse("2020-08-05 13:14:15.999999999").ToIso8601ZuluNanoString() // 2020-08-05T13:14:15.999999999Z
 
 // RFC822 フォーマット文字列を出力
 carbon.Parse("2020-08-05 13:14:15").ToRfc822String() // 05 Aug 20 13:14 CST
@@ -1116,13 +1134,18 @@ fmt.Printf("%s", carbon.Parse("2020-08-05 13:14:15")) // 2020-08-05 13:14:15
 // "2006-01-02 15:04:05.999999999 -0700 MST" フォーマット文字列を出力
 carbon.Parse("2020-08-05 13:14:15").ToString() // 2020-08-05 13:14:15.999999 +0800 CST
 
-// レイアウトを指定する文字列を出力, Layout() は 是ToLayoutString() の略記です
+// "Jan 2, 2006" フォーマット文字列を出力
+carbon.Parse("2020-08-05 13:14:15").ToFormattedDateString() // Aug 5, 2020
+// "Mon, Jan 2, 2006" フォーマット文字列を出力
+carbon.Parse("2020-08-05 13:14:15").ToFormattedDayDateString() // Wed, Aug 5, 2020
+
+// レイアウトを指定する文字列を出力
 carbon.Parse("2020-08-05 13:14:15").Layout(carbon.ISO8601Layout) // 2020-08-05T13:14:15+08:00
 carbon.Parse("2020-08-05 13:14:15").Layout("20060102150405") // 20200805131415
 carbon.Parse("2020-08-05 13:14:15").Layout("2006年01月02日 15时04分05秒") // 2020年08月05日 13时14分15秒
 carbon.Parse("2020-08-05 13:14:15").Layout("It is 2006-01-02 15:04:05") // It is 2020-08-05 13:14:15
 
-// 指定されたフォーマットの文字列を出力, Format() は 是ToFormatString() の略記です
+// 指定されたフォーマットの文字列を出力
 carbon.Parse("2020-08-05 13:14:15").Format("YmdHis") // 20200805131415
 carbon.Parse("2020-08-05 13:14:15").Format("Y年m月d日 H时i分s秒") // 2020年08月05日 13时14分15秒
 carbon.Parse("2020-08-05 13:14:15").Format("l jS \\o\\f F Y h:i:s A") // Wednesday 5th of August 2020 01:14:15 PM
@@ -1186,124 +1209,27 @@ carbon.Parse("2020-08-05 13:14:15").IsAutumn() // false
 carbon.Parse("2020-08-05 13:14:15").IsWinter() // false
 ```
 
-##### 中国の旧暦
-
-> 現在は西暦`1900`年`2100`年の`200`年スパンだけをサポートしています
-
-```go
-// 干支を取得します
-carbon.Parse("2020-08-05 13:14:15").Lunar().Animal() // 鼠
-
-// 中国の旧暦の祝日を獲得します
-carbon.Parse("2021-02-12 13:14:15").Lunar().Festival() // 春节
-
-// 中国の年月日時分秒を取得する
-carbon.Parse("2020-08-05 13:14:15").Lunar().DateTime() // 2020, 6, 16, 13, 14, 15
-// 中国の年月日を取得する
-carbon.Parse("2020-08-05 13:14:15").Lunar().Date() // 2020, 6, 16
-// 中国の時分秒を取得する
-carbon.Parse("2020-08-05 13:14:15").Lunar().Time() // 13, 14, 15
-
-// 中国の年を取得する
-carbon.Parse("2020-08-05 13:14:15").Lunar().Year() // 2020
-// 中国の月を取得する
-carbon.Parse("2020-08-05 13:14:15").Lunar().Month() // 6
-// 中国の閏月を取得する
-carbon.Parse("2020-08-05 13:14:15").Lunar().LeapMonth() // 4
-// 中国のああを取得する
-carbon.Parse("2020-08-05 13:14:15").Lunar().Day() // 16
-// 中国の旧正月 YYYY-MM-DD HH::ii::ss フォーマット文字列を取得します
-fmt.Printf("%s", carbon.Parse("2020-08-05 13:14:15").Lunar()) // 2020-06-16 13:14:15
-
-// 中国の旧正月文字列を取得します
-carbon.Parse("2020-08-05 13:14:15").Lunar().ToYearString() // 二零二零
-// 中国の旧正月文字列を取得します
-carbon.Parse("2020-08-05 13:14:15").Lunar().ToMonthString() // 六月
-// 中国の旧正月の日文字列を取得します
-carbon.Parse("2020-08-05 13:14:15").Lunar().ToDayString() // 十六
-// 中国の旧正月日付文字列を取得します
-carbon.Parse("2020-08-05 13:14:15").Lunar().ToDateString() // 二零二零年六月十六
-
-// 中国の旧正月の閏年ですか
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsLeapYear() // true
-// 中国の旧暦の閏月かどうか
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsLeapMonth() // false
-
-// ねずみ年かどうか
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsRatYear() // true
-// 牛年かどうか
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsOxYear() // false
-// 寅年かどうか
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsTigerYear() // false
-// うさぎ年かどうか
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsRabbitYear() // false
-// 龍年かどうか
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsDragonYear() // false
-// 蛇の年かどうか
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsSnakeYear() // false
-// 馬年かどうか
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsHorseYear() // false
-// 羊年かどうか
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsGoatYear() // false
-// 申年かどうか
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsMonkeyYear() // false
-// 鶏の年かどうか
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsRoosterYear() // false
-// 犬年かどうか
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsDogYear() // false
-// 豚年かどうか
-carbon.Parse("2020-08-05 13:14:15").Lunar().IsPigYear() // false
-
-// 旧正月を取得する
-carbon.Parse("2020-02-05 21:00:00").Lunar().DoubleHour() // 亥时
-
-// であるかどうかね時
-carbon.Parse("2020-03-21 00:00:00").Lunar().IsFirstDoubleHour() // true
-// であるかどううし時
-carbon.Parse("2020-03-21 01:00:00").Lunar().IsSecondDoubleHour() // true
-// であるかどうとら時
-carbon.Parse("2020-03-21 03:00:00").Lunar().IsThirdDoubleHour() // true
-// であるかどうう時
-carbon.Parse("2020-03-21 05:00:00").Lunar().IsFourthDoubleHour() // true
-// であるかどうたつ時
-carbon.Parse("2020-03-21 07:00:00").Lunar().IsFifthDoubleHour() // true
-// であるかどうみ時
-carbon.Parse("2020-03-21 09:00:00").Lunar().IsSixthDoubleHour() // true
-// であるかどううま時
-carbon.Parse("2020-03-21 11:00:00").Lunar().IsSeventhDoubleHour() // true
-// であるかどうひつじ時
-carbon.Parse("2020-03-21 13:00:00").Lunar().IsEighthDoubleHour() // true
-// であるかどうさる時
-carbon.Parse("2020-03-21 15:00:00").Lunar().IsNinthDoubleHour() // true
-// であるかどうとり時
-carbon.Parse("2020-03-21 17:00:00").Lunar().IsTenthDoubleHour() // true
-// であるかどういぬ時
-carbon.Parse("2020-03-21 19:00:00").Lunar().IsEleventhDoubleHour() // true
-// であるかどうい時
-carbon.Parse("2020-03-21 21:00:00").Lunar().IsTwelfthDoubleHour() // true
-```
-
 ##### JSON
 
 ###### シナリオ 1: すべての時刻フィールドが同じ形式である
 ```go
 carbon.SetDefault(carbon.Default{
-  Layout: carbon.RFC3339Layout,
+  Layout: carbon.DateTimeLayout,
 })
 
 type Person struct {
   Name string `json:"name"`
   Age  int    `json:"age"`
   
-  Field1 Carbon `json:"field1"`
-  Field2 Carbon `json:"field2"`
-  Field3 Carbon `json:"field3"`
-  Field4 Carbon `json:"field4"`
+  Field1 carbon.Carbon `json:"field1"`
+  Field2 carbon.Carbon `json:"field2"`
+  Field3 carbon.Carbon `json:"field3"`
+  Field4 carbon.Carbon `json:"field4"`
   
-  Field5 Carbon `json:"field5"`
-  Field6 Carbon `json:"field6"`
-  Field7 Carbon `json:"field7"`
-  Field8 Carbon `json:"field8"`
+  Field5 carbon.Carbon `json:"field5"`
+  Field6 carbon.Carbon `json:"field6"`
+  Field7 carbon.Carbon `json:"field7"`
+  Field8 carbon.Carbon `json:"field8"`
 }
 
 now := carbon.Parse("2020-08-05 13:14:15", carbon.PRC)
@@ -1331,14 +1257,14 @@ fmt.Printf("%s", data)
 {
   "name": "gouguoyin",
   "age": 18,
-  "field1": "2020-08-05T13:14:15+08:00",
-  "field2": "2020-08-05T13:14:15+08:00",
-  "field3": "2020-08-05T13:14:15+08:00",
-  "field4": "2020-08-05T13:14:15+08:00",
-  "field5": "2020-08-05T13:14:15+08:00",
-  "field6": "2020-08-05T13:14:15+08:00",
-  "field7": "2020-08-05T13:14:15+08:00",
-  "field8": "2020-08-05T13:14:15+08:00",
+  "field1": "2020-08-05 13:14:15",
+  "field2": "2020-08-05 13:14:15",
+  "field3": "2020-08-05 13:14:15",
+  "field4": "2020-08-05 13:14:15",
+  "field5": "2020-08-05 13:14:15",
+  "field6": "2020-08-05 13:14:15",
+  "field7": "2020-08-05 13:14:15",
+  "field8": "2020-08-05 13:14:15"
 }
 
 unmarshalErr := json.Unmarshal(data, &person)
@@ -1347,15 +1273,15 @@ if unmarshalErr != nil {
   log.Fatal(unmarshalErr)
 }
 
-fmt.Printf("%s", person.Field1) // 2020-08-05T13:14:15+08:00
-fmt.Printf("%s", person.Field2) // 2020-08-05T13:14:15+08:00
-fmt.Printf("%s", person.Field3) // 2020-08-05T13:14:15+08:00
-fmt.Printf("%s", person.Field4) // 2020-08-05T13:14:15+08:00
+fmt.Printf("%s", person.Field1) // 2020-08-05 13:14:15
+fmt.Printf("%s", person.Field2) // 2020-08-05 13:14:15
+fmt.Printf("%s", person.Field3) // 2020-08-05 13:14:15
+fmt.Printf("%s", person.Field4) // 2020-08-05 13:14:15
 
-fmt.Printf("%s", person.Field5) // 2020-08-05T13:14:15+08:00
-fmt.Printf("%s", person.Field6) // 2020-08-05T13:14:15+08:00
-fmt.Printf("%s", person.Field7) // 2020-08-05T13:14:15+08:00
-fmt.Printf("%s", person.Field8) // 2020-08-05T13:14:15+08:00
+fmt.Printf("%s", person.Field5) // 2020-08-05 13:14:15
+fmt.Printf("%s", person.Field6) // 2020-08-05 13:14:15
+fmt.Printf("%s", person.Field7) // 2020-08-05 13:14:15
+fmt.Printf("%s", person.Field8) // 2020-08-05 13:14:15
 ```
 
 ###### シナリオ 2: 異なる時刻フィールドは異なる形式を持つ
@@ -1367,24 +1293,24 @@ type Person struct {
   Name string `json:"name"`
   Age  int    `json:"age"`
   
-  Field1 Carbon `json:"field1"`
+  Field1 carbon.Carbon `json:"field1"`
   
-  Field2 Carbon `json:"field2" carbon:"type:date" tz:"PRC"`
-  Field3 Carbon `json:"field3" carbon:"type:time" tz:"PRC"`
-  Field4 Carbon `json:"field4" carbon:"type:dateTime" tz:"PRC"`
+  Field2 carbon.Carbon `json:"field2" carbon:"type:date" tz:"PRC"`
+  Field3 carbon.Carbon `json:"field3" carbon:"type:time" tz:"PRC"`
+  Field4 carbon.Carbon `json:"field4" carbon:"type:dateTime" tz:"PRC"`
   // または
-  Field2 Carbon `json:"field2" carbon:"layout:2006-01-02" tz:"PRC"`
-  Field3 Carbon `json:"field3" carbon:"layout:15:04:05" tz:"PRC"`
-  Field4 Carbon `json:"field4" carbon:"layout:2006-01-02 15:04:05" tz:"PRC"`
+  Field2 carbon.Carbon `json:"field2" carbon:"layout:2006-01-02" tz:"PRC"`
+  Field3 carbon.Carbon `json:"field3" carbon:"layout:15:04:05" tz:"PRC"`
+  Field4 carbon.Carbon `json:"field4" carbon:"layout:2006-01-02 15:04:05" tz:"PRC"`
   // または
-  Field2 Carbon `json:"field2" carbon:"layout:2006-01-02" tz:"PRC"`
-  Field3 Carbon `json:"field3" carbon:"layout:15:04:05" tz:"PRC"`
-  Field4 Carbon `json:"field4" carbon:"layout:2006-01-02 15:04:05" tz:"PRC"`
+  Field2 carbon.Carbon `json:"field2" carbon:"format:Y-m-d" tz:"PRC"`
+  Field3 carbon.Carbon `json:"field3" carbon:"format:H:i:s" tz:"PRC"`
+  Field4 carbon.Carbon `json:"field4" carbon:"format:Y-m-d H:i:s" tz:"PRC"`
   
-  Field5 Carbon `json:"field5" carbon:"type:timestamp" tz:"PRC"`
-  Field6 Carbon `json:"field6" carbon:"type:timestampMilli" tz:"PRC"`
-  Field7 Carbon `json:"field7" carbon:"type:timestampMicro" tz:"PRC"`
-  Field8 Carbon `json:"field8" carbon:"type:timestampNano" tz:"PRC"`
+  Field5 carbon.Carbon `json:"field5" carbon:"type:timestamp" tz:"PRC"`
+  Field6 carbon.Carbon `json:"field6" carbon:"type:timestampMilli" tz:"PRC"`
+  Field7 carbon.Carbon `json:"field7" carbon:"type:timestampMicro" tz:"PRC"`
+  Field8 carbon.Carbon `json:"field8" carbon:"type:timestampNano" tz:"PRC"`
 }
 
 now := Parse("2020-08-05 13:14:15", carbon.PRC)
@@ -1453,6 +1379,14 @@ fmt.Printf("%d", person.Field8) // 1596604455999999999
 
 ```
 
+##### カレンダ＃カレンダ＃
+
+現在サポートされているカレンダーは
+
+* [儒略の日/簡略化儒略の日](./calendar/julian/README.jp.md "儒略日/简化儒略日")
+* [中国の旧暦](./calendar/lunar/README.jp.md "中国の旧暦")
+* [ペルシャ暦/イラン暦](./calendar/persian/README.jp.md "ペルシャ暦/イラン暦")
+
 ##### 国際化
 
 現在サポートされている言語
@@ -1470,14 +1404,16 @@ fmt.Printf("%d", person.Field8) // 1596604455999999999
 * [ウクライナ語(uk)](./lang/uk.json "ウクライナ語")：[open-git](https://github.com/open-git "open-git") から翻訳されます
 * [ルーマニア語(ro)](./lang/ro.json "ルーマニア語"): [DrOctavius](https://github.com/DrOctavius "DrOctavius") から翻訳されます
 * [インドネシア語(id)](./lang/id.json "インドネシア語"): [justpoypoy](https://github.com/justpoypoy "justpoypoy") から翻訳されます
+* [イタリア語(it)](./lang/it.json "イタリア語"): [nicoloHevelop](https://github.com/hollowaykeanho "nicoloHevelop") から翻訳されます
 * [マレーシアバハマ語(ms-MY)](./lang/ms-MY.json "マレーシアバハマ語"): [hollowaykeanho](https://github.com/hollowaykeanho "hollowaykeanho") から翻訳されます
 * [フランス語(fr)](./lang/fr.json "フランス語"): [hollowaykeanho](https://github.com/hollowaykeanho "hollowaykeanho") から翻訳されます
 * [タイ語(th)](./lang/th.json "タイ語"): [izcream](https://github.com/izcream "izcream") から翻訳されます
 * [スウェーデン語(se)](./lang/se.json "スウェーデン語"):  [jwanglof](https://github.com/jwanglof "jwanglof") から翻訳されます
-* [イラン語(fa)](./lang/fa.json "イラン語"):  [Iranian](https://github.com/Iranian "Iranian") から翻訳されます
+* [ペルシア語(fa)](./lang/fa.json "ペルシア語"):  [Iranian](https://github.com/Iranian "Iranian") から翻訳されます
 * [ポーランド語(nl)](./lang/nl.json "ポーランド語"): [RemcoE33](https://github.com/RemcoE33 "RemcoE33") から翻訳されます
 * [ベトナム語(vi)](./lang/vi.json "ベトナム語"): [culy247](https://github.com/culy247 "culy247") から翻訳されます
 * [ヒンディー語(hi)](./lang/hi.json "ヒンディー語"): [chauhan17nitin](https://github.com/chauhan17nitin "chauhan17nitin") から翻訳されます
+* [ポーランド語(pl)](./lang/pl.json "ポーランド語"): [gouguoyin](https://github.com/gouguoyin "gouguoyin") から翻訳されます
 
 現在サポートされている方法
 

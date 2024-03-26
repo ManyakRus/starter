@@ -32,14 +32,21 @@ var (
 )
 
 // MessagesReorderPinnedSavedDialogsRequest represents TL type `messages.reorderPinnedSavedDialogs#8b716587`.
+// Reorder pinned saved message dialogs »¹.
+//
+// Links:
+//  1. https://core.telegram.org/api/saved-messages
 //
 // See https://core.telegram.org/method/messages.reorderPinnedSavedDialogs for reference.
 type MessagesReorderPinnedSavedDialogsRequest struct {
-	// Flags field of MessagesReorderPinnedSavedDialogsRequest.
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// Force field of MessagesReorderPinnedSavedDialogsRequest.
+	// If set, dialogs pinned server-side but not present in the order field will be unpinned.
 	Force bool
-	// Order field of MessagesReorderPinnedSavedDialogsRequest.
+	// New dialog order
 	Order []InputDialogPeerClass
 }
 
@@ -237,6 +244,10 @@ func (r *MessagesReorderPinnedSavedDialogsRequest) MapOrder() (value InputDialog
 }
 
 // MessagesReorderPinnedSavedDialogs invokes method messages.reorderPinnedSavedDialogs#8b716587 returning error if any.
+// Reorder pinned saved message dialogs »¹.
+//
+// Links:
+//  1. https://core.telegram.org/api/saved-messages
 //
 // See https://core.telegram.org/method/messages.reorderPinnedSavedDialogs for reference.
 func (c *Client) MessagesReorderPinnedSavedDialogs(ctx context.Context, request *MessagesReorderPinnedSavedDialogsRequest) (bool, error) {

@@ -7,7 +7,7 @@ import (
 // IsDST reports whether is daylight saving time.
 // 是否是夏令时
 func (c Carbon) IsDST() bool {
-	return c.ToStdTime().IsDST()
+	return c.time.IsDST()
 }
 
 // IsZero reports whether is zero time.
@@ -207,7 +207,7 @@ func (c Carbon) IsMonday() bool {
 	if c.IsInvalid() {
 		return false
 	}
-	return c.ToStdTime().Weekday() == time.Monday
+	return c.StdTime().Weekday() == time.Monday
 }
 
 // IsTuesday reports whether is Tuesday.
@@ -216,7 +216,7 @@ func (c Carbon) IsTuesday() bool {
 	if c.IsInvalid() {
 		return false
 	}
-	return c.ToStdTime().Weekday() == time.Tuesday
+	return c.StdTime().Weekday() == time.Tuesday
 }
 
 // IsWednesday reports whether is Wednesday.
@@ -225,7 +225,7 @@ func (c Carbon) IsWednesday() bool {
 	if c.IsInvalid() {
 		return false
 	}
-	return c.ToStdTime().Weekday() == time.Wednesday
+	return c.StdTime().Weekday() == time.Wednesday
 }
 
 // IsThursday reports whether is Thursday.
@@ -234,7 +234,7 @@ func (c Carbon) IsThursday() bool {
 	if c.IsInvalid() {
 		return false
 	}
-	return c.ToStdTime().Weekday() == time.Thursday
+	return c.StdTime().Weekday() == time.Thursday
 }
 
 // IsFriday reports whether is Friday.
@@ -243,7 +243,7 @@ func (c Carbon) IsFriday() bool {
 	if c.IsInvalid() {
 		return false
 	}
-	return c.ToStdTime().Weekday() == time.Friday
+	return c.StdTime().Weekday() == time.Friday
 }
 
 // IsSaturday reports whether is Saturday.
@@ -252,7 +252,7 @@ func (c Carbon) IsSaturday() bool {
 	if c.IsInvalid() {
 		return false
 	}
-	return c.ToStdTime().Weekday() == time.Saturday
+	return c.StdTime().Weekday() == time.Saturday
 }
 
 // IsSunday reports whether is Sunday.
@@ -261,7 +261,7 @@ func (c Carbon) IsSunday() bool {
 	if c.IsInvalid() {
 		return false
 	}
-	return c.ToStdTime().Weekday() == time.Sunday
+	return c.StdTime().Weekday() == time.Sunday
 }
 
 // IsWeekday reports whether is weekday.

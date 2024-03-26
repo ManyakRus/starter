@@ -32,24 +32,24 @@ func (c Carbon) Farthest(c1 Carbon, c2 Carbon) Carbon {
 
 // Max returns the maximum Carbon instance from the given Carbon instance (second-precision).
 // 返回最大的 Carbon 实例
-func Max(c1 Carbon, c2 ...Carbon) Carbon {
-	max := c1
+func Max(c1 Carbon, c2 ...Carbon) (c Carbon) {
+	c = c1
 	for i := range c2 {
-		if c2[i].Gte(max) {
-			max = c2[i]
+		if c2[i].Gte(c) {
+			c = c2[i]
 		}
 	}
-	return max
+	return
 }
 
 // Min returns the minimum Carbon instance from the given Carbon instance (second-precision).
 // 返回最小的 Carbon 实例
-func Min(c1 Carbon, c2 ...Carbon) Carbon {
-	min := c1
+func Min(c1 Carbon, c2 ...Carbon) (c Carbon) {
+	c = c1
 	for i := range c2 {
-		if c2[i].Lte(min) {
-			min = c2[i]
+		if c2[i].Lte(c) {
+			c = c2[i]
 		}
 	}
-	return min
+	return
 }

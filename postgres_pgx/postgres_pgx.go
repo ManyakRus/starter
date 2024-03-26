@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"github.com/ManyakRus/starter/logger"
 	"github.com/ManyakRus/starter/port_checker"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"strings"
 	"time"
 
@@ -20,7 +20,7 @@ import (
 	//_ "github.com/jackc/pgconn"
 	//_ "github.com/jackc/pgx/v4"
 	//"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
+	//_ "github.com/lib/pq"
 	//log "github.com/sirupsen/logrus"
 
 	"github.com/ManyakRus/starter/contextmain"
@@ -100,7 +100,7 @@ func Connect_WithApplicationName_err(ApplicationName string) error {
 
 	//
 	config, err := pgx.ParseConfig(databaseUrl)
-	config.PreferSimpleProtocol = true //для мульти-запросов
+	//config.PreferSimpleProtocol = true //для мульти-запросов
 	Conn, err = pgx.ConnectConfig(ctx, config)
 
 	if err != nil {

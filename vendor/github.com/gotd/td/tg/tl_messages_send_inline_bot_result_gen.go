@@ -31,7 +31,7 @@ var (
 	_ = tdjson.Encoder{}
 )
 
-// MessagesSendInlineBotResultRequest represents TL type `messages.sendInlineBotResult#f7bc68ba`.
+// MessagesSendInlineBotResultRequest represents TL type `messages.sendInlineBotResult#3ebee86a`.
 // Send a result obtained using messages.getInlineBotResults¹.
 //
 // Links:
@@ -87,10 +87,14 @@ type MessagesSendInlineBotResultRequest struct {
 	//
 	// Use SetSendAs and GetSendAs helpers.
 	SendAs InputPeerClass
+	// QuickReplyShortcut field of MessagesSendInlineBotResultRequest.
+	//
+	// Use SetQuickReplyShortcut and GetQuickReplyShortcut helpers.
+	QuickReplyShortcut InputQuickReplyShortcutClass
 }
 
 // MessagesSendInlineBotResultRequestTypeID is TL type id of MessagesSendInlineBotResultRequest.
-const MessagesSendInlineBotResultRequestTypeID = 0xf7bc68ba
+const MessagesSendInlineBotResultRequestTypeID = 0x3ebee86a
 
 // Ensuring interfaces in compile-time for MessagesSendInlineBotResultRequest.
 var (
@@ -140,6 +144,9 @@ func (s *MessagesSendInlineBotResultRequest) Zero() bool {
 	if !(s.SendAs == nil) {
 		return false
 	}
+	if !(s.QuickReplyShortcut == nil) {
+		return false
+	}
 
 	return true
 }
@@ -166,6 +173,7 @@ func (s *MessagesSendInlineBotResultRequest) FillFrom(from interface {
 	GetID() (value string)
 	GetScheduleDate() (value int, ok bool)
 	GetSendAs() (value InputPeerClass, ok bool)
+	GetQuickReplyShortcut() (value InputQuickReplyShortcutClass, ok bool)
 }) {
 	s.Silent = from.GetSilent()
 	s.Background = from.GetBackground()
@@ -185,6 +193,10 @@ func (s *MessagesSendInlineBotResultRequest) FillFrom(from interface {
 
 	if val, ok := from.GetSendAs(); ok {
 		s.SendAs = val
+	}
+
+	if val, ok := from.GetQuickReplyShortcut(); ok {
+		s.QuickReplyShortcut = val
 	}
 
 }
@@ -263,6 +275,11 @@ func (s *MessagesSendInlineBotResultRequest) TypeInfo() tdp.Type {
 			SchemaName: "send_as",
 			Null:       !s.Flags.Has(13),
 		},
+		{
+			Name:       "QuickReplyShortcut",
+			SchemaName: "quick_reply_shortcut",
+			Null:       !s.Flags.Has(17),
+		},
 	}
 	return typ
 }
@@ -290,12 +307,15 @@ func (s *MessagesSendInlineBotResultRequest) SetFlags() {
 	if !(s.SendAs == nil) {
 		s.Flags.Set(13)
 	}
+	if !(s.QuickReplyShortcut == nil) {
+		s.Flags.Set(17)
+	}
 }
 
 // Encode implements bin.Encoder.
 func (s *MessagesSendInlineBotResultRequest) Encode(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't encode messages.sendInlineBotResult#f7bc68ba as nil")
+		return fmt.Errorf("can't encode messages.sendInlineBotResult#3ebee86a as nil")
 	}
 	b.PutID(MessagesSendInlineBotResultRequestTypeID)
 	return s.EncodeBare(b)
@@ -304,24 +324,24 @@ func (s *MessagesSendInlineBotResultRequest) Encode(b *bin.Buffer) error {
 // EncodeBare implements bin.BareEncoder.
 func (s *MessagesSendInlineBotResultRequest) EncodeBare(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't encode messages.sendInlineBotResult#f7bc68ba as nil")
+		return fmt.Errorf("can't encode messages.sendInlineBotResult#3ebee86a as nil")
 	}
 	s.SetFlags()
 	if err := s.Flags.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode messages.sendInlineBotResult#f7bc68ba: field flags: %w", err)
+		return fmt.Errorf("unable to encode messages.sendInlineBotResult#3ebee86a: field flags: %w", err)
 	}
 	if s.Peer == nil {
-		return fmt.Errorf("unable to encode messages.sendInlineBotResult#f7bc68ba: field peer is nil")
+		return fmt.Errorf("unable to encode messages.sendInlineBotResult#3ebee86a: field peer is nil")
 	}
 	if err := s.Peer.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode messages.sendInlineBotResult#f7bc68ba: field peer: %w", err)
+		return fmt.Errorf("unable to encode messages.sendInlineBotResult#3ebee86a: field peer: %w", err)
 	}
 	if s.Flags.Has(0) {
 		if s.ReplyTo == nil {
-			return fmt.Errorf("unable to encode messages.sendInlineBotResult#f7bc68ba: field reply_to is nil")
+			return fmt.Errorf("unable to encode messages.sendInlineBotResult#3ebee86a: field reply_to is nil")
 		}
 		if err := s.ReplyTo.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode messages.sendInlineBotResult#f7bc68ba: field reply_to: %w", err)
+			return fmt.Errorf("unable to encode messages.sendInlineBotResult#3ebee86a: field reply_to: %w", err)
 		}
 	}
 	b.PutLong(s.RandomID)
@@ -332,10 +352,18 @@ func (s *MessagesSendInlineBotResultRequest) EncodeBare(b *bin.Buffer) error {
 	}
 	if s.Flags.Has(13) {
 		if s.SendAs == nil {
-			return fmt.Errorf("unable to encode messages.sendInlineBotResult#f7bc68ba: field send_as is nil")
+			return fmt.Errorf("unable to encode messages.sendInlineBotResult#3ebee86a: field send_as is nil")
 		}
 		if err := s.SendAs.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode messages.sendInlineBotResult#f7bc68ba: field send_as: %w", err)
+			return fmt.Errorf("unable to encode messages.sendInlineBotResult#3ebee86a: field send_as: %w", err)
+		}
+	}
+	if s.Flags.Has(17) {
+		if s.QuickReplyShortcut == nil {
+			return fmt.Errorf("unable to encode messages.sendInlineBotResult#3ebee86a: field quick_reply_shortcut is nil")
+		}
+		if err := s.QuickReplyShortcut.Encode(b); err != nil {
+			return fmt.Errorf("unable to encode messages.sendInlineBotResult#3ebee86a: field quick_reply_shortcut: %w", err)
 		}
 	}
 	return nil
@@ -344,10 +372,10 @@ func (s *MessagesSendInlineBotResultRequest) EncodeBare(b *bin.Buffer) error {
 // Decode implements bin.Decoder.
 func (s *MessagesSendInlineBotResultRequest) Decode(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't decode messages.sendInlineBotResult#f7bc68ba to nil")
+		return fmt.Errorf("can't decode messages.sendInlineBotResult#3ebee86a to nil")
 	}
 	if err := b.ConsumeID(MessagesSendInlineBotResultRequestTypeID); err != nil {
-		return fmt.Errorf("unable to decode messages.sendInlineBotResult#f7bc68ba: %w", err)
+		return fmt.Errorf("unable to decode messages.sendInlineBotResult#3ebee86a: %w", err)
 	}
 	return s.DecodeBare(b)
 }
@@ -355,11 +383,11 @@ func (s *MessagesSendInlineBotResultRequest) Decode(b *bin.Buffer) error {
 // DecodeBare implements bin.BareDecoder.
 func (s *MessagesSendInlineBotResultRequest) DecodeBare(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't decode messages.sendInlineBotResult#f7bc68ba to nil")
+		return fmt.Errorf("can't decode messages.sendInlineBotResult#3ebee86a to nil")
 	}
 	{
 		if err := s.Flags.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode messages.sendInlineBotResult#f7bc68ba: field flags: %w", err)
+			return fmt.Errorf("unable to decode messages.sendInlineBotResult#3ebee86a: field flags: %w", err)
 		}
 	}
 	s.Silent = s.Flags.Has(5)
@@ -369,51 +397,58 @@ func (s *MessagesSendInlineBotResultRequest) DecodeBare(b *bin.Buffer) error {
 	{
 		value, err := DecodeInputPeer(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.sendInlineBotResult#f7bc68ba: field peer: %w", err)
+			return fmt.Errorf("unable to decode messages.sendInlineBotResult#3ebee86a: field peer: %w", err)
 		}
 		s.Peer = value
 	}
 	if s.Flags.Has(0) {
 		value, err := DecodeInputReplyTo(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.sendInlineBotResult#f7bc68ba: field reply_to: %w", err)
+			return fmt.Errorf("unable to decode messages.sendInlineBotResult#3ebee86a: field reply_to: %w", err)
 		}
 		s.ReplyTo = value
 	}
 	{
 		value, err := b.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.sendInlineBotResult#f7bc68ba: field random_id: %w", err)
+			return fmt.Errorf("unable to decode messages.sendInlineBotResult#3ebee86a: field random_id: %w", err)
 		}
 		s.RandomID = value
 	}
 	{
 		value, err := b.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.sendInlineBotResult#f7bc68ba: field query_id: %w", err)
+			return fmt.Errorf("unable to decode messages.sendInlineBotResult#3ebee86a: field query_id: %w", err)
 		}
 		s.QueryID = value
 	}
 	{
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.sendInlineBotResult#f7bc68ba: field id: %w", err)
+			return fmt.Errorf("unable to decode messages.sendInlineBotResult#3ebee86a: field id: %w", err)
 		}
 		s.ID = value
 	}
 	if s.Flags.Has(10) {
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.sendInlineBotResult#f7bc68ba: field schedule_date: %w", err)
+			return fmt.Errorf("unable to decode messages.sendInlineBotResult#3ebee86a: field schedule_date: %w", err)
 		}
 		s.ScheduleDate = value
 	}
 	if s.Flags.Has(13) {
 		value, err := DecodeInputPeer(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.sendInlineBotResult#f7bc68ba: field send_as: %w", err)
+			return fmt.Errorf("unable to decode messages.sendInlineBotResult#3ebee86a: field send_as: %w", err)
 		}
 		s.SendAs = value
+	}
+	if s.Flags.Has(17) {
+		value, err := DecodeInputQuickReplyShortcut(b)
+		if err != nil {
+			return fmt.Errorf("unable to decode messages.sendInlineBotResult#3ebee86a: field quick_reply_shortcut: %w", err)
+		}
+		s.QuickReplyShortcut = value
 	}
 	return nil
 }
@@ -580,7 +615,25 @@ func (s *MessagesSendInlineBotResultRequest) GetSendAs() (value InputPeerClass, 
 	return s.SendAs, true
 }
 
-// MessagesSendInlineBotResult invokes method messages.sendInlineBotResult#f7bc68ba returning error if any.
+// SetQuickReplyShortcut sets value of QuickReplyShortcut conditional field.
+func (s *MessagesSendInlineBotResultRequest) SetQuickReplyShortcut(value InputQuickReplyShortcutClass) {
+	s.Flags.Set(17)
+	s.QuickReplyShortcut = value
+}
+
+// GetQuickReplyShortcut returns value of QuickReplyShortcut conditional field and
+// boolean which is true if field was set.
+func (s *MessagesSendInlineBotResultRequest) GetQuickReplyShortcut() (value InputQuickReplyShortcutClass, ok bool) {
+	if s == nil {
+		return
+	}
+	if !s.Flags.Has(17) {
+		return value, false
+	}
+	return s.QuickReplyShortcut, true
+}
+
+// MessagesSendInlineBotResult invokes method messages.sendInlineBotResult#3ebee86a returning error if any.
 // Send a result obtained using messages.getInlineBotResults¹.
 //
 // Links:
@@ -599,6 +652,7 @@ func (s *MessagesSendInlineBotResultRequest) GetSendAs() (value InputPeerClass, 
 //	403 CHAT_SEND_INLINE_FORBIDDEN: You can't send inline messages in this group.
 //	403 CHAT_SEND_MEDIA_FORBIDDEN: You can't send media in this chat.
 //	403 CHAT_SEND_PHOTOS_FORBIDDEN: You can't send photos in this chat.
+//	403 CHAT_SEND_PLAIN_FORBIDDEN: You can't send non-media (text) messages in this chat.
 //	403 CHAT_SEND_STICKERS_FORBIDDEN: You can't send stickers in this chat.
 //	403 CHAT_SEND_VOICES_FORBIDDEN: You can't send voice recordings in this chat.
 //	403 CHAT_WRITE_FORBIDDEN: You can't write in this chat.
@@ -614,7 +668,7 @@ func (s *MessagesSendInlineBotResultRequest) GetSendAs() (value InputPeerClass, 
 //	400 RESULT_ID_INVALID: One of the specified result IDs is invalid.
 //	400 SCHEDULE_DATE_TOO_LATE: You can't schedule a message this far in the future.
 //	400 SCHEDULE_TOO_MUCH: There are too many scheduled messages.
-//	500 SEND_MEDIA_INVALID:
+//	500 SEND_MEDIA_INVALID: The specified media is invalid.
 //	420 SLOWMODE_WAIT_%d: Slowmode is enabled in this chat: wait %d seconds before sending another message to this chat.
 //	400 TOPIC_DELETED: The specified topic was deleted.
 //	400 USER_BANNED_IN_CHANNEL: You're banned from sending messages in supergroups/channels.

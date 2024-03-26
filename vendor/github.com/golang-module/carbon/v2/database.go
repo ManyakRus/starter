@@ -25,7 +25,7 @@ func (c Carbon) Value() (driver.Value, error) {
 	if c.IsZero() {
 		return nil, nil
 	}
-	return c.ToStdTime(), nil
+	return c.StdTime(), nil
 }
 
 // GormDataType implements the interface GormDataTypeInterface for Carbon struct.
