@@ -101,6 +101,7 @@ func Connect_WithApplicationName_err(ApplicationName string) error {
 	//
 	config, err := pgx.ParseConfig(databaseUrl)
 	//config.PreferSimpleProtocol = true //для мульти-запросов
+	Conn = nil
 	Conn, err = pgx.ConnectConfig(ctx, config)
 
 	if err != nil {
@@ -331,7 +332,7 @@ loop:
 
 // GetConnection - возвращает соединение к нужной базе данных
 func GetConnection() *pgx.Conn {
-	if Conn == nil {
+	if Conn == nil || Conn.IsClosed() {
 		Connect()
 	}
 
@@ -351,10 +352,16 @@ func GetConnection_WithApplicationName(ApplicationName string) *pgx.Conn {
 func RawMultipleSQL(db *pgx.Conn, TextSQL string) (pgx.Rows, error) {
 	var Rows pgx.Rows
 	var err error
-	Conn = db
 
-	if Conn == nil {
+	if db == nil {
 		TextError := "RawMultipleSQL() error: db =nil"
+		log.Error(TextError)
+		err = errors.New(TextError)
+		return Rows, err
+	}
+
+	if db.IsClosed() {
+		TextError := "RawMultipleSQL() error: db is closed"
 		log.Error(TextError)
 		err = errors.New(TextError)
 		return Rows, err
@@ -363,7 +370,7 @@ func RawMultipleSQL(db *pgx.Conn, TextSQL string) (pgx.Rows, error) {
 	ctx := contextmain.GetContext()
 
 	//запустим транзакцию
-	tx, err := Conn.Begin(ctx)
+	tx, err := db.Begin(ctx)
 	if err != nil {
 		log.Error(err)
 		return Rows, err

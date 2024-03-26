@@ -133,9 +133,11 @@ SELECT * FROM temp_TestRawMultipleSQL2
 	Rows, err := RawMultipleSQL(Conn, TextSQL)
 	if err != nil {
 		t.Error("TestRawMultipleSQL() error: ", err)
+		return
 	}
 	if Rows == nil {
-
+		t.Error("TestRawMultipleSQL() error: Rows == nil")
+		return
 	}
 
 	Otvet := 0
@@ -149,12 +151,14 @@ SELECT * FROM temp_TestRawMultipleSQL2
 	t.Log("Прошло время: ", time.Since(TimeStart))
 }
 
+// TestRawMultipleSQL2 - negative test, with error
 func TestRawMultipleSQL2(t *testing.T) {
 	config_main.LoadEnv()
 	GetConnection()
 	defer CloseConnection()
 
 	TimeStart := time.Now()
+	defer t.Log("Прошло время: ", time.Since(TimeStart))
 
 	TextSQL := `
 drop table if exists temp_TestRawMultipleSQL2; 
@@ -170,15 +174,11 @@ SELECT * FROM temp_TestRawMultipleSQL2
 	Rows, err := Conn.Query(ctx, TextSQL)
 	if err == nil {
 		t.Error("TestRawMultipleSQL2() Query() error: ", err)
+		return
+	}
+	if Rows == nil {
+		t.Error("TestRawMultipleSQL2() error: Rows == nil")
+		return
 	}
 
-	Otvet := 0
-	for Rows.Next() {
-		err := Rows.Scan(&Otvet)
-		if err != nil {
-			t.Error("TestRawMultipleSQL2() Scan() error: ", err)
-		}
-	}
-
-	t.Log("Прошло время: ", time.Since(TimeStart))
 }
