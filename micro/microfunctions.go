@@ -822,3 +822,10 @@ func StringFloat32_Dimension2(f float32) string {
 
 	return Otvet
 }
+
+// ShowTimePassed - показывает время прошедшее с момента старта
+// запускать:
+// defer micro.ShowTimePassed(time.Now())
+func ShowTimePassed(StartAt time.Time) {
+	fmt.Print("Time passed: ", time.Since(StartAt))
+}

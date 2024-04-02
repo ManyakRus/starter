@@ -594,3 +594,7 @@ func TestStringFloat32_Dimension2(t *testing.T) {
 		t.Errorf("Expected '0.00' but got %s", result)
 	}
 }
+
+func TestShowTimePassed(t *testing.T) {
+	defer ShowTimePassed(time.Now())
+}
