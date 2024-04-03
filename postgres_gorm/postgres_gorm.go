@@ -433,15 +433,15 @@ loop:
 func RawMultipleSQL(db *gorm.DB, TextSQL string) *gorm.DB {
 	var tx *gorm.DB
 	var err error
-	tx = db
+	//tx = db
 
-	if tx == nil {
+	if db == nil {
 		log.Error("RawMultipleSQL() error: db =nil")
 		return tx
 	}
 
 	//запустим транзакцию
-	tx.Begin()
+	tx = db.Begin()
 	defer tx.Commit()
 
 	//
