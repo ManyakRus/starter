@@ -441,8 +441,8 @@ func RawMultipleSQL(db *gorm.DB, TextSQL string) *gorm.DB {
 	}
 
 	//запустим транзакцию
-	tx = tx.Begin()
-	defer tx.Commit()
+	//tx = tx.Begin()
+	//defer tx.Commit()
 
 	//
 	TextSQL1 := ""
