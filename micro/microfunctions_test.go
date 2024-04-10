@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/ManyakRus/starter/contextmain"
 	"os"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -597,4 +598,39 @@ func TestStringFloat32_Dimension2(t *testing.T) {
 
 func TestShowTimePassed(t *testing.T) {
 	defer ShowTimePassed(time.Now())
+}
+
+func TestStructDeepCopy(t *testing.T) {
+	type NestedStruct struct {
+		Number int
+		Text   string
+	}
+
+	type TestStruct struct {
+		ID      int
+		Name    string
+		Nested  NestedStruct
+		Numbers []int
+	}
+
+	src := TestStruct{
+		ID:   1,
+		Name: "Test",
+		Nested: NestedStruct{
+			Number: 100,
+			Text:   "Nested",
+		},
+		Numbers: []int{1, 2, 3},
+	}
+
+	var dist TestStruct
+
+	err := StructDeepCopy(src, &dist)
+	if err != nil {
+		t.Fatalf("error copying struct: %v", err)
+	}
+
+	if !reflect.DeepEqual(src, dist) {
+		t.Errorf("copied struct does not match original struct")
+	}
 }

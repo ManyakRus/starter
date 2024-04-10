@@ -3,7 +3,9 @@
 package micro
 
 import (
+	"bytes"
 	"context"
+	"encoding/gob"
 	"errors"
 	"fmt"
 	"hash/fnv"
@@ -828,4 +830,14 @@ func StringFloat32_Dimension2(f float32) string {
 // defer micro.ShowTimePassed(time.Now())
 func ShowTimePassed(StartAt time.Time) {
 	fmt.Print("Time passed: ", time.Since(StartAt))
+}
+
+// StructDeepCopy - копирует структуру из src в dist
+// dist - обязательно ссылка &
+func StructDeepCopy(src, dist interface{}) (err error) {
+	buf := bytes.Buffer{}
+	if err = gob.NewEncoder(&buf).Encode(src); err != nil {
+		return
+	}
+	return gob.NewDecoder(&buf).Decode(dist)
 }
