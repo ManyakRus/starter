@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ManyakRus/starter/contextmain"
+	"github.com/google/uuid"
 	"os"
 	"reflect"
 	"testing"
@@ -632,5 +633,23 @@ func TestStructDeepCopy(t *testing.T) {
 
 	if !reflect.DeepEqual(src, dist) {
 		t.Errorf("copied struct does not match original struct")
+	}
+}
+
+func TestIsEmptyValue(t *testing.T) {
+	// Testing for integer zero value
+	if !IsEmptyValue(0) {
+		t.Error("Expected true for integer zero value")
+	}
+
+	// Testing for empty string value
+	if !IsEmptyValue("") {
+		t.Error("Expected true for empty string value")
+	}
+
+	// Testing for empty uuid value
+	uuid1 := uuid.Nil
+	if !IsEmptyValue(uuid1) {
+		t.Error("Expected true for empty uuid value")
 	}
 }

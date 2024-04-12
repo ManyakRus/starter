@@ -841,3 +841,10 @@ func StructDeepCopy(src, dist interface{}) (err error) {
 	}
 	return gob.NewDecoder(&buf).Decode(dist)
 }
+
+// IsEmptyValue - возвращает true если значение по умолчанию (0, пустая строка, пустой слайс)
+func IsEmptyValue(v any) bool {
+	rv := reflect.ValueOf(v)
+	Otvet := !rv.IsValid() || reflect.DeepEqual(rv.Interface(), reflect.Zero(rv.Type()).Interface())
+	return Otvet
+}
