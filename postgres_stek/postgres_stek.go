@@ -83,11 +83,13 @@ func Connect_err(Connection connections.Connection) error {
 	dsn := GetDSN(Connection)
 
 	//
-	conf := &gorm.Config{}
+	conf := &gorm.Config{
+		Logger: gormlogger.Default.LogMode(gormlogger.Silent),
+	}
 	conn := postgres.Open(dsn)
 	Conn, err := gorm.Open(conn, conf)
 	Conn.Config.NamingStrategy = schema.NamingStrategy{TablePrefix: Connection.DbScheme + "."}
-	Conn.Config.Logger = gormlogger.Default.LogMode(gormlogger.Warn)
+	//Conn.Config.Logger = gormlogger.Default.LogMode(gormlogger.Warn)
 
 	if err == nil {
 		DB, err := Conn.DB()
