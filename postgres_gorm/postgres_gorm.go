@@ -489,14 +489,6 @@ func ReplaceSchema(TextSQL string) string {
 	return Otvet
 }
 
-//func ReplaceTableNamesToUnique(TextSQL string) string {
-//	Otvet := TextSQL
-//
-//	sUUID := micro.StringIdentifierFromUUID()
-//
-//	return Otvet
-//}
-
 // ReplaceTemporaryTableNamesToUnique - заменяет "public.TableName" на "public.TableName_UUID"
 func ReplaceTemporaryTableNamesToUnique(TextSQL string) string {
 	Otvet := TextSQL
