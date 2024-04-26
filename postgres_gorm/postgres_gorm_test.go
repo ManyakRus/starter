@@ -216,3 +216,84 @@ SELECT * FROM temp_TestRawMultipleSQL2
 
 	t.Log("Прошло время: ", time.Since(TimeStart))
 }
+
+func TestReplaceSchema(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		schema   string
+		expected string
+	}{
+		{
+			name:     "No schema",
+			input:    "SELECT * FROM public.users",
+			schema:   "",
+			expected: "SELECT * FROM public.users",
+		},
+		{
+			name:     "Schema with tabs and newlines",
+			input:    "\tSELECT * FROM public.users\n",
+			schema:   "myschema",
+			expected: "\tSELECT * FROM myschema.users\n",
+		},
+		{
+			name:     "Schema with spaces",
+			input:    "SELECT * FROM public.users ",
+			schema:   "myschema",
+			expected: "SELECT * FROM myschema.users ",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			Settings.DB_SCHEMA = tt.schema
+			got := ReplaceSchema(tt.input)
+			if got != tt.expected {
+				t.Errorf("ReplaceSchema() = %v, expected %v", got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestReplaceTableNamesToUnique1(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		uuid     string
+		expected string
+	}{
+		{
+			name:     "No public schema",
+			input:    "SELECT * FROM TableName",
+			uuid:     "1234567890",
+			expected: "SELECT * FROM TableName",
+		},
+		{
+			name:     "Public schema with no spaces",
+			input:    "SELECT * FROM public.TableName",
+			uuid:     "1234567890",
+			expected: "SELECT * FROM public.TableName",
+		},
+		{
+			name:     "Public schema with spaces",
+			input:    "SELECT * FROM public.Table Name",
+			uuid:     "1234567890",
+			expected: "SELECT * FROM public.Table_1234567890 Name",
+		},
+		{
+			name:     "Public schema with tabs",
+			input:    "SELECT * FROM public.\tTableName\t",
+			uuid:     "1234567890",
+			expected: "SELECT * FROM public.\tTableName_1234567890\t",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ReplaceTableNamesToUnique1(tt.input, tt.uuid)
+			if got != tt.expected {
+				t.Errorf("ReplaceTableNamesToUnique1() = %v, expected %v", got, tt.expected)
+			}
+		})
+	}
+}

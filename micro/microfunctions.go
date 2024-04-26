@@ -8,6 +8,7 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"hash/fnv"
 	"reflect"
 	"runtime"
@@ -846,5 +847,52 @@ func StructDeepCopy(src, dist interface{}) (err error) {
 func IsEmptyValue(v any) bool {
 	rv := reflect.ValueOf(v)
 	Otvet := !rv.IsValid() || reflect.DeepEqual(rv.Interface(), reflect.Zero(rv.Type()).Interface())
+	return Otvet
+}
+
+// StringIdentifierFromUUID - возвращает строку из UUID
+func StringIdentifierFromUUID() string {
+	Otvet := uuid.New().String()
+	Otvet = strings.ReplaceAll(Otvet, "-", "")
+
+	return Otvet
+}
+
+// IndexMassSubstringMin - возвращает индекс первого вхождения в строке
+func IndexMassSubstringMin(s string, MassSubstr ...string) int {
+	Otvet := -1
+
+	for _, v := range MassSubstr {
+		Otvet1 := -1
+		if v != "" {
+			Otvet1 = strings.Index(s, v)
+		}
+		if Otvet1 != -1 && (Otvet1 < Otvet || Otvet == -1) {
+			Otvet = Otvet1
+		}
+	}
+
+	return Otvet
+}
+
+// IndexSubstringMin2 - возвращает индекс первого вхождения в строке
+func IndexSubstringMin2(s string, substr1, substr2 string) int {
+	Otvet := -1
+
+	Otvet1 := -1
+	Otvet2 := -1
+	if substr1 != "" {
+		Otvet1 = strings.Index(s, substr1)
+	}
+	if substr2 != "" {
+		Otvet2 = strings.Index(s, substr2)
+	}
+
+	if Otvet1 != -1 && (Otvet1 < Otvet2 || Otvet2 == -1) {
+		Otvet = Otvet1
+	} else {
+		Otvet = Otvet2
+	}
+
 	return Otvet
 }

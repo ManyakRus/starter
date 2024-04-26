@@ -473,3 +473,47 @@ func RawMultipleSQL(db *gorm.DB, TextSQL string) *gorm.DB {
 
 	return tx
 }
+
+// ReplaceSchema - заменяет "public." на Settings.DB_SCHEMA
+func ReplaceSchema(TextSQL string) string {
+	Otvet := TextSQL
+
+	if Settings.DB_SCHEMA == "" {
+		return Otvet
+	}
+
+	Otvet = strings.ReplaceAll(Otvet, "\tpublic.", "\t"+Settings.DB_SCHEMA+".")
+	Otvet = strings.ReplaceAll(Otvet, "\npublic.", "\n"+Settings.DB_SCHEMA+".")
+	Otvet = strings.ReplaceAll(Otvet, " public.", " "+Settings.DB_SCHEMA+".")
+
+	return Otvet
+}
+
+//func ReplaceTableNamesToUnique(TextSQL string) string {
+//	Otvet := TextSQL
+//
+//	sUUID := micro.StringIdentifierFromUUID()
+//
+//	return Otvet
+//}
+
+// ReplaceTableNamesToUnique1 - заменяет "public.TableName" на "public.TableName_UUID"
+func ReplaceTableNamesToUnique1(TextSQL, sUUID string) string {
+	Otvet := TextSQL
+
+	sFind := "public."
+	pos1 := strings.Index(Otvet, sFind)
+	if pos1 == -1 {
+		return Otvet
+	}
+
+	s2 := Otvet[pos1+len(sFind):]
+	pos2 := micro.IndexSubstringMin2(s2, " ", "\n")
+	if pos2 == -1 {
+		return Otvet
+	}
+
+	Otvet = Otvet[0:pos1+len(sFind)+pos2] + "_" + sUUID + Otvet[pos1+len(sFind)+pos2:]
+
+	return Otvet
+}
