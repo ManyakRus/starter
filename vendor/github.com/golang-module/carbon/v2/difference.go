@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+const (
+	minDuration time.Duration = -1 << 63
+	maxDuration time.Duration = 1<<63 - 1
+)
+
 // DiffInYears gets the difference in years.
 // 相差多少年
 func (c Carbon) DiffInYears(carbon ...Carbon) int64 {
@@ -202,14 +207,11 @@ func (c Carbon) DiffInDuration(carbon ...Carbon) time.Duration {
 // DiffAbsInDuration gets the difference in duration with absolute value.
 // 相差时长(绝对值)
 func (c Carbon) DiffAbsInDuration(carbon ...Carbon) time.Duration {
-	end := c.Now()
-	if c.IsSetTestNow() {
-		end = CreateFromTimestampNano(c.testNow, c.Location())
+	d := c.DiffInDuration(carbon...)
+	if d >= 0 {
+		return d
 	}
-	if len(carbon) > 0 {
-		end = carbon[0]
-	}
-	return end.StdTime().Sub(c.StdTime()).Abs()
+	return -d
 }
 
 // DiffForHumans gets the difference in a human-readable format, i18n is supported.

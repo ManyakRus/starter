@@ -14,11 +14,16 @@ func CalcStructVersion(t reflect.Type) uint32 {
 	// имя + тип поля
 	s := ""
 	for i := range names {
-		s = s + t.Field(i).Name
-		s = s + t.Field(i).Type.Name()
+		Field1 := t.Field(i)
+		s = s + Field1.Name
+		s = s + Field1.Type.Name()
+		if Field1.Anonymous == true && Field1.Type != t {
+			version2 := CalcStructVersion(Field1.Type)
+			ReturnVar = ReturnVar + version2
+		}
 	}
 
-	ReturnVar = micro.Hash(s)
+	ReturnVar = ReturnVar + micro.Hash(s)
 
 	return ReturnVar
 }

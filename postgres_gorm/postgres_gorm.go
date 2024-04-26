@@ -497,23 +497,64 @@ func ReplaceSchema(TextSQL string) string {
 //	return Otvet
 //}
 
-// ReplaceTableNamesToUnique1 - заменяет "public.TableName" на "public.TableName_UUID"
-func ReplaceTableNamesToUnique1(TextSQL, sUUID string) string {
+// ReplaceTemporaryTableNamesToUnique - заменяет "public.TableName" на "public.TableName_UUID"
+func ReplaceTemporaryTableNamesToUnique(TextSQL string) string {
 	Otvet := TextSQL
 
-	sFind := "public."
-	pos1 := strings.Index(Otvet, sFind)
-	if pos1 == -1 {
-		return Otvet
+	sUUID := micro.StringIdentifierFromUUID()
+	map1 := make(map[string]int)
+
+	//найдём список всех временных таблиц, и заполним в map1
+	s0 := Otvet
+	for {
+		sFind := "CREATE TEMPORARY TABLE "
+		sFind2 := "create temporary table "
+		pos1 := micro.IndexSubstringMin2(s0, sFind, sFind2)
+		if pos1 < 0 {
+			break
+		}
+		s2 := s0[pos1+len(sFind):]
+		pos2 := micro.IndexSubstringMin2(s2, " ", "\n")
+		if pos2 <= 0 {
+			break
+		}
+		name1 := s0[pos1+len(sFind) : pos1+len(sFind)+pos2]
+		if name1 == "" {
+			break
+		}
+
+		s0 = s0[pos1+len(sFind)+pos2:]
+		map1[name1] = len(name1)
 	}
 
-	s2 := Otvet[pos1+len(sFind):]
-	pos2 := micro.IndexSubstringMin2(s2, " ", "\n")
-	if pos2 == -1 {
-		return Otvet
-	}
+	//заменим все временные таблицы на уникальные
+	MassNames := micro.SortMapStringInt_Desc(map1)
+	for _, v := range MassNames {
+		sFirst := " "
+		Otvet = strings.ReplaceAll(Otvet, sFirst+v+" ", " "+v+"_"+sUUID+" ")
+		Otvet = strings.ReplaceAll(Otvet, sFirst+v+"\n", " "+v+"_"+sUUID+"\n")
+		Otvet = strings.ReplaceAll(Otvet, sFirst+v+"\t", " "+v+"_"+sUUID+"\t")
+		Otvet = strings.ReplaceAll(Otvet, sFirst+v+";", " "+v+"_"+sUUID+";")
+		Otvet = strings.ReplaceAll(Otvet, sFirst+v+"(", " "+v+"_"+sUUID+"(")
+		Otvet = strings.ReplaceAll(Otvet, sFirst+v+")", " "+v+"_"+sUUID+")")
 
-	Otvet = Otvet[0:pos1+len(sFind)+pos2] + "_" + sUUID + Otvet[pos1+len(sFind)+pos2:]
+		sFirst = "\t"
+		Otvet = strings.ReplaceAll(Otvet, sFirst+v+" ", " "+v+"_"+sUUID+" ")
+		Otvet = strings.ReplaceAll(Otvet, sFirst+v+"\n", " "+v+"_"+sUUID+"\n")
+		Otvet = strings.ReplaceAll(Otvet, sFirst+v+"\t", " "+v+"_"+sUUID+"\t")
+		Otvet = strings.ReplaceAll(Otvet, sFirst+v+";", " "+v+"_"+sUUID+";")
+		Otvet = strings.ReplaceAll(Otvet, sFirst+v+"(", " "+v+"_"+sUUID+"(")
+		Otvet = strings.ReplaceAll(Otvet, sFirst+v+")", " "+v+"_"+sUUID+")")
+
+		sFirst = "\n"
+		Otvet = strings.ReplaceAll(Otvet, sFirst+v+" ", " "+v+"_"+sUUID+" ")
+		Otvet = strings.ReplaceAll(Otvet, sFirst+v+"\n", " "+v+"_"+sUUID+"\n")
+		Otvet = strings.ReplaceAll(Otvet, sFirst+v+"\t", " "+v+"_"+sUUID+"\t")
+		Otvet = strings.ReplaceAll(Otvet, sFirst+v+";", " "+v+"_"+sUUID+";")
+		Otvet = strings.ReplaceAll(Otvet, sFirst+v+"(", " "+v+"_"+sUUID+"(")
+		Otvet = strings.ReplaceAll(Otvet, sFirst+v+")", " "+v+"_"+sUUID+")")
+
+	}
 
 	return Otvet
 }

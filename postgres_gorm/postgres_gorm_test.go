@@ -290,10 +290,44 @@ func TestReplaceTableNamesToUnique1(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ReplaceTableNamesToUnique1(tt.input, tt.uuid)
+			got := ReplaceTemporaryTableNamesToUnique(tt.input)
 			if got != tt.expected {
-				t.Errorf("ReplaceTableNamesToUnique1() = %v, expected %v", got, tt.expected)
+				t.Errorf("ReplaceTemporaryTableNamesToUnique() = %v, expected %v", got, tt.expected)
 			}
 		})
+	}
+}
+
+func TestReplaceTemporaryTableNamesToUnique_EmptyInput(t *testing.T) {
+	input := ""
+	expected := ""
+	result := ReplaceTemporaryTableNamesToUnique(input)
+	if result != expected {
+		t.Errorf("Expected: %s, but got: %s", expected, result)
+	}
+}
+
+func TestReplaceTemporaryTableNamesToUnique_NoTempTable(t *testing.T) {
+	input := "SELECT * FROM TableName"
+	expected := "SELECT * FROM TableName"
+	result := ReplaceTemporaryTableNamesToUnique(input)
+	if result != expected {
+		t.Errorf("Expected: %s, but got: %s", expected, result)
+	}
+}
+
+func TestReplaceTemporaryTableNamesToUnique_OneTempTable(t *testing.T) {
+	input := "CREATE TEMPORARY TABLE temp_Test (id int); SELECT * FROM temp_Test "
+	result := ReplaceTemporaryTableNamesToUnique(input)
+	if result == input {
+		t.Errorf("TestReplaceTemporaryTableNamesToUnique_OneTempTable() error: no changes")
+	}
+}
+
+func TestReplaceTemporaryTableNamesToUnique_MultipleTempTables(t *testing.T) {
+	input := "CREATE TEMPORARY TABLE temp1 (id int); CREATE TEMPORARY TABLE temp2 (name varchar); SELECT * FROM temp1;"
+	result := ReplaceTemporaryTableNamesToUnique(input)
+	if result == input {
+		t.Errorf("TestReplaceTemporaryTableNamesToUnique_OneTempTable() error: no changes")
 	}
 }

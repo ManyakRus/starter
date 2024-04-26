@@ -12,6 +12,7 @@ import (
 	"hash/fnv"
 	"reflect"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"unicode"
@@ -895,4 +896,24 @@ func IndexSubstringMin2(s string, substr1, substr2 string) int {
 	}
 
 	return Otvet
+}
+
+// SortMapStringInt_Desc - сортирует map по значению, по убыванию
+func SortMapStringInt_Desc(values map[string]int) []string {
+	type kv struct {
+		Key   string
+		Value int
+	}
+	var ss []kv
+	for k, v := range values {
+		ss = append(ss, kv{k, v})
+	}
+	sort.Slice(ss, func(i, j int) bool {
+		return ss[i].Value > ss[j].Value
+	})
+	ranked := make([]string, len(values))
+	for i, kv := range ss {
+		ranked[i] = kv.Key
+	}
+	return ranked
 }

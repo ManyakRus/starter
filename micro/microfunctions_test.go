@@ -745,3 +745,36 @@ func TestIndexSubstringMin2(t *testing.T) {
 		}
 	}
 }
+
+func TestSortkMapStringInt(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    map[string]int
+		expected []string
+	}{
+		{
+			name:     "Empty map",
+			input:    map[string]int{},
+			expected: []string{},
+		},
+		{
+			name:     "Single element map",
+			input:    map[string]int{"a": 1},
+			expected: []string{"a"},
+		},
+		{
+			name:     "Multiple element map",
+			input:    map[string]int{"a": 1, "b": 2, "c": 3},
+			expected: []string{"c", "b", "a"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := SortMapStringInt_Desc(tt.input)
+			if !reflect.DeepEqual(result, tt.expected) {
+				t.Errorf("Expected %v, but got %v", tt.expected, result)
+			}
+		})
+	}
+}

@@ -65,8 +65,7 @@ carbon.SetDefault(carbon.Default{
   Locale: "en",
 })
 ```
-
-> If not set, the default layout is `2006-01-02 15:04:05`, the default timezone is `Local`, the default week start date is `Sunday` and the default language locale is `en`
+> Suggest setting in the entry file such as `main.go`
 
 ##### Convert between `Carbon` and `time.Time`
 
@@ -1281,97 +1280,107 @@ fmt.Printf("%s", person.Field8) // 2020-08-05 13:14:15
 ```
 
 ###### Scene two: different time fields have different formats
-> Please refer to <a href="https://github.com/golang-module/carbon/blob/master/tag.go#L24">here</a> for all supported type values. If the `carbon` tag is not set, the default is `layout:2006-01-02 15:04:05`, if the `tz` tag is not set, the default is `Local`
-
 ```go
 type Person struct {
   Name string `json:"name"`
-  Age  int    `json:"age"`
-  
-  Field1 carbon.Carbon `json:"field1"`
-  
-  Field2 carbon.Carbon `json:"field2" carbon:"type:date" tz:"PRC"`
-  Field3 carbon.Carbon `json:"field3" carbon:"type:time" tz:"PRC"`
-  Field4 carbon.Carbon `json:"field4" carbon:"type:dateTime" tz:"PRC"`
-  // or
-  Field2 carbon.Carbon `json:"field2" carbon:"layout:2006-01-02" tz:"PRC"`
-  Field3 carbon.Carbon `json:"field3" carbon:"layout:15:04:05" tz:"PRC"`
-  Field4 carbon.Carbon `json:"field4" carbon:"layout:2006-01-02 15:04:05" tz:"PRC"`
-  // or
-  Field2 carbon.Carbon `json:"field2" carbon:"format:Y-m-d" tz:"PRC"`
-  Field3 carbon.Carbon `json:"field3" carbon:"format:H:i:s" tz:"PRC"`
-  Field4 carbon.Carbon `json:"field4" carbon:"format:Y-m-d H:i:s" tz:"PRC"`
-  
-  Field5 carbon.Carbon `json:"field5" carbon:"type:timestamp" tz:"PRC"`
-  Field6 carbon.Carbon `json:"field6" carbon:"type:timestampMilli" tz:"PRC"`
-  Field7 carbon.Carbon `json:"field7" carbon:"type:timestampMicro" tz:"PRC"`
-  Field8 carbon.Carbon `json:"field8" carbon:"type:timestampNano" tz:"PRC"`
+  Age int `json:"age"`
+  Birthday1 carbon.DateTime `json:"birthday1"`
+  Birthday2 carbon.DateTimeMilli `json:"birthday2"`
+  Birthday3 carbon.DateTimeMicro `json:"birthday3"`
+  Birthday4 carbon.DateTimeNano `json:"birthday4"`
+  GraduatedAt1 carbon.Date `json:"graduated_at1"`
+  GraduatedAt2 carbon.DateMilli `json:"graduated_at2"`
+  GraduatedAt3 carbon.DateMicro `json:"graduated_at3"`
+  GraduatedAt4 carbon.DateNano `json:"graduated_at4"`
+  OperatedAt1 carbon.Time `json:"operated_at1"`
+  OperatedAt2 carbon.TimeMilli `json:"operated_at2"`
+  OperatedAt3 carbon.TimeMicro `json:"operated_at3"`
+  OperatedAt4 carbon.TimeNano `json:"operated_at4"`
+  CreatedAt1 carbon.Timestamp `json:"created_at1"`
+  CreatedAt2 carbon.TimestampMilli `json:"created_at2"`
+  CreatedAt3 carbon.TimestampMicro `json:"created_at3"`
+  CreatedAt4 carbon.TimestampNano `json:"created_at4"`
 }
 
-now := Parse("2020-08-05 13:14:15", carbon.PRC)
 person := Person {
-  Name:   "gouguoyin",
-  Age:    18,
-  
-  Field1: now,
-  Field2: now,
-  Field3: now,
-  Field4: now,
-  Field5: now,
-  Field6: now,
-  Field7: now,
-  Field8: now,
+  Name:        "gouguoyin",
+  Age:          18,
+  Birthday1:    carbon.Now().SubYears(18).ToDateTimeStruct(),
+  Birthday2:    carbon.Now().SubYears(18).ToDateTimeMilliStruct(),
+  Birthday3:    carbon.Now().SubYears(18).ToDateTimeMicroStruct(),
+  Birthday4:    carbon.Now().SubYears(18).ToDateTimeNanoStruct(),
+  GraduatedAt1: carbon.Now().ToDateStruct(),
+  GraduatedAt2: carbon.Now().ToDateMilliStruct(),
+  GraduatedAt3: carbon.Now().ToDateMicroStruct(),
+  GraduatedAt4: carbon.Now().ToDateNanoStruct(),
+  OperatedAt1:  carbon.Now().ToTimeStruct(),
+  OperatedAt2:  carbon.Now().ToTimeMilliStruct(),
+  OperatedAt3:  carbon.Now().ToTimeMicroStruct(),
+  OperatedAt4:  carbon.Now().ToTimeNanoStruct(),
+  CreatedAt1:   carbon.Now().ToTimestampStruct(),
+  CreatedAt2:   carbon.Now().ToTimestampMilliStruct(),
+  CreatedAt3:   carbon.Now().ToTimestampMicroStruct(),
+  CreatedAt4:   carbon.Now().ToTimestampNanoStruct(),
 }
 
-loadErr := carbon.LoadTag(&person)
-if loadErr != nil {
+data, err := json.Marshal(&person)
+if err != nil {
   // Error handle...
-  log.Fatal(loadErr)
-}
-data, marshalErr := json.Marshal(person)
-if marshalErr != nil {
-  // Error handle...
-  log.Fatal(marshalErr)
+  log.Fatal(err)
 }
 fmt.Printf("%s", data)
 // Output
 {
   "name": "gouguoyin",
   "age": 18,
-  "field1": "2020-08-05 13:14:15",
-  "field2": "2020-08-05",
-  "field3": "13:14:15",
-  "field4": "2020-08-05 13:14:15",
-  "field5": 1596604455,
-  "field6": 1596604455999,
-  "field7": 1596604455999999,
-  "field8": 1596604455999999999
+  "birthday1": "2003-07-16 13:14:15",
+  "birthday2": "2003-07-16 13:14:15.999",
+  "birthday3": "2003-07-16 13:14:15.999999",
+  "birthday4": "2003-07-16 13:14:15.999999999",
+  "graduated_at1": "2020-08-05",
+  "graduated_at2": "2020-08-05.999",
+  "graduated_at3": "2020-08-05.999999",
+  "graduated_at4": "2020-08-05.999999999",
+  "operated_at1": "13:14:15",
+  "operated_at2": "13:14:15.999",
+  "operated_at3": "13:14:15.999999",
+  "operated_at4": "13:14:15.999999999",
+  "created_at1": 1596604455,
+  "created_at2": 1596604455999,
+  "created_at3": 1596604455999999,
+  "created_at4": 1596604455999999999
 }
 
-var person Person
-
-loadErr := carbon.LoadTag(&person)
-if loadErr != nil {
+err := json.Unmarshal([]byte(data), &person)
+if err != nil {
   // Error handle...
-  log.Fatal(loadErr)
+  log.Fatal(err)
 }
 
-unmarshalErr := json.Unmarshal(data, &person)
-if unmarshalErr != nil {
-  // Error handle...
-  log.Fatal(unmarshalErr)
-}
+person.Birthday1.String() // 2003-07-16 13:14:15
+person.Birthday2.String() // 2003-07-16 13:14:15.999
+person.Birthday3.String() // 2003-07-16 13:14:15.999999
+person.Birthday4.String() // 2003-07-16 13:14:15.999999999
 
-fmt.Printf("%s", person.Field1) // 2002-08-05 13:14:15
-fmt.Printf("%s", person.Field2) // 2020-08-05
-fmt.Printf("%s", person.Field3) // 13:14:15
-fmt.Printf("%s", person.Field4) // 2002-08-05 13:14:15
+person.GraduatedAt1.String() // 2020-08-05
+person.GraduatedAt2.String() // 2020-08-05.999
+person.GraduatedAt3.String() // 2020-08-05.999999
+person.GraduatedAt4.String() // 2020-08-05.999999999
 
-fmt.Printf("%d", person.Field5) // 1596604455
-fmt.Printf("%d", person.Field6) // 1596604455999
-fmt.Printf("%d", person.Field7) // 1596604455999999
-fmt.Printf("%d", person.Field8) // 1596604455999999999
+person.OperatedAt1.String() // 13:14:15
+person.OperatedAt2.String() // 13:14:15.999
+person.OperatedAt3.String() // 13:14:15.999999
+person.OperatedAt4.String() // 13:14:15.999999999
 
+person.CreatedAt1.String() // "1596604455"
+person.CreatedAt2.String() // "1596604455999"
+person.CreatedAt3.String() // "1596604455999999"
+person.CreatedAt4.String() // "1596604455999999999"
+
+person.CreatedAt1.Int64() // 1596604455
+person.CreatedAt2.Int64() // 1596604455999
+person.CreatedAt3.Int64() // 1596604455999999
+person.CreatedAt4.Int64() // 1596604455999999999
 ```
 
 ##### Calendar
@@ -1415,6 +1424,7 @@ The following languages are supported
 * [VietNamese(vi)](./lang/vi.json "VietNam"): translated by [culy247](https://github.com/culy247 "culy247")
 * [Hindi(hi)](./lang/hi.json "India"): translated by [chauhan17nitin](https://github.com/chauhan17nitin "chauhan17nitin")
 * [Polish(pl)](./lang/pl.json "Polish"): translated by [gouguoyin](https://github.com/gouguoyin "gouguoyin")
+* [Bulgarian(bg)](./lang/bg.json "Bulgarian"): translated by [yuksbg](https://github.com/yuksbg "yuksbg")
 
 The following methods are supported
 

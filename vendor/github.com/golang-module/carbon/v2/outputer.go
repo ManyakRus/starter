@@ -24,7 +24,7 @@ func (c Carbon) String() string {
 // GoString implements fmt.GoStringer and formats c to be printed in Go source code.
 // 实现 fmt.GoStringer 接口，并格式化 c 以在 Go 源代码中打印
 func (c Carbon) GoString() string {
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().GoString()
@@ -36,7 +36,7 @@ func (c Carbon) ToString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().String()
@@ -48,7 +48,7 @@ func (c Carbon) ToMonthString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	if len(c.lang.resources) == 0 {
@@ -71,7 +71,7 @@ func (c Carbon) ToShortMonthString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	if len(c.lang.resources) == 0 {
@@ -94,7 +94,7 @@ func (c Carbon) ToWeekString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	if len(c.lang.resources) == 0 {
@@ -117,7 +117,7 @@ func (c Carbon) ToShortWeekString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	if len(c.lang.resources) == 0 {
@@ -140,7 +140,7 @@ func (c Carbon) ToDayDateTimeString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(DayDateTimeLayout)
@@ -152,7 +152,7 @@ func (c Carbon) ToDateTimeString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(DateTimeLayout)
@@ -164,7 +164,7 @@ func (c Carbon) ToDateTimeMilliString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(DateTimeMilliLayout)
@@ -176,7 +176,7 @@ func (c Carbon) ToDateTimeMicroString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(DateTimeMicroLayout)
@@ -188,7 +188,7 @@ func (c Carbon) ToDateTimeNanoString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(DateTimeNanoLayout)
@@ -200,7 +200,7 @@ func (c Carbon) ToShortDateTimeString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(ShortDateTimeLayout)
@@ -212,7 +212,7 @@ func (c Carbon) ToShortDateTimeMilliString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(ShortDateTimeMilliLayout)
@@ -224,7 +224,7 @@ func (c Carbon) ToShortDateTimeMicroString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(ShortDateTimeMicroLayout)
@@ -236,7 +236,7 @@ func (c Carbon) ToShortDateTimeNanoString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(ShortDateTimeNanoLayout)
@@ -248,7 +248,7 @@ func (c Carbon) ToDateString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(DateLayout)
@@ -260,7 +260,7 @@ func (c Carbon) ToDateMilliString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(DateMilliLayout)
@@ -272,7 +272,7 @@ func (c Carbon) ToDateMicroString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(DateMicroLayout)
@@ -284,7 +284,7 @@ func (c Carbon) ToDateNanoString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(DateNanoLayout)
@@ -296,7 +296,7 @@ func (c Carbon) ToShortDateString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(ShortDateLayout)
@@ -308,7 +308,7 @@ func (c Carbon) ToShortDateMilliString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(ShortDateMilliLayout)
@@ -320,7 +320,7 @@ func (c Carbon) ToShortDateMicroString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(ShortDateMicroLayout)
@@ -332,7 +332,7 @@ func (c Carbon) ToShortDateNanoString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(ShortDateNanoLayout)
@@ -344,7 +344,7 @@ func (c Carbon) ToTimeString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(TimeLayout)
@@ -356,7 +356,7 @@ func (c Carbon) ToTimeMilliString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(TimeMilliLayout)
@@ -368,7 +368,7 @@ func (c Carbon) ToTimeMicroString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(TimeMicroLayout)
@@ -380,7 +380,7 @@ func (c Carbon) ToTimeNanoString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(TimeNanoLayout)
@@ -392,7 +392,7 @@ func (c Carbon) ToShortTimeString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(ShortTimeLayout)
@@ -404,7 +404,7 @@ func (c Carbon) ToShortTimeMilliString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(ShortTimeMilliLayout)
@@ -416,7 +416,7 @@ func (c Carbon) ToShortTimeMicroString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(ShortTimeMicroLayout)
@@ -428,7 +428,7 @@ func (c Carbon) ToShortTimeNanoString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(ShortTimeNanoLayout)
@@ -440,7 +440,7 @@ func (c Carbon) ToAtomString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(AtomLayout)
@@ -452,7 +452,7 @@ func (c Carbon) ToAnsicString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(ANSICLayout)
@@ -464,7 +464,7 @@ func (c Carbon) ToCookieString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(CookieLayout)
@@ -476,7 +476,7 @@ func (c Carbon) ToRssString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(RssLayout)
@@ -488,7 +488,7 @@ func (c Carbon) ToW3cString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(W3cLayout)
@@ -500,7 +500,7 @@ func (c Carbon) ToUnixDateString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(UnixDateLayout)
@@ -512,7 +512,7 @@ func (c Carbon) ToRubyDateString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(RubyDateLayout)
@@ -524,7 +524,7 @@ func (c Carbon) ToKitchenString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(KitchenLayout)
@@ -536,7 +536,7 @@ func (c Carbon) ToIso8601String(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(ISO8601Layout)
@@ -548,7 +548,7 @@ func (c Carbon) ToIso8601MilliString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(ISO8601MilliLayout)
@@ -560,7 +560,7 @@ func (c Carbon) ToIso8601MicroString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(ISO8601MicroLayout)
@@ -572,7 +572,7 @@ func (c Carbon) ToIso8601NanoString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(ISO8601NanoLayout)
@@ -584,7 +584,7 @@ func (c Carbon) ToIso8601ZuluString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(ISO8601ZuluLayout)
@@ -596,7 +596,7 @@ func (c Carbon) ToIso8601ZuluMilliString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(ISO8601ZuluMilliLayout)
@@ -608,7 +608,7 @@ func (c Carbon) ToIso8601ZuluMicroString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(ISO8601ZuluMicroLayout)
@@ -620,7 +620,7 @@ func (c Carbon) ToIso8601ZuluNanoString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(ISO8601ZuluNanoLayout)
@@ -632,7 +632,7 @@ func (c Carbon) ToRfc822String(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(RFC822Layout)
@@ -644,7 +644,7 @@ func (c Carbon) ToRfc822zString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(RFC822ZLayout)
@@ -656,7 +656,7 @@ func (c Carbon) ToRfc850String(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(RFC850Layout)
@@ -668,7 +668,7 @@ func (c Carbon) ToRfc1036String(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(RFC1036Layout)
@@ -680,7 +680,7 @@ func (c Carbon) ToRfc1123String(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(RFC1123Layout)
@@ -692,7 +692,7 @@ func (c Carbon) ToRfc1123zString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(RFC1123ZLayout)
@@ -704,7 +704,7 @@ func (c Carbon) ToRfc2822String(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(RFC2822Layout)
@@ -716,7 +716,7 @@ func (c Carbon) ToRfc3339String(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(RFC3339Layout)
@@ -728,7 +728,7 @@ func (c Carbon) ToRfc3339MilliString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(RFC3339MilliLayout)
@@ -740,7 +740,7 @@ func (c Carbon) ToRfc3339MicroString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(RFC3339MicroLayout)
@@ -752,7 +752,7 @@ func (c Carbon) ToRfc3339NanoString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(RFC3339NanoLayout)
@@ -764,7 +764,7 @@ func (c Carbon) ToRfc7231String(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(RFC7231Layout)
@@ -776,7 +776,7 @@ func (c Carbon) ToFormattedDateString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(FormattedDateLayout)
@@ -788,7 +788,7 @@ func (c Carbon) ToFormattedDayDateString(timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(FormattedDayDateLayout)
@@ -800,7 +800,7 @@ func (c Carbon) Layout(layout string, timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	return c.StdTime().Format(layout)
@@ -812,7 +812,7 @@ func (c Carbon) Format(format string, timezone ...string) string {
 	if len(timezone) > 0 {
 		c.loc, c.Error = getLocationByTimezone(timezone[0])
 	}
-	if c.IsInvalid() {
+	if c.Error != nil || c.IsZero() {
 		return ""
 	}
 	buffer := bytes.NewBuffer(nil)

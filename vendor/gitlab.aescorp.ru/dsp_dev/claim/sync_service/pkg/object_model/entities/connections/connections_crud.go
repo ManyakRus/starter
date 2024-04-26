@@ -23,6 +23,8 @@ type ICrud_Connection interface {
 	Save(*Connection) error
 	Update(*Connection) error
 	Create(*Connection) error
+	ReadFromCache(ID int64) (Connection, error)
+	UpdateManyFields(*Connection, []string) error
 	Update_BranchID(*Connection) error
 	Update_DbName(*Connection) error
 	Update_DbScheme(*Connection) error
@@ -143,11 +145,36 @@ func (m *Connection) Create() error {
 	return err
 }
 
+// ReadFromCache - находит запись в кэше или в БД по ID, и заполняет в объект
+func (m *Connection) ReadFromCache(ID int64) (Connection, error) {
+	Otvet := Connection{}
+	var err error
+
+	if Crud_Connection == nil {
+		return Otvet, constants.ErrorCrudIsNotInit
+	}
+
+	Otvet, err = Crud_Connection.ReadFromCache(ID)
+
+	return Otvet, err
+}
+
 // SetCrudInterface - заполняет интерфейс crud: DB, GRPC, NRPC
 func (m Connection) SetCrudInterface(crud ICrud_Connection) {
 	Crud_Connection = crud
 
 	return
+}
+
+// UpdateManyFields - находит запись в БД по ID, и изменяет только нужные колонки
+func (m *Connection) UpdateManyFields(MassNeedUpdateFields []string) error {
+	if Crud_Connection == nil {
+		return constants.ErrorCrudIsNotInit
+	}
+
+	err := Crud_Connection.UpdateManyFields(m, MassNeedUpdateFields)
+
+	return err
 }
 
 // ---------------------------- конец CRUD операции ------------------------------------------------------------
