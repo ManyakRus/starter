@@ -678,47 +678,56 @@ func TestIndexSubstringMin(t *testing.T) {
 	// Test case 1: empty input string and no substrings provided
 	s1 := ""
 	Otvet1 := -1
-	if IndexMassSubstringMin(s1) != Otvet1 {
-		t.Errorf("IndexMassSubstringMin(%q) = %d; want %d", s1, IndexMassSubstringMin(s1), Otvet1)
+	if IndexSubstringMin(s1) != Otvet1 {
+		t.Errorf("IndexSubstringMin(%q) = %d; want %d", s1, IndexSubstringMin(s1), Otvet1)
 	}
 
 	// Test case 2: non-empty input string and no substrings provided
 	s2 := "Hello, world!"
 	Otvet2 := -1
-	if IndexMassSubstringMin(s2) != Otvet2 {
-		t.Errorf("IndexMassSubstringMin(%q) = %d; want %d", s2, IndexMassSubstringMin(s2), Otvet2)
+	if IndexSubstringMin(s2) != Otvet2 {
+		t.Errorf("IndexSubstringMin(%q) = %d; want %d", s2, IndexSubstringMin(s2), Otvet2)
 	}
 
 	// Test case 3: input string contains one of the substrings
 	s3 := "Hello, world!"
 	substrings3 := []string{"world"}
 	Otvet3 := 7
-	if IndexMassSubstringMin(s3, substrings3...) != Otvet3 {
-		t.Errorf("IndexMassSubstringMin(%q, %v...) = %d; want %d", s3, substrings3, IndexMassSubstringMin(s3, substrings3...), Otvet3)
+	if IndexSubstringMin(s3, substrings3...) != Otvet3 {
+		t.Errorf("IndexSubstringMin(%q, %v...) = %d; want %d", s3, substrings3, IndexSubstringMin(s3, substrings3...), Otvet3)
 	}
 
 	// Test case 4: input string contains multiple occurrences of the same substring
 	s4 := "Hello, world! Hello, world!"
 	substrings4 := []string{"world"}
 	Otvet4 := 7
-	if IndexMassSubstringMin(s4, substrings4...) != Otvet4 {
-		t.Errorf("IndexMassSubstringMin(%q, %v...) = %d; want %d", s4, substrings4, IndexMassSubstringMin(s4, substrings4...), Otvet4)
+	if IndexSubstringMin(s4, substrings4...) != Otvet4 {
+		t.Errorf("IndexSubstringMin(%q, %v...) = %d; want %d", s4, substrings4, IndexSubstringMin(s4, substrings4...), Otvet4)
 	}
 
 	// Test case 5: input string contains multiple different substrings
 	s5 := "Hello, world! How are you?"
 	substrings5 := []string{"world", "are"}
 	Otvet5 := 7
-	if IndexMassSubstringMin(s5, substrings5...) != Otvet5 {
-		t.Errorf("IndexMassSubstringMin(%q, %v...) = %d; want %d", s5, substrings5, IndexMassSubstringMin(s5, substrings5...), Otvet5)
+	if IndexSubstringMin(s5, substrings5...) != Otvet5 {
+		t.Errorf("IndexSubstringMin(%q, %v...) = %d; want %d", s5, substrings5, IndexSubstringMin(s5, substrings5...), Otvet5)
 	}
 
 	// Test case 6: input string contains a mix of substrings that overlap and don't overlap
 	s6 := "Hello, world! How are you?"
 	substrings6 := []string{"world", "orl"}
 	Otvet6 := 7
-	if IndexMassSubstringMin(s6, substrings6...) != Otvet6 {
-		t.Errorf("IndexMassSubstringMin(%q, %v...) = %d; want %d", s6, substrings6, IndexMassSubstringMin(s6, substrings6...), Otvet6)
+	if IndexSubstringMin(s6, substrings6...) != Otvet6 {
+		t.Errorf("IndexSubstringMin(%q, %v...) = %d; want %d", s6, substrings6, IndexSubstringMin(s6, substrings6...), Otvet6)
+	}
+
+	// Test case 6: input string contains a mix of substrings that overlap and don't overlap
+	s7 := "Hello, world! How are you?"
+	substring7 := "world"
+	substring8 := "How"
+	Otvet7 := 7
+	if IndexSubstringMin(s7, substring7, substring8) != Otvet7 {
+		t.Errorf("IndexSubstringMin(%q, %v...) = %d; want %d", s7, substring7, IndexSubstringMin(s7, substring7, substring8), Otvet7)
 	}
 }
 

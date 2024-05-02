@@ -859,8 +859,8 @@ func StringIdentifierFromUUID() string {
 	return Otvet
 }
 
-// IndexMassSubstringMin - возвращает индекс первого вхождения в строке
-func IndexMassSubstringMin(s string, MassSubstr ...string) int {
+// IndexSubstringMin - возвращает индекс первого вхождения в строке
+func IndexSubstringMin(s string, MassSubstr ...string) int {
 	Otvet := -1
 
 	for _, v := range MassSubstr {
