@@ -441,8 +441,8 @@ func RawMultipleSQL(db *gorm.DB, TextSQL string) *gorm.DB {
 	}
 
 	//запустим транзакцию
-	tx0 := tx.Begin()
-	defer tx0.Commit()
+	//tx0 := tx.Begin()
+	//defer tx0.Commit()
 
 	//
 	TextSQL1 := ""
@@ -453,7 +453,7 @@ func RawMultipleSQL(db *gorm.DB, TextSQL string) *gorm.DB {
 	if pos1 > 0 {
 		TextSQL1 = TextSQL[0:pos1]
 		TextSQL2 = TextSQL[pos1:]
-		tx = tx0.Exec(TextSQL1)
+		tx = tx.Exec(TextSQL1)
 		err = tx.Error
 		if err != nil {
 			TextError := fmt.Sprint("db.Exec() error: ", err, ", TextSQL: \n", TextSQL1)
@@ -463,7 +463,7 @@ func RawMultipleSQL(db *gorm.DB, TextSQL string) *gorm.DB {
 	}
 
 	//запустим последний запрос, с возвратом результата
-	tx = tx0.Raw(TextSQL2)
+	tx = tx.Raw(TextSQL2)
 	err = tx.Error
 	if err != nil {
 		TextError := fmt.Sprint("db.Raw() error: ", err, ", TextSQL: \n", TextSQL2)
