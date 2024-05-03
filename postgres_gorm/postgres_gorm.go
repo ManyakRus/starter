@@ -303,6 +303,13 @@ func Start(ApplicationName string) {
 
 }
 
+// Start_SingularTableName - делает соединение с БД, отключение и др. Без переименования имени таблиц на множественное число
+func Start_SingularTableName(ApplicationName string) {
+	SetSingularTableNames(true)
+	Start(ApplicationName)
+
+}
+
 // FillSettings загружает переменные окружения в структуру из файла или из переменных окружения
 func FillSettings() {
 	Settings = SettingsINI{}
