@@ -323,6 +323,7 @@ func FillSettings() {
 
 	//
 	NamingStrategy.SchemaName(Settings.DB_SCHEMA)
+	NamingStrategy.TablePrefix = Settings.DB_SCHEMA + "."
 }
 
 // GetDSN - возвращает строку соединения к базе данных
