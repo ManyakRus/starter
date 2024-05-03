@@ -78,6 +78,33 @@ func Connect_err() error {
 	return err
 }
 
+// Connect_WithApplicationName_SingularTableName - подключается к базе данных, с указанием имени приложения, без переименования имени таблиц
+func Connect_WithApplicationName_SingularTableName(ApplicationName string) {
+	err := Connect_WithApplicationName_SingularTableName_err(ApplicationName)
+	if err != nil {
+		log.Panicln("POSTGRES gorm Connect_WithApplicationName_SingularTableName_err() to database host: ", Settings.DB_HOST, ", Error: ", err)
+	} else {
+		log.Info("POSTGRES gorm Connected. host: ", Settings.DB_HOST, ", base name: ", Settings.DB_NAME, ", schema: ", Settings.DB_SCHEMA)
+	}
+}
+
+// Connect_WithApplicationName_SingularTableName_err - подключается к базе данных, с указанием имени приложения, без переименования имени таблиц
+func Connect_WithApplicationName_SingularTableName_err(ApplicationName string) error {
+	SetSingularTableNames(true)
+	err := Connect_WithApplicationName_err(ApplicationName)
+	return err
+}
+
+// Connect_WithApplicationName - подключается к базе данных, с указанием имени приложения
+func Connect_WithApplicationName(ApplicationName string) {
+	err := Connect_WithApplicationName_err(ApplicationName)
+	if err != nil {
+		log.Panicln("POSTGRES gorm Connect_WithApplicationName_err() to database host: ", Settings.DB_HOST, ", Error: ", err)
+	} else {
+		log.Info("POSTGRES gorm Connected. host: ", Settings.DB_HOST, ", base name: ", Settings.DB_NAME, ", schema: ", Settings.DB_SCHEMA)
+	}
+}
+
 // Connect_WithApplicationName_err - подключается к базе данных, с указанием имени приложения
 func Connect_WithApplicationName_err(ApplicationName string) error {
 	var err error
