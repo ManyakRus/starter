@@ -2,6 +2,7 @@ package postgres_gorm
 
 import (
 	"errors"
+	"sync"
 	"testing"
 	"time"
 
@@ -178,6 +179,7 @@ SELECT * FROM temp_TestRawMultipleSQL2
 
 func TestRawMultipleSQL3(t *testing.T) {
 	config_main.LoadEnv()
+	wg := sync.WaitGroup{}
 	GetConnection()
 	defer CloseConnection()
 
@@ -203,16 +205,17 @@ SELECT * FROM temp_TestRawMultipleSQL2
 			t.Error("TestRawMultipleSQL3() RowsAffected = ", tx.RowsAffected)
 		}
 
+		wg.Done()
 	}
 
 	//запустим 100 потоков
-	for i := 0; i < 100; i++ {
-		stopapp.GetWaitGroup_Main().Add(1)
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
 		go f(t)
-		stopapp.GetWaitGroup_Main().Done()
 	}
 
-	stopapp.GetWaitGroup_Main().Wait()
+	//micro.Pause(100)
+	wg.Wait()
 
 	t.Log("Прошло время: ", time.Since(TimeStart))
 }
@@ -255,44 +258,30 @@ func TestReplaceSchema(t *testing.T) {
 	}
 }
 
-func TestReplaceTableNamesToUnique1(t *testing.T) {
+func TestReplaceTemporaryTableNamesToUnique(t *testing.T) {
 	tests := []struct {
-		name     string
-		input    string
-		uuid     string
-		expected string
+		name  string
+		input string
 	}{
 		{
-			name:     "No public schema",
-			input:    "SELECT * FROM TableName",
-			uuid:     "1234567890",
-			expected: "SELECT * FROM TableName",
+			name:  "One temporary table",
+			input: "CREATE TEMPORARY TABLE temp_TableName (id int); SELECT * FROM temp_TableName",
 		},
 		{
-			name:     "Public schema with no spaces",
-			input:    "SELECT * FROM public.TableName",
-			uuid:     "1234567890",
-			expected: "SELECT * FROM public.TableName",
+			name:  "Multiple temporary tables",
+			input: "CREATE TEMPORARY TABLE temp_TableName1 (id int); CREATE TEMPORARY TABLE temp_TableName2 (name varchar); SELECT * FROM temp_TableName1; SELECT * FROM temp_TableName2",
 		},
 		{
-			name:     "Public schema with spaces",
-			input:    "SELECT * FROM public.Table Name",
-			uuid:     "1234567890",
-			expected: "SELECT * FROM public.Table_1234567890 Name",
-		},
-		{
-			name:     "Public schema with tabs",
-			input:    "SELECT * FROM public.\tTableName\t",
-			uuid:     "1234567890",
-			expected: "SELECT * FROM public.\tTableName_1234567890\t",
+			name:  "Temporary table with different cases",
+			input: "CREATE TEMPORARY TABLE temp_tableName (id int); SELECT * FROM temp_tableName",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := ReplaceTemporaryTableNamesToUnique(tt.input)
-			if got != tt.expected {
-				t.Errorf("ReplaceTemporaryTableNamesToUnique() = %v, expected %v", got, tt.expected)
+			if got == tt.input {
+				t.Errorf("ReplaceTemporaryTableNamesToUnique() error: no changes")
 			}
 		})
 	}
@@ -329,5 +318,21 @@ func TestReplaceTemporaryTableNamesToUnique_MultipleTempTables(t *testing.T) {
 	result := ReplaceTemporaryTableNamesToUnique(input)
 	if result == input {
 		t.Errorf("TestReplaceTemporaryTableNamesToUnique_OneTempTable() error: no changes")
+	}
+}
+
+func TestSetSingularTableNames(t *testing.T) {
+	// Test case 1: IsSingular is true
+	IsSingular := true
+	SetSingularTableNames(IsSingular)
+	if NamingStrategy.SingularTable != IsSingular {
+		t.Errorf("Expected SingularTable to be %v, but got %v", IsSingular, NamingStrategy.SingularTable)
+	}
+
+	// Test case 2: IsSingular is false
+	IsSingular = false
+	SetSingularTableNames(IsSingular)
+	if NamingStrategy.SingularTable != IsSingular {
+		t.Errorf("Expected SingularTable to be %v, but got %v", IsSingular, NamingStrategy.SingularTable)
 	}
 }

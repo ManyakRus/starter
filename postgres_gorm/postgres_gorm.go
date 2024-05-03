@@ -12,17 +12,11 @@ import (
 	"strings"
 	"time"
 
-	//"github.com/jackc/pgconn"
-	"os"
-	"sync"
-	//"time"
-
-	//"github.com/jmoiron/sqlx"
-	//_ "github.com/lib/pq"
-
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/micro"
 	"github.com/ManyakRus/starter/stopapp"
+	"os"
+	"sync"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -54,6 +48,9 @@ type SettingsINI struct {
 	DB_USER     string
 	DB_PASSWORD string
 }
+
+// NamingStrategy - структура для хранения настроек наименования таблиц
+var NamingStrategy = schema.NamingStrategy{TablePrefix: Settings.DB_SCHEMA + "."}
 
 // Connect_err - подключается к базе данных
 func Connect() {
@@ -89,29 +86,24 @@ func Connect_WithApplicationName_err(ApplicationName string) error {
 		FillSettings()
 	}
 
-	//ctxMain := context.Background()
-	//ctxMain := contextmain.GetContext()
-	//ctx, cancel := context.WithTimeout(ctxMain, 5*time.Second)
-	//defer cancel()
-
-	// get the database connection URL.
+	//get the database connection URL.
 	dsn := GetDSN(ApplicationName)
 
 	//
 	conf := &gorm.Config{
 		Logger: gormlogger.Default.LogMode(gormlogger.Silent),
 	}
-	//conn := postgres.Open(dsn)
+	conf.NamingStrategy = NamingStrategy
 
-	dialect := postgres.New(postgres.Config{
+	//
+	config := postgres.Config{
 		DSN:                  dsn,
 		PreferSimpleProtocol: true, //для запуска мультизапросов
-	})
-	Conn, err = gorm.Open(dialect, conf)
+	}
 
-	//Conn, err = gorm.Open(conn, conf)
-	Conn.Config.NamingStrategy = schema.NamingStrategy{TablePrefix: Settings.DB_SCHEMA + "."}
-	//Conn.Config.Logger = gormlogger.Default.LogMode(gormlogger.Error)
+	//
+	dialect := postgres.New(config)
+	Conn, err = gorm.Open(dialect, conf)
 
 	if err == nil {
 		DB, err := Conn.DB()
@@ -271,7 +263,10 @@ func StartDB() {
 
 // Start - делает соединение с БД, отключение и др.
 func Start(ApplicationName string) {
-	Connect_WithApplicationName_err(ApplicationName)
+	err := Connect_WithApplicationName_err(ApplicationName)
+	if err != nil {
+		log.Panic("Postgres gorm Start() error: ", err)
+	}
 
 	stopapp.GetWaitGroup_Main().Add(1)
 	go WaitStop()
@@ -356,7 +351,10 @@ func GetConnection() *gorm.DB {
 // GetConnection_WithApplicationName - возвращает соединение к нужной базе данных, с указанием имени приложения
 func GetConnection_WithApplicationName(ApplicationName string) *gorm.DB {
 	if Conn == nil {
-		Connect_WithApplicationName_err(ApplicationName)
+		err := Connect_WithApplicationName_err(ApplicationName)
+		if err != nil {
+			log.Panic("GetConnection_WithApplicationName() error: ", err)
+		}
 	}
 
 	return Conn
@@ -549,4 +547,10 @@ func ReplaceTemporaryTableNamesToUnique(TextSQL string) string {
 	}
 
 	return Otvet
+}
+
+// SetSingularTableNames - меняет настройку "SingularTable" - надо ли НЕ переименовывать имя таблиц во вножественное число
+// true = не переименовывать
+func SetSingularTableNames(IsSingular bool) {
+	NamingStrategy.SingularTable = IsSingular
 }
