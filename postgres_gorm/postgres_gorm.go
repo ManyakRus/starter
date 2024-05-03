@@ -50,7 +50,7 @@ type SettingsINI struct {
 }
 
 // NamingStrategy - структура для хранения настроек наименования таблиц
-var NamingStrategy = schema.NamingStrategy{TablePrefix: Settings.DB_SCHEMA + "."}
+var NamingStrategy = schema.NamingStrategy{}
 
 // Connect_err - подключается к базе данных
 func Connect() {
@@ -322,6 +322,7 @@ func FillSettings() {
 	}
 
 	//
+	NamingStrategy.SchemaName(Settings.DB_SCHEMA)
 }
 
 // GetDSN - возвращает строку соединения к базе данных
