@@ -604,7 +604,12 @@ func TestShowTimePassed(t *testing.T) {
 
 func TestShowTimePassedSeconds(t *testing.T) {
 	defer ShowTimePassedSeconds(time.Now())
-	//Pause(1)
+	Pause(1)
+}
+
+func TestShowTimePassedMilliSeconds(t *testing.T) {
+	defer ShowTimePassedMilliSeconds(time.Now())
+	Pause(1)
 }
 
 func TestStructDeepCopy(t *testing.T) {
