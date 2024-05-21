@@ -831,21 +831,21 @@ func StringFloat32_Dimension2(f float32) string {
 // запускать:
 // defer micro.ShowTimePassed(time.Now())
 func ShowTimePassed(StartAt time.Time) {
-	fmt.Print("Time passed: ", time.Since(StartAt))
+	fmt.Printf("Time passed: %s\n", time.Since(StartAt))
 }
 
 // ShowTimePassedSeconds - показывает время секунд прошедшее с момента старта
 // запускать:
 // defer micro.ShowTimePassedSeconds(time.Now())
 func ShowTimePassedSeconds(StartAt time.Time) {
-	fmt.Printf("Time passed: %s", time.Since(StartAt).Round(time.Second))
+	fmt.Printf("Time passed: %s\n", time.Since(StartAt).Round(time.Second))
 }
 
 // ShowTimePassedMilliSeconds - показывает время миллисекунд прошедшее с момента старта
 // запускать:
 // defer micro.ShowTimePassedMilliSeconds(time.Now())
 func ShowTimePassedMilliSeconds(StartAt time.Time) {
-	fmt.Printf("Time passed: %s", time.Since(StartAt).Round(time.Millisecond))
+	fmt.Printf("Time passed: %s\n", time.Since(StartAt).Round(time.Millisecond))
 }
 
 // StructDeepCopy - копирует структуру из src в dist
