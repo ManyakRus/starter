@@ -602,6 +602,11 @@ func TestShowTimePassed(t *testing.T) {
 	defer ShowTimePassed(time.Now())
 }
 
+func TestShowTimePassedSeconds(t *testing.T) {
+	defer ShowTimePassedSeconds(time.Now())
+	//Pause(1)
+}
+
 func TestStructDeepCopy(t *testing.T) {
 	type NestedStruct struct {
 		Number int

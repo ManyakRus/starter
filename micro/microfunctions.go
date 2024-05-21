@@ -834,6 +834,13 @@ func ShowTimePassed(StartAt time.Time) {
 	fmt.Print("Time passed: ", time.Since(StartAt))
 }
 
+// ShowTimePassedSeconds - показывает время секунд прошедшее с момента старта
+// запускать:
+// defer micro.ShowTimePassed(time.Now())
+func ShowTimePassedSeconds(StartAt time.Time) {
+	fmt.Printf("Time passed: %.3f", time.Since(StartAt).Seconds())
+}
+
 // StructDeepCopy - копирует структуру из src в dist
 // dist - обязательно ссылка &
 func StructDeepCopy(src, dist interface{}) (err error) {
