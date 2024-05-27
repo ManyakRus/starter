@@ -183,7 +183,7 @@ func LastWord(StringFrom string) string {
 	}
 
 	r := []rune(StringFrom)
-	for f := len(r); f >= 0; f-- {
+	for f := len(r); f > 0; f-- {
 		r1 := r[f-1]
 		if r1 == '_' {
 		} else if unicode.IsLetter(r1) == false && unicode.IsDigit(r1) == false {
