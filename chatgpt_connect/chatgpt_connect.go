@@ -32,10 +32,12 @@ var Settings SettingsINI
 
 // SettingsINI - структура для хранения всех нужных переменных окружения
 type SettingsINI struct {
-	CHATGPT_API_KEY    string
-	CHATGPT_NAME       string
-	CHATGPT_START_TEXT string
-	CHATGPT_END_TEXT   string
+	CHATGPT_API_KEY       string
+	CHATGPT_NAME          string
+	CHATGPT_START_TEXT    string
+	CHATGPT_END_TEXT      string
+	CHATGPT_PROXY_API_URL string
+	CHATGPT_PROXY_API_KEY string
 }
 
 // Connect_err - подключается к базе данных
@@ -58,7 +60,11 @@ func Connect_err() error {
 		FillSettings()
 	}
 
-	Conn = gogpt.NewClient(Settings.CHATGPT_API_KEY)
+	if Settings.CHATGPT_PROXY_API_KEY != "" {
+		Conn = gogpt.NewClient(Settings.CHATGPT_PROXY_API_KEY)
+	} else {
+		Conn = gogpt.NewClient(Settings.CHATGPT_API_KEY)
+	}
 
 	//req := gogpt.CompletionRequest{
 	//	Model:     gogpt.GPT3Ada,
@@ -141,6 +147,8 @@ func FillSettings() {
 	Settings.CHATGPT_NAME = os.Getenv("CHATGPT_NAME")
 	Settings.CHATGPT_START_TEXT = os.Getenv("CHATGPT_START_TEXT")
 	Settings.CHATGPT_END_TEXT = os.Getenv("CHATGPT_END_TEXT")
+	Settings.CHATGPT_PROXY_API_URL = os.Getenv("CHATGPT_PROXY_API_URL")
+	Settings.CHATGPT_PROXY_API_KEY = os.Getenv("CHATGPT_PROXY_API_KEY")
 	if Settings.CHATGPT_API_KEY == "" {
 		log.Panicln("Need fill CHATGPT_API_KEY ! in os .env ")
 	}
@@ -178,7 +186,7 @@ func SendMessage(Text string, user string) (string, error) {
 	defer cancel()
 
 	req := gogpt.CompletionRequest{
-		Model:     gogpt.GPT4, //надо gogpt.GPT3TextDavinci003
+		Model:     gogpt.GPT4Turbo, //надо gogpt.GPT3TextDavinci003
 		MaxTokens: 2048,
 		Prompt:    Text,
 		User:      user,

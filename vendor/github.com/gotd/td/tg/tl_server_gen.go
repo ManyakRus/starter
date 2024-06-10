@@ -455,6 +455,27 @@ func (s *ServerDispatcher) OnAuthResetLoginEmail(f func(ctx context.Context, req
 	s.handlers[AuthResetLoginEmailRequestTypeID] = handler
 }
 
+func (s *ServerDispatcher) OnAuthReportMissingCode(f func(ctx context.Context, request *AuthReportMissingCodeRequest) (bool, error)) {
+	handler := func(ctx context.Context, b *bin.Buffer) (bin.Encoder, error) {
+		var request AuthReportMissingCodeRequest
+		if err := request.Decode(b); err != nil {
+			return nil, err
+		}
+
+		response, err := f(ctx, &request)
+		if err != nil {
+			return nil, err
+		}
+		if response {
+			return &BoolBox{Bool: &BoolTrue{}}, nil
+		}
+
+		return &BoolBox{Bool: &BoolFalse{}}, nil
+	}
+
+	s.handlers[AuthReportMissingCodeRequestTypeID] = handler
+}
+
 func (s *ServerDispatcher) OnAccountRegisterDevice(f func(ctx context.Context, request *AccountRegisterDeviceRequest) (bool, error)) {
 	handler := func(ctx context.Context, b *bin.Buffer) (bin.Encoder, error) {
 		var request AccountRegisterDeviceRequest
@@ -6867,6 +6888,23 @@ func (s *ServerDispatcher) OnMessagesGetMyStickers(f func(ctx context.Context, r
 	}
 
 	s.handlers[MessagesGetMyStickersRequestTypeID] = handler
+}
+
+func (s *ServerDispatcher) OnMessagesGetEmojiStickerGroups(f func(ctx context.Context, hash int) (MessagesEmojiGroupsClass, error)) {
+	handler := func(ctx context.Context, b *bin.Buffer) (bin.Encoder, error) {
+		var request MessagesGetEmojiStickerGroupsRequest
+		if err := request.Decode(b); err != nil {
+			return nil, err
+		}
+
+		response, err := f(ctx, request.Hash)
+		if err != nil {
+			return nil, err
+		}
+		return &MessagesEmojiGroupsBox{EmojiGroups: response}, nil
+	}
+
+	s.handlers[MessagesGetEmojiStickerGroupsRequestTypeID] = handler
 }
 
 func (s *ServerDispatcher) OnUpdatesGetState(f func(ctx context.Context) (*UpdatesState, error)) {

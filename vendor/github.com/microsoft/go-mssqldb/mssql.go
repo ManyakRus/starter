@@ -983,6 +983,19 @@ func (s *Stmt) makeParam(val driver.Value) (res param, err error) {
 		return
 	}
 	switch valuer := val.(type) {
+	// sql.Nullxxx integer types return an int64. We want the original type, to match the SQL type size.
+	case sql.NullByte:
+		if valuer.Valid {
+			return s.makeParam(valuer.Byte)
+		}
+	case sql.NullInt16:
+		if valuer.Valid {
+			return s.makeParam(valuer.Int16)
+		}
+	case sql.NullInt32:
+		if valuer.Valid {
+			return s.makeParam(valuer.Int32)
+		}
 	case UniqueIdentifier:
 	case NullUniqueIdentifier:
 	default:
@@ -1052,9 +1065,20 @@ func (s *Stmt) makeParam(val driver.Value) (res param, err error) {
 		res.ti.Size = 8
 		res.buffer = []byte{}
 	case sql.NullInt32:
+		// only null values should be getting here
 		res.ti.TypeId = typeIntN
 		res.ti.Size = 4
 		res.buffer = []byte{}
+	case sql.NullInt16:
+		// only null values should be getting here
+		res.buffer = []byte{}
+		res.ti.Size = 2
+		res.ti.TypeId = typeIntN
+	case sql.NullByte:
+		// only null values should be getting here
+		res.buffer = []byte{}
+		res.ti.Size = 1
+		res.ti.TypeId = typeIntN
 	case byte:
 		res.ti.TypeId = typeIntN
 		res.buffer = []byte{val}
@@ -1110,6 +1134,18 @@ func (s *Stmt) makeParam(val driver.Value) (res param, err error) {
 			res.buffer = encodeDateTime(val)
 			res.ti.Size = len(res.buffer)
 		}
+	case sql.NullTime: // only null values reach here
+		res.buffer = []byte{}
+		res.ti.Size = 8
+		if s.c.sess.loginAck.TDSVersion >= verTDS73 {
+			res.ti.TypeId = typeDateTimeOffsetN
+			res.ti.Scale = 7
+		} else {
+			res.ti.TypeId = typeDateTimeN
+		}
+	case driver.Valuer:
+		// We have a custom Valuer implementation with a nil value
+		return s.makeParam(nil)
 	default:
 		return s.makeParamExtra(val)
 	}

@@ -523,10 +523,13 @@ func CompressHandler(h RequestHandler) RequestHandler {
 func CompressHandlerLevel(h RequestHandler, level int) RequestHandler {
 	return func(ctx *RequestCtx) {
 		h(ctx)
-		if ctx.Request.Header.HasAcceptEncodingBytes(strGzip) {
-			ctx.Response.gzipBody(level) //nolint:errcheck
-		} else if ctx.Request.Header.HasAcceptEncodingBytes(strDeflate) {
-			ctx.Response.deflateBody(level) //nolint:errcheck
+		switch {
+		case ctx.Request.Header.HasAcceptEncodingBytes(strGzip):
+			ctx.Response.gzipBody(level)
+		case ctx.Request.Header.HasAcceptEncodingBytes(strDeflate):
+			ctx.Response.deflateBody(level)
+		case ctx.Request.Header.HasAcceptEncodingBytes(strZstd):
+			ctx.Response.zstdBody(level)
 		}
 	}
 }
@@ -554,11 +557,13 @@ func CompressHandlerBrotliLevel(h RequestHandler, brotliLevel, otherLevel int) R
 		h(ctx)
 		switch {
 		case ctx.Request.Header.HasAcceptEncodingBytes(strBr):
-			ctx.Response.brotliBody(brotliLevel) //nolint:errcheck
+			ctx.Response.brotliBody(brotliLevel)
 		case ctx.Request.Header.HasAcceptEncodingBytes(strGzip):
-			ctx.Response.gzipBody(otherLevel) //nolint:errcheck
+			ctx.Response.gzipBody(otherLevel)
 		case ctx.Request.Header.HasAcceptEncodingBytes(strDeflate):
-			ctx.Response.deflateBody(otherLevel) //nolint:errcheck
+			ctx.Response.deflateBody(otherLevel)
+		case ctx.Request.Header.HasAcceptEncodingBytes(strZstd):
+			ctx.Response.zstdBody(otherLevel)
 		}
 	}
 }
@@ -677,7 +682,7 @@ func (ctx *RequestCtx) Hijacked() bool {
 // All the values are removed from ctx after returning from the top
 // RequestHandler. Additionally, Close method is called on each value
 // implementing io.Closer before removing the value from ctx.
-func (ctx *RequestCtx) SetUserValue(key any, value any) {
+func (ctx *RequestCtx) SetUserValue(key, value any) {
 	ctx.userValues.Set(key, value)
 }
 
@@ -2039,10 +2044,10 @@ func (s *Server) ServeConn(c net.Conn) error {
 	atomic.AddUint32(&s.concurrency, ^uint32(0))
 
 	if err != errHijacked {
-		err1 := c.Close()
+		errc := c.Close()
 		s.setState(c, StateClosed)
 		if err == nil {
-			err = err1
+			err = errc
 		}
 	} else {
 		err = nil

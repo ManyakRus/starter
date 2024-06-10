@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"github.com/vmihailenco/msgpack/v5"
 	"gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/db/calc_struct_version"
-	"gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/db/constants"
+	"gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/db/db_constants"
 	"reflect"
 )
 
@@ -104,7 +104,7 @@ func (m Connection) GetJSON() (string, error) {
 // Read - находит запись в БД по ID, и заполняет в объект
 func (m *Connection) Read() error {
 	if Crud_Connection == nil {
-		return constants.ErrorCrudIsNotInit
+		return db_constants.ErrorCrudIsNotInit
 	}
 
 	err := Crud_Connection.Read(m)
@@ -115,7 +115,7 @@ func (m *Connection) Read() error {
 // Save - записывает объект в БД по ID
 func (m *Connection) Save() error {
 	if Crud_Connection == nil {
-		return constants.ErrorCrudIsNotInit
+		return db_constants.ErrorCrudIsNotInit
 	}
 
 	err := Crud_Connection.Save(m)
@@ -126,7 +126,7 @@ func (m *Connection) Save() error {
 // Update - обновляет объект в БД по ID
 func (m *Connection) Update() error {
 	if Crud_Connection == nil {
-		return constants.ErrorCrudIsNotInit
+		return db_constants.ErrorCrudIsNotInit
 	}
 
 	err := Crud_Connection.Update(m)
@@ -137,7 +137,7 @@ func (m *Connection) Update() error {
 // Create - создаёт объект в БД с новым ID
 func (m *Connection) Create() error {
 	if Crud_Connection == nil {
-		return constants.ErrorCrudIsNotInit
+		return db_constants.ErrorCrudIsNotInit
 	}
 
 	err := Crud_Connection.Create(m)
@@ -151,7 +151,7 @@ func (m *Connection) ReadFromCache(ID int64) (Connection, error) {
 	var err error
 
 	if Crud_Connection == nil {
-		return Otvet, constants.ErrorCrudIsNotInit
+		return Otvet, db_constants.ErrorCrudIsNotInit
 	}
 
 	Otvet, err = Crud_Connection.ReadFromCache(ID)
@@ -169,7 +169,7 @@ func (m Connection) SetCrudInterface(crud ICrud_Connection) {
 // UpdateManyFields - находит запись в БД по ID, и изменяет только нужные колонки
 func (m *Connection) UpdateManyFields(MassNeedUpdateFields []string) error {
 	if Crud_Connection == nil {
-		return constants.ErrorCrudIsNotInit
+		return db_constants.ErrorCrudIsNotInit
 	}
 
 	err := Crud_Connection.UpdateManyFields(m, MassNeedUpdateFields)

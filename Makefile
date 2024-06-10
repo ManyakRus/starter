@@ -15,7 +15,7 @@ run:
 mod:
 	clear
 	go get -u ./...
-	go mod tidy -compat=1.20
+	go mod tidy -compat=1.22
 	go mod vendor
 	go fmt ./...
 build:
