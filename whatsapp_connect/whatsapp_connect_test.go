@@ -25,7 +25,7 @@ func TestCreateClient(t *testing.T) {
 }
 
 func TestSendMessage(t *testing.T) {
-	t.Skip()
+	//t.Skip()
 
 	//ProgramDir := programdir.ProgramDir()
 	//ProgramDir := micro.ProgramDir_Common()

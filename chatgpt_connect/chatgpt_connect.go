@@ -186,7 +186,7 @@ func SendMessage(Text string, user string) (string, error) {
 	defer cancel()
 
 	req := gogpt.CompletionRequest{
-		Model:     gogpt.GPT4Turbo, //надо gogpt.GPT3TextDavinci003
+		Model:     gogpt.GPT4o, //надо gogpt.GPT3TextDavinci003
 		MaxTokens: 2048,
 		Prompt:    Text,
 		User:      user,
