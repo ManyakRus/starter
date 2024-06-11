@@ -370,11 +370,11 @@ func RawMultipleSQL(db *pgx.Conn, TextSQL string) (pgx.Rows, error) {
 	ctx := contextmain.GetContext()
 
 	//запустим транзакцию
-	tx, err := db.Begin(ctx)
-	if err != nil {
-		log.Error(err)
-		return Rows, err
-	}
+	//tx, err := db.Begin(ctx)
+	//if err != nil {
+	//	log.Error(err)
+	//	return Rows, err
+	//}
 	//defer tx.Commit()
 
 	//
@@ -386,7 +386,7 @@ func RawMultipleSQL(db *pgx.Conn, TextSQL string) (pgx.Rows, error) {
 	if pos1 > 0 {
 		TextSQL1 = TextSQL[0:pos1]
 		TextSQL2 = TextSQL[pos1:]
-		_, err := tx.Exec(ctx, TextSQL1)
+		_, err := db.Exec(ctx, TextSQL1)
 		if err != nil {
 			TextError := fmt.Sprint("db.Exec() error: ", err, ", TextSQL: \n", TextSQL1)
 			err = errors.New(TextError)
@@ -396,7 +396,7 @@ func RawMultipleSQL(db *pgx.Conn, TextSQL string) (pgx.Rows, error) {
 	}
 
 	//запустим последний запрос, с возвратом результата
-	Rows, err = tx.Query(ctx, TextSQL2)
+	Rows, err = db.Query(ctx, TextSQL2)
 	if err != nil {
 		TextError := fmt.Sprint("db.Raw() error: ", err, ", TextSQL: \n", TextSQL2)
 		err = errors.New(TextError)
