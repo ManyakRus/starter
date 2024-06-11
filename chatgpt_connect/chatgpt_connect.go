@@ -185,20 +185,20 @@ func SendMessage(Text string, user string) (string, error) {
 	ctx, cancel := context.WithTimeout(ctxMain, 600*time.Second)
 	defer cancel()
 
-	req := gogpt.CompletionRequest{
+	req := gogpt.ChatCompletionRequest{
 		Model:     gogpt.GPT4o, //надо gogpt.GPT3TextDavinci003
 		MaxTokens: 2048,
-		Prompt:    Text,
-		User:      user,
+		//Prompt:    Text,
+		User: user,
 	}
-	resp, err := Conn.CreateCompletion(ctx, req)
+	resp, err := Conn.CreateChatCompletion(ctx, req)
 	if err != nil {
 		log.Debug("ChatGPT CreateCompletion() error: ", err)
 		return Otvet, err
 	}
 
 	if len(resp.Choices) > 0 {
-		Otvet = resp.Choices[0].Text
+		Otvet = resp.Choices[0].Message.Content
 	} else {
 		err = errors.New("error: no response")
 	}
