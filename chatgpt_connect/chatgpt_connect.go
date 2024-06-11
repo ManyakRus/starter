@@ -52,6 +52,13 @@ func Connect() {
 
 }
 
+// NewClient_proxy creates new OpenAI API client.
+func NewClient_proxy(authToken string) *gogpt.Client {
+	config := gogpt.DefaultConfig(authToken)
+	config.BaseURL = Settings.CHATGPT_PROXY_API_URL
+	return gogpt.NewClientWithConfig(config)
+}
+
 // Connect_err - подключается к базе данных
 func Connect_err() error {
 	var err error
@@ -61,7 +68,7 @@ func Connect_err() error {
 	}
 
 	if Settings.CHATGPT_PROXY_API_KEY != "" {
-		Conn = gogpt.NewClient(Settings.CHATGPT_PROXY_API_KEY)
+		Conn = NewClient_proxy(Settings.CHATGPT_PROXY_API_KEY)
 	} else {
 		Conn = gogpt.NewClient(Settings.CHATGPT_API_KEY)
 	}
@@ -202,36 +209,6 @@ func SendMessage(Text string, user string) (string, error) {
 	} else {
 		err = errors.New("error: no response")
 	}
-	//fmt.Println("Otvet: ", resp.Choices[0].Text)
-
-	//req := gogpt.CompletionRequest{
-	//	Model:     gogpt.GPT3Ada,
-	//	MaxTokens: 5,
-	//	Prompt:    Text,
-	//	Stream:    true,
-	//}
-	//stream, err := Conn.CreateCompletionStream(ctx, req)
-	//if err != nil {
-	//	return Otvet, err
-	//}
-	//defer stream.Close()
-	//
-	//for {
-	//	response, err := stream.Recv()
-	//	Otvet = response
-	//	if errors.Is(err, io.EOF) {
-	//		fmt.Println("Stream finished")
-	//		err = nil
-	//		return Otvet, err
-	//	}
-	//
-	//	if err != nil {
-	//		fmt.Printf("Stream error: %v\n", err)
-	//		return Otvet, err
-	//	}
-	//
-	//	fmt.Printf("Stream response: %v\n", response)
-	//}
 
 	return Otvet, err
 }
