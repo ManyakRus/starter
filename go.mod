@@ -77,6 +77,7 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rs/xid v1.5.0 // indirect
 	github.com/rs/zerolog v1.33.0 // indirect
+	github.com/rugatling/go-openai v0.0.0-20240602200622-19edf07d0a97 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/syndtr/goleveldb v1.0.0 // indirect

@@ -1,10 +1,9 @@
-package chatgpt_connect
+package chatgpt_proxy
 
 import (
 	"context"
 	"errors"
 	"github.com/ManyakRus/starter/logger"
-	"github.com/rugatling/go-openai"
 	"time"
 
 	//"github.com/jackc/pgconn"
@@ -15,7 +14,7 @@ import (
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/stopapp"
 
-	gogpt "github.com/sashabaranov/go-openai"
+	gogpt "github.com/rugatling/go-openai"
 )
 
 // Conn - соединение к CHAT GPT
@@ -53,13 +52,6 @@ func Connect() {
 
 }
 
-// NewClient_proxy creates new OpenAI API client.
-func NewClient_proxy(authToken string) *gogpt.Client {
-	config := gogpt.DefaultConfig(authToken)
-	config.BaseURL = Settings.CHATGPT_PROXY_API_URL
-	return gogpt.NewClientWithConfig(config)
-}
-
 // Connect_err - подключается к базе данных
 func Connect_err() error {
 	var err error
@@ -69,7 +61,9 @@ func Connect_err() error {
 	}
 
 	if Settings.CHATGPT_PROXY_API_KEY != "" {
-		Conn = NewClient_proxy(Settings.CHATGPT_PROXY_API_KEY)
+		config := gogpt.DefaultConfig(Settings.CHATGPT_PROXY_API_KEY)
+		config.BaseURL = Settings.CHATGPT_PROXY_API_URL
+		Conn = gogpt.NewClientWithConfig(config)
 	} else {
 		Conn = gogpt.NewClient(Settings.CHATGPT_API_KEY)
 	}
@@ -195,21 +189,20 @@ func SendMessage(Text string, user string) (string, error) {
 
 	Messages := []gogpt.ChatCompletionMessage{
 		{
-			Name:    user,
+			Role:    gogpt.ChatMessageRoleSystem,
 			Content: Text,
-			Role:    openai.ChatMessageRoleSystem,
 		},
 	}
 
 	req := gogpt.ChatCompletionRequest{
-		Model:     gogpt.GPT4o, //надо gogpt.GPT3TextDavinci003
+		Model:     gogpt.GPT4o,
 		MaxTokens: 2048,
 		Messages:  Messages,
 		User:      user,
 	}
 	resp, err := Conn.CreateChatCompletion(ctx, req)
 	if err != nil {
-		log.Debug("ChatGPT CreateCompletion() error: ", err)
+		log.Debug("ChatGPT CreateChatCompletion() error: ", err)
 		return Otvet, err
 	}
 

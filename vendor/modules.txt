@@ -316,6 +316,10 @@ github.com/rs/xid
 github.com/rs/zerolog
 github.com/rs/zerolog/internal/cbor
 github.com/rs/zerolog/internal/json
+# github.com/rugatling/go-openai v0.0.0-20240602200622-19edf07d0a97
+## explicit; go 1.18
+github.com/rugatling/go-openai
+github.com/rugatling/go-openai/internal
 # github.com/sashabaranov/go-openai v1.24.1
 ## explicit; go 1.18
 github.com/sashabaranov/go-openai
