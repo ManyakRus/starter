@@ -53,7 +53,7 @@ func Connect() {
 
 }
 
-// NewClient_proxy creates new OpenAI API client.
+// NewClient_proxy creates new OpenAI API client with another base URL ("https://api.proxyapi.ru/openai/v1")
 func NewClient_proxy(authToken string) *gogpt.Client {
 	config := gogpt.DefaultConfig(authToken)
 	config.BaseURL = Settings.CHATGPT_PROXY_API_URL
@@ -64,7 +64,7 @@ func NewClient_proxy(authToken string) *gogpt.Client {
 func Connect_err() error {
 	var err error
 
-	if Settings.CHATGPT_API_KEY == "" {
+	if Settings.CHATGPT_API_KEY == "" && Settings.CHATGPT_PROXY_API_KEY == "" {
 		FillSettings()
 	}
 

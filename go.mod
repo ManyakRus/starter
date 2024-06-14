@@ -6,7 +6,7 @@ toolchain go1.22.1
 
 require (
 	github.com/ManyakRus/logrus v0.0.0-20231019115155-9e6fede0d792
-	github.com/camunda/zeebe/clients/go/v8 v8.5.2
+	github.com/camunda/zeebe/clients/go/v8 v8.5.3
 	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/emersion/go-imap v1.2.1
 	github.com/emersion/go-message v0.18.1
@@ -15,25 +15,26 @@ require (
 	github.com/golang-module/carbon/v2 v2.3.12
 	github.com/google/uuid v1.6.0
 	github.com/gotd/contrib v0.20.0
-	github.com/gotd/td v0.102.0
+	github.com/gotd/td v0.103.0
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/joho/godotenv v1.5.1
-	github.com/klauspost/compress v1.17.8
+	github.com/klauspost/compress v1.17.9
 	github.com/lib/pq v1.10.9
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/mdp/qrterminal/v3 v3.2.0
 	github.com/minio/minio-go/v7 v7.0.71
 	github.com/nats-io/nats.go v1.35.0
-	github.com/sashabaranov/go-openai v1.24.1
+	github.com/rugatling/go-openai v0.0.0-20240602200622-19edf07d0a97
+	github.com/sashabaranov/go-openai v1.25.0
 	github.com/segmentio/kafka-go v0.4.47
 	github.com/xhit/go-simple-mail/v2 v2.16.0
 	gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange v0.0.20
-	gitlab.aescorp.ru/dsp_dev/claim/sync_service v1.2.132
+	gitlab.aescorp.ru/dsp_dev/claim/sync_service v1.2.135
 	go.mau.fi/whatsmeow v0.0.0-20240603101645-64bc969fbe78
 	golang.org/x/crypto v0.24.0
-	golang.org/x/exp v0.0.0-20240604190554-fc45aab8b7f8
-	gorm.io/driver/postgres v1.5.7
+	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
+	gorm.io/driver/postgres v1.5.9
 	gorm.io/driver/sqlserver v1.5.3
 	gorm.io/gorm v1.25.10
 )
@@ -55,7 +56,7 @@ require (
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
-	github.com/gorilla/websocket v1.5.2 // indirect
+	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/gotd/ige v0.2.2 // indirect
 	github.com/gotd/neo v0.1.5 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -77,7 +78,6 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rs/xid v1.5.0 // indirect
 	github.com/rs/zerolog v1.33.0 // indirect
-	github.com/rugatling/go-openai v0.0.0-20240602200622-19edf07d0a97 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/syndtr/goleveldb v1.0.0 // indirect
@@ -102,7 +102,7 @@ require (
 	golang.org/x/text v0.16.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240610135401-a8a62080eff3 // indirect
 	google.golang.org/grpc v1.64.0 // indirect
-	google.golang.org/protobuf v1.34.1 // indirect
+	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.11 // indirect

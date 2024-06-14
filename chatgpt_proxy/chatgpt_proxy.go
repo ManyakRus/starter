@@ -1,3 +1,5 @@
+// модуль для работы с ChatGPT API через прокси (https://proxyapi.ru/)
+
 package chatgpt_proxy
 
 import (
