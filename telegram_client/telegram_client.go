@@ -440,6 +440,8 @@ func ConnectTelegram() error {
 		return err
 	}
 
+	log.Info("Telegram connected: ", Settings.TELEGRAM_PHONE_FROM)
+
 	return nil
 }
 
