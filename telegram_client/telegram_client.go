@@ -5,8 +5,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/ManyakRus/starter/logger"
-	"io/ioutil"
+	"github.com/ManyakRus/starter/log"
 	"os"
 	"strconv"
 	"strings"
@@ -34,14 +33,14 @@ import (
 // filenameSession - имя файла сохранения сессии мессенджера Телеграм
 var filenameSession string
 
-// client - клиент соединения мессенджера Телеграм
-var client *telegram.Client
+// Client - клиент соединения мессенджера Телеграм
+var Client *telegram.Client
 
 // lastSendTime - время последней отправки сообщения и мьютекс
 var lastSendTime = lastSendTimeMutex{}
 
-// log - глобальный логгер приложения
-var log = logger.GetLog()
+//// log - глобальный логгер приложения
+//var log = logger.GetLog()
 
 // stopTelegramFunc - функция остановки соединения с мессенджером Телеграм
 var stopTelegramFunc bg.StopFunc
@@ -83,7 +82,7 @@ func SendMessage(phone_send_to string, text string) (int, error) {
 	//var is_sent bool
 	//
 
-	if client == nil {
+	if Client == nil {
 		CreateTelegramClient(nil)
 		//if err != nil {
 		//	log.Error("ConnectTelegram() error: ", err)
@@ -111,7 +110,7 @@ func SendMessage(phone_send_to string, text string) (int, error) {
 	text = micro.SubstringLeft(text, MAX_MESSAGE_LEN)
 
 	//
-	api := client.API()
+	api := Client.API()
 
 	//ctxMain := contextmain.GetContext()
 	ctxMain := context.Background()
@@ -163,7 +162,7 @@ func SendMessage(phone_send_to string, text string) (int, error) {
 
 	//log.Print("Success")
 
-	// Return to close client connection and free up resources.
+	// Return to close Client connection and free up resources.
 	// Client is closed.
 	return id, err
 
@@ -182,7 +181,7 @@ func AddContact(ctx context.Context, phone_send_to string) error {
 
 	TimeLimit()
 
-	api := client.API()
+	api := Client.API()
 
 	//var contacts []tg.InputPhoneContact
 	contact := tg.InputPhoneContact{}
@@ -301,19 +300,13 @@ func (s *memorySession) LoadSession(context.Context) ([]byte, error) {
 	defer s.mux.RUnlock()
 
 	// read the whole file at once
-	cpy, err := ioutil.ReadFile(filenameSession)
+	cpy, err := os.ReadFile(filenameSession)
 	if err != nil {
 		cpy = nil
 		log.Error(err)
 		return nil, nil
 		//return nil, session.ErrNotFound
 	}
-
-	////было
-	//if len(s.data) == 0 {
-	//	return nil, session.ErrNotFound
-	//}
-	//cpy = append([]byte(nil), s.data...)
 
 	return cpy, nil
 }
@@ -329,7 +322,7 @@ func (s *memorySession) StoreSession(ctx context.Context, data []byte) error {
 	//s.data = data
 
 	// write the whole body at once
-	err := ioutil.WriteFile(filenameSession, data, 0644)
+	err := os.WriteFile(filenameSession, data, 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -353,7 +346,7 @@ func CreateTelegramClient(func_OnNewMessage func(ctx context.Context, entities t
 	sessionStorage := &memorySession{}
 
 	dispatcher := tg.NewUpdateDispatcher()
-	client = telegram.NewClient(Settings.TELEGRAM_APP_ID, Settings.TELEGRAM_APP_HASH,
+	Client = telegram.NewClient(Settings.TELEGRAM_APP_ID, Settings.TELEGRAM_APP_HASH,
 		telegram.Options{
 			SessionStorage: sessionStorage,
 			UpdateHandler:  dispatcher,
@@ -378,7 +371,7 @@ func OnNewMessage_Test(ctx context.Context, entities tg.Entities, u *tg.UpdateNe
 
 	// тестовый пример эхо
 	// Helper for sending messages.
-	api := client.API()
+	api := Client.API()
 	sender := message.NewSender(api)
 
 	// Sending reply.
@@ -422,20 +415,20 @@ func ConnectTelegram() error {
 	bg.WithContext(ctx)
 	var err error
 	//Option := bg.WithContext(ctx)
-	stopTelegramFunc, err = bg.Connect(client)
+	stopTelegramFunc, err = bg.Connect(Client)
 	if err != nil {
 		log.Fatalln("Can not connect to Telegram ! Error: ", err)
 	}
 
 	micro.Sleep(100) //не успевает
 	//for i := 1; i <= 5; i++ {
-	//	err = client.Ping(ctx)
+	//	err = Client.Ping(ctx)
 	//	if err != nil {
 	//		micro.Sleep(1000)
 	//	}
 	//}
 
-	//fmt.Println("Client: ", client)
+	//fmt.Println("Client: ", Client)
 
 	//
 	flow := auth.NewFlow(
@@ -443,7 +436,7 @@ func ConnectTelegram() error {
 		auth.SendCodeOptions{},
 	)
 
-	if err := client.Auth().IfNecessary(ctx, flow); err != nil {
+	if err := Client.Auth().IfNecessary(ctx, flow); err != nil {
 		return err
 	}
 
@@ -502,7 +495,7 @@ func FindMessageByID(ctx context.Context, id int) (*tg.Message, error) {
 		return Otvet, err
 	}
 
-	api := client.API()
+	api := Client.API()
 
 	var IMC []tg.InputMessageClass
 	IMC = append(IMC, &tg.InputMessageID{ID: id})
