@@ -29,8 +29,8 @@ import (
 	"github.com/ManyakRus/starter/stopapp"
 )
 
-// clientWhatsApp - клиент соединения мессенджера Whatsapp
-var clientWhatsApp *whatsmeow.Client
+// ClientWhatsApp - клиент соединения мессенджера Whatsapp
+var ClientWhatsApp *whatsmeow.Client
 
 // log - глобальный логгер приложения
 var log = logger.GetLog()
@@ -122,7 +122,7 @@ func SendMessage(phone_send_to string, text string) (string, error) {
 	MessageID := whatsmeow.GenerateMessageID()
 	message1 := &waProto.Message{}
 	message1.Conversation = &text
-	_, err := clientWhatsApp.SendMessage(ctx, recipient, message1)
+	_, err := ClientWhatsApp.SendMessage(ctx, recipient, message1)
 	if err != nil {
 		text1 := "Message not sent, to: " + phone_send_to + " !"
 		log.Error(text1)
@@ -182,13 +182,13 @@ func Connect_err(eventHandler func(evt interface{})) error {
 		log.Panicln(err)
 	}
 	clientLog := waLog.Stdout("Client", "WARN", true)
-	clientWhatsApp = whatsmeow.NewClient(deviceStore, clientLog)
-	clientWhatsApp.AddEventHandler(eventHandler)
+	ClientWhatsApp = whatsmeow.NewClient(deviceStore, clientLog)
+	ClientWhatsApp.AddEventHandler(eventHandler)
 
-	if clientWhatsApp.Store.ID == nil {
+	if ClientWhatsApp.Store.ID == nil {
 		// No ID stored, new login
-		qrChan, _ := clientWhatsApp.GetQRChannel(context.Background())
-		err = clientWhatsApp.Connect()
+		qrChan, _ := ClientWhatsApp.GetQRChannel(context.Background())
+		err = ClientWhatsApp.Connect()
 		if err != nil {
 			log.Panicln(err)
 		}
@@ -204,7 +204,7 @@ func Connect_err(eventHandler func(evt interface{})) error {
 		}
 	} else {
 		// Already logged in, just connect
-		err = clientWhatsApp.Connect()
+		err = ClientWhatsApp.Connect()
 		if err != nil {
 			log.Panicln(err)
 		}
@@ -219,7 +219,7 @@ func Connect_err(eventHandler func(evt interface{})) error {
 
 // StopWhatsApp - остановка работы клиента мессенджера Whatsapp
 func StopWhatsApp() {
-	clientWhatsApp.Disconnect()
+	ClientWhatsApp.Disconnect()
 
 }
 
