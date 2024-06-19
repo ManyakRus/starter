@@ -160,31 +160,31 @@ func SendMessage(phone_send_to string, text string) (int, error) {
 	UpdatesClass, err := target.Text(ctx, text)
 
 	//проверка на ошибки
-	isFlood := false
-	if err != nil {
-		textFind := "peer: can't resolve phone"
-		if micro.SubstringLeft(err.Error(), len(textFind)) == textFind {
-			err2 := AddContact(ctx, phone_send_to)
-
-			isFlood = FloodWait(ctx, err2) //ожидание при ошибке FloodWait
-			if isFlood {
-				return SendMessage(phone_send_to, text)
-			}
-
-			if err2 == nil {
-				return SendMessage(phone_send_to, text)
-			} else {
-				log.Error("not send, text: " + err.Error())
-				return 0, err
-			}
-		} else {
-			isFlood = FloodWait(ctx, err) //ожидание при ошибке FloodWait
-			if isFlood {
-				return SendMessage(phone_send_to, text)
-			}
-		}
-
-	}
+	//isFlood := false
+	//if err != nil {
+	//	textFind := "peer: can't resolve phone"
+	//	if micro.SubstringLeft(err.Error(), len(textFind)) == textFind {
+	//		err2 := AddContact(ctx, phone_send_to)
+	//
+	//		isFlood = FloodWait(ctx, err2) //ожидание при ошибке FloodWait
+	//		if isFlood {
+	//			return SendMessage(phone_send_to, text)
+	//		}
+	//
+	//		if err2 == nil {
+	//			return SendMessage(phone_send_to, text)
+	//		} else {
+	//			log.Error("not send, text: " + err.Error())
+	//			return 0, err
+	//		}
+	//	} else {
+	//		isFlood = FloodWait(ctx, err) //ожидание при ошибке FloodWait
+	//		if isFlood {
+	//			return SendMessage(phone_send_to, text)
+	//		}
+	//	}
+	//
+	//}
 
 	if UpdatesClass != nil {
 		id = findIdFromUpdatesClass(UpdatesClass)
@@ -755,6 +755,7 @@ func FillMessageTelegramFromMessage(m *tg.Message) MessageTelegram {
 		}
 	} else {
 		IsFromMe = true
+		SenderID = UserSelf.ID
 	}
 	Otvet.IsGroup = IsGroup //m.GroupedID != 0
 
