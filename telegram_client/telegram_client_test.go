@@ -53,7 +53,7 @@ func TestSendMessage(t *testing.T) {
 
 	text := "Test www.ya.ru " + time.Now().String()
 	id, err := SendMessage(Settings.TELEGRAM_PHONE_SEND_TEST, text)
-	log.Info("Message id: ", id)
+	t.Log("Message id: ", id)
 	if err != nil {
 		t.Error("telegramclient_test.TestSendMessage() SendMessage() error: ", err)
 	}
@@ -218,4 +218,22 @@ func TestStartTelegram(t *testing.T) {
 	StopTelegram()
 	contextmain.CancelContext()
 	contextmain.GetNewContext()
+}
+
+func TestFillMessageTelegramFromMessage(t *testing.T) {
+	config_main.LoadEnvTest()
+	CreateTelegramClient(nil)
+
+	mess := &tg.Message{
+		Message: "Test Message",
+		ID:      123,
+	}
+
+	FillMessageTelegramFromMessage(mess)
+
+	// Check if Otvet.Text is correctly assigned from m.Message
+	//if result.Text != "Test Message" {
+	//	t.Errorf("Expected Text to be 'Test Message', but got %s", result.Text)
+	//}
+
 }

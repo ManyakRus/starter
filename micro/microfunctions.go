@@ -931,3 +931,18 @@ func SortMapStringInt_Desc(values map[string]int) []string {
 	}
 	return ranked
 }
+
+// IsNilInterface - проверка интерфейса на nil
+func IsNilInterface(i any) bool {
+	iv := reflect.ValueOf(i)
+	if !iv.IsValid() {
+		return true
+	}
+
+	switch iv.Kind() {
+	case reflect.Ptr, reflect.Slice, reflect.Map, reflect.Func, reflect.Interface:
+		return iv.IsNil()
+	default:
+		return false
+	}
+}

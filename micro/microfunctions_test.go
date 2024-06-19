@@ -797,3 +797,35 @@ func TestSortkMapStringInt(t *testing.T) {
 		})
 	}
 }
+
+func TestIsNilInterface(t *testing.T) {
+	// Testing for a nil pointer interface
+	var ptr *int
+	if !IsNilInterface(ptr) {
+		t.Error("Expected true for nil pointer interface")
+	}
+
+	// Testing for a nil slice interface
+	var slice []int
+	if !IsNilInterface(slice) {
+		t.Error("Expected true for nil slice interface")
+	}
+
+	// Testing for a non-nil map interface
+	m := make(map[string]int)
+	if IsNilInterface(m) {
+		t.Error("Expected false for non-nil map interface")
+	}
+
+	// Testing for a nil function interface
+	var fn func()
+	if !IsNilInterface(fn) {
+		t.Error("Expected true for nil function interface")
+	}
+
+	// Testing for a nil interface
+	var i interface{}
+	if !IsNilInterface(i) {
+		t.Error("Expected true for nil interface")
+	}
+}
