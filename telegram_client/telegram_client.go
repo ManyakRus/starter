@@ -158,6 +158,10 @@ func SendMessage(phone_send_to string, text string) (int, error) {
 
 	//отправка сообщения
 	UpdatesClass, err := target.Text(ctx, text)
+	if err != nil {
+		log.Error("Text() error: ", err)
+		return 0, err
+	}
 
 	//проверка на ошибки
 	//isFlood := false
@@ -189,7 +193,7 @@ func SendMessage(phone_send_to string, text string) (int, error) {
 	if UpdatesClass != nil {
 		id = findIdFromUpdatesClass(UpdatesClass)
 	}
-	log.Debug("id: ", id, ", error: ", err, ", text: "+text)
+	//log.Debug("id: ", id, ", error: ", err, ", text: "+text)
 
 	//log.Print("Success")
 
