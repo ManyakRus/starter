@@ -45,7 +45,7 @@ func TestSendMessage(t *testing.T) {
 
 	CreateTelegramClient(nil)
 
-	err = ConnectTelegram()
+	err = ConnectTelegram_err()
 	if err != nil {
 		t.Error("telegramclient_test.TestSendMessage() error: ", err)
 		return
@@ -97,7 +97,7 @@ func TestConnectTelegram(t *testing.T) {
 
 	CreateTelegramClient(nil)
 
-	err := ConnectTelegram()
+	err := ConnectTelegram_err()
 	if err != nil {
 		t.Error("telegramclient_test.TestConnectTelegram() error: ", err)
 	}
@@ -122,7 +122,7 @@ func TestSendMessage_Many(t *testing.T) {
 
 	CreateTelegramClient(nil)
 
-	err := ConnectTelegram()
+	err := ConnectTelegram_err()
 	if err != nil {
 		t.Error("telegramclient_test.TestSendMessage() ConnectTelegram() error: ", err)
 	}

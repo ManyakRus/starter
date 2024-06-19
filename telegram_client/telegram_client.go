@@ -435,8 +435,20 @@ func TimeLimit() {
 	lastSendTime.time = time.Now()
 }
 
-// ConnectTelegram подключение к серверу Телеграм
-func ConnectTelegram() error {
+// ConnectTelegram подключение к серверу Телеграм, паника при ошибке
+func ConnectTelegram() {
+	err := ConnectTelegram_err()
+	if err != nil {
+		TextError := fmt.Sprint("Telegram connected: ", Settings.TELEGRAM_PHONE_FROM)
+		log.Error(TextError)
+		panic(TextError)
+	} else {
+		log.Info("Telegram connected: ", Settings.TELEGRAM_PHONE_FROM)
+	}
+}
+
+// ConnectTelegram_err подключение к серверу Телеграм
+func ConnectTelegram_err() error {
 
 	ctxMain := context.Background()
 	//ctxMain := contextmain.GetContext()
@@ -448,7 +460,8 @@ func ConnectTelegram() error {
 	//Option := bg.WithContext(ctx)
 	stopTelegramFunc, err = bg.Connect(Client)
 	if err != nil {
-		log.Fatalln("Can not connect to Telegram ! Error: ", err)
+		return err
+		//log.Fatalln("Can not connect to Telegram ! Error: ", err)
 	}
 
 	micro.Sleep(100) //не успевает
@@ -476,9 +489,6 @@ func ConnectTelegram() error {
 	if err != nil {
 		return err
 	}
-
-	//
-	log.Info("Telegram connected: ", Settings.TELEGRAM_PHONE_FROM)
 
 	return nil
 }
@@ -639,7 +649,7 @@ func AsFloodWait(err error) (d int, ok bool) {
 func StartTelegram(func_OnNewMessage func(ctx context.Context, entities tg.Entities, u *tg.UpdateNewMessage) error) {
 	CreateTelegramClient(func_OnNewMessage)
 
-	err := ConnectTelegram()
+	err := ConnectTelegram_err()
 	if err != nil {
 		log.Fatalln("Can not login to telegram ! Error: ", err)
 	}
