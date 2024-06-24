@@ -14,3 +14,4 @@
 /sync_exchange_connect/store/
 /updates.bolt.db
 /log.jsonl
+/peers.pebble.db/
