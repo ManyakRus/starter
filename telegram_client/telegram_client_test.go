@@ -21,17 +21,9 @@ func TestCreateTelegramClient(t *testing.T) {
 
 	config_main.LoadEnv()
 
-	//ctx := contextmain.GetContext()
 	CreateTelegramClient(nil)
-	//if err != nil {
-	//	t.Error("CreateTelegramClient error: ", err)
-	//}
 	StopTelegram()
 
-}
-
-func TestTimeLimit(t *testing.T) {
-	TimeLimit()
 }
 
 func TestSendMessage(t *testing.T) {
@@ -236,4 +228,8 @@ func TestFillMessageTelegramFromMessage(t *testing.T) {
 	//	t.Errorf("Expected Text to be 'Test Message', but got %s", result.Text)
 	//}
 
+}
+
+func TestTimeLimit(t *testing.T) {
+	TimeLimit()
 }

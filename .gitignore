@@ -12,3 +12,5 @@
 /minio_connect/test.md
 /nats_liveness/store/
 /sync_exchange_connect/store/
+/updates.bolt.db
+/log.jsonl

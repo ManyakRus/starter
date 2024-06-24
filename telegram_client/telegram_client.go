@@ -6,7 +6,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/ManyakRus/starter/log"
+	"github.com/gotd/contrib/storage"
+	"go.etcd.io/bbolt"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -28,6 +33,12 @@ import (
 	"github.com/gotd/td/session"
 	"github.com/gotd/td/telegram"
 	"github.com/gotd/td/telegram/auth"
+	"github.com/gotd/td/telegram/updates"
+
+	pebbledb "github.com/cockroachdb/pebble"
+	boltstor "github.com/gotd/contrib/bbolt"
+	"github.com/gotd/contrib/pebble"
+	lj "gopkg.in/natefinch/lumberjack.v2"
 )
 
 // filenameSession - имя файла сохранения сессии мессенджера Телеграм
@@ -369,6 +380,17 @@ func (s *memorySession) StoreSession(ctx context.Context, data []byte) error {
 
 // CreateTelegramClient создание клиента Телеграм
 func CreateTelegramClient(func_OnNewMessage func(ctx context.Context, entities tg.Entities, u *tg.UpdateNewMessage) error) {
+	err := CreateTelegramClient_err(func_OnNewMessage)
+	if err != nil {
+		log.Panic("CreateTelegramClient_err() error: ", err)
+	} else {
+		log.Info("CreateTelegramClient() ok, phone from: ", Settings.TELEGRAM_PHONE_FROM)
+	}
+	return
+}
+
+// CreateTelegramClient_err создание клиента Телеграм
+func CreateTelegramClient_err(func_OnNewMessage func(ctx context.Context, entities tg.Entities, u *tg.UpdateNewMessage) error) error {
 	// https://core.telegram.org/api/obtaining_api_id
 
 	if Settings.TELEGRAM_APP_ID == 0 {
@@ -376,22 +398,89 @@ func CreateTelegramClient(func_OnNewMessage func(ctx context.Context, entities t
 	}
 
 	programDir := micro.ProgramDir()
-	filenameSession = programDir + "session.txt"
+	sessionDir := programDir
+	//filenameSession = programDir + "session.txt"
 
-	sessionStorage := &memorySession{}
+	//sessionStorage := &memorySession{}
 
+	logFilePath := filepath.Join(programDir, "log.jsonl")
+
+	// Log to file, so we don't interfere with prompts and messages to user.
+	logWriter := zapcore.AddSync(&lj.Logger{
+		Filename:   logFilePath,
+		MaxBackups: 3,
+		MaxSize:    1, // megabytes
+		MaxAge:     7, // days
+	})
+	logCore := zapcore.NewCore(
+		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+		logWriter,
+		zap.DebugLevel,
+	)
+	lg := zap.New(logCore)
+
+	sessionStorage := &telegram.FileSessionStorage{
+		Path: filepath.Join(programDir, "session.txt"),
+	}
+
+	// Peer storage, for resolve caching and short updates handling.
+	db, err := pebbledb.Open(filepath.Join(programDir, "peers.pebble.db"), &pebbledb.Options{})
+	if err != nil {
+		return errors.Wrap(err, "create pebble storage")
+	}
+	peerDB := pebble.NewPeerStorage(db)
+	if err != nil {
+		return errors.Wrap(err, "create bolt storage")
+	}
+
+	// Setting up client.
+	//
+	// Dispatcher is used to register handlers for events.
 	dispatcher := tg.NewUpdateDispatcher()
-	Client = telegram.NewClient(Settings.TELEGRAM_APP_ID, Settings.TELEGRAM_APP_HASH,
-		telegram.Options{
-			SessionStorage: sessionStorage,
-			UpdateHandler:  dispatcher,
-		})
+	// Setting up update handler that will fill peer storage before
+	// calling dispatcher handlers.
+	updateHandler := storage.UpdateHook(dispatcher, peerDB)
+
+	// Setting up persistent storage for qts/pts to be able to
+	// recover after restart.
+	boltdb, err := bbolt.Open(filepath.Join(sessionDir, "updates.bolt.db"), 0666, nil)
+	if err != nil {
+		return errors.Wrap(err, "create bolt storage")
+	}
+
+	updatesRecovery := updates.New(updates.Config{
+		Handler: updateHandler, // using previous handler with peerDB
+		Logger:  lg.Named("updates.recovery"),
+		Storage: boltstor.NewStateStorage(boltdb),
+	})
+
+	//// Handler of FLOOD_WAIT that will automatically retry request.
+	//waiter := floodwait.NewWaiter().WithCallback(func(ctx context.Context, wait floodwait.FloodWait) {
+	//	// Notifying about flood wait.
+	//	lg.Warn("Flood wait", zap.Duration("wait", wait.Duration))
+	//	fmt.Println("Got FLOOD_WAIT. Will retry after", wait.Duration)
+	//})
+
+	// Filling client options.
+	options := telegram.Options{
+		Logger:         lg,              // Passing logger for observability.
+		SessionStorage: sessionStorage,  // Setting up session sessionStorage to store auth data.
+		UpdateHandler:  updatesRecovery, // Setting up handler for updates from server.
+		//Middlewares: []telegram.Middleware{
+		//	// Setting up FLOOD_WAIT handler to automatically wait and retry request.
+		//	waiter,
+		//	// Setting up general rate limits to less likely get flood wait errors.
+		//	ratelimit.New(rate.Every(time.Millisecond*100), 5),
+		//},
+	}
+
+	Client = telegram.NewClient(Settings.TELEGRAM_APP_ID, Settings.TELEGRAM_APP_HASH, options)
 
 	if func_OnNewMessage != nil {
 		dispatcher.OnNewMessage(func_OnNewMessage)
 	}
 
-	return
+	return err
 }
 
 // OnNewMessage_Test - пример функции для получения новых сообщений
