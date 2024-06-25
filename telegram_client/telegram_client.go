@@ -847,14 +847,28 @@ func FillMessageTelegramFromMessage(m *tg.Message) MessageTelegram {
 		default:
 		}
 	} else {
-		IsFromMe = true
-		SenderID = UserSelf.ID
+		if m.PeerID != nil && micro.IsNilInterface(m.PeerID) == false {
+			switch v := m.PeerID.(type) {
+			case *tg.PeerUser:
+				{
+					if v.UserID == MyID {
+						IsFromMe = true
+						SenderID = MyID
+					} else {
+						SenderID = v.UserID
+					}
+				}
+			//case *tg.PeerChat: // peerChat#36c6019a
+			//case *tg.PeerChannel: // peerChannel#a2a5371e
+			default:
+			}
+		}
 	}
 	Otvet.IsGroup = IsGroup //m.GroupedID != 0
 
-	if MyID == SenderID {
-		IsFromMe = true
-	}
+	//if MyID == SenderID {
+	//	IsFromMe = true
+	//}
 	Otvet.IsFromMe = IsFromMe
 	Otvet.FromID = SenderID
 
