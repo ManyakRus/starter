@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/ManyakRus/starter/log"
 	"github.com/gotd/contrib/storage"
+	"github.com/gotd/td/telegram/message/peer"
 	"go.etcd.io/bbolt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -86,6 +87,8 @@ type SettingsINI struct {
 	TELEGRAM_PHONE_FROM      string
 	TELEGRAM_PHONE_SEND_TEST string
 }
+
+var PeerDB *pebble.PeerStorage
 
 // MessageTelegram - сообщение из Telegram сокращённо
 type MessageTelegram struct {
@@ -428,7 +431,7 @@ func CreateTelegramClient_err(func_OnNewMessage func(ctx context.Context, entiti
 	if err != nil {
 		return errors.Wrap(err, "create pebble storage")
 	}
-	peerDB := pebble.NewPeerStorage(db)
+	PeerDB = pebble.NewPeerStorage(db)
 	if err != nil {
 		return errors.Wrap(err, "create bolt storage")
 	}
@@ -439,7 +442,7 @@ func CreateTelegramClient_err(func_OnNewMessage func(ctx context.Context, entiti
 	dispatcher := tg.NewUpdateDispatcher()
 	// Setting up update handler that will fill peer storage before
 	// calling dispatcher handlers.
-	updateHandler := storage.UpdateHook(dispatcher, peerDB)
+	updateHandler := storage.UpdateHook(dispatcher, PeerDB)
 
 	// Setting up persistent storage for qts/pts to be able to
 	// recover after restart.
@@ -449,7 +452,7 @@ func CreateTelegramClient_err(func_OnNewMessage func(ctx context.Context, entiti
 	}
 
 	updatesRecovery := updates.New(updates.Config{
-		Handler: updateHandler, // using previous handler with peerDB
+		Handler: updateHandler, // using previous handler with PeerDB
 		Logger:  lg.Named("updates.recovery"),
 		Storage: boltstor.NewStateStorage(boltdb),
 	})
@@ -479,6 +482,16 @@ func CreateTelegramClient_err(func_OnNewMessage func(ctx context.Context, entiti
 	if func_OnNewMessage != nil {
 		dispatcher.OnNewMessage(func_OnNewMessage)
 	}
+
+	api := Client.API()
+
+	// Setting up resolver cache that will use peer storage.
+	resolver := storage.NewResolverCache(peer.Plain(api), PeerDB)
+	// Usage:
+	//   if _, err := resolver.ResolveDomain(ctx, "tdlibchat"); err != nil {
+	//	   return errors.Wrap(err, "resolve")
+	//   }
+	_ = resolver
 
 	return err
 }
