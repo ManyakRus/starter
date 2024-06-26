@@ -730,14 +730,14 @@ func WaitStop() {
 	stopapp.WaitTotalMessagesSendingNow("telegram")
 
 	//
-	StopTelegram()
+	CloseConnection()
 
 	//
 	stopapp.GetWaitGroup_Main().Done()
 }
 
-// StopTelegram - остановка работы клиента Телеграм
-func StopTelegram() {
+// CloseConnection - остановка работы клиента Телеграм
+func CloseConnection() {
 	if stopTelegramFunc != nil {
 		err := stopTelegramFunc()
 		if err != nil {

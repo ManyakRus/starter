@@ -22,7 +22,7 @@ func TestCreateTelegramClient(t *testing.T) {
 	config_main.LoadEnv()
 
 	CreateTelegramClient(nil)
-	StopTelegram()
+	CloseConnection()
 
 }
 
@@ -62,7 +62,7 @@ func TestSendMessage(t *testing.T) {
 		t.Error("telegramclient_test.TestSendMessage() SendMessage() error: ", err)
 	}
 
-	StopTelegram()
+	CloseConnection()
 	//stopapp.SignalInterrupt <- syscall.SIGINT
 	//stopapp.GetWaitGroup_Main().Wait()
 
@@ -94,7 +94,7 @@ func TestConnectTelegram(t *testing.T) {
 		t.Error("telegramclient_test.TestConnectTelegram() error: ", err)
 	}
 
-	StopTelegram()
+	CloseConnection()
 }
 
 func Test_termAuth_Phone(t *testing.T) {
@@ -136,7 +136,7 @@ func TestSendMessage_Many(t *testing.T) {
 
 	micro.Pause(18000)
 
-	StopTelegram()
+	CloseConnection()
 	//stopapp.SignalInterrupt <- syscall.SIGINT
 	//stopapp.GetWaitGroup_Main().Wait()
 }
@@ -207,7 +207,7 @@ func TestStartTelegram(t *testing.T) {
 
 	micro.Sleep(200)
 
-	StopTelegram()
+	CloseConnection()
 	contextmain.CancelContext()
 	contextmain.GetNewContext()
 }
