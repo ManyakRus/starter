@@ -417,7 +417,20 @@ func CreateTelegramClient_err(func_OnNewMessage func(ctx context.Context, entiti
 
 	//создадим логгер zap
 	sessionDir := programDir
-	logFilePath := filepath.Join(programDir, "log.jsonl")
+	LogDir := filepath.Join(sessionDir, "log")
+	logFilePath := filepath.Join(LogDir, "log.jsonl")
+	ok, err := micro.FileExists(LogDir)
+	if err != nil {
+		err = fmt.Errorf("FileExists() error: %w", err)
+		log.Error(err)
+		return err
+	}
+	if ok == false {
+		err = fmt.Errorf("FileExists() error: need create folder: %v", LogDir)
+		log.Error(err)
+		//micro.CreateFolder(LogDir, 0666)
+		return err
+	}
 
 	// Log to file, so we don't interfere with prompts and messages to user.
 	logWriter := zapcore.AddSync(&lj.Logger{
