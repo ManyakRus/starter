@@ -946,3 +946,18 @@ func IsNilInterface(i any) bool {
 		return false
 	}
 }
+
+// StringFromMassInt64 - преобразование массива int64 в строку
+func StringFromMassInt64(A []int64, delim string) string {
+
+	var buffer bytes.Buffer
+	for i := 0; i < len(A); i++ {
+		s1 := StringFromInt64(A[i])
+		buffer.WriteString(s1)
+		if i != len(A)-1 {
+			buffer.WriteString(delim)
+		}
+	}
+
+	return buffer.String()
+}

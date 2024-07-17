@@ -829,3 +829,27 @@ func TestIsNilInterface(t *testing.T) {
 		t.Error("Expected true for nil interface")
 	}
 }
+
+func TestStringFromMassInt64(t *testing.T) {
+	// Test with an empty array
+	emptyArray := []int64{}
+	emptyResult := StringFromMassInt64(emptyArray, ",")
+	if emptyResult != "" {
+		t.Errorf("Expected empty string, but got: %s", emptyResult)
+	}
+
+	// Test with an array of single element
+	singleArray := []int64{42}
+	singleResult := StringFromMassInt64(singleArray, ",")
+	if singleResult != "42" {
+		t.Errorf("Expected '42', but got: %s", singleResult)
+	}
+
+	// Test with an array of multiple elements
+	multipleArray := []int64{1, 2, 3}
+	multipleResult := StringFromMassInt64(multipleArray, "-")
+	expectedResult := "1-2-3"
+	if multipleResult != expectedResult {
+		t.Errorf("Expected '%s', but got: %s", expectedResult, multipleResult)
+	}
+}
