@@ -393,7 +393,7 @@ func (s *memorySession) StoreSession(ctx context.Context, data []byte) error {
 func CreateTelegramClient(func_OnNewMessage func(ctx context.Context, entities tg.Entities, u *tg.UpdateNewMessage, Peer1 storage.Peer) error) {
 	err := CreateTelegramClient_err(func_OnNewMessage)
 	if err != nil {
-		log.Panic("CreateTelegramClient_err() error: ", err)
+		log.Panic("CreateTelegramClient() error: ", err)
 	} else {
 		log.Info("CreateTelegramClient() ok, phone from: ", Settings.TELEGRAM_PHONE_FROM)
 	}
@@ -457,9 +457,6 @@ func CreateTelegramClient_err(func_OnNewMessage func(ctx context.Context, entiti
 		return errors.Wrap(err, "create pebble storage")
 	}
 	PeerDB = pebble.NewPeerStorage(db)
-	if err != nil {
-		return errors.Wrap(err, "create bolt storage")
-	}
 
 	// Setting up client.
 	//
