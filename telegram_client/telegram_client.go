@@ -598,7 +598,7 @@ func TimeLimit() {
 func Connect(func_OnNewMessage func(ctx context.Context, entities tg.Entities, u *tg.UpdateNewMessage, Peer1 storage.Peer) error) {
 	err := Connect_err(func_OnNewMessage)
 	if err != nil {
-		TextError := fmt.Sprint("Telegram connected: ", Settings.TELEGRAM_PHONE_FROM)
+		TextError := fmt.Sprint("Telegram connection: ", Settings.TELEGRAM_PHONE_FROM, ", error: ", err)
 		log.Panic(TextError)
 	} else {
 		log.Info("Telegram connected: ", Settings.TELEGRAM_PHONE_FROM)
