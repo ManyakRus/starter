@@ -420,15 +420,20 @@ func CreateTelegramClient_err(func_OnNewMessage func(ctx context.Context, entiti
 	LogDir := filepath.Join(sessionDir, "log")
 	logFilePath := filepath.Join(LogDir, "log.jsonl")
 	ok, err := micro.FileExists(LogDir)
-	if err != nil {
-		err = fmt.Errorf("FileExists() error: %w", err)
-		log.Error(err)
-		return err
-	}
 	if ok == false {
 		err = fmt.Errorf("FileExists() error: need create folder: %v", LogDir)
 		log.Error(err)
-		//micro.CreateFolder(LogDir, 0666)
+		err := micro.CreateFolder(LogDir, 0600) //rw------- т.к. файл секретный
+		if err != nil {
+			log.Error("CreateFolder() error: ", err)
+			return err
+		}
+		//return err
+	}
+
+	if err != nil {
+		err = fmt.Errorf("FileExists() error: %w", err)
+		log.Debug(err)
 		return err
 	}
 
