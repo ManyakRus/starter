@@ -961,3 +961,20 @@ func StringFromMassInt64(A []int64, delim string) string {
 
 	return buffer.String()
 }
+
+// IsInt - проверяет, является ли строка целым числом
+func IsInt(s string) bool {
+	Otvet := false
+	if s == "" {
+		return Otvet
+	}
+
+	for _, c := range s {
+		if !unicode.IsDigit(c) {
+			return Otvet
+		}
+	}
+
+	Otvet = true
+	return Otvet
+}

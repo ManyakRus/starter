@@ -853,3 +853,23 @@ func TestStringFromMassInt64(t *testing.T) {
 		t.Errorf("Expected '%s', but got: %s", expectedResult, multipleResult)
 	}
 }
+
+func TestIsInt(t *testing.T) {
+	// Test with an empty string
+	emptyResult := IsInt("")
+	if emptyResult != false {
+		t.Errorf("Expected false for empty string, but got: %v", emptyResult)
+	}
+
+	// Test with a string containing only digits
+	digitResult := IsInt("12345")
+	if digitResult != true {
+		t.Errorf("Expected true for string containing only digits, but got: %v", digitResult)
+	}
+
+	// Test with a string containing non-digit characters
+	nonDigitResult := IsInt("abc123")
+	if nonDigitResult != false {
+		t.Errorf("Expected false for string containing non-digit characters, but got: %v", nonDigitResult)
+	}
+}
