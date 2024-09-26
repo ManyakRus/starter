@@ -877,7 +877,7 @@ func TestIsInt(t *testing.T) {
 func TestInt32FromString(t *testing.T) {
 	// Test converting a valid string to int32
 	input1 := "12345"
-	expected1 := int64(12345)
+	expected1 := int32(12345)
 	result1, err1 := Int32FromString(input1)
 	if err1 != nil {
 		t.Errorf("Expected no error, but got: %v", err1)
@@ -888,7 +888,7 @@ func TestInt32FromString(t *testing.T) {
 
 	// Test converting an empty string to int32
 	input2 := ""
-	expected2 := int64(0)
+	expected2 := int32(0)
 	result2, err2 := Int32FromString(input2)
 	if err2 == nil {
 		t.Errorf("Expected error, but got: %v", err2)
@@ -899,7 +899,7 @@ func TestInt32FromString(t *testing.T) {
 
 	// Test converting an invalid string to int32
 	input3 := "abc"
-	expected3 := int64(0)
+	expected3 := int32(0)
 	result3, err3 := Int32FromString(input3)
 	if err3 == nil {
 		t.Error("Expected an error, but got none")

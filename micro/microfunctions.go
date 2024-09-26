@@ -980,11 +980,16 @@ func IsInt(s string) bool {
 }
 
 // Int32FromString - возвращает int32 из строки
-func Int32FromString(s string) (int64, error) {
-	var Otvet int64
+func Int32FromString(s string) (int32, error) {
+	var Otvet int32
 	var err error
 
-	Otvet, err = strconv.ParseInt(s, 10, 32)
+	Otvet64, err := strconv.ParseInt(s, 10, 32)
+	if err != nil {
+		return Otvet, err
+	}
+
+	Otvet = int32(Otvet64)
 
 	return Otvet, err
 }
