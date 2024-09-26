@@ -49,3 +49,5 @@ lines:
 	go_lines_count ./ ./docs/lines_count.txt 10
 licenses:
 	golicense -out-xlsx=./docs/licenses.xlsx $(FILEAPP)
+gocyclo:
+	golangci-lint run ./... --disable-all -E gocyclo -v

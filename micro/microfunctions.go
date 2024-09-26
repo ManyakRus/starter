@@ -978,3 +978,13 @@ func IsInt(s string) bool {
 	Otvet = true
 	return Otvet
 }
+
+// Int32FromString - возвращает int32 из строки
+func Int32FromString(s string) (int64, error) {
+	var Otvet int64
+	var err error
+
+	Otvet, err = strconv.ParseInt(s, 10, 32)
+
+	return Otvet, err
+}

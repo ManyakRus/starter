@@ -873,3 +873,38 @@ func TestIsInt(t *testing.T) {
 		t.Errorf("Expected false for string containing non-digit characters, but got: %v", nonDigitResult)
 	}
 }
+
+func TestInt32FromString(t *testing.T) {
+	// Test converting a valid string to int32
+	input1 := "12345"
+	expected1 := int64(12345)
+	result1, err1 := Int32FromString(input1)
+	if err1 != nil {
+		t.Errorf("Expected no error, but got: %v", err1)
+	}
+	if result1 != expected1 {
+		t.Errorf("Expected %d, but got: %d", expected1, result1)
+	}
+
+	// Test converting an empty string to int32
+	input2 := ""
+	expected2 := int64(0)
+	result2, err2 := Int32FromString(input2)
+	if err2 == nil {
+		t.Errorf("Expected error, but got: %v", err2)
+	}
+	if result2 != expected2 {
+		t.Errorf("Expected %d, but got: %d", expected2, result2)
+	}
+
+	// Test converting an invalid string to int32
+	input3 := "abc"
+	expected3 := int64(0)
+	result3, err3 := Int32FromString(input3)
+	if err3 == nil {
+		t.Error("Expected an error, but got none")
+	}
+	if result3 != expected3 {
+		t.Errorf("Expected %d, but got: %d", expected3, result3)
+	}
+}
