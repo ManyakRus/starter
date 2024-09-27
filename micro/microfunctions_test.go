@@ -908,3 +908,30 @@ func TestInt32FromString(t *testing.T) {
 		t.Errorf("Expected %d, but got: %d", expected3, result3)
 	}
 }
+
+func TestPause_ctx(t *testing.T) {
+	t.Run("Context canceled before pause duration elapses", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+
+		start := time.Now()
+		Pause_ctx(ctx, 100)
+		duration := time.Since(start)
+
+		if duration > 50*time.Millisecond {
+			t.Errorf("Pause_ctx did not return in a timely manner when context was canceled")
+		}
+	})
+
+	t.Run("Context not canceled before pause duration elapses", func(t *testing.T) {
+		ctx := context.Background()
+
+		start := time.Now()
+		Pause_ctx(ctx, 100)
+		duration := time.Since(start)
+
+		if duration < 100*time.Millisecond {
+			t.Errorf("Pause_ctx did not wait for the specified duration when context was not canceled")
+		}
+	})
+}

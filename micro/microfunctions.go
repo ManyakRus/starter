@@ -91,6 +91,17 @@ func Pause(ms int) {
 	Sleep(ms)
 }
 
+// Pause_ctx - приостановка работы программы на нужное число миллисекунд, с учётом глобального контекста
+func Pause_ctx(ctx context.Context, ms int) {
+
+	Duration := time.Duration(ms) * time.Millisecond
+
+	select {
+	case <-ctx.Done():
+	case <-time.After(Duration):
+	}
+}
+
 // FindDirUp - возвращает строку с именем каталога на уровень выше
 func FindDirUp(dir string) string {
 	otvet := dir
