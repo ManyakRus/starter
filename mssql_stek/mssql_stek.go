@@ -118,13 +118,13 @@ func FindDates_from_DateClosed(date_closed time.Time) (date1_balances, date2_bal
 	// дата сегодня
 	carbon.SetLocation(Loc)
 	DateNow1 := time.Now()
-	DateNow2 := carbon.Time2Carbon(DateNow1).EndOfDay().Carbon2Time()
+	DateNow2 := carbon.CreateFromStdTime(DateNow1).EndOfDay().StdTime()
 
 	// 2 месяца разделим по 1 месяцу
-	date_closed_next1 := carbon.Time2Carbon(date_closed).AddMonth().StartOfMonth().Carbon2Time()
+	date_closed_next1 := carbon.CreateFromStdTime(date_closed).AddMonth().StartOfMonth().StdTime()
 
 	date1_balances = date_closed_next1
-	date2_balances = carbon.Time2Carbon(date1_balances).EndOfMonth().Carbon2Time()
+	date2_balances = carbon.CreateFromStdTime(date1_balances).EndOfMonth().StdTime()
 	if date2_balances.After(DateNow2) {
 		date2_balances = DateNow2
 	}

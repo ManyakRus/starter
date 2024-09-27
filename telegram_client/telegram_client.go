@@ -822,6 +822,22 @@ func StartTelegram(func_OnNewMessage func(ctx context.Context, entities tg.Entit
 
 }
 
+// Start_ctx - необходимые процедуры для подключения к серверу Telegram
+// Свой контекст и WaitGroup нужны для остановки работы сервиса Graceful shutdown
+// Для тех кто пользуется этим репозиторием для старта и останова сервиса можно просто StartTelegram()
+func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, func_OnNewMessage func(ctx context.Context, entities tg.Entities, u *tg.UpdateNewMessage, Peer1 storage.Peer) error) error {
+	var err error
+
+	//запомним к себе контекст и WaitGroup
+	contextmain.Ctx = ctx
+	stopapp.SetWaitGroup_Main(WaitGroup)
+
+	//
+	StartTelegram(func_OnNewMessage)
+
+	return err
+}
+
 // FillSettings загружает переменные окружения в структуру из переменных окружения
 func FillSettings() {
 	Settings = SettingsINI{}

@@ -281,6 +281,22 @@ func StartDB(Connection connections.Connection) {
 
 }
 
+// Start_ctx - необходимые процедуры для подключения к серверу БД
+// Свой контекст и WaitGroup нужны для остановки работы сервиса Graceful shutdown
+// Для тех кто пользуется этим репозиторием для старта и останова сервиса можно просто StartDB()
+func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, Connection connections.Connection) error {
+	var err error
+
+	//запомним к себе контекст и WaitGroup
+	contextmain.Ctx = ctx
+	stopapp.SetWaitGroup_Main(WaitGroup)
+
+	//
+	StartDB(Connection)
+
+	return err
+}
+
 // GetDSN - возвращает строку соединения к базе данных
 func GetDSN(Connection connections.Connection) string {
 	dsn := "host=" + Connection.Server + " "

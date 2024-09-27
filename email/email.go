@@ -235,7 +235,7 @@ func WaitStop() {
 	stopapp.GetWaitGroup_Main().Done()
 }
 
-// StartDB - делает соединение с БД, отключение и др.
+// Start - необходимые процедуры для подключения к серверу email
 func Start() {
 	LoadEnv()
 	Connect()
@@ -243,6 +243,22 @@ func Start() {
 	stopapp.GetWaitGroup_Main().Add(1)
 	go WaitStop()
 
+}
+
+// Start_ctx - необходимые процедуры для подключения к серверу email
+// Свой контекст и WaitGroup нужны для остановки работы сервиса Graceful shutdown
+// Для тех кто пользуется этим репозиторием для старта и останова сервиса можно просто Start()
+func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
+	var err error
+
+	//запомним к себе контекст и WaitGroup
+	contextmain.Ctx = ctx
+	stopapp.SetWaitGroup_Main(WaitGroup)
+
+	//
+	Start()
+
+	return err
 }
 
 // LoadEnv - загружает переменные окружения в структуру из файла или из переменных окружения

@@ -54,8 +54,8 @@ func Start() {
 }
 
 // Start_ctx - запускает работу веб-сервера с функций liveness
-// Graceful shutdown - для тех кто передаст сюда свой контекст и WaitGroup
-// для тех кто НЕ пользуется этим репозиторием для старта и останова
+// Свой контекст и WaitGroup нужны для остановки работы сервиса Graceful shutdown
+// Для тех кто пользуется этим репозиторием для старта и останова сервиса можно просто Start()
 func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	var err error
 

@@ -11,6 +11,8 @@ import (
 	"github.com/camunda/zeebe/clients/go/v8/pkg/entities"
 	"github.com/camunda/zeebe/clients/go/v8/pkg/worker"
 	"github.com/camunda/zeebe/clients/go/v8/pkg/zbc"
+	"sync"
+
 	// "gitlab.aescorp.ru/dsp_dev/claim/stack_exchange/internal/v0/app/constants"
 	// "github.com/ManyakRus/starter/mssql"
 	"os"
@@ -211,6 +213,22 @@ func StartCamunda(HandleJob func(client worker.JobClient, job entities.Job), CAM
 	stopapp.GetWaitGroup_Main().Add(1)
 	go ping_go()
 
+}
+
+// Start_ctx - необходимые процедуры для подключения к серверу Camunda
+// Свой контекст и WaitGroup нужны для остановки работы сервиса Graceful shutdown
+// Для тех кто пользуется этим репозиторием для старта и останова сервиса можно просто StartCamunda()
+func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, HandleJob func(client worker.JobClient, job entities.Job), CAMUNDA_JOBTYPE string, BPMN_filename string) error {
+	var err error
+
+	//запомним к себе контекст и WaitGroup
+	contextmain.Ctx = ctx
+	stopapp.SetWaitGroup_Main(WaitGroup)
+
+	//
+	StartCamunda(HandleJob, CAMUNDA_JOBTYPE, BPMN_filename)
+
+	return err
 }
 
 // Send_BPMN_File - отправляем файл .bpmn в камунду

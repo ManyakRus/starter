@@ -208,6 +208,22 @@ func StartDB() {
 
 }
 
+// Start_ctx - необходимые процедуры для подключения к серверу БД
+// Свой контекст и WaitGroup нужны для остановки работы сервиса Graceful shutdown
+// Для тех кто пользуется этим репозиторием для старта и останова сервиса можно просто StartDB()
+func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
+	var err error
+
+	//запомним к себе контекст и WaitGroup
+	contextmain.Ctx = ctx
+	stopapp.SetWaitGroup_Main(WaitGroup)
+
+	//
+	StartDB()
+
+	return err
+}
+
 // FillSettings загружает переменные окружения в структуру из файла или из переменных окружения
 func FillSettings() {
 	Settings = SettingsINI{}

@@ -2,12 +2,14 @@
 package sync_exchange_connect
 
 import (
+	"context"
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/nats_connect"
 	"github.com/ManyakRus/starter/stopapp"
 	"gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange"
 	"gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/sync_types"
+	"sync"
 )
 
 // Connect - подключение к NATS SyncExchange
@@ -35,6 +37,22 @@ func Start(ServiceName string) {
 	stopapp.GetWaitGroup_Main().Add(1)
 	go WaitStop()
 
+}
+
+// Start_ctx - необходимые процедуры для подключения к NATS с библиотекой SyncExchange
+// Свой контекст и WaitGroup нужны для остановки работы сервиса Graceful shutdown
+// Для тех кто пользуется этим репозиторием для старта и останова сервиса можно просто Start()
+func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, ServiceName string) error {
+	var err error
+
+	//запомним к себе контекст и WaitGroup
+	contextmain.Ctx = ctx
+	stopapp.SetWaitGroup_Main(WaitGroup)
+
+	//
+	Start(ServiceName)
+
+	return err
 }
 
 // CloseConnection - закрывает соединение с NATS

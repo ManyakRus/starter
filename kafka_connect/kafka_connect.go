@@ -1,8 +1,11 @@
 package kafka_connect
 
 import (
+	"context"
 	"github.com/ManyakRus/starter/logger"
 	"os"
+	"sync"
+
 	//"github.com/ManyakRus/starter/common/v0/micro"
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/stopapp"
@@ -56,13 +59,29 @@ func Connect_err() error {
 	return err
 }
 
-// StartKafka - необходимые процедуры для подключения к серверу Nats
+// StartKafka - необходимые процедуры для подключения к серверу Kafka
 func StartKafka() {
 	Connect()
 
 	stopapp.GetWaitGroup_Main().Add(1)
 	go WaitStop()
 
+}
+
+// Start_ctx - необходимые процедуры для подключения к серверу Kafka
+// Свой контекст и WaitGroup нужны для остановки работы сервиса Graceful shutdown
+// Для тех кто пользуется этим репозиторием для старта и останова сервиса можно просто StartKafka()
+func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
+	var err error
+
+	//запомним к себе контекст и WaitGroup
+	contextmain.Ctx = ctx
+	stopapp.SetWaitGroup_Main(WaitGroup)
+
+	//
+	StartKafka()
+
+	return err
 }
 
 // CloseConnection - закрывает соединение с сервером Nats

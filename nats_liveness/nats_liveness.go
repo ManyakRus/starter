@@ -2,6 +2,7 @@ package nats_liveness
 
 import (
 	bytes "bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"github.com/ManyakRus/starter/contextmain"
@@ -12,6 +13,7 @@ import (
 	"gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/sync_types"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -195,6 +197,22 @@ func Start(ServiceName string) {
 	stopapp.GetWaitGroup_Main().Add(1)
 	go SendMessages_go()
 
+}
+
+// Start_ctx - необходимые процедуры для подключения к серверу NATS
+// Свой контекст и WaitGroup нужны для остановки работы сервиса Graceful shutdown
+// Для тех кто пользуется этим репозиторием для старта и останова сервиса можно просто Start()
+func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, ServiceName string) error {
+	var err error
+
+	//запомним к себе контекст и WaitGroup
+	contextmain.Ctx = ctx
+	stopapp.SetWaitGroup_Main(WaitGroup)
+
+	//
+	Start(ServiceName)
+
+	return err
 }
 
 // WaitStop - ожидает отмену глобального контекста
