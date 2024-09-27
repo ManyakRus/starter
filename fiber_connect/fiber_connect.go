@@ -1,6 +1,7 @@
 package fiber_connect
 
 import (
+	"context"
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/logger"
 	"github.com/ManyakRus/starter/stopapp"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sync"
 )
 
 // empty - пустая структура для имени пакета
@@ -40,6 +42,8 @@ func Connect() {
 	}
 	Client = fiber.New()
 
+	go Listen()
+
 	log.Info("Fiber connected. OK. host: ", Settings.WEBSERVER_HOST, ":", Settings.WEBSERVER_PORT)
 
 }
@@ -67,42 +71,20 @@ func FillSettings() {
 
 }
 
-func CloseConnection_err() error {
-	err := Client.Shutdown()
-
-	return err
-}
-
-func CloseConnection() {
-	err := CloseConnection_err()
-	if err != nil {
-		log.Error("Fiber CloseConnection() error: ", err)
-	} else {
-		log.Info("Fiber connection closed.")
-	}
-}
-
-// StartLiveness - делает соединение с БД, отключение и др.
-func Start() {
-	if Client == nil {
-		FillSettings()
-		Connect()
-	}
-
-	go Listen()
-
-	stopapp.GetWaitGroup_Main().Add(1)
-	go WaitStop()
-
-}
-
+// Listen_err - начинает прослушивать порт, паника при ошибке
 func Listen() {
+	err := Listen_err()
+	if err != nil {
+		log.Panic(PackageName, "Fiber Listen() error: ", err)
+	}
+
+}
+
+// Listen_err - начинает прослушивать порт, возвращает ошибку
+func Listen_err() error {
 	addr := Settings.WEBSERVER_HOST + ":" + Settings.WEBSERVER_PORT //3002
 	err := Client.Listen(addr)
-	if err != nil {
-		log.Panic(PackageName, "Listen() error: ", err)
-	}
-
+	return err
 }
 
 // WaitStop - ожидает отмену глобального контекста
@@ -129,4 +111,50 @@ func GetHost() string {
 	}
 
 	return Otvet
+}
+
+// Start - запускает работу веб-сервера
+// Graceful shutdown только для тех кто пользуется этим репозиторием для старта и останова
+func Start() {
+	if Client == nil {
+		FillSettings()
+		Connect()
+	}
+
+	stopapp.GetWaitGroup_Main().Add(1)
+	go WaitStop()
+
+}
+
+// Start_ctx - запускает работу веб-сервера
+// Graceful shutdown - для тех кто передаст сюда свой контекст и WaitGroup
+// для тех кто НЕ пользуется этим репозиторием для старта и останова
+func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
+	var err error
+
+	//запомним к себе контекст и WaitGroup
+	contextmain.Ctx = ctx
+	stopapp.SetWaitGroup_Main(WaitGroup)
+
+	//
+	Start()
+
+	return err
+}
+
+// CloseConnection - закрывает соединения веб-сервера, возвращает ошибку
+func CloseConnection_err() error {
+	err := Client.Shutdown()
+
+	return err
+}
+
+// CloseConnection - закрывает соединения веб-сервера
+func CloseConnection() {
+	err := CloseConnection_err()
+	if err != nil {
+		log.Error("Fiber CloseConnection() error: ", err)
+	} else {
+		log.Info("Fiber connection closed.")
+	}
 }

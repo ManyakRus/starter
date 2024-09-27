@@ -1,12 +1,20 @@
+// модуль для работы веб-сервера с функцией Liveness
+// Для GET запросов веб-сервер возвращает статус 200 "ok", и текст `{"status":"ok"}`
+
 package liveness
 
 import (
+	"context"
+	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/fiber_connect"
 	"github.com/ManyakRus/starter/log"
+	"github.com/ManyakRus/starter/stopapp"
 	"github.com/gofiber/fiber/v2"
 	"os"
+	"sync"
 )
 
+// LIVENESS_URL - адрес URL веб-сервера для функции Liveness
 const LIVENESS_URL = "/liveness/"
 
 // Settings хранит все нужные переменные окружения
@@ -21,7 +29,10 @@ type SettingsINI struct {
 // WEBSERVER_PORT_DEFAULT - порт веб-сервера по умолчанию
 var WEBSERVER_PORT_DEFAULT = "3000"
 
-// Start - запуск работы компоненты Liveness
+// TEXT_OK - текст для ответа из веб-сервера
+const TEXT_OK = `{"status":"ok"}`
+
+// Start - запуск работы веб-сервера с функцией Liveness
 func Start() {
 
 	FillSettings()
@@ -42,8 +53,26 @@ func Start() {
 
 }
 
+// Start_ctx - запускает работу веб-сервера с функций liveness
+// Graceful shutdown - для тех кто передаст сюда свой контекст и WaitGroup
+// для тех кто НЕ пользуется этим репозиторием для старта и останова
+func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
+	var err error
+
+	//запомним к себе контекст и WaitGroup
+	contextmain.Ctx = ctx
+	stopapp.SetWaitGroup_Main(WaitGroup)
+
+	//
+	Start()
+
+	return err
+}
+
+// Handlerliveness - обрабатывает GET запросы
 func Handlerliveness(c *fiber.Ctx) error {
-	return c.SendString("{\"status\":\"ok\"}")
+	err := c.SendString(TEXT_OK)
+	return err
 }
 
 // FillSettings загружает переменные окружения в структуру из переменных окружения
