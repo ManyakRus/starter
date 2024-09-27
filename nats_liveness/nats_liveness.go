@@ -45,10 +45,17 @@ type Message struct {
 // Connect - подключается к серверу Nats-sync_exchange
 func Connect() {
 	err := Connect_err()
+	LogInfo_Connected(err)
+}
+
+// LogInfo_Connected - выводит сообщение в Лог, или паника при ошибке
+func LogInfo_Connected(err error) {
 	if err != nil {
 		log.Panicln("Can not connect NATS: ", nats_connect.Settings.NATS_HOST, ", error: ", err)
+	} else {
+		log.Info("NATS liveness connected. host: ", nats_connect.Settings.NATS_HOST, ":", nats_connect.Settings.NATS_PORT, ", topic: ", Settings.NATS_LIVENESS_TOPIC)
 	}
-	log.Info("NATS liveness connected. host: ", nats_connect.Settings.NATS_HOST, ":", nats_connect.Settings.NATS_PORT, ", topic: ", Settings.NATS_LIVENESS_TOPIC)
+
 }
 
 // Connect_err - подключается к серверу Nats-sync_exchange и возвращает ошибку
@@ -191,24 +198,10 @@ func CheckSettingsNATS() error {
 func Start(ServiceName string) {
 	var err error
 
-	//
-	err = CheckSettingsNATS()
-	if err != nil {
-		return
-	}
-
-	//
-	FillSettings(ServiceName)
-
-	Connect()
-
-	stopapp.GetWaitGroup_Main().Add(1)
-	go WaitStop()
-
-	Ticker = time.NewTicker(5 * time.Second)
-
-	stopapp.GetWaitGroup_Main().Add(1)
-	go SendMessages_go()
+	ctx := contextmain.GetContext()
+	WaitGroup := stopapp.GetWaitGroup_Main()
+	err = Start_ctx(&ctx, WaitGroup, ServiceName)
+	LogInfo_Connected(err)
 
 }
 

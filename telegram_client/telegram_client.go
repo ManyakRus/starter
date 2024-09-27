@@ -599,12 +599,18 @@ func TimeLimit() {
 // Connect подключение к серверу Телеграм, паника при ошибке
 func Connect(func_OnNewMessage func(ctx context.Context, entities tg.Entities, u *tg.UpdateNewMessage, Peer1 storage.Peer) error) {
 	err := Connect_err(func_OnNewMessage)
+	LogInfo_Connected(err)
+}
+
+// LogInfo_Connected - выводит сообщение в Лог, или паника при ошибке
+func LogInfo_Connected(err error) {
 	if err != nil {
 		TextError := fmt.Sprint("Telegram connection: ", Settings.TELEGRAM_PHONE_FROM, ", error: ", err)
 		log.Panic(TextError)
 	} else {
 		log.Info("Telegram connected: ", Settings.TELEGRAM_PHONE_FROM)
 	}
+
 }
 
 // Connect_err подключение к серверу Телеграм
@@ -810,15 +816,12 @@ func AsFloodWait(err error) (d int, ok bool) {
 // StartTelegram - подключается к телеграмму, запускает остановку приложения.
 // func_OnNewMessage - функция для приёма новых сообщений
 func StartTelegram(func_OnNewMessage func(ctx context.Context, entities tg.Entities, u *tg.UpdateNewMessage, Peer1 storage.Peer) error) {
-	CreateTelegramClient(func_OnNewMessage)
+	var err error
 
-	err := Connect_err(func_OnNewMessage)
-	if err != nil {
-		log.Panic("Can not login to telegram ! Error: ", err)
-	}
-
-	stopapp.GetWaitGroup_Main().Add(1)
-	go WaitStop()
+	ctx := contextmain.GetContext()
+	WaitGroup := stopapp.GetWaitGroup_Main()
+	err = Start_ctx(&ctx, WaitGroup, func_OnNewMessage)
+	LogInfo_Connected(err)
 
 }
 

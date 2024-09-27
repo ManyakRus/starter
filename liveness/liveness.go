@@ -34,7 +34,25 @@ const TEXT_OK = `{"status":"ok"}`
 
 // Start - запуск работы веб-сервера с функцией Liveness
 func Start() {
+	//var err error
 
+	ctx := contextmain.GetContext()
+	WaitGroup := stopapp.GetWaitGroup_Main()
+	Start_ctx(&ctx, WaitGroup)
+
+}
+
+// Start_ctx - запускает работу веб-сервера с функций liveness
+// Свой контекст и WaitGroup нужны для остановки работы сервиса Graceful shutdown
+// Для тех кто пользуется этим репозиторием для старта и останова сервиса можно просто Start()
+func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) {
+	//var err error
+
+	//запомним к себе контекст и WaitGroup
+	contextmain.Ctx = ctx
+	stopapp.SetWaitGroup_Main(WaitGroup)
+
+	//
 	FillSettings()
 	fiber_connect.Settings.WEBSERVER_HOST = Settings.LIVENESS_HOST
 	fiber_connect.Settings.WEBSERVER_PORT = Settings.LIVENESS_PORT
@@ -51,22 +69,7 @@ func Start() {
 
 	log.Info("Liveness start OK. URL: ", LIVENESS_URL)
 
-}
-
-// Start_ctx - запускает работу веб-сервера с функций liveness
-// Свой контекст и WaitGroup нужны для остановки работы сервиса Graceful shutdown
-// Для тех кто пользуется этим репозиторием для старта и останова сервиса можно просто Start()
-func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
-	var err error
-
-	//запомним к себе контекст и WaitGroup
-	contextmain.Ctx = ctx
-	stopapp.SetWaitGroup_Main(WaitGroup)
-
-	//
-	Start()
-
-	return err
+	//return err
 }
 
 // Handlerliveness - обрабатывает GET запросы

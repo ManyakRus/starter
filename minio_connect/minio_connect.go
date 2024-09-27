@@ -52,6 +52,12 @@ func Connect() {
 	//ping.CheckPort(Settings.MINIO_HOST, Settings.MINIO_PORT)
 
 	err := Connect_err()
+	LogInfo_Connected(err)
+
+}
+
+// LogInfo_Connected - выводит сообщение в Лог, или паника при ошибке
+func LogInfo_Connected(err error) {
 	if err != nil {
 		log.Panicln("Minio Connect_err() host: ", Settings.MINIO_HOST, ", Error: ", err)
 	} else {
@@ -195,13 +201,12 @@ func WaitStop() {
 
 // StartMinio - необходимые процедуры для подключения к серверу Minio
 func StartMinio() {
-	Connect()
+	var err error
 
-	stopapp.GetWaitGroup_Main().Add(1)
-	go WaitStop()
-
-	stopapp.GetWaitGroup_Main().Add(1)
-	go ping_go()
+	ctx := contextmain.GetContext()
+	WaitGroup := stopapp.GetWaitGroup_Main()
+	err = Start_ctx(&ctx, WaitGroup)
+	LogInfo_Connected(err)
 
 }
 

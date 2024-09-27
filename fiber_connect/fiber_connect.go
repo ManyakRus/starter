@@ -44,6 +44,12 @@ func Connect() {
 
 	go Listen()
 
+	LogInfo_Connected()
+
+}
+
+// LogInfo_Connected - выводит сообщение в Лог, или паника при ошибке
+func LogInfo_Connected() {
 	log.Info("Fiber connected. OK. host: ", Settings.WEBSERVER_HOST, ":", Settings.WEBSERVER_PORT)
 
 }
@@ -116,13 +122,12 @@ func GetHost() string {
 // Start - запускает работу веб-сервера
 // Graceful shutdown только для тех кто пользуется этим репозиторием для старта и останова
 func Start() {
-	if Client == nil {
-		FillSettings()
-		Connect()
-	}
+	//var err error
 
-	stopapp.GetWaitGroup_Main().Add(1)
-	go WaitStop()
+	ctx := contextmain.GetContext()
+	WaitGroup := stopapp.GetWaitGroup_Main()
+	Start_ctx(&ctx, WaitGroup)
+	LogInfo_Connected()
 
 }
 
@@ -137,8 +142,15 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) {
 	stopapp.SetWaitGroup_Main(WaitGroup)
 
 	//
-	Start()
+	if Client == nil {
+		FillSettings()
+		Connect()
+	}
 
+	stopapp.GetWaitGroup_Main().Add(1)
+	go WaitStop()
+
+	//return err
 }
 
 // CloseConnection - закрывает соединения веб-сервера, возвращает ошибку

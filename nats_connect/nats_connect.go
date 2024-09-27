@@ -36,11 +36,17 @@ func Connect() {
 	var err error
 
 	err = Connect_err()
+	LogInfo_Connected(err)
+}
+
+// LogInfo_Connected - выводит сообщение в Лог, или паника при ошибке
+func LogInfo_Connected(err error) {
 	if err != nil {
 		log.Panicln("NATS Connect() error: ", err)
 	} else {
 		log.Info("NATS Connect() ok ")
 	}
+
 }
 
 // Connect_err - подключается к серверу Nats и возвращает ошибку
@@ -64,10 +70,12 @@ func Connect_err() error {
 
 // StartNats - необходимые процедуры для подключения к серверу Nats
 func StartNats() {
-	Connect()
+	var err error
 
-	stopapp.GetWaitGroup_Main().Add(1)
-	go WaitStop()
+	ctx := contextmain.GetContext()
+	WaitGroup := stopapp.GetWaitGroup_Main()
+	err = Start_ctx(&ctx, WaitGroup)
+	LogInfo_Connected(err)
 
 }
 

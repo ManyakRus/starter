@@ -15,11 +15,17 @@ import (
 // Connect - подключение к NATS SyncExchange
 func Connect(ServiceName string) {
 	err := Connect_err(ServiceName)
+	LogInfo_Connected(err)
+}
+
+// LogInfo_Connected - выводит сообщение в Лог, или паника при ошибке
+func LogInfo_Connected(err error) {
 	if err != nil {
 		log.Panicln("Can not start NATS, server: ", nats_connect.Settings.NATS_HOST, " error: ", err)
 	} else {
 		log.Info("NATS connected. OK., server: ", nats_connect.Settings.NATS_HOST, ":", nats_connect.Settings.NATS_PORT, " error: ", err)
 	}
+
 }
 
 // Connect_err - подключение к NATS SyncExchange
@@ -37,12 +43,12 @@ func Connect_err(ServiceName string) error {
 
 // Start - необходимые процедуры для подключения к серверу Nats SyncExchange
 func Start(ServiceName string) {
-	//var err error
+	var err error
 
-	Connect(ServiceName)
-
-	stopapp.GetWaitGroup_Main().Add(1)
-	go WaitStop()
+	ctx := contextmain.GetContext()
+	WaitGroup := stopapp.GetWaitGroup_Main()
+	err = Start_ctx(&ctx, WaitGroup, ServiceName)
+	LogInfo_Connected(err)
 
 }
 

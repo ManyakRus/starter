@@ -153,11 +153,17 @@ func eventHandler_test(evt interface{}) {
 // Connect - создание клиента Whatsapp
 func Connect(eventHandler func(evt interface{})) {
 	err := Connect_err(eventHandler)
+	LogInfo_Connected(err)
+}
+
+// LogInfo_Connected - выводит сообщение в Лог, или паника при ошибке
+func LogInfo_Connected(err error) {
 	if err != nil {
 		log.Panic("WHATSAPP Connect_err() error: ", err)
 	} else {
 		log.Info("WHATSAPP connected. Phone from: ", Settings.WHATSAPP_PHONE_FROM)
 	}
+
 }
 
 // Connect_err - создание клиента Whatsapp, и возвращает ошибку
@@ -305,10 +311,12 @@ func FillSettings() {
 
 // Start - необходимые процедуры для подключения к серверу Whatsapp
 func Start(eventHandler func(evt interface{})) {
-	Connect(eventHandler)
+	var err error
 
-	stopapp.GetWaitGroup_Main().Add(1)
-	go WaitStop()
+	ctx := contextmain.GetContext()
+	WaitGroup := stopapp.GetWaitGroup_Main()
+	err = Start_ctx(&ctx, WaitGroup, eventHandler)
+	LogInfo_Connected(err)
 
 }
 

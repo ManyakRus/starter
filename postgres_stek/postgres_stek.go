@@ -57,6 +57,12 @@ func Connect(Connection connections.Connection) {
 	port_checker.CheckPort(Connection.Server, Connection.Port)
 
 	err := Connect_err(Connection)
+	LogInfo_Connected(err, Connection)
+
+}
+
+// LogInfo_Connected - выводит сообщение в Лог, или паника при ошибке
+func LogInfo_Connected(err error, Connection connections.Connection) {
 	if err != nil {
 		log.Panicln("POSTGRES gorm stack Connect() to database host: ", Connection.Server, ", Error: ", err)
 	} else {
@@ -271,13 +277,12 @@ func WaitStop() {
 
 // StartDB - делает соединение с БД, отключение и др.
 func StartDB(Connection connections.Connection) {
-	Connect(Connection)
+	var err error
 
-	stopapp.GetWaitGroup_Main().Add(1)
-	go WaitStop()
-
-	stopapp.GetWaitGroup_Main().Add(1)
-	go ping_go()
+	ctx := contextmain.GetContext()
+	WaitGroup := stopapp.GetWaitGroup_Main()
+	err = Start_ctx(&ctx, WaitGroup, Connection)
+	LogInfo_Connected(err, Connection)
 
 }
 

@@ -35,11 +35,17 @@ func Connect() {
 	var err error
 
 	err = Connect_err()
+	LogInfo_Connected(err)
+}
+
+// LogInfo_Connected - выводит сообщение в Лог, или паника при ошибке
+func LogInfo_Connected(err error) {
 	if err != nil {
 		log.Panicln("KAFKA Connect() host: ", Settings.KAFKA_HOST, " error: ", err)
 	} else {
 		log.Info("KAFKA Connect() OK, host: ", Settings.KAFKA_HOST)
 	}
+
 }
 
 // Connect_err - подключается к серверу Nats и возвращает ошибку
@@ -61,10 +67,12 @@ func Connect_err() error {
 
 // StartKafka - необходимые процедуры для подключения к серверу Kafka
 func StartKafka() {
-	Connect()
+	var err error
 
-	stopapp.GetWaitGroup_Main().Add(1)
-	go WaitStop()
+	ctx := contextmain.GetContext()
+	WaitGroup := stopapp.GetWaitGroup_Main()
+	err = Start_ctx(&ctx, WaitGroup)
+	LogInfo_Connected(err)
 
 }
 

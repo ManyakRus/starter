@@ -78,11 +78,17 @@ func FillSettings() {
 // Connect_err - подключается к серверу Camunda, паника при ошибке
 func Connect() {
 	err := Connect_err()
+	LogInfo_Connected(err)
+}
+
+// LogInfo_Connected - выводит сообщение в Лог, или паника при ошибке
+func LogInfo_Connected(err error) {
 	if err != nil {
-		log.Panic("Connect_err() error: ", err)
+		log.Panic("CAMUNDA Connect_err() ip: ", Settings.CAMUNDA_HOST, " port: ", Settings.CAMUNDA_PORT, " error: ", err)
 	} else {
 		log.Info("CAMUNDA connected, ip: ", Settings.CAMUNDA_HOST, " port: ", Settings.CAMUNDA_PORT)
 	}
+
 }
 
 // Connect_err - подключается к серверу Camunda, возвращает ошибку
@@ -213,20 +219,12 @@ func WaitStop() {
 
 // StartCamunda - необходимые процедуры для подключения к серверу Camunda
 func StartCamunda(HandleJob func(client worker.JobClient, job entities.Job), CAMUNDA_JOBTYPE string, BPMN_filename string) {
-	// var err error
+	var err error
 
-	Connect()
-
-	JobWorker = Client.NewJobWorker().JobType(CAMUNDA_JOBTYPE).Handler(HandleJob).Open()
-
-	Send_BPMN_File(BPMN_filename)
-
-	stopapp.GetWaitGroup_Main().Add(1)
-	go WaitStop()
-
-	stopapp.GetWaitGroup_Main().Add(1)
-	go ping_go()
-
+	ctx := contextmain.GetContext()
+	WaitGroup := stopapp.GetWaitGroup_Main()
+	err = Start_ctx(&ctx, WaitGroup, HandleJob, CAMUNDA_JOBTYPE, BPMN_filename)
+	LogInfo_Connected(err)
 }
 
 // Start_ctx - необходимые процедуры для подключения к серверу Camunda

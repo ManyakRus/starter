@@ -63,6 +63,12 @@ func Connect() {
 	port_checker.CheckPort(Settings.DB_HOST, Settings.DB_PORT)
 
 	err := Connect_err()
+	LogInfo_Connected(err)
+
+}
+
+// LogInfo_Connected - выводит сообщение в Лог, или паника при ошибке
+func LogInfo_Connected(err error) {
 	if err != nil {
 		log.Panicln("POSTGRES pgx Connect() to database host: ", Settings.DB_HOST, ", Error: ", err)
 	} else {
@@ -241,13 +247,12 @@ func WaitStop() {
 
 // StartDB - делает соединение с БД, отключение и др.
 func StartDB() {
-	Connect()
+	var err error
 
-	stopapp.GetWaitGroup_Main().Add(1)
-	go WaitStop()
-
-	stopapp.GetWaitGroup_Main().Add(1)
-	go ping_go()
+	ctx := contextmain.GetContext()
+	WaitGroup := stopapp.GetWaitGroup_Main()
+	err = Start_ctx(&ctx, WaitGroup)
+	LogInfo_Connected(err)
 
 }
 

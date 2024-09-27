@@ -53,6 +53,12 @@ type Attachment struct {
 // Connect - подключение клиента Email
 func Connect() {
 	err := Connect_err()
+	LogInfo_Connected(err)
+
+}
+
+// LogInfo_Connected - выводит сообщение в Лог, или паника при ошибке
+func LogInfo_Connected(err error) {
 	if err != nil {
 		log.Panicln("Connect() error: ", err)
 	} else {
@@ -267,11 +273,12 @@ func WaitStop() {
 
 // Start - необходимые процедуры для подключения к серверу email imap
 func Start() {
-	LoadEnv()
-	Connect()
+	var err error
 
-	stopapp.GetWaitGroup_Main().Add(1)
-	go WaitStop()
+	ctx := contextmain.GetContext()
+	WaitGroup := stopapp.GetWaitGroup_Main()
+	err = Start_ctx(&ctx, WaitGroup)
+	LogInfo_Connected(err)
 
 }
 
