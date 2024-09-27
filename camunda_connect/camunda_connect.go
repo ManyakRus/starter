@@ -75,27 +75,41 @@ func FillSettings() {
 
 }
 
-// Connect - подключается к серверу Camunda
+// Connect_err - подключается к серверу Camunda, паника при ошибке
 func Connect() {
+	err := Connect_err()
+	if err != nil {
+		log.Panic("Connect_err() error: ", err)
+	} else {
+		log.Info("CAMUNDA connected, ip: ", Settings.CAMUNDA_HOST, " port: ", Settings.CAMUNDA_PORT)
+	}
+}
+
+// Connect_err - подключается к серверу Camunda, возвращает ошибку
+func Connect_err() error {
 	var err error
 
 	if Settings.CAMUNDA_HOST == "" {
 		FillSettings()
 	}
 
-	port_checker.CheckPort(Settings.CAMUNDA_HOST, Settings.CAMUNDA_PORT)
+	err = port_checker.CheckPort_err(Settings.CAMUNDA_HOST, Settings.CAMUNDA_PORT)
+	if err != nil {
+		return err
+	}
 
 	Client, err = zbc.NewClient(&zbc.ClientConfig{
 		GatewayAddress:         GetURL(),
 		UsePlaintextConnection: true,
 	})
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	log.Infoln("CAMUNDA connected. ip: ", Settings.CAMUNDA_HOST)
+	//log.Infoln("CAMUNDA connected. ip: ", Settings.CAMUNDA_HOST)
 
 	// JobWorker = Client.NewJobWorker().JobType(CAMUNDA_ID).Handler(HandleJob).Open()
+	return err
 }
 
 // CloseConnection - отключается от сервера Camunda
@@ -226,7 +240,22 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, HandleJob func(c
 	stopapp.SetWaitGroup_Main(WaitGroup)
 
 	//
-	StartCamunda(HandleJob, CAMUNDA_JOBTYPE, BPMN_filename)
+	// var err error
+
+	err = Connect_err()
+	if err != nil {
+		return err
+	}
+
+	JobWorker = Client.NewJobWorker().JobType(CAMUNDA_JOBTYPE).Handler(HandleJob).Open()
+
+	Send_BPMN_File(BPMN_filename)
+
+	stopapp.GetWaitGroup_Main().Add(1)
+	go WaitStop()
+
+	stopapp.GetWaitGroup_Main().Add(1)
+	go ping_go()
 
 	return err
 }

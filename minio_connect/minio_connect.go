@@ -216,7 +216,13 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	stopapp.SetWaitGroup_Main(WaitGroup)
 
 	//
-	StartMinio()
+	err = Connect_err()
+
+	stopapp.GetWaitGroup_Main().Add(1)
+	go WaitStop()
+
+	stopapp.GetWaitGroup_Main().Add(1)
+	go ping_go()
 
 	return err
 }

@@ -25,6 +25,8 @@ type ICrud_Connection interface {
 	Create(*Connection) error
 	ReadFromCache(ID int64) (Connection, error)
 	UpdateManyFields(*Connection, []string) error
+	FindBy_BranchID_IsLegal(*Connection) error
+	FindMassBy_BranchID(*Connection) ([]Connection, error)
 	Update_BranchID(*Connection) error
 	Update_DbName(*Connection) error
 	Update_DbScheme(*Connection) error
@@ -36,7 +38,7 @@ type ICrud_Connection interface {
 	Update_Server(*Connection) error
 }
 
-// TableName - возвращает имя таблицы в БД
+// TableNameDB - возвращает имя таблицы в БД
 func (m Connection) TableNameDB() string {
 	return "connections"
 }

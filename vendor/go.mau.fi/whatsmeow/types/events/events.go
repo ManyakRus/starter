@@ -15,6 +15,8 @@ import (
 	waBinary "go.mau.fi/whatsmeow/binary"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	armadillo "go.mau.fi/whatsmeow/proto"
+	"go.mau.fi/whatsmeow/proto/waArmadilloApplication"
+	"go.mau.fi/whatsmeow/proto/waConsumerApplication"
 	"go.mau.fi/whatsmeow/proto/waMsgApplication"
 	"go.mau.fi/whatsmeow/proto/waMsgTransport"
 	"go.mau.fi/whatsmeow/types"
@@ -107,6 +109,9 @@ type LoggedOut struct {
 // This can happen if you accidentally start another process with the same session
 // or otherwise try to connect twice with the same session.
 type StreamReplaced struct{}
+
+// ManualLoginReconnect is emitted after login if DisableLoginAutoReconnect is set.
+type ManualLoginReconnect struct{}
 
 // TempBanReason is an error code included in temp ban error events.
 type TempBanReason int
@@ -301,6 +306,20 @@ type FBMessage struct {
 	Application *waMsgApplication.MessageApplication // The second level of wrapping the message was in
 }
 
+func (evt *FBMessage) GetConsumerApplication() *waConsumerApplication.ConsumerApplication {
+	if consumerApp, ok := evt.Message.(*waConsumerApplication.ConsumerApplication); ok {
+		return consumerApp
+	}
+	return nil
+}
+
+func (evt *FBMessage) GetArmadillo() *waArmadilloApplication.Armadillo {
+	if armadillo, ok := evt.Message.(*waArmadilloApplication.Armadillo); ok {
+		return armadillo
+	}
+	return nil
+}
+
 // UnwrapRaw fills the Message, IsEphemeral and IsViewOnce fields based on the raw message in the RawMessage field.
 func (evt *Message) UnwrapRaw() *Message {
 	evt.Message = evt.RawMessage
@@ -413,6 +432,8 @@ type GroupInfo struct {
 	Locked    *types.GroupLocked    // Group locked status change (can only admins edit group info?)
 	Announce  *types.GroupAnnounce  // Group announce status change (can only admins send messages?)
 	Ephemeral *types.GroupEphemeral // Disappearing messages change
+
+	MembershipApprovalMode *types.GroupMembershipApprovalMode // Membership approval mode change
 
 	Delete *types.GroupDelete
 

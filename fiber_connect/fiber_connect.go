@@ -129,8 +129,8 @@ func Start() {
 // Start_ctx - запускает работу веб-сервера
 // Свой контекст и WaitGroup нужны для остановки работы сервиса Graceful shutdown
 // Для тех кто пользуется этим репозиторием для старта и останова сервиса можно просто Start()
-func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
-	var err error
+func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) {
+	//var err error
 
 	//запомним к себе контекст и WaitGroup
 	contextmain.Ctx = ctx
@@ -139,7 +139,6 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	//
 	Start()
 
-	return err
 }
 
 // CloseConnection - закрывает соединения веб-сервера, возвращает ошибку

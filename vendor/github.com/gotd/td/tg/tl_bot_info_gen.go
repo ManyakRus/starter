@@ -31,7 +31,7 @@ var (
 	_ = tdjson.Encoder{}
 )
 
-// BotInfo represents TL type `botInfo#8f300b57`.
+// BotInfo represents TL type `botInfo#82437e74`.
 // Info about bots (available bot commands, etc)
 //
 // See https://core.telegram.org/constructor/botInfo for reference.
@@ -41,6 +41,12 @@ type BotInfo struct {
 	// Links:
 	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
+	// If set, the bot has some preview medias for the configured Main Mini App, see here
+	// »¹ for more info on Main Mini App preview medias.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/bots/webapps#main-mini-app-previews
+	HasPreviewMedias bool
 	// ID of the bot
 	//
 	// Use SetUserID and GetUserID helpers.
@@ -65,10 +71,14 @@ type BotInfo struct {
 	//
 	// Use SetMenuButton and GetMenuButton helpers.
 	MenuButton BotMenuButtonClass
+	// PrivacyPolicyURL field of BotInfo.
+	//
+	// Use SetPrivacyPolicyURL and GetPrivacyPolicyURL helpers.
+	PrivacyPolicyURL string
 }
 
 // BotInfoTypeID is TL type id of BotInfo.
-const BotInfoTypeID = 0x8f300b57
+const BotInfoTypeID = 0x82437e74
 
 // Ensuring interfaces in compile-time for BotInfo.
 var (
@@ -83,6 +93,9 @@ func (b *BotInfo) Zero() bool {
 		return true
 	}
 	if !(b.Flags.Zero()) {
+		return false
+	}
+	if !(b.HasPreviewMedias == false) {
 		return false
 	}
 	if !(b.UserID == 0) {
@@ -103,6 +116,9 @@ func (b *BotInfo) Zero() bool {
 	if !(b.MenuButton == nil) {
 		return false
 	}
+	if !(b.PrivacyPolicyURL == "") {
+		return false
+	}
 
 	return true
 }
@@ -118,13 +134,16 @@ func (b *BotInfo) String() string {
 
 // FillFrom fills BotInfo from given interface.
 func (b *BotInfo) FillFrom(from interface {
+	GetHasPreviewMedias() (value bool)
 	GetUserID() (value int64, ok bool)
 	GetDescription() (value string, ok bool)
 	GetDescriptionPhoto() (value PhotoClass, ok bool)
 	GetDescriptionDocument() (value DocumentClass, ok bool)
 	GetCommands() (value []BotCommand, ok bool)
 	GetMenuButton() (value BotMenuButtonClass, ok bool)
+	GetPrivacyPolicyURL() (value string, ok bool)
 }) {
+	b.HasPreviewMedias = from.GetHasPreviewMedias()
 	if val, ok := from.GetUserID(); ok {
 		b.UserID = val
 	}
@@ -147,6 +166,10 @@ func (b *BotInfo) FillFrom(from interface {
 
 	if val, ok := from.GetMenuButton(); ok {
 		b.MenuButton = val
+	}
+
+	if val, ok := from.GetPrivacyPolicyURL(); ok {
+		b.PrivacyPolicyURL = val
 	}
 
 }
@@ -174,6 +197,11 @@ func (b *BotInfo) TypeInfo() tdp.Type {
 		return typ
 	}
 	typ.Fields = []tdp.Field{
+		{
+			Name:       "HasPreviewMedias",
+			SchemaName: "has_preview_medias",
+			Null:       !b.Flags.Has(6),
+		},
 		{
 			Name:       "UserID",
 			SchemaName: "user_id",
@@ -204,12 +232,20 @@ func (b *BotInfo) TypeInfo() tdp.Type {
 			SchemaName: "menu_button",
 			Null:       !b.Flags.Has(3),
 		},
+		{
+			Name:       "PrivacyPolicyURL",
+			SchemaName: "privacy_policy_url",
+			Null:       !b.Flags.Has(7),
+		},
 	}
 	return typ
 }
 
 // SetFlags sets flags for non-zero fields.
 func (b *BotInfo) SetFlags() {
+	if !(b.HasPreviewMedias == false) {
+		b.Flags.Set(6)
+	}
 	if !(b.UserID == 0) {
 		b.Flags.Set(0)
 	}
@@ -228,12 +264,15 @@ func (b *BotInfo) SetFlags() {
 	if !(b.MenuButton == nil) {
 		b.Flags.Set(3)
 	}
+	if !(b.PrivacyPolicyURL == "") {
+		b.Flags.Set(7)
+	}
 }
 
 // Encode implements bin.Encoder.
 func (b *BotInfo) Encode(buf *bin.Buffer) error {
 	if b == nil {
-		return fmt.Errorf("can't encode botInfo#8f300b57 as nil")
+		return fmt.Errorf("can't encode botInfo#82437e74 as nil")
 	}
 	buf.PutID(BotInfoTypeID)
 	return b.EncodeBare(buf)
@@ -242,11 +281,11 @@ func (b *BotInfo) Encode(buf *bin.Buffer) error {
 // EncodeBare implements bin.BareEncoder.
 func (b *BotInfo) EncodeBare(buf *bin.Buffer) error {
 	if b == nil {
-		return fmt.Errorf("can't encode botInfo#8f300b57 as nil")
+		return fmt.Errorf("can't encode botInfo#82437e74 as nil")
 	}
 	b.SetFlags()
 	if err := b.Flags.Encode(buf); err != nil {
-		return fmt.Errorf("unable to encode botInfo#8f300b57: field flags: %w", err)
+		return fmt.Errorf("unable to encode botInfo#82437e74: field flags: %w", err)
 	}
 	if b.Flags.Has(0) {
 		buf.PutLong(b.UserID)
@@ -256,35 +295,38 @@ func (b *BotInfo) EncodeBare(buf *bin.Buffer) error {
 	}
 	if b.Flags.Has(4) {
 		if b.DescriptionPhoto == nil {
-			return fmt.Errorf("unable to encode botInfo#8f300b57: field description_photo is nil")
+			return fmt.Errorf("unable to encode botInfo#82437e74: field description_photo is nil")
 		}
 		if err := b.DescriptionPhoto.Encode(buf); err != nil {
-			return fmt.Errorf("unable to encode botInfo#8f300b57: field description_photo: %w", err)
+			return fmt.Errorf("unable to encode botInfo#82437e74: field description_photo: %w", err)
 		}
 	}
 	if b.Flags.Has(5) {
 		if b.DescriptionDocument == nil {
-			return fmt.Errorf("unable to encode botInfo#8f300b57: field description_document is nil")
+			return fmt.Errorf("unable to encode botInfo#82437e74: field description_document is nil")
 		}
 		if err := b.DescriptionDocument.Encode(buf); err != nil {
-			return fmt.Errorf("unable to encode botInfo#8f300b57: field description_document: %w", err)
+			return fmt.Errorf("unable to encode botInfo#82437e74: field description_document: %w", err)
 		}
 	}
 	if b.Flags.Has(2) {
 		buf.PutVectorHeader(len(b.Commands))
 		for idx, v := range b.Commands {
 			if err := v.Encode(buf); err != nil {
-				return fmt.Errorf("unable to encode botInfo#8f300b57: field commands element with index %d: %w", idx, err)
+				return fmt.Errorf("unable to encode botInfo#82437e74: field commands element with index %d: %w", idx, err)
 			}
 		}
 	}
 	if b.Flags.Has(3) {
 		if b.MenuButton == nil {
-			return fmt.Errorf("unable to encode botInfo#8f300b57: field menu_button is nil")
+			return fmt.Errorf("unable to encode botInfo#82437e74: field menu_button is nil")
 		}
 		if err := b.MenuButton.Encode(buf); err != nil {
-			return fmt.Errorf("unable to encode botInfo#8f300b57: field menu_button: %w", err)
+			return fmt.Errorf("unable to encode botInfo#82437e74: field menu_button: %w", err)
 		}
+	}
+	if b.Flags.Has(7) {
+		buf.PutString(b.PrivacyPolicyURL)
 	}
 	return nil
 }
@@ -292,10 +334,10 @@ func (b *BotInfo) EncodeBare(buf *bin.Buffer) error {
 // Decode implements bin.Decoder.
 func (b *BotInfo) Decode(buf *bin.Buffer) error {
 	if b == nil {
-		return fmt.Errorf("can't decode botInfo#8f300b57 to nil")
+		return fmt.Errorf("can't decode botInfo#82437e74 to nil")
 	}
 	if err := buf.ConsumeID(BotInfoTypeID); err != nil {
-		return fmt.Errorf("unable to decode botInfo#8f300b57: %w", err)
+		return fmt.Errorf("unable to decode botInfo#82437e74: %w", err)
 	}
 	return b.DecodeBare(buf)
 }
@@ -303,45 +345,46 @@ func (b *BotInfo) Decode(buf *bin.Buffer) error {
 // DecodeBare implements bin.BareDecoder.
 func (b *BotInfo) DecodeBare(buf *bin.Buffer) error {
 	if b == nil {
-		return fmt.Errorf("can't decode botInfo#8f300b57 to nil")
+		return fmt.Errorf("can't decode botInfo#82437e74 to nil")
 	}
 	{
 		if err := b.Flags.Decode(buf); err != nil {
-			return fmt.Errorf("unable to decode botInfo#8f300b57: field flags: %w", err)
+			return fmt.Errorf("unable to decode botInfo#82437e74: field flags: %w", err)
 		}
 	}
+	b.HasPreviewMedias = b.Flags.Has(6)
 	if b.Flags.Has(0) {
 		value, err := buf.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode botInfo#8f300b57: field user_id: %w", err)
+			return fmt.Errorf("unable to decode botInfo#82437e74: field user_id: %w", err)
 		}
 		b.UserID = value
 	}
 	if b.Flags.Has(1) {
 		value, err := buf.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode botInfo#8f300b57: field description: %w", err)
+			return fmt.Errorf("unable to decode botInfo#82437e74: field description: %w", err)
 		}
 		b.Description = value
 	}
 	if b.Flags.Has(4) {
 		value, err := DecodePhoto(buf)
 		if err != nil {
-			return fmt.Errorf("unable to decode botInfo#8f300b57: field description_photo: %w", err)
+			return fmt.Errorf("unable to decode botInfo#82437e74: field description_photo: %w", err)
 		}
 		b.DescriptionPhoto = value
 	}
 	if b.Flags.Has(5) {
 		value, err := DecodeDocument(buf)
 		if err != nil {
-			return fmt.Errorf("unable to decode botInfo#8f300b57: field description_document: %w", err)
+			return fmt.Errorf("unable to decode botInfo#82437e74: field description_document: %w", err)
 		}
 		b.DescriptionDocument = value
 	}
 	if b.Flags.Has(2) {
 		headerLen, err := buf.VectorHeader()
 		if err != nil {
-			return fmt.Errorf("unable to decode botInfo#8f300b57: field commands: %w", err)
+			return fmt.Errorf("unable to decode botInfo#82437e74: field commands: %w", err)
 		}
 
 		if headerLen > 0 {
@@ -350,7 +393,7 @@ func (b *BotInfo) DecodeBare(buf *bin.Buffer) error {
 		for idx := 0; idx < headerLen; idx++ {
 			var value BotCommand
 			if err := value.Decode(buf); err != nil {
-				return fmt.Errorf("unable to decode botInfo#8f300b57: field commands: %w", err)
+				return fmt.Errorf("unable to decode botInfo#82437e74: field commands: %w", err)
 			}
 			b.Commands = append(b.Commands, value)
 		}
@@ -358,11 +401,37 @@ func (b *BotInfo) DecodeBare(buf *bin.Buffer) error {
 	if b.Flags.Has(3) {
 		value, err := DecodeBotMenuButton(buf)
 		if err != nil {
-			return fmt.Errorf("unable to decode botInfo#8f300b57: field menu_button: %w", err)
+			return fmt.Errorf("unable to decode botInfo#82437e74: field menu_button: %w", err)
 		}
 		b.MenuButton = value
 	}
+	if b.Flags.Has(7) {
+		value, err := buf.String()
+		if err != nil {
+			return fmt.Errorf("unable to decode botInfo#82437e74: field privacy_policy_url: %w", err)
+		}
+		b.PrivacyPolicyURL = value
+	}
 	return nil
+}
+
+// SetHasPreviewMedias sets value of HasPreviewMedias conditional field.
+func (b *BotInfo) SetHasPreviewMedias(value bool) {
+	if value {
+		b.Flags.Set(6)
+		b.HasPreviewMedias = true
+	} else {
+		b.Flags.Unset(6)
+		b.HasPreviewMedias = false
+	}
+}
+
+// GetHasPreviewMedias returns value of HasPreviewMedias conditional field.
+func (b *BotInfo) GetHasPreviewMedias() (value bool) {
+	if b == nil {
+		return
+	}
+	return b.Flags.Has(6)
 }
 
 // SetUserID sets value of UserID conditional field.
@@ -471,6 +540,24 @@ func (b *BotInfo) GetMenuButton() (value BotMenuButtonClass, ok bool) {
 		return value, false
 	}
 	return b.MenuButton, true
+}
+
+// SetPrivacyPolicyURL sets value of PrivacyPolicyURL conditional field.
+func (b *BotInfo) SetPrivacyPolicyURL(value string) {
+	b.Flags.Set(7)
+	b.PrivacyPolicyURL = value
+}
+
+// GetPrivacyPolicyURL returns value of PrivacyPolicyURL conditional field and
+// boolean which is true if field was set.
+func (b *BotInfo) GetPrivacyPolicyURL() (value string, ok bool) {
+	if b == nil {
+		return
+	}
+	if !b.Flags.Has(7) {
+		return value, false
+	}
+	return b.PrivacyPolicyURL, true
 }
 
 // GetDescriptionPhotoAsNotEmpty returns mapped value of DescriptionPhoto conditional field and

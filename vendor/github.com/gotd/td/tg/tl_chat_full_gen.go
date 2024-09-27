@@ -33,9 +33,13 @@ var (
 
 // ChatFull represents TL type `chatFull#2633421b`.
 // Full info about a basic group¹.
+// When updating the local peer database »¹, all fields from the newly received
+// constructor take priority over the old constructor cached locally (including by
+// removing fields that aren't set in the new constructor).
 //
 // Links:
 //  1. https://core.telegram.org/api/channel#basic-groups
+//  2. https://core.telegram.org/api/peers
 //
 // See https://core.telegram.org/constructor/chatFull for reference.
 type ChatFull struct {
@@ -128,7 +132,11 @@ type ChatFull struct {
 	//
 	// Use SetAvailableReactions and GetAvailableReactions helpers.
 	AvailableReactions ChatReactionsClass
-	// ReactionsLimit field of ChatFull.
+	// This flag may be used to impose a custom limit of unique reactions (i.e. a
+	// customizable version of appConfig.reactions_uniq_max¹).
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/config#reactions-uniq-max
 	//
 	// Use SetReactionsLimit and GetReactionsLimit helpers.
 	ReactionsLimit int
@@ -1077,11 +1085,15 @@ func (c *ChatFull) GetReactionsLimit() (value int, ok bool) {
 
 // ChannelFull represents TL type `channelFull#bbab348d`.
 // Full info about a channel¹, supergroup² or gigagroup³.
+// When updating the local peer database »¹, all fields from the newly received
+// constructor take priority over the old constructor cached locally (including by
+// removing fields that aren't set in the new constructor).
 //
 // Links:
 //  1. https://core.telegram.org/api/channel#channels
 //  2. https://core.telegram.org/api/channel#supergroups
 //  3. https://core.telegram.org/api/channel#gigagroups
+//  4. https://core.telegram.org/api/peers
 //
 // See https://core.telegram.org/constructor/channelFull for reference.
 type ChannelFull struct {
@@ -1150,10 +1162,29 @@ type ChannelFull struct {
 	//  1) https://core.telegram.org/api/forum
 	//  2) https://core.telegram.org/method/channels.toggleViewForumAsMessages
 	ViewForumAsMessages bool
-	// RestrictedSponsored field of ChannelFull.
+	// Whether ads on this channel were disabled as specified here »¹ (this flag is only
+	// visible to the owner of the channel).
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/boost#disable-ads-on-the-channel
 	RestrictedSponsored bool
-	// CanViewRevenue field of ChannelFull.
+	// If set, this user can view ad revenue statistics »¹ for this channel.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/revenue#revenue-statistics
 	CanViewRevenue bool
+	// Whether the current user can send or forward paid media »¹ to this channel.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/paid-media
+	PaidMediaAllowed bool
+	// If set, this user can view Telegram Star revenue statistics »¹ for this channel.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/stars#revenue-statistics
+	CanViewStarsRevenue bool
+	// PaidReactionsAvailable field of ChannelFull.
+	PaidReactionsAvailable bool
 	// ID of the channel
 	ID int64
 	// Info about the channel
@@ -1236,7 +1267,8 @@ type ChannelFull struct {
 	//
 	// Use SetFolderID and GetFolderID helpers.
 	FolderID int
-	// ID of the linked discussion chat¹ for channels
+	// ID of the linked discussion chat¹ for channels (and vice versa, the ID of the linked
+	// channel for discussion chats).
 	//
 	// Links:
 	//  1) https://core.telegram.org/api/discussion
@@ -1316,7 +1348,11 @@ type ChannelFull struct {
 	//
 	// Use SetAvailableReactions and GetAvailableReactions helpers.
 	AvailableReactions ChatReactionsClass
-	// ReactionsLimit field of ChannelFull.
+	// This flag may be used to impose a custom limit of unique reactions (i.e. a
+	// customizable version of appConfig.reactions_uniq_max¹).
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/config#reactions-uniq-max
 	//
 	// Use SetReactionsLimit and GetReactionsLimit helpers.
 	ReactionsLimit int
@@ -1334,15 +1370,30 @@ type ChannelFull struct {
 	//
 	// Use SetWallpaper and GetWallpaper helpers.
 	Wallpaper WallPaperClass
-	// BoostsApplied field of ChannelFull.
+	// The number of boosts¹ the current user has applied to the current supergroup.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/boost
 	//
 	// Use SetBoostsApplied and GetBoostsApplied helpers.
 	BoostsApplied int
-	// BoostsUnrestrict field of ChannelFull.
+	// The number of boosts¹ this supergroup requires to bypass slowmode and other
+	// restrictions, see here »² for more info.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/boost
+	//  2) https://core.telegram.org/api/boost#bypass-slowmode-and-chat-restrictions
 	//
 	// Use SetBoostsUnrestrict and GetBoostsUnrestrict helpers.
 	BoostsUnrestrict int
-	// Emojiset field of ChannelFull.
+	// Custom emoji stickerset¹ associated to the current supergroup, set using channels
+	// setEmojiStickers² after reaching the appropriate boost level, see here »³ for more
+	// info.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/custom-emoji
+	//  2) https://core.telegram.org/method/channels.setEmojiStickers
+	//  3) https://core.telegram.org/api/boost#setting-a-custom-emoji-stickerset-for-supergroups
 	//
 	// Use SetEmojiset and GetEmojiset helpers.
 	Emojiset StickerSet
@@ -1420,6 +1471,15 @@ func (c *ChannelFull) Zero() bool {
 		return false
 	}
 	if !(c.CanViewRevenue == false) {
+		return false
+	}
+	if !(c.PaidMediaAllowed == false) {
+		return false
+	}
+	if !(c.CanViewStarsRevenue == false) {
+		return false
+	}
+	if !(c.PaidReactionsAvailable == false) {
 		return false
 	}
 	if !(c.ID == 0) {
@@ -1576,6 +1636,9 @@ func (c *ChannelFull) FillFrom(from interface {
 	GetViewForumAsMessages() (value bool)
 	GetRestrictedSponsored() (value bool)
 	GetCanViewRevenue() (value bool)
+	GetPaidMediaAllowed() (value bool)
+	GetCanViewStarsRevenue() (value bool)
+	GetPaidReactionsAvailable() (value bool)
 	GetID() (value int64)
 	GetAbout() (value string)
 	GetParticipantsCount() (value int, ok bool)
@@ -1634,6 +1697,9 @@ func (c *ChannelFull) FillFrom(from interface {
 	c.ViewForumAsMessages = from.GetViewForumAsMessages()
 	c.RestrictedSponsored = from.GetRestrictedSponsored()
 	c.CanViewRevenue = from.GetCanViewRevenue()
+	c.PaidMediaAllowed = from.GetPaidMediaAllowed()
+	c.CanViewStarsRevenue = from.GetCanViewStarsRevenue()
+	c.PaidReactionsAvailable = from.GetPaidReactionsAvailable()
 	c.ID = from.GetID()
 	c.About = from.GetAbout()
 	if val, ok := from.GetParticipantsCount(); ok {
@@ -1875,6 +1941,21 @@ func (c *ChannelFull) TypeInfo() tdp.Type {
 			Name:       "CanViewRevenue",
 			SchemaName: "can_view_revenue",
 			Null:       !c.Flags2.Has(12),
+		},
+		{
+			Name:       "PaidMediaAllowed",
+			SchemaName: "paid_media_allowed",
+			Null:       !c.Flags2.Has(14),
+		},
+		{
+			Name:       "CanViewStarsRevenue",
+			SchemaName: "can_view_stars_revenue",
+			Null:       !c.Flags2.Has(15),
+		},
+		{
+			Name:       "PaidReactionsAvailable",
+			SchemaName: "paid_reactions_available",
+			Null:       !c.Flags2.Has(16),
 		},
 		{
 			Name:       "ID",
@@ -2125,6 +2206,15 @@ func (c *ChannelFull) SetFlags() {
 	}
 	if !(c.CanViewRevenue == false) {
 		c.Flags2.Set(12)
+	}
+	if !(c.PaidMediaAllowed == false) {
+		c.Flags2.Set(14)
+	}
+	if !(c.CanViewStarsRevenue == false) {
+		c.Flags2.Set(15)
+	}
+	if !(c.PaidReactionsAvailable == false) {
+		c.Flags2.Set(16)
 	}
 	if !(c.ParticipantsCount == 0) {
 		c.Flags.Set(0)
@@ -2451,6 +2541,9 @@ func (c *ChannelFull) DecodeBare(b *bin.Buffer) error {
 	c.ViewForumAsMessages = c.Flags2.Has(6)
 	c.RestrictedSponsored = c.Flags2.Has(11)
 	c.CanViewRevenue = c.Flags2.Has(12)
+	c.PaidMediaAllowed = c.Flags2.Has(14)
+	c.CanViewStarsRevenue = c.Flags2.Has(15)
+	c.PaidReactionsAvailable = c.Flags2.Has(16)
 	{
 		value, err := b.Long()
 		if err != nil {
@@ -3063,6 +3156,63 @@ func (c *ChannelFull) GetCanViewRevenue() (value bool) {
 		return
 	}
 	return c.Flags2.Has(12)
+}
+
+// SetPaidMediaAllowed sets value of PaidMediaAllowed conditional field.
+func (c *ChannelFull) SetPaidMediaAllowed(value bool) {
+	if value {
+		c.Flags2.Set(14)
+		c.PaidMediaAllowed = true
+	} else {
+		c.Flags2.Unset(14)
+		c.PaidMediaAllowed = false
+	}
+}
+
+// GetPaidMediaAllowed returns value of PaidMediaAllowed conditional field.
+func (c *ChannelFull) GetPaidMediaAllowed() (value bool) {
+	if c == nil {
+		return
+	}
+	return c.Flags2.Has(14)
+}
+
+// SetCanViewStarsRevenue sets value of CanViewStarsRevenue conditional field.
+func (c *ChannelFull) SetCanViewStarsRevenue(value bool) {
+	if value {
+		c.Flags2.Set(15)
+		c.CanViewStarsRevenue = true
+	} else {
+		c.Flags2.Unset(15)
+		c.CanViewStarsRevenue = false
+	}
+}
+
+// GetCanViewStarsRevenue returns value of CanViewStarsRevenue conditional field.
+func (c *ChannelFull) GetCanViewStarsRevenue() (value bool) {
+	if c == nil {
+		return
+	}
+	return c.Flags2.Has(15)
+}
+
+// SetPaidReactionsAvailable sets value of PaidReactionsAvailable conditional field.
+func (c *ChannelFull) SetPaidReactionsAvailable(value bool) {
+	if value {
+		c.Flags2.Set(16)
+		c.PaidReactionsAvailable = true
+	} else {
+		c.Flags2.Unset(16)
+		c.PaidReactionsAvailable = false
+	}
+}
+
+// GetPaidReactionsAvailable returns value of PaidReactionsAvailable conditional field.
+func (c *ChannelFull) GetPaidReactionsAvailable() (value bool) {
+	if c == nil {
+		return
+	}
+	return c.Flags2.Has(16)
 }
 
 // GetID returns value of ID field.
@@ -3818,7 +3968,11 @@ type ChatFullClass interface {
 	//  1) https://core.telegram.org/api/reactions
 	GetAvailableReactions() (value ChatReactionsClass, ok bool)
 
-	// ReactionsLimit field of ChatFull.
+	// This flag may be used to impose a custom limit of unique reactions (i.e. a
+	// customizable version of appConfig.reactions_uniq_max¹).
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/config#reactions-uniq-max
 	GetReactionsLimit() (value int, ok bool)
 }
 

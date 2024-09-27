@@ -1689,6 +1689,58 @@ func (s UpdateClassArray) AsUpdateStarsBalance() (to UpdateStarsBalanceArray) {
 	return to
 }
 
+// AsUpdateBusinessBotCallbackQuery returns copy with only UpdateBusinessBotCallbackQuery constructors.
+func (s UpdateClassArray) AsUpdateBusinessBotCallbackQuery() (to UpdateBusinessBotCallbackQueryArray) {
+	for _, elem := range s {
+		value, ok := elem.(*UpdateBusinessBotCallbackQuery)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsUpdateStarsRevenueStatus returns copy with only UpdateStarsRevenueStatus constructors.
+func (s UpdateClassArray) AsUpdateStarsRevenueStatus() (to UpdateStarsRevenueStatusArray) {
+	for _, elem := range s {
+		value, ok := elem.(*UpdateStarsRevenueStatus)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsUpdateBotPurchasedPaidMedia returns copy with only UpdateBotPurchasedPaidMedia constructors.
+func (s UpdateClassArray) AsUpdateBotPurchasedPaidMedia() (to UpdateBotPurchasedPaidMediaArray) {
+	for _, elem := range s {
+		value, ok := elem.(*UpdateBotPurchasedPaidMedia)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsUpdatePaidReactionPrivacy returns copy with only UpdatePaidReactionPrivacy constructors.
+func (s UpdateClassArray) AsUpdatePaidReactionPrivacy() (to UpdatePaidReactionPrivacyArray) {
+	for _, elem := range s {
+		value, ok := elem.(*UpdatePaidReactionPrivacy)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
 // UpdateNewMessageArray is adapter for slice of UpdateNewMessage.
 type UpdateNewMessageArray []UpdateNewMessage
 
@@ -11865,6 +11917,334 @@ func (s *UpdateStarsBalanceArray) PopFirst() (v UpdateStarsBalance, ok bool) {
 
 // Pop returns last element of slice (if exists) and deletes it.
 func (s *UpdateStarsBalanceArray) Pop() (v UpdateStarsBalance, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// UpdateBusinessBotCallbackQueryArray is adapter for slice of UpdateBusinessBotCallbackQuery.
+type UpdateBusinessBotCallbackQueryArray []UpdateBusinessBotCallbackQuery
+
+// Sort sorts slice of UpdateBusinessBotCallbackQuery.
+func (s UpdateBusinessBotCallbackQueryArray) Sort(less func(a, b UpdateBusinessBotCallbackQuery) bool) UpdateBusinessBotCallbackQueryArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of UpdateBusinessBotCallbackQuery.
+func (s UpdateBusinessBotCallbackQueryArray) SortStable(less func(a, b UpdateBusinessBotCallbackQuery) bool) UpdateBusinessBotCallbackQueryArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of UpdateBusinessBotCallbackQuery.
+func (s UpdateBusinessBotCallbackQueryArray) Retain(keep func(x UpdateBusinessBotCallbackQuery) bool) UpdateBusinessBotCallbackQueryArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s UpdateBusinessBotCallbackQueryArray) First() (v UpdateBusinessBotCallbackQuery, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s UpdateBusinessBotCallbackQueryArray) Last() (v UpdateBusinessBotCallbackQuery, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *UpdateBusinessBotCallbackQueryArray) PopFirst() (v UpdateBusinessBotCallbackQuery, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero UpdateBusinessBotCallbackQuery
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *UpdateBusinessBotCallbackQueryArray) Pop() (v UpdateBusinessBotCallbackQuery, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// UpdateStarsRevenueStatusArray is adapter for slice of UpdateStarsRevenueStatus.
+type UpdateStarsRevenueStatusArray []UpdateStarsRevenueStatus
+
+// Sort sorts slice of UpdateStarsRevenueStatus.
+func (s UpdateStarsRevenueStatusArray) Sort(less func(a, b UpdateStarsRevenueStatus) bool) UpdateStarsRevenueStatusArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of UpdateStarsRevenueStatus.
+func (s UpdateStarsRevenueStatusArray) SortStable(less func(a, b UpdateStarsRevenueStatus) bool) UpdateStarsRevenueStatusArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of UpdateStarsRevenueStatus.
+func (s UpdateStarsRevenueStatusArray) Retain(keep func(x UpdateStarsRevenueStatus) bool) UpdateStarsRevenueStatusArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s UpdateStarsRevenueStatusArray) First() (v UpdateStarsRevenueStatus, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s UpdateStarsRevenueStatusArray) Last() (v UpdateStarsRevenueStatus, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *UpdateStarsRevenueStatusArray) PopFirst() (v UpdateStarsRevenueStatus, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero UpdateStarsRevenueStatus
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *UpdateStarsRevenueStatusArray) Pop() (v UpdateStarsRevenueStatus, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// UpdateBotPurchasedPaidMediaArray is adapter for slice of UpdateBotPurchasedPaidMedia.
+type UpdateBotPurchasedPaidMediaArray []UpdateBotPurchasedPaidMedia
+
+// Sort sorts slice of UpdateBotPurchasedPaidMedia.
+func (s UpdateBotPurchasedPaidMediaArray) Sort(less func(a, b UpdateBotPurchasedPaidMedia) bool) UpdateBotPurchasedPaidMediaArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of UpdateBotPurchasedPaidMedia.
+func (s UpdateBotPurchasedPaidMediaArray) SortStable(less func(a, b UpdateBotPurchasedPaidMedia) bool) UpdateBotPurchasedPaidMediaArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of UpdateBotPurchasedPaidMedia.
+func (s UpdateBotPurchasedPaidMediaArray) Retain(keep func(x UpdateBotPurchasedPaidMedia) bool) UpdateBotPurchasedPaidMediaArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s UpdateBotPurchasedPaidMediaArray) First() (v UpdateBotPurchasedPaidMedia, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s UpdateBotPurchasedPaidMediaArray) Last() (v UpdateBotPurchasedPaidMedia, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *UpdateBotPurchasedPaidMediaArray) PopFirst() (v UpdateBotPurchasedPaidMedia, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero UpdateBotPurchasedPaidMedia
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *UpdateBotPurchasedPaidMediaArray) Pop() (v UpdateBotPurchasedPaidMedia, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// UpdatePaidReactionPrivacyArray is adapter for slice of UpdatePaidReactionPrivacy.
+type UpdatePaidReactionPrivacyArray []UpdatePaidReactionPrivacy
+
+// Sort sorts slice of UpdatePaidReactionPrivacy.
+func (s UpdatePaidReactionPrivacyArray) Sort(less func(a, b UpdatePaidReactionPrivacy) bool) UpdatePaidReactionPrivacyArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of UpdatePaidReactionPrivacy.
+func (s UpdatePaidReactionPrivacyArray) SortStable(less func(a, b UpdatePaidReactionPrivacy) bool) UpdatePaidReactionPrivacyArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of UpdatePaidReactionPrivacy.
+func (s UpdatePaidReactionPrivacyArray) Retain(keep func(x UpdatePaidReactionPrivacy) bool) UpdatePaidReactionPrivacyArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s UpdatePaidReactionPrivacyArray) First() (v UpdatePaidReactionPrivacy, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s UpdatePaidReactionPrivacyArray) Last() (v UpdatePaidReactionPrivacy, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *UpdatePaidReactionPrivacyArray) PopFirst() (v UpdatePaidReactionPrivacy, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero UpdatePaidReactionPrivacy
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *UpdatePaidReactionPrivacyArray) Pop() (v UpdatePaidReactionPrivacy, ok bool) {
 	if s == nil || len(*s) < 1 {
 		return
 	}

@@ -59,8 +59,6 @@ message CallLogRecord {
 message WaffleAccountLinkStateAction {
 	enum AccountLinkState {
 		ACTIVE = 0;
-		PAUSED = 1;
-		UNLINKED = 2;
 	}
 
 	optional AccountLinkState linkState = 2;
@@ -114,6 +112,34 @@ message MarketingMessageAction {
 	optional int64 lastSentAt = 5;
 	optional bool isDeleted = 6;
 	optional string mediaID = 7;
+}
+
+message UsernameChatStartModeAction {
+	enum ChatStartMode {
+		LID = 1;
+		PN = 2;
+	}
+
+	optional ChatStartMode chatStartMode = 1;
+}
+
+message LabelEditAction {
+	enum ListType {
+		NONE = 0;
+		UNREAD = 1;
+		GROUPS = 2;
+		FAVORITES = 3;
+		PREDEFINED = 4;
+		CUSTOM = 5;
+	}
+
+	optional string name = 1;
+	optional int32 color = 2;
+	optional int32 predefinedID = 3;
+	optional bool deleted = 4;
+	optional int32 orderIndex = 5;
+	optional bool isActive = 6;
+	optional ListType type = 7;
 }
 
 message PatchDebugData {
@@ -195,9 +221,10 @@ message SyncActionValue {
 	optional PrivacySettingDisableLinkPreviewsAction privacySettingDisableLinkPreviewsAction = 53;
 	optional WAProtobufsDeviceCapabilities.DeviceCapabilities deviceCapabilities = 54;
 	optional NoteEditAction noteEditAction = 55;
-	optional FavoritesAction favorites = 56;
+	optional FavoritesAction favoritesAction = 56;
 	optional MerchantPaymentPartnerAction merchantPaymentPartnerAction = 57;
 	optional WaffleAccountLinkStateAction waffleAccountLinkStateAction = 58;
+	optional UsernameChatStartModeAction usernameChatStartMode = 59;
 }
 
 message FavoritesAction {
@@ -379,14 +406,6 @@ message ArchiveChatAction {
 
 message RecentEmojiWeightsAction {
 	repeated RecentEmojiWeight weights = 1;
-}
-
-message LabelEditAction {
-	optional string name = 1;
-	optional int32 color = 2;
-	optional int32 predefinedID = 3;
-	optional bool deleted = 4;
-	optional int32 orderIndex = 5;
 }
 
 message LabelAssociationAction {

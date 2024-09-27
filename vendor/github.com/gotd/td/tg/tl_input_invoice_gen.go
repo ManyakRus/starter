@@ -32,14 +32,15 @@ var (
 )
 
 // InputInvoiceMessage represents TL type `inputInvoiceMessage#c5b56859`.
-// An invoice contained in a messageMediaInvoice¹ message.
+// An invoice contained in a messageMediaInvoice¹ message or paid media »².
 //
 // Links:
 //  1. https://core.telegram.org/constructor/messageMediaInvoice
+//  2. https://core.telegram.org/api/paid-media
 //
 // See https://core.telegram.org/constructor/inputInvoiceMessage for reference.
 type InputInvoiceMessage struct {
-	// Chat where the invoice was sent
+	// Chat where the invoice/paid media was sent
 	Peer InputPeerClass
 	// Message ID
 	MsgID int
@@ -342,8 +343,8 @@ func (i *InputInvoiceSlug) GetSlug() (value string) {
 }
 
 // InputInvoicePremiumGiftCode represents TL type `inputInvoicePremiumGiftCode#98986c0d`.
-// Used if the user wishes to start a channel giveaway¹ or send some giftcodes² to
-// members of a channel, in exchange for boosts³.
+// Used if the user wishes to start a channel/supergroup giveaway¹ or send some
+// giftcodes² to members of a channel/supergroup, in exchange for boosts³.
 //
 // Links:
 //  1. https://core.telegram.org/api/giveaways
@@ -526,16 +527,25 @@ func (i *InputInvoicePremiumGiftCode) GetOption() (value PremiumGiftCodeOption) 
 	return i.Option
 }
 
-// InputInvoiceStars represents TL type `inputInvoiceStars#1da33ad8`.
+// InputInvoiceStars represents TL type `inputInvoiceStars#65f00ce3`.
+// Used to top up the Telegram Stars¹ balance of the current account or someone else's
+// account.
+//
+// Links:
+//  1. https://core.telegram.org/api/stars
 //
 // See https://core.telegram.org/constructor/inputInvoiceStars for reference.
 type InputInvoiceStars struct {
-	// Option field of InputInvoiceStars.
-	Option StarsTopupOption
+	// Either an inputStorePaymentStarsTopup¹ or an inputStorePaymentStarsGift².
+	//
+	// Links:
+	//  1) https://core.telegram.org/constructor/inputStorePaymentStarsTopup
+	//  2) https://core.telegram.org/constructor/inputStorePaymentStarsGift
+	Purpose InputStorePaymentPurposeClass
 }
 
 // InputInvoiceStarsTypeID is TL type id of InputInvoiceStars.
-const InputInvoiceStarsTypeID = 0x1da33ad8
+const InputInvoiceStarsTypeID = 0x65f00ce3
 
 // construct implements constructor of InputInvoiceClass.
 func (i InputInvoiceStars) construct() InputInvoiceClass { return &i }
@@ -554,7 +564,7 @@ func (i *InputInvoiceStars) Zero() bool {
 	if i == nil {
 		return true
 	}
-	if !(i.Option.Zero()) {
+	if !(i.Purpose == nil) {
 		return false
 	}
 
@@ -572,9 +582,9 @@ func (i *InputInvoiceStars) String() string {
 
 // FillFrom fills InputInvoiceStars from given interface.
 func (i *InputInvoiceStars) FillFrom(from interface {
-	GetOption() (value StarsTopupOption)
+	GetPurpose() (value InputStorePaymentPurposeClass)
 }) {
-	i.Option = from.GetOption()
+	i.Purpose = from.GetPurpose()
 }
 
 // TypeID returns type id in TL schema.
@@ -601,8 +611,8 @@ func (i *InputInvoiceStars) TypeInfo() tdp.Type {
 	}
 	typ.Fields = []tdp.Field{
 		{
-			Name:       "Option",
-			SchemaName: "option",
+			Name:       "Purpose",
+			SchemaName: "purpose",
 		},
 	}
 	return typ
@@ -611,7 +621,7 @@ func (i *InputInvoiceStars) TypeInfo() tdp.Type {
 // Encode implements bin.Encoder.
 func (i *InputInvoiceStars) Encode(b *bin.Buffer) error {
 	if i == nil {
-		return fmt.Errorf("can't encode inputInvoiceStars#1da33ad8 as nil")
+		return fmt.Errorf("can't encode inputInvoiceStars#65f00ce3 as nil")
 	}
 	b.PutID(InputInvoiceStarsTypeID)
 	return i.EncodeBare(b)
@@ -620,10 +630,13 @@ func (i *InputInvoiceStars) Encode(b *bin.Buffer) error {
 // EncodeBare implements bin.BareEncoder.
 func (i *InputInvoiceStars) EncodeBare(b *bin.Buffer) error {
 	if i == nil {
-		return fmt.Errorf("can't encode inputInvoiceStars#1da33ad8 as nil")
+		return fmt.Errorf("can't encode inputInvoiceStars#65f00ce3 as nil")
 	}
-	if err := i.Option.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode inputInvoiceStars#1da33ad8: field option: %w", err)
+	if i.Purpose == nil {
+		return fmt.Errorf("unable to encode inputInvoiceStars#65f00ce3: field purpose is nil")
+	}
+	if err := i.Purpose.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode inputInvoiceStars#65f00ce3: field purpose: %w", err)
 	}
 	return nil
 }
@@ -631,10 +644,10 @@ func (i *InputInvoiceStars) EncodeBare(b *bin.Buffer) error {
 // Decode implements bin.Decoder.
 func (i *InputInvoiceStars) Decode(b *bin.Buffer) error {
 	if i == nil {
-		return fmt.Errorf("can't decode inputInvoiceStars#1da33ad8 to nil")
+		return fmt.Errorf("can't decode inputInvoiceStars#65f00ce3 to nil")
 	}
 	if err := b.ConsumeID(InputInvoiceStarsTypeID); err != nil {
-		return fmt.Errorf("unable to decode inputInvoiceStars#1da33ad8: %w", err)
+		return fmt.Errorf("unable to decode inputInvoiceStars#65f00ce3: %w", err)
 	}
 	return i.DecodeBare(b)
 }
@@ -642,22 +655,158 @@ func (i *InputInvoiceStars) Decode(b *bin.Buffer) error {
 // DecodeBare implements bin.BareDecoder.
 func (i *InputInvoiceStars) DecodeBare(b *bin.Buffer) error {
 	if i == nil {
-		return fmt.Errorf("can't decode inputInvoiceStars#1da33ad8 to nil")
+		return fmt.Errorf("can't decode inputInvoiceStars#65f00ce3 to nil")
 	}
 	{
-		if err := i.Option.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode inputInvoiceStars#1da33ad8: field option: %w", err)
+		value, err := DecodeInputStorePaymentPurpose(b)
+		if err != nil {
+			return fmt.Errorf("unable to decode inputInvoiceStars#65f00ce3: field purpose: %w", err)
 		}
+		i.Purpose = value
 	}
 	return nil
 }
 
-// GetOption returns value of Option field.
-func (i *InputInvoiceStars) GetOption() (value StarsTopupOption) {
+// GetPurpose returns value of Purpose field.
+func (i *InputInvoiceStars) GetPurpose() (value InputStorePaymentPurposeClass) {
 	if i == nil {
 		return
 	}
-	return i.Option
+	return i.Purpose
+}
+
+// InputInvoiceChatInviteSubscription represents TL type `inputInvoiceChatInviteSubscription#34e793f1`.
+//
+// See https://core.telegram.org/constructor/inputInvoiceChatInviteSubscription for reference.
+type InputInvoiceChatInviteSubscription struct {
+	// Hash field of InputInvoiceChatInviteSubscription.
+	Hash string
+}
+
+// InputInvoiceChatInviteSubscriptionTypeID is TL type id of InputInvoiceChatInviteSubscription.
+const InputInvoiceChatInviteSubscriptionTypeID = 0x34e793f1
+
+// construct implements constructor of InputInvoiceClass.
+func (i InputInvoiceChatInviteSubscription) construct() InputInvoiceClass { return &i }
+
+// Ensuring interfaces in compile-time for InputInvoiceChatInviteSubscription.
+var (
+	_ bin.Encoder     = &InputInvoiceChatInviteSubscription{}
+	_ bin.Decoder     = &InputInvoiceChatInviteSubscription{}
+	_ bin.BareEncoder = &InputInvoiceChatInviteSubscription{}
+	_ bin.BareDecoder = &InputInvoiceChatInviteSubscription{}
+
+	_ InputInvoiceClass = &InputInvoiceChatInviteSubscription{}
+)
+
+func (i *InputInvoiceChatInviteSubscription) Zero() bool {
+	if i == nil {
+		return true
+	}
+	if !(i.Hash == "") {
+		return false
+	}
+
+	return true
+}
+
+// String implements fmt.Stringer.
+func (i *InputInvoiceChatInviteSubscription) String() string {
+	if i == nil {
+		return "InputInvoiceChatInviteSubscription(nil)"
+	}
+	type Alias InputInvoiceChatInviteSubscription
+	return fmt.Sprintf("InputInvoiceChatInviteSubscription%+v", Alias(*i))
+}
+
+// FillFrom fills InputInvoiceChatInviteSubscription from given interface.
+func (i *InputInvoiceChatInviteSubscription) FillFrom(from interface {
+	GetHash() (value string)
+}) {
+	i.Hash = from.GetHash()
+}
+
+// TypeID returns type id in TL schema.
+//
+// See https://core.telegram.org/mtproto/TL-tl#remarks.
+func (*InputInvoiceChatInviteSubscription) TypeID() uint32 {
+	return InputInvoiceChatInviteSubscriptionTypeID
+}
+
+// TypeName returns name of type in TL schema.
+func (*InputInvoiceChatInviteSubscription) TypeName() string {
+	return "inputInvoiceChatInviteSubscription"
+}
+
+// TypeInfo returns info about TL type.
+func (i *InputInvoiceChatInviteSubscription) TypeInfo() tdp.Type {
+	typ := tdp.Type{
+		Name: "inputInvoiceChatInviteSubscription",
+		ID:   InputInvoiceChatInviteSubscriptionTypeID,
+	}
+	if i == nil {
+		typ.Null = true
+		return typ
+	}
+	typ.Fields = []tdp.Field{
+		{
+			Name:       "Hash",
+			SchemaName: "hash",
+		},
+	}
+	return typ
+}
+
+// Encode implements bin.Encoder.
+func (i *InputInvoiceChatInviteSubscription) Encode(b *bin.Buffer) error {
+	if i == nil {
+		return fmt.Errorf("can't encode inputInvoiceChatInviteSubscription#34e793f1 as nil")
+	}
+	b.PutID(InputInvoiceChatInviteSubscriptionTypeID)
+	return i.EncodeBare(b)
+}
+
+// EncodeBare implements bin.BareEncoder.
+func (i *InputInvoiceChatInviteSubscription) EncodeBare(b *bin.Buffer) error {
+	if i == nil {
+		return fmt.Errorf("can't encode inputInvoiceChatInviteSubscription#34e793f1 as nil")
+	}
+	b.PutString(i.Hash)
+	return nil
+}
+
+// Decode implements bin.Decoder.
+func (i *InputInvoiceChatInviteSubscription) Decode(b *bin.Buffer) error {
+	if i == nil {
+		return fmt.Errorf("can't decode inputInvoiceChatInviteSubscription#34e793f1 to nil")
+	}
+	if err := b.ConsumeID(InputInvoiceChatInviteSubscriptionTypeID); err != nil {
+		return fmt.Errorf("unable to decode inputInvoiceChatInviteSubscription#34e793f1: %w", err)
+	}
+	return i.DecodeBare(b)
+}
+
+// DecodeBare implements bin.BareDecoder.
+func (i *InputInvoiceChatInviteSubscription) DecodeBare(b *bin.Buffer) error {
+	if i == nil {
+		return fmt.Errorf("can't decode inputInvoiceChatInviteSubscription#34e793f1 to nil")
+	}
+	{
+		value, err := b.String()
+		if err != nil {
+			return fmt.Errorf("unable to decode inputInvoiceChatInviteSubscription#34e793f1: field hash: %w", err)
+		}
+		i.Hash = value
+	}
+	return nil
+}
+
+// GetHash returns value of Hash field.
+func (i *InputInvoiceChatInviteSubscription) GetHash() (value string) {
+	if i == nil {
+		return
+	}
+	return i.Hash
 }
 
 // InputInvoiceClassName is schema name of InputInvoiceClass.
@@ -677,7 +826,8 @@ const InputInvoiceClassName = "InputInvoice"
 //	case *tg.InputInvoiceMessage: // inputInvoiceMessage#c5b56859
 //	case *tg.InputInvoiceSlug: // inputInvoiceSlug#c326caef
 //	case *tg.InputInvoicePremiumGiftCode: // inputInvoicePremiumGiftCode#98986c0d
-//	case *tg.InputInvoiceStars: // inputInvoiceStars#1da33ad8
+//	case *tg.InputInvoiceStars: // inputInvoiceStars#65f00ce3
+//	case *tg.InputInvoiceChatInviteSubscription: // inputInvoiceChatInviteSubscription#34e793f1
 //	default: panic(v)
 //	}
 type InputInvoiceClass interface {
@@ -728,8 +878,15 @@ func DecodeInputInvoice(buf *bin.Buffer) (InputInvoiceClass, error) {
 		}
 		return &v, nil
 	case InputInvoiceStarsTypeID:
-		// Decoding inputInvoiceStars#1da33ad8.
+		// Decoding inputInvoiceStars#65f00ce3.
 		v := InputInvoiceStars{}
+		if err := v.Decode(buf); err != nil {
+			return nil, fmt.Errorf("unable to decode InputInvoiceClass: %w", err)
+		}
+		return &v, nil
+	case InputInvoiceChatInviteSubscriptionTypeID:
+		// Decoding inputInvoiceChatInviteSubscription#34e793f1.
+		v := InputInvoiceChatInviteSubscription{}
 		if err := v.Decode(buf); err != nil {
 			return nil, fmt.Errorf("unable to decode InputInvoiceClass: %w", err)
 		}

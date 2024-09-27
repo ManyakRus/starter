@@ -268,7 +268,7 @@ func WaitStop() {
 // Start - необходимые процедуры для подключения к серверу email imap
 func Start() {
 	LoadEnv()
-	Connect_err()
+	Connect()
 
 	stopapp.GetWaitGroup_Main().Add(1)
 	go WaitStop()
@@ -286,7 +286,14 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	stopapp.SetWaitGroup_Main(WaitGroup)
 
 	//
-	Start()
+	LoadEnv()
+	err = Connect_err()
+	if err != nil {
+		return err
+	}
+
+	stopapp.GetWaitGroup_Main().Add(1)
+	go WaitStop()
 
 	return err
 }

@@ -233,7 +233,13 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	stopapp.SetWaitGroup_Main(WaitGroup)
 
 	//
-	StartDB()
+	err = Connect_err()
+	if err != nil {
+		return err
+	}
+
+	stopapp.GetWaitGroup_Main().Add(1)
+	go WaitStop()
 
 	return err
 }

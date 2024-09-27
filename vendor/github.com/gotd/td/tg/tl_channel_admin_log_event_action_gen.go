@@ -7396,12 +7396,16 @@ func (c *ChannelAdminLogEventActionChangeEmojiStatus) GetNewValue() (value Emoji
 }
 
 // ChannelAdminLogEventActionChangeEmojiStickerSet represents TL type `channelAdminLogEventActionChangeEmojiStickerSet#46d840ab`.
+// The supergroup's custom emoji stickerset¹ was changed.
+//
+// Links:
+//  1. https://core.telegram.org/api/boost#setting-a-custom-emoji-stickerset-for-supergroups
 //
 // See https://core.telegram.org/constructor/channelAdminLogEventActionChangeEmojiStickerSet for reference.
 type ChannelAdminLogEventActionChangeEmojiStickerSet struct {
-	// PrevStickerset field of ChannelAdminLogEventActionChangeEmojiStickerSet.
+	// Old value
 	PrevStickerset InputStickerSetClass
-	// NewStickerset field of ChannelAdminLogEventActionChangeEmojiStickerSet.
+	// New value
 	NewStickerset InputStickerSetClass
 }
 
@@ -7568,6 +7572,315 @@ func (c *ChannelAdminLogEventActionChangeEmojiStickerSet) GetNewStickerset() (va
 	return c.NewStickerset
 }
 
+// ChannelAdminLogEventActionToggleSignatureProfiles represents TL type `channelAdminLogEventActionToggleSignatureProfiles#60a79c79`.
+//
+// See https://core.telegram.org/constructor/channelAdminLogEventActionToggleSignatureProfiles for reference.
+type ChannelAdminLogEventActionToggleSignatureProfiles struct {
+	// NewValue field of ChannelAdminLogEventActionToggleSignatureProfiles.
+	NewValue bool
+}
+
+// ChannelAdminLogEventActionToggleSignatureProfilesTypeID is TL type id of ChannelAdminLogEventActionToggleSignatureProfiles.
+const ChannelAdminLogEventActionToggleSignatureProfilesTypeID = 0x60a79c79
+
+// construct implements constructor of ChannelAdminLogEventActionClass.
+func (c ChannelAdminLogEventActionToggleSignatureProfiles) construct() ChannelAdminLogEventActionClass {
+	return &c
+}
+
+// Ensuring interfaces in compile-time for ChannelAdminLogEventActionToggleSignatureProfiles.
+var (
+	_ bin.Encoder     = &ChannelAdminLogEventActionToggleSignatureProfiles{}
+	_ bin.Decoder     = &ChannelAdminLogEventActionToggleSignatureProfiles{}
+	_ bin.BareEncoder = &ChannelAdminLogEventActionToggleSignatureProfiles{}
+	_ bin.BareDecoder = &ChannelAdminLogEventActionToggleSignatureProfiles{}
+
+	_ ChannelAdminLogEventActionClass = &ChannelAdminLogEventActionToggleSignatureProfiles{}
+)
+
+func (c *ChannelAdminLogEventActionToggleSignatureProfiles) Zero() bool {
+	if c == nil {
+		return true
+	}
+	if !(c.NewValue == false) {
+		return false
+	}
+
+	return true
+}
+
+// String implements fmt.Stringer.
+func (c *ChannelAdminLogEventActionToggleSignatureProfiles) String() string {
+	if c == nil {
+		return "ChannelAdminLogEventActionToggleSignatureProfiles(nil)"
+	}
+	type Alias ChannelAdminLogEventActionToggleSignatureProfiles
+	return fmt.Sprintf("ChannelAdminLogEventActionToggleSignatureProfiles%+v", Alias(*c))
+}
+
+// FillFrom fills ChannelAdminLogEventActionToggleSignatureProfiles from given interface.
+func (c *ChannelAdminLogEventActionToggleSignatureProfiles) FillFrom(from interface {
+	GetNewValue() (value bool)
+}) {
+	c.NewValue = from.GetNewValue()
+}
+
+// TypeID returns type id in TL schema.
+//
+// See https://core.telegram.org/mtproto/TL-tl#remarks.
+func (*ChannelAdminLogEventActionToggleSignatureProfiles) TypeID() uint32 {
+	return ChannelAdminLogEventActionToggleSignatureProfilesTypeID
+}
+
+// TypeName returns name of type in TL schema.
+func (*ChannelAdminLogEventActionToggleSignatureProfiles) TypeName() string {
+	return "channelAdminLogEventActionToggleSignatureProfiles"
+}
+
+// TypeInfo returns info about TL type.
+func (c *ChannelAdminLogEventActionToggleSignatureProfiles) TypeInfo() tdp.Type {
+	typ := tdp.Type{
+		Name: "channelAdminLogEventActionToggleSignatureProfiles",
+		ID:   ChannelAdminLogEventActionToggleSignatureProfilesTypeID,
+	}
+	if c == nil {
+		typ.Null = true
+		return typ
+	}
+	typ.Fields = []tdp.Field{
+		{
+			Name:       "NewValue",
+			SchemaName: "new_value",
+		},
+	}
+	return typ
+}
+
+// Encode implements bin.Encoder.
+func (c *ChannelAdminLogEventActionToggleSignatureProfiles) Encode(b *bin.Buffer) error {
+	if c == nil {
+		return fmt.Errorf("can't encode channelAdminLogEventActionToggleSignatureProfiles#60a79c79 as nil")
+	}
+	b.PutID(ChannelAdminLogEventActionToggleSignatureProfilesTypeID)
+	return c.EncodeBare(b)
+}
+
+// EncodeBare implements bin.BareEncoder.
+func (c *ChannelAdminLogEventActionToggleSignatureProfiles) EncodeBare(b *bin.Buffer) error {
+	if c == nil {
+		return fmt.Errorf("can't encode channelAdminLogEventActionToggleSignatureProfiles#60a79c79 as nil")
+	}
+	b.PutBool(c.NewValue)
+	return nil
+}
+
+// Decode implements bin.Decoder.
+func (c *ChannelAdminLogEventActionToggleSignatureProfiles) Decode(b *bin.Buffer) error {
+	if c == nil {
+		return fmt.Errorf("can't decode channelAdminLogEventActionToggleSignatureProfiles#60a79c79 to nil")
+	}
+	if err := b.ConsumeID(ChannelAdminLogEventActionToggleSignatureProfilesTypeID); err != nil {
+		return fmt.Errorf("unable to decode channelAdminLogEventActionToggleSignatureProfiles#60a79c79: %w", err)
+	}
+	return c.DecodeBare(b)
+}
+
+// DecodeBare implements bin.BareDecoder.
+func (c *ChannelAdminLogEventActionToggleSignatureProfiles) DecodeBare(b *bin.Buffer) error {
+	if c == nil {
+		return fmt.Errorf("can't decode channelAdminLogEventActionToggleSignatureProfiles#60a79c79 to nil")
+	}
+	{
+		value, err := b.Bool()
+		if err != nil {
+			return fmt.Errorf("unable to decode channelAdminLogEventActionToggleSignatureProfiles#60a79c79: field new_value: %w", err)
+		}
+		c.NewValue = value
+	}
+	return nil
+}
+
+// GetNewValue returns value of NewValue field.
+func (c *ChannelAdminLogEventActionToggleSignatureProfiles) GetNewValue() (value bool) {
+	if c == nil {
+		return
+	}
+	return c.NewValue
+}
+
+// ChannelAdminLogEventActionParticipantSubExtend represents TL type `channelAdminLogEventActionParticipantSubExtend#64642db3`.
+//
+// See https://core.telegram.org/constructor/channelAdminLogEventActionParticipantSubExtend for reference.
+type ChannelAdminLogEventActionParticipantSubExtend struct {
+	// PrevParticipant field of ChannelAdminLogEventActionParticipantSubExtend.
+	PrevParticipant ChannelParticipantClass
+	// NewParticipant field of ChannelAdminLogEventActionParticipantSubExtend.
+	NewParticipant ChannelParticipantClass
+}
+
+// ChannelAdminLogEventActionParticipantSubExtendTypeID is TL type id of ChannelAdminLogEventActionParticipantSubExtend.
+const ChannelAdminLogEventActionParticipantSubExtendTypeID = 0x64642db3
+
+// construct implements constructor of ChannelAdminLogEventActionClass.
+func (c ChannelAdminLogEventActionParticipantSubExtend) construct() ChannelAdminLogEventActionClass {
+	return &c
+}
+
+// Ensuring interfaces in compile-time for ChannelAdminLogEventActionParticipantSubExtend.
+var (
+	_ bin.Encoder     = &ChannelAdminLogEventActionParticipantSubExtend{}
+	_ bin.Decoder     = &ChannelAdminLogEventActionParticipantSubExtend{}
+	_ bin.BareEncoder = &ChannelAdminLogEventActionParticipantSubExtend{}
+	_ bin.BareDecoder = &ChannelAdminLogEventActionParticipantSubExtend{}
+
+	_ ChannelAdminLogEventActionClass = &ChannelAdminLogEventActionParticipantSubExtend{}
+)
+
+func (c *ChannelAdminLogEventActionParticipantSubExtend) Zero() bool {
+	if c == nil {
+		return true
+	}
+	if !(c.PrevParticipant == nil) {
+		return false
+	}
+	if !(c.NewParticipant == nil) {
+		return false
+	}
+
+	return true
+}
+
+// String implements fmt.Stringer.
+func (c *ChannelAdminLogEventActionParticipantSubExtend) String() string {
+	if c == nil {
+		return "ChannelAdminLogEventActionParticipantSubExtend(nil)"
+	}
+	type Alias ChannelAdminLogEventActionParticipantSubExtend
+	return fmt.Sprintf("ChannelAdminLogEventActionParticipantSubExtend%+v", Alias(*c))
+}
+
+// FillFrom fills ChannelAdminLogEventActionParticipantSubExtend from given interface.
+func (c *ChannelAdminLogEventActionParticipantSubExtend) FillFrom(from interface {
+	GetPrevParticipant() (value ChannelParticipantClass)
+	GetNewParticipant() (value ChannelParticipantClass)
+}) {
+	c.PrevParticipant = from.GetPrevParticipant()
+	c.NewParticipant = from.GetNewParticipant()
+}
+
+// TypeID returns type id in TL schema.
+//
+// See https://core.telegram.org/mtproto/TL-tl#remarks.
+func (*ChannelAdminLogEventActionParticipantSubExtend) TypeID() uint32 {
+	return ChannelAdminLogEventActionParticipantSubExtendTypeID
+}
+
+// TypeName returns name of type in TL schema.
+func (*ChannelAdminLogEventActionParticipantSubExtend) TypeName() string {
+	return "channelAdminLogEventActionParticipantSubExtend"
+}
+
+// TypeInfo returns info about TL type.
+func (c *ChannelAdminLogEventActionParticipantSubExtend) TypeInfo() tdp.Type {
+	typ := tdp.Type{
+		Name: "channelAdminLogEventActionParticipantSubExtend",
+		ID:   ChannelAdminLogEventActionParticipantSubExtendTypeID,
+	}
+	if c == nil {
+		typ.Null = true
+		return typ
+	}
+	typ.Fields = []tdp.Field{
+		{
+			Name:       "PrevParticipant",
+			SchemaName: "prev_participant",
+		},
+		{
+			Name:       "NewParticipant",
+			SchemaName: "new_participant",
+		},
+	}
+	return typ
+}
+
+// Encode implements bin.Encoder.
+func (c *ChannelAdminLogEventActionParticipantSubExtend) Encode(b *bin.Buffer) error {
+	if c == nil {
+		return fmt.Errorf("can't encode channelAdminLogEventActionParticipantSubExtend#64642db3 as nil")
+	}
+	b.PutID(ChannelAdminLogEventActionParticipantSubExtendTypeID)
+	return c.EncodeBare(b)
+}
+
+// EncodeBare implements bin.BareEncoder.
+func (c *ChannelAdminLogEventActionParticipantSubExtend) EncodeBare(b *bin.Buffer) error {
+	if c == nil {
+		return fmt.Errorf("can't encode channelAdminLogEventActionParticipantSubExtend#64642db3 as nil")
+	}
+	if c.PrevParticipant == nil {
+		return fmt.Errorf("unable to encode channelAdminLogEventActionParticipantSubExtend#64642db3: field prev_participant is nil")
+	}
+	if err := c.PrevParticipant.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode channelAdminLogEventActionParticipantSubExtend#64642db3: field prev_participant: %w", err)
+	}
+	if c.NewParticipant == nil {
+		return fmt.Errorf("unable to encode channelAdminLogEventActionParticipantSubExtend#64642db3: field new_participant is nil")
+	}
+	if err := c.NewParticipant.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode channelAdminLogEventActionParticipantSubExtend#64642db3: field new_participant: %w", err)
+	}
+	return nil
+}
+
+// Decode implements bin.Decoder.
+func (c *ChannelAdminLogEventActionParticipantSubExtend) Decode(b *bin.Buffer) error {
+	if c == nil {
+		return fmt.Errorf("can't decode channelAdminLogEventActionParticipantSubExtend#64642db3 to nil")
+	}
+	if err := b.ConsumeID(ChannelAdminLogEventActionParticipantSubExtendTypeID); err != nil {
+		return fmt.Errorf("unable to decode channelAdminLogEventActionParticipantSubExtend#64642db3: %w", err)
+	}
+	return c.DecodeBare(b)
+}
+
+// DecodeBare implements bin.BareDecoder.
+func (c *ChannelAdminLogEventActionParticipantSubExtend) DecodeBare(b *bin.Buffer) error {
+	if c == nil {
+		return fmt.Errorf("can't decode channelAdminLogEventActionParticipantSubExtend#64642db3 to nil")
+	}
+	{
+		value, err := DecodeChannelParticipant(b)
+		if err != nil {
+			return fmt.Errorf("unable to decode channelAdminLogEventActionParticipantSubExtend#64642db3: field prev_participant: %w", err)
+		}
+		c.PrevParticipant = value
+	}
+	{
+		value, err := DecodeChannelParticipant(b)
+		if err != nil {
+			return fmt.Errorf("unable to decode channelAdminLogEventActionParticipantSubExtend#64642db3: field new_participant: %w", err)
+		}
+		c.NewParticipant = value
+	}
+	return nil
+}
+
+// GetPrevParticipant returns value of PrevParticipant field.
+func (c *ChannelAdminLogEventActionParticipantSubExtend) GetPrevParticipant() (value ChannelParticipantClass) {
+	if c == nil {
+		return
+	}
+	return c.PrevParticipant
+}
+
+// GetNewParticipant returns value of NewParticipant field.
+func (c *ChannelAdminLogEventActionParticipantSubExtend) GetNewParticipant() (value ChannelParticipantClass) {
+	if c == nil {
+		return
+	}
+	return c.NewParticipant
+}
+
 // ChannelAdminLogEventActionClassName is schema name of ChannelAdminLogEventActionClass.
 const ChannelAdminLogEventActionClassName = "ChannelAdminLogEventAction"
 
@@ -7630,6 +7943,8 @@ const ChannelAdminLogEventActionClassName = "ChannelAdminLogEventAction"
 //	case *tg.ChannelAdminLogEventActionChangeWallpaper: // channelAdminLogEventActionChangeWallpaper#31bb5d52
 //	case *tg.ChannelAdminLogEventActionChangeEmojiStatus: // channelAdminLogEventActionChangeEmojiStatus#3ea9feb1
 //	case *tg.ChannelAdminLogEventActionChangeEmojiStickerSet: // channelAdminLogEventActionChangeEmojiStickerSet#46d840ab
+//	case *tg.ChannelAdminLogEventActionToggleSignatureProfiles: // channelAdminLogEventActionToggleSignatureProfiles#60a79c79
+//	case *tg.ChannelAdminLogEventActionParticipantSubExtend: // channelAdminLogEventActionParticipantSubExtend#64642db3
 //	default: panic(v)
 //	}
 type ChannelAdminLogEventActionClass interface {
@@ -7990,6 +8305,20 @@ func DecodeChannelAdminLogEventAction(buf *bin.Buffer) (ChannelAdminLogEventActi
 	case ChannelAdminLogEventActionChangeEmojiStickerSetTypeID:
 		// Decoding channelAdminLogEventActionChangeEmojiStickerSet#46d840ab.
 		v := ChannelAdminLogEventActionChangeEmojiStickerSet{}
+		if err := v.Decode(buf); err != nil {
+			return nil, fmt.Errorf("unable to decode ChannelAdminLogEventActionClass: %w", err)
+		}
+		return &v, nil
+	case ChannelAdminLogEventActionToggleSignatureProfilesTypeID:
+		// Decoding channelAdminLogEventActionToggleSignatureProfiles#60a79c79.
+		v := ChannelAdminLogEventActionToggleSignatureProfiles{}
+		if err := v.Decode(buf); err != nil {
+			return nil, fmt.Errorf("unable to decode ChannelAdminLogEventActionClass: %w", err)
+		}
+		return &v, nil
+	case ChannelAdminLogEventActionParticipantSubExtendTypeID:
+		// Decoding channelAdminLogEventActionParticipantSubExtend#64642db3.
+		v := ChannelAdminLogEventActionParticipantSubExtend{}
 		if err := v.Decode(buf); err != nil {
 			return nil, fmt.Errorf("unable to decode ChannelAdminLogEventActionClass: %w", err)
 		}

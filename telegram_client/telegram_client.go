@@ -833,7 +833,15 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, func_OnNewMessag
 	stopapp.SetWaitGroup_Main(WaitGroup)
 
 	//
-	StartTelegram(func_OnNewMessage)
+	CreateTelegramClient(func_OnNewMessage)
+
+	err = Connect_err(func_OnNewMessage)
+	if err != nil {
+		return err
+	}
+
+	stopapp.GetWaitGroup_Main().Add(1)
+	go WaitStop()
 
 	return err
 }

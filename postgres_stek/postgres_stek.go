@@ -292,7 +292,16 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, Connection conne
 	stopapp.SetWaitGroup_Main(WaitGroup)
 
 	//
-	StartDB(Connection)
+	err = Connect_err(Connection)
+	if err != nil {
+		return err
+	}
+
+	stopapp.GetWaitGroup_Main().Add(1)
+	go WaitStop()
+
+	stopapp.GetWaitGroup_Main().Add(1)
+	go ping_go()
 
 	return err
 }

@@ -161,10 +161,10 @@ func FillSettings(SERVICE_NAME string) {
 
 }
 
-// Start - Старт работы NATS Liveness
-func Start(ServiceName string) {
+// CheckSettingsNATS - проверяет наличие переменных окружения
+func CheckSettingsNATS() error {
+	var err error
 
-	// проверка нужен ли старт
 	NATS_HOST := os.Getenv("NATS_HOST")
 	NATS_PORT := os.Getenv("NATS_PORT")
 	if NATS_HOST == "" {
@@ -177,10 +177,23 @@ func Start(ServiceName string) {
 
 	if NATS_HOST == "" {
 		log.Error("Need fill BUS_LOCAL_HOST ! in os.ENV ")
-		return
+		return err
 	}
 	if NATS_PORT == "" {
 		log.Error("Need fill BUS_LOCAL_PORT ! in os.ENV ")
+		return err
+	}
+
+	return err
+}
+
+// Start - Старт работы NATS Liveness
+func Start(ServiceName string) {
+	var err error
+
+	//
+	err = CheckSettingsNATS()
+	if err != nil {
 		return
 	}
 
@@ -210,7 +223,26 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, ServiceName stri
 	stopapp.SetWaitGroup_Main(WaitGroup)
 
 	//
-	Start(ServiceName)
+	err = CheckSettingsNATS()
+	if err != nil {
+		return err
+	}
+
+	//
+	FillSettings(ServiceName)
+
+	err = Connect_err()
+	if err != nil {
+		return err
+	}
+
+	stopapp.GetWaitGroup_Main().Add(1)
+	go WaitStop()
+
+	Ticker = time.NewTicker(5 * time.Second)
+
+	stopapp.GetWaitGroup_Main().Add(1)
+	go SendMessages_go()
 
 	return err
 }

@@ -14,18 +14,25 @@ import (
 
 // Connect - подключение к NATS SyncExchange
 func Connect(ServiceName string) {
+	err := Connect_err(ServiceName)
+	if err != nil {
+		log.Panicln("Can not start NATS, server: ", nats_connect.Settings.NATS_HOST, " error: ", err)
+	} else {
+		log.Info("NATS connected. OK., server: ", nats_connect.Settings.NATS_HOST, ":", nats_connect.Settings.NATS_PORT, " error: ", err)
+	}
+}
+
+// Connect_err - подключение к NATS SyncExchange
+func Connect_err(ServiceName string) error {
 	var err error
 
 	nats_connect.FillSettings()
 	sNATS_PORT := (nats_connect.Settings.NATS_PORT)
 	url := "nats://" + nats_connect.Settings.NATS_HOST + ":" + sNATS_PORT
 
-	err = sync_exchange.InitSyncExchange(url, ServiceName)
-	if err != nil {
-		log.Panicln("Can not start NATS, server: ", nats_connect.Settings.NATS_HOST, " error: ", err)
-	}
+	err = sync_exchange.InitSyncExchange(url, ServiceName, "")
 
-	//return err
+	return err
 }
 
 // Start - необходимые процедуры для подключения к серверу Nats SyncExchange
@@ -50,7 +57,13 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, ServiceName stri
 	stopapp.SetWaitGroup_Main(WaitGroup)
 
 	//
-	Start(ServiceName)
+	err = Connect_err(ServiceName)
+	if err != nil {
+		return err
+	}
+
+	stopapp.GetWaitGroup_Main().Add(1)
+	go WaitStop()
 
 	return err
 }

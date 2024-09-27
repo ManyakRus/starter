@@ -10,6 +10,6 @@ const TIMEOUT_DB_SECONDS = 30
 
 const TEXT_RECORD_NOT_FOUND = "record not found"
 
-const TextCrudIsNotInit = "Need initializate crud with InitCrudTransport_GRPC() function at first."
+const TextCrudIsNotInit = "Need initializate crud with InitCrudTransport_DB() function at first."
 
 var ErrorCrudIsNotInit error = errors.New(TextCrudIsNotInit)

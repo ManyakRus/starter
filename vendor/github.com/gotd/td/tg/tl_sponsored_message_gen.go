@@ -31,7 +31,7 @@ var (
 	_ = tdjson.Encoder{}
 )
 
-// SponsoredMessage represents TL type `sponsoredMessage#bdedf566`.
+// SponsoredMessage represents TL type `sponsoredMessage#4d93a990`.
 // A sponsored message¹.
 //
 // Links:
@@ -46,32 +46,44 @@ type SponsoredMessage struct {
 	Flags bin.Fields
 	// Whether the message needs to be labeled as "recommended" instead of "sponsored"
 	Recommended bool
-	// CanReport field of SponsoredMessage.
+	// Whether this message can be reported as specified here »¹.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/sponsored-messages#reporting-sponsored-messages
 	CanReport bool
 	// Message ID
 	RandomID []byte
-	// URL field of SponsoredMessage.
+	// Contains the URL to open when the user clicks on the sponsored message.
 	URL string
-	// Title field of SponsoredMessage.
+	// Contains the title of the sponsored message.
 	Title string
 	// Sponsored message
 	Message string
-	// Message entities for styled text¹
+	// Message entities for styled text¹ in message.
 	//
 	// Links:
 	//  1) https://core.telegram.org/api/entities
 	//
 	// Use SetEntities and GetEntities helpers.
 	Entities []MessageEntityClass
-	// Photo field of SponsoredMessage.
+	// If set, contains a custom profile photo bubble that should be displayed for the
+	// sponsored message, like for messages sent in groups.
 	//
 	// Use SetPhoto and GetPhoto helpers.
 	Photo PhotoClass
-	// Color field of SponsoredMessage.
+	// Media field of SponsoredMessage.
+	//
+	// Use SetMedia and GetMedia helpers.
+	Media MessageMediaClass
+	// If set, the sponsored message should use the message accent color »¹ specified in
+	// color.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/colors
 	//
 	// Use SetColor and GetColor helpers.
 	Color PeerColor
-	// Text of the sponsored message button.
+	// Label of the sponsored message button.
 	ButtonText string
 	// If set, contains additional information about the sponsor to be shown along with the
 	// message.
@@ -86,7 +98,7 @@ type SponsoredMessage struct {
 }
 
 // SponsoredMessageTypeID is TL type id of SponsoredMessage.
-const SponsoredMessageTypeID = 0xbdedf566
+const SponsoredMessageTypeID = 0x4d93a990
 
 // Ensuring interfaces in compile-time for SponsoredMessage.
 var (
@@ -127,6 +139,9 @@ func (s *SponsoredMessage) Zero() bool {
 	if !(s.Photo == nil) {
 		return false
 	}
+	if !(s.Media == nil) {
+		return false
+	}
 	if !(s.Color.Zero()) {
 		return false
 	}
@@ -162,6 +177,7 @@ func (s *SponsoredMessage) FillFrom(from interface {
 	GetMessage() (value string)
 	GetEntities() (value []MessageEntityClass, ok bool)
 	GetPhoto() (value PhotoClass, ok bool)
+	GetMedia() (value MessageMediaClass, ok bool)
 	GetColor() (value PeerColor, ok bool)
 	GetButtonText() (value string)
 	GetSponsorInfo() (value string, ok bool)
@@ -179,6 +195,10 @@ func (s *SponsoredMessage) FillFrom(from interface {
 
 	if val, ok := from.GetPhoto(); ok {
 		s.Photo = val
+	}
+
+	if val, ok := from.GetMedia(); ok {
+		s.Media = val
 	}
 
 	if val, ok := from.GetColor(); ok {
@@ -256,6 +276,11 @@ func (s *SponsoredMessage) TypeInfo() tdp.Type {
 			Null:       !s.Flags.Has(6),
 		},
 		{
+			Name:       "Media",
+			SchemaName: "media",
+			Null:       !s.Flags.Has(14),
+		},
+		{
 			Name:       "Color",
 			SchemaName: "color",
 			Null:       !s.Flags.Has(13),
@@ -292,6 +317,9 @@ func (s *SponsoredMessage) SetFlags() {
 	if !(s.Photo == nil) {
 		s.Flags.Set(6)
 	}
+	if !(s.Media == nil) {
+		s.Flags.Set(14)
+	}
 	if !(s.Color.Zero()) {
 		s.Flags.Set(13)
 	}
@@ -306,7 +334,7 @@ func (s *SponsoredMessage) SetFlags() {
 // Encode implements bin.Encoder.
 func (s *SponsoredMessage) Encode(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't encode sponsoredMessage#bdedf566 as nil")
+		return fmt.Errorf("can't encode sponsoredMessage#4d93a990 as nil")
 	}
 	b.PutID(SponsoredMessageTypeID)
 	return s.EncodeBare(b)
@@ -315,11 +343,11 @@ func (s *SponsoredMessage) Encode(b *bin.Buffer) error {
 // EncodeBare implements bin.BareEncoder.
 func (s *SponsoredMessage) EncodeBare(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't encode sponsoredMessage#bdedf566 as nil")
+		return fmt.Errorf("can't encode sponsoredMessage#4d93a990 as nil")
 	}
 	s.SetFlags()
 	if err := s.Flags.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode sponsoredMessage#bdedf566: field flags: %w", err)
+		return fmt.Errorf("unable to encode sponsoredMessage#4d93a990: field flags: %w", err)
 	}
 	b.PutBytes(s.RandomID)
 	b.PutString(s.URL)
@@ -329,24 +357,32 @@ func (s *SponsoredMessage) EncodeBare(b *bin.Buffer) error {
 		b.PutVectorHeader(len(s.Entities))
 		for idx, v := range s.Entities {
 			if v == nil {
-				return fmt.Errorf("unable to encode sponsoredMessage#bdedf566: field entities element with index %d is nil", idx)
+				return fmt.Errorf("unable to encode sponsoredMessage#4d93a990: field entities element with index %d is nil", idx)
 			}
 			if err := v.Encode(b); err != nil {
-				return fmt.Errorf("unable to encode sponsoredMessage#bdedf566: field entities element with index %d: %w", idx, err)
+				return fmt.Errorf("unable to encode sponsoredMessage#4d93a990: field entities element with index %d: %w", idx, err)
 			}
 		}
 	}
 	if s.Flags.Has(6) {
 		if s.Photo == nil {
-			return fmt.Errorf("unable to encode sponsoredMessage#bdedf566: field photo is nil")
+			return fmt.Errorf("unable to encode sponsoredMessage#4d93a990: field photo is nil")
 		}
 		if err := s.Photo.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode sponsoredMessage#bdedf566: field photo: %w", err)
+			return fmt.Errorf("unable to encode sponsoredMessage#4d93a990: field photo: %w", err)
+		}
+	}
+	if s.Flags.Has(14) {
+		if s.Media == nil {
+			return fmt.Errorf("unable to encode sponsoredMessage#4d93a990: field media is nil")
+		}
+		if err := s.Media.Encode(b); err != nil {
+			return fmt.Errorf("unable to encode sponsoredMessage#4d93a990: field media: %w", err)
 		}
 	}
 	if s.Flags.Has(13) {
 		if err := s.Color.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode sponsoredMessage#bdedf566: field color: %w", err)
+			return fmt.Errorf("unable to encode sponsoredMessage#4d93a990: field color: %w", err)
 		}
 	}
 	b.PutString(s.ButtonText)
@@ -362,10 +398,10 @@ func (s *SponsoredMessage) EncodeBare(b *bin.Buffer) error {
 // Decode implements bin.Decoder.
 func (s *SponsoredMessage) Decode(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't decode sponsoredMessage#bdedf566 to nil")
+		return fmt.Errorf("can't decode sponsoredMessage#4d93a990 to nil")
 	}
 	if err := b.ConsumeID(SponsoredMessageTypeID); err != nil {
-		return fmt.Errorf("unable to decode sponsoredMessage#bdedf566: %w", err)
+		return fmt.Errorf("unable to decode sponsoredMessage#4d93a990: %w", err)
 	}
 	return s.DecodeBare(b)
 }
@@ -373,11 +409,11 @@ func (s *SponsoredMessage) Decode(b *bin.Buffer) error {
 // DecodeBare implements bin.BareDecoder.
 func (s *SponsoredMessage) DecodeBare(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't decode sponsoredMessage#bdedf566 to nil")
+		return fmt.Errorf("can't decode sponsoredMessage#4d93a990 to nil")
 	}
 	{
 		if err := s.Flags.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode sponsoredMessage#bdedf566: field flags: %w", err)
+			return fmt.Errorf("unable to decode sponsoredMessage#4d93a990: field flags: %w", err)
 		}
 	}
 	s.Recommended = s.Flags.Has(5)
@@ -385,35 +421,35 @@ func (s *SponsoredMessage) DecodeBare(b *bin.Buffer) error {
 	{
 		value, err := b.Bytes()
 		if err != nil {
-			return fmt.Errorf("unable to decode sponsoredMessage#bdedf566: field random_id: %w", err)
+			return fmt.Errorf("unable to decode sponsoredMessage#4d93a990: field random_id: %w", err)
 		}
 		s.RandomID = value
 	}
 	{
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode sponsoredMessage#bdedf566: field url: %w", err)
+			return fmt.Errorf("unable to decode sponsoredMessage#4d93a990: field url: %w", err)
 		}
 		s.URL = value
 	}
 	{
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode sponsoredMessage#bdedf566: field title: %w", err)
+			return fmt.Errorf("unable to decode sponsoredMessage#4d93a990: field title: %w", err)
 		}
 		s.Title = value
 	}
 	{
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode sponsoredMessage#bdedf566: field message: %w", err)
+			return fmt.Errorf("unable to decode sponsoredMessage#4d93a990: field message: %w", err)
 		}
 		s.Message = value
 	}
 	if s.Flags.Has(1) {
 		headerLen, err := b.VectorHeader()
 		if err != nil {
-			return fmt.Errorf("unable to decode sponsoredMessage#bdedf566: field entities: %w", err)
+			return fmt.Errorf("unable to decode sponsoredMessage#4d93a990: field entities: %w", err)
 		}
 
 		if headerLen > 0 {
@@ -422,7 +458,7 @@ func (s *SponsoredMessage) DecodeBare(b *bin.Buffer) error {
 		for idx := 0; idx < headerLen; idx++ {
 			value, err := DecodeMessageEntity(b)
 			if err != nil {
-				return fmt.Errorf("unable to decode sponsoredMessage#bdedf566: field entities: %w", err)
+				return fmt.Errorf("unable to decode sponsoredMessage#4d93a990: field entities: %w", err)
 			}
 			s.Entities = append(s.Entities, value)
 		}
@@ -430,33 +466,40 @@ func (s *SponsoredMessage) DecodeBare(b *bin.Buffer) error {
 	if s.Flags.Has(6) {
 		value, err := DecodePhoto(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode sponsoredMessage#bdedf566: field photo: %w", err)
+			return fmt.Errorf("unable to decode sponsoredMessage#4d93a990: field photo: %w", err)
 		}
 		s.Photo = value
 	}
+	if s.Flags.Has(14) {
+		value, err := DecodeMessageMedia(b)
+		if err != nil {
+			return fmt.Errorf("unable to decode sponsoredMessage#4d93a990: field media: %w", err)
+		}
+		s.Media = value
+	}
 	if s.Flags.Has(13) {
 		if err := s.Color.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode sponsoredMessage#bdedf566: field color: %w", err)
+			return fmt.Errorf("unable to decode sponsoredMessage#4d93a990: field color: %w", err)
 		}
 	}
 	{
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode sponsoredMessage#bdedf566: field button_text: %w", err)
+			return fmt.Errorf("unable to decode sponsoredMessage#4d93a990: field button_text: %w", err)
 		}
 		s.ButtonText = value
 	}
 	if s.Flags.Has(7) {
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode sponsoredMessage#bdedf566: field sponsor_info: %w", err)
+			return fmt.Errorf("unable to decode sponsoredMessage#4d93a990: field sponsor_info: %w", err)
 		}
 		s.SponsorInfo = value
 	}
 	if s.Flags.Has(8) {
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode sponsoredMessage#bdedf566: field additional_info: %w", err)
+			return fmt.Errorf("unable to decode sponsoredMessage#4d93a990: field additional_info: %w", err)
 		}
 		s.AdditionalInfo = value
 	}
@@ -567,6 +610,24 @@ func (s *SponsoredMessage) GetPhoto() (value PhotoClass, ok bool) {
 		return value, false
 	}
 	return s.Photo, true
+}
+
+// SetMedia sets value of Media conditional field.
+func (s *SponsoredMessage) SetMedia(value MessageMediaClass) {
+	s.Flags.Set(14)
+	s.Media = value
+}
+
+// GetMedia returns value of Media conditional field and
+// boolean which is true if field was set.
+func (s *SponsoredMessage) GetMedia() (value MessageMediaClass, ok bool) {
+	if s == nil {
+		return
+	}
+	if !s.Flags.Has(14) {
+		return value, false
+	}
+	return s.Media, true
 }
 
 // SetColor sets value of Color conditional field.

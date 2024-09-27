@@ -209,6 +209,23 @@ func (p *PostPolicy) SetContentTypeStartsWith(contentTypeStartsWith string) erro
 	return nil
 }
 
+// SetContentDisposition - Sets content-disposition of the object for this policy
+func (p *PostPolicy) SetContentDisposition(contentDisposition string) error {
+	if strings.TrimSpace(contentDisposition) == "" || contentDisposition == "" {
+		return errInvalidArgument("No content disposition specified.")
+	}
+	policyCond := policyCondition{
+		matchType: "eq",
+		condition: "$Content-Disposition",
+		value:     contentDisposition,
+	}
+	if err := p.addNewPolicy(policyCond); err != nil {
+		return err
+	}
+	p.formData["Content-Disposition"] = contentDisposition
+	return nil
+}
+
 // SetContentLengthRange - Set new min and max content length
 // condition for all incoming uploads.
 func (p *PostPolicy) SetContentLengthRange(min, max int64) error {
@@ -274,6 +291,25 @@ func (p *PostPolicy) SetUserMetadata(key, value string) error {
 	headerName := fmt.Sprintf("x-amz-meta-%s", key)
 	policyCond := policyCondition{
 		matchType: "eq",
+		condition: fmt.Sprintf("$%s", headerName),
+		value:     value,
+	}
+	if err := p.addNewPolicy(policyCond); err != nil {
+		return err
+	}
+	p.formData[headerName] = value
+	return nil
+}
+
+// SetUserMetadataStartsWith - Set how an user metadata should starts with.
+// Can be retrieved through a HEAD request or an event.
+func (p *PostPolicy) SetUserMetadataStartsWith(key, value string) error {
+	if strings.TrimSpace(key) == "" || key == "" {
+		return errInvalidArgument("Key is empty")
+	}
+	headerName := fmt.Sprintf("x-amz-meta-%s", key)
+	policyCond := policyCondition{
+		matchType: "starts-with",
 		condition: fmt.Sprintf("$%s", headerName),
 		value:     value,
 	}

@@ -12,6 +12,8 @@ import (
 
 // NetConn converts a *websocket.Conn into a net.Conn.
 //
+// Deprecated: coder now maintains this library at https://github.com/coder/websocket.
+//
 // It's for tunneling arbitrary protocols over WebSockets.
 // Few users of the library will need this but it's tricky to implement
 // correctly and so provided in the library.

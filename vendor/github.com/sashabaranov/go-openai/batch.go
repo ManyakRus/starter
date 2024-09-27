@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -66,7 +65,7 @@ type Batch struct {
 	Endpoint BatchEndpoint `json:"endpoint"`
 	Errors   *struct {
 		Object string `json:"object,omitempty"`
-		Data   struct {
+		Data   []struct {
 			Code    string  `json:"code,omitempty"`
 			Message string  `json:"message,omitempty"`
 			Param   *string `json:"param,omitempty"`
@@ -108,8 +107,6 @@ type BatchResponse struct {
 	httpHeader
 	Batch
 }
-
-var ErrUploadBatchFileFailed = errors.New("upload batch file failed")
 
 // CreateBatch — API call to Create batch.
 func (c *Client) CreateBatch(
@@ -202,7 +199,6 @@ func (c *Client) CreateBatchWithUploadFile(
 		Lines:    request.Lines,
 	})
 	if err != nil {
-		err = errors.Join(ErrUploadBatchFileFailed, err)
 		return
 	}
 	return c.CreateBatch(ctx, CreateBatchRequest{
