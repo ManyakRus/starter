@@ -82,9 +82,17 @@ func StartKafka() {
 func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	var err error
 
-	//запомним к себе контекст и WaitGroup
+	//запомним к себе контекст
 	contextmain.Ctx = ctx
+	if ctx == nil {
+		contextmain.GetContext()
+	}
+
+	//запомним к себе WaitGroup
 	stopapp.SetWaitGroup_Main(WaitGroup)
+	if WaitGroup == nil {
+		stopapp.StartWaitStop()
+	}
 
 	//
 	err = Connect_err()

@@ -233,9 +233,17 @@ func StartCamunda(HandleJob func(client worker.JobClient, job entities.Job), CAM
 func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, HandleJob func(client worker.JobClient, job entities.Job), CAMUNDA_JOBTYPE string, BPMN_filename string) error {
 	var err error
 
-	//запомним к себе контекст и WaitGroup
+	//запомним к себе контекст
 	contextmain.Ctx = ctx
+	if ctx == nil {
+		contextmain.GetContext()
+	}
+
+	//запомним к себе WaitGroup
 	stopapp.SetWaitGroup_Main(WaitGroup)
+	if WaitGroup == nil {
+		stopapp.StartWaitStop()
+	}
 
 	//
 	// var err error

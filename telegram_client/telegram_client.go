@@ -831,9 +831,17 @@ func StartTelegram(func_OnNewMessage func(ctx context.Context, entities tg.Entit
 func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, func_OnNewMessage func(ctx context.Context, entities tg.Entities, u *tg.UpdateNewMessage, Peer1 storage.Peer) error) error {
 	var err error
 
-	//запомним к себе контекст и WaitGroup
+	//запомним к себе контекст
 	contextmain.Ctx = ctx
+	if ctx == nil {
+		contextmain.GetContext()
+	}
+
+	//запомним к себе WaitGroup
 	stopapp.SetWaitGroup_Main(WaitGroup)
+	if WaitGroup == nil {
+		stopapp.StartWaitStop()
+	}
 
 	//
 	CreateTelegramClient(func_OnNewMessage)

@@ -94,7 +94,8 @@ func StopAppAndWait() {
 	if contextmain.CancelContext != nil {
 		contextmain.CancelContext()
 	} else {
-		os.Exit(0)
+		//os.Exit(0)
+		log.Warn("Context = nil")
 	}
 
 	GetWaitGroup_Main().Wait()
@@ -106,7 +107,9 @@ func WaitStop() {
 	select {
 	case <-SignalInterrupt:
 		log.Warn("Interrupt clean shutdown.")
-		contextmain.CancelContext()
+		if contextmain.CancelContext != nil {
+			contextmain.CancelContext()
+		}
 	case <-contextmain.GetContext().Done():
 		log.Warn("Context app is canceled.")
 	}
