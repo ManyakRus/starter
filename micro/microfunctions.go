@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"hash/fnv"
+	"os/exec"
 	"reflect"
 	"runtime"
 	"sort"
@@ -1003,4 +1004,34 @@ func Int32FromString(s string) (int32, error) {
 	Otvet = int32(Otvet64)
 
 	return Otvet, err
+}
+
+// ExecuteShellCommand - выполняет команду в shell, и возвращает строку результата
+func ExecuteShellCommand(TextCommand string, args ...string) (string, error) {
+	Otvet := ""
+	var err error
+
+	MassByte, err := exec.Command(TextCommand, args...).CombinedOutput()
+	Otvet = string(MassByte)
+	if err != nil {
+		return Otvet, err
+	}
+
+	return Otvet, err
+}
+
+// DeleteEndEndline - убирает в конце "\n"
+func DeleteEndEndline(Text string) string {
+	Otvet := Text
+
+	if Otvet == "" {
+		return Otvet
+	}
+
+	LastSymbol := Otvet[len(Otvet)-1:]
+	if LastSymbol == "\n" {
+		Otvet = Otvet[0 : len(Otvet)-1]
+	}
+
+	return Otvet
 }

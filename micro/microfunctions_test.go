@@ -935,3 +935,114 @@ func TestPause_ctx(t *testing.T) {
 		}
 	})
 }
+
+func TestExecuteShellCommand_EmptyCommand(t *testing.T) {
+	expected := ""
+	result, err := ExecuteShellCommand("")
+	if result != expected || err == nil {
+		t.Errorf("Expected empty result and non-nil error, but got result: %s, error: %v", result, err)
+	}
+}
+
+func TestExecuteShellCommand_ValidCommand(t *testing.T) {
+	expectedOutput := "Hello, World!"
+	cmd := "echo"
+	arg := "Hello, World!"
+
+	output, err := ExecuteShellCommand(cmd, arg)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+
+	if output != (expectedOutput + "\n") {
+		t.Errorf("Expected: %s, but got: %s", expectedOutput, output)
+	}
+}
+
+func TestExecuteShellCommand_InvalidCommand(t *testing.T) {
+	cmd := "invalidcommand"
+
+	_, err := ExecuteShellCommand(cmd)
+	if err == nil {
+		t.Error("Expected an error for invalid command, but got nil")
+	}
+}
+
+func TestExecuteShellCommand_Git(t *testing.T) {
+	//найдём список Хэшей коммитов
+	cmd := "git"
+	arg := make([]string, 0)
+	arg = append(arg, "rev-list")
+	arg = append(arg, "--all")
+	arg = append(arg, "--max-count=1")
+
+	output, err := ExecuteShellCommand(cmd, arg...)
+	if err != nil {
+		t.Errorf("TestExecuteShellCommand_Git() error: %v", err)
+		return
+	}
+
+	if output == "" {
+		t.Error("TestExecuteShellCommand_Git() error: Output=''")
+		return
+	}
+	MassHash0 := strings.Split(output, "\n")
+	MassHash := make([]string, 0)
+
+	for _, v := range MassHash0 {
+		if v == "" {
+			continue
+		}
+		MassHash = append(MassHash, v)
+	}
+
+	//найдём версии их Хэшей
+	cmd = "git"
+	arg = make([]string, 0)
+	arg = append(arg, "describe")
+	arg = append(arg, "--always")
+	arg = append(arg, "--tags")
+	arg = append(arg, MassHash...)
+
+	output, err = ExecuteShellCommand(cmd, arg...)
+	if err != nil {
+		t.Errorf("TestExecuteShellCommand_Git() error: %v", err)
+	}
+
+	if output == "" {
+		t.Error("TestExecuteShellCommand_Git() error: Output=''")
+	}
+}
+
+func TestDeleteEndEndline(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "Text ends with \\n",
+			input:    "example\n",
+			expected: "example",
+		},
+		{
+			name:     "Text does not end with \\n",
+			input:    "example",
+			expected: "example",
+		},
+		{
+			name:     "Empty string",
+			input:    "",
+			expected: "",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result := DeleteEndEndline(test.input)
+			if result != test.expected {
+				t.Errorf("Expected %s, but got %s", test.expected, result)
+			}
+		})
+	}
+}
