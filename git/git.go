@@ -1,11 +1,12 @@
 package git
 
 import (
+	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/micro"
 	"strings"
 )
 
-// Find_LastTagVersion - возвращает последнюю версию в гит, образцы:
+// Find_LastCommitVersion - возвращает последнюю версию в гит, образцы:
 // v1.2.159-15-ga4b0c32b
 // v1.2.159-14-gafa2f9b5
 // v1.2.159-13-g27f8c242
@@ -26,7 +27,7 @@ import (
 // v1.2.158-15-g1cbe3bc2
 // v1.2.158-14-gcf2bce22
 // v1.2.158-13-gc45d16a8
-func Find_LastTagVersion() (string, error) {
+func Find_LastCommitVersion() (string, error) {
 	Otvet := ""
 	var err error
 
@@ -71,4 +72,18 @@ func Find_LastTagVersion() (string, error) {
 	Otvet = micro.DeleteEndEndline(Otvet)
 
 	return Otvet, err
+}
+
+// Show_LastCommitVersion - Выводит в консоль последнюю версию коммита в git
+func Show_LastCommitVersion() {
+
+	Text := "git commit version: "
+	Otvet, err := Find_LastCommitVersion()
+	if err != nil {
+		Text = Text + err.Error()
+	} else {
+		Text = Text + Otvet
+	}
+
+	log.Info(Text)
 }
