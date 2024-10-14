@@ -1,12 +1,58 @@
 package git
 
 import (
+	_ "embed"
 	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/micro"
+	"strconv"
 	"strings"
+	"time"
 )
 
-// Find_LastCommitVersion - возвращает последнюю версию в гит, образцы:
+// Find_LastCommitHash - возвращает хэш последней версии в гит
+func Find_LastCommitHash() (string, error) {
+	Otvet := ""
+	var err error
+
+	//найдём версии их Хэшей
+	cmd := "git"
+	arg := make([]string, 0)
+	arg = append(arg, "rev-parse")
+	arg = append(arg, "HEAD")
+
+	Otvet, err = micro.ExecuteShellCommand(cmd, arg...)
+	if err != nil {
+		return Otvet, err
+	}
+
+	Otvet = micro.DeleteEndEndline(Otvet)
+
+	return Otvet, err
+}
+
+// Find_LastCommitDescribe - возвращает последнюю версию в гит, образцы:
+func Find_LastCommitDescribe() (string, error) {
+	Otvet := ""
+	var err error
+
+	//найдём версии их Хэшей
+	cmd := "git"
+	arg := make([]string, 0)
+	arg = append(arg, "describe")
+	arg = append(arg, "--long")
+	arg = append(arg, "--tags")
+
+	Otvet, err = micro.ExecuteShellCommand(cmd, arg...)
+	if err != nil {
+		return Otvet, err
+	}
+
+	Otvet = micro.DeleteEndEndline(Otvet)
+
+	return Otvet, err
+}
+
+// Find_CommitDescribe - возвращает последнюю версию в гит, образцы:
 // v1.2.159-15-ga4b0c32b
 // v1.2.159-14-gafa2f9b5
 // v1.2.159-13-g27f8c242
@@ -27,42 +73,17 @@ import (
 // v1.2.158-15-g1cbe3bc2
 // v1.2.158-14-gcf2bce22
 // v1.2.158-13-gc45d16a8
-func Find_LastCommitVersion() (string, error) {
+func Find_CommitDescribe(Hash string) (string, error) {
 	Otvet := ""
 	var err error
 
-	//найдём список Хэшей коммитов
+	//найдём версии их Хэшей
 	cmd := "git"
 	arg := make([]string, 0)
-	arg = append(arg, "rev-list")
-	arg = append(arg, "--all")
-	arg = append(arg, "--max-count=1")
-
-	output, err := micro.ExecuteShellCommand(cmd, arg...)
-	if err != nil {
-		return Otvet, err
-	}
-
-	if output == "" {
-		return Otvet, err
-	}
-	MassHash0 := strings.Split(output, "\n")
-	MassHash := make([]string, 0)
-
-	for _, v := range MassHash0 {
-		if v == "" {
-			continue
-		}
-		MassHash = append(MassHash, v)
-	}
-
-	//найдём версии их Хэшей
-	cmd = "git"
-	arg = make([]string, 0)
 	arg = append(arg, "describe")
-	arg = append(arg, "--always")
+	arg = append(arg, "--long")
 	arg = append(arg, "--tags")
-	arg = append(arg, MassHash...)
+	arg = append(arg, Hash)
 
 	Otvet, err = micro.ExecuteShellCommand(cmd, arg...)
 	if err != nil {
@@ -74,11 +95,109 @@ func Find_LastCommitVersion() (string, error) {
 	return Otvet, err
 }
 
+// Find_CommitTime - возвращает время последнего коммита
+func Find_CommitTime(Hash string) (time.Time, error) {
+	var Otvet time.Time
+	var err error
+
+	//найдём версии их Хэшей
+	cmd := "git"
+	arg := make([]string, 0)
+	arg = append(arg, "show")
+	arg = append(arg, "-s")
+	arg = append(arg, `--format="%ct"`)
+	arg = append(arg, Hash)
+
+	//время в формате строка число unix
+	sTime, err := micro.ExecuteShellCommand(cmd, arg...)
+	if err != nil {
+		return Otvet, err
+	}
+	sTime = strings.ReplaceAll(sTime, "\n", "")
+	sTime = strings.ReplaceAll(sTime, `"`, "")
+
+	//время в формате число unix
+	iTime, err := micro.Int64FromString(sTime)
+	if err != nil {
+		return Otvet, err
+	}
+
+	//время в формате time
+	Otvet = time.Unix(iTime, 0)
+
+	return Otvet, err
+}
+
+// Find_LastCommitTime - возвращает время последнего коммита
+func Find_LastCommitTime() (time.Time, error) {
+	var Otvet time.Time
+	var err error
+
+	//найдём версии их Хэшей
+	cmd := "git"
+	arg := make([]string, 0)
+	arg = append(arg, "show")
+	arg = append(arg, "-s")
+	arg = append(arg, `--format="%ct"`)
+
+	//время в формате строка число unix
+	sTime, err := micro.ExecuteShellCommand(cmd, arg...)
+	if err != nil {
+		return Otvet, err
+	}
+	sTime = strings.ReplaceAll(sTime, "\n", "")
+	sTime = strings.ReplaceAll(sTime, `"`, "")
+
+	//время в формате число unix
+	iTime, err := micro.Int64FromString(sTime)
+	if err != nil {
+		return Otvet, err
+	}
+
+	//время в формате time
+	Otvet = time.Unix(iTime, 0)
+
+	return Otvet, err
+}
+
+// Find_LastCommitHashes - возвращает массив последних коммитов в гит
+func Find_LastCommitHashes(count int) ([]string, error) {
+	MassOtvet := make([]string, 0)
+	var err error
+
+	//найдём список Хэшей коммитов
+	cmd := "git"
+	arg := make([]string, 0)
+	arg = append(arg, "rev-list")
+	arg = append(arg, "--all")
+	arg = append(arg, "--max-count="+strconv.Itoa(count))
+
+	output, err := micro.ExecuteShellCommand(cmd, arg...)
+	if err != nil {
+		return MassOtvet, err
+	}
+
+	if output == "" {
+		return MassOtvet, err
+	}
+	MassHash0 := strings.Split(output, "\n")
+
+	//уберём пустые строки
+	for _, v := range MassHash0 {
+		if v == "" {
+			continue
+		}
+		MassOtvet = append(MassOtvet, v)
+	}
+
+	return MassOtvet, err
+}
+
 // Show_LastCommitVersion - Выводит в консоль последнюю версию коммита в git
 func Show_LastCommitVersion() {
 
 	Text := "git commit version: "
-	Otvet, err := Find_LastCommitVersion()
+	Otvet, err := Find_LastCommitDescribe()
 	if err != nil {
 		Text = Text + err.Error()
 	} else {
