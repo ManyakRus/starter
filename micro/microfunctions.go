@@ -1035,3 +1035,120 @@ func DeleteEndEndline(Text string) string {
 
 	return Otvet
 }
+
+// Find_Directory_ModifiedTime - возвращает дату последнего изменения в папке internal
+func Find_Directory_ModifiedTime(FolderName string) (time.Time, error) {
+	var Otvet time.Time
+	var err error
+
+	dir := ProgramDir()
+	dir = dir + FolderName
+
+	ok, err := FileExists(dir)
+	if err != nil {
+		err = fmt.Errorf("Find_Directory_ModifiedTime() FileExists() error: %w", err)
+		return Otvet, err
+	}
+
+	if ok == false {
+		err = fmt.Errorf("Find_Directory_ModifiedTime() FileExists() error: file not exists: %s", dir)
+		return Otvet, err
+	}
+
+	//найдём дату папки
+	f, err := os.Open(dir)
+	if err != nil {
+		err = fmt.Errorf("Find_Directory_ModifiedTime() os.Open() error: %w", err)
+		return Otvet, err
+	}
+	defer f.Close()
+
+	stat, err := f.Stat()
+	if err != nil {
+		err = fmt.Errorf("Find_Directory_ModifiedTime() f.Stat() error: %w", err)
+		return Otvet, err
+	}
+
+	Otvet = stat.ModTime()
+
+	return Otvet, err
+}
+
+// Show_Repository_Code_ModifiedTime - выводит дату последнего изменения в папках cmd, internal, pkg, vendor
+func Show_Repository_Code_ModifiedTime() {
+	Date, err := Find_Repository_Code_ModifiedTime()
+	if err != nil {
+		println("Find_Repository_Code_ModifiedTime() error: ", err.Error())
+		return
+	}
+
+	if Date.IsZero() {
+		println("Last repository code modified time: not found")
+		return
+	}
+
+	println("Last repository code modified time: ", Date.String())
+
+}
+
+// Find_Repository_Code_ModifiedTime - возвращает дату последнего изменения в папках cmd, internal, pkg, vendor
+func Find_Repository_Code_ModifiedTime() (time.Time, error) {
+	var Otvet time.Time
+	var err error
+
+	//cmd
+	Time_cmd, err := Find_Directory_ModifiedTime("cmd")
+	if err != nil {
+		//return Otvet, err
+	}
+
+	//internal
+	Time_internal, err := Find_Directory_ModifiedTime("internal")
+	if err != nil {
+		//return Otvet, err
+	}
+
+	//pkg
+	Time_pkg, err := Find_Directory_ModifiedTime("pkg")
+	if err != nil {
+		//return Otvet, err
+	}
+
+	//vendor
+	Time_vendor, err := Find_Directory_ModifiedTime("vendor")
+	if err != nil {
+		//return Otvet, err
+	}
+
+	//выбираем максимальную дату
+	Otvet = TimeMax(Time_cmd, Time_internal, Time_pkg, Time_vendor)
+
+	return Otvet, err
+}
+
+// TimeMax - возвращает максимальную дату
+func TimeMax(x time.Time, y ...time.Time) time.Time {
+	maxTime := x
+	for _, val := range y {
+		if val.After(maxTime) {
+			maxTime = val
+		}
+	}
+	return maxTime
+}
+
+// TimeMin - возвращает минимальную дату
+func TimeMin(x time.Time, y ...time.Time) time.Time {
+	minTime := x
+	for _, val := range y {
+		if val.Before(minTime) {
+			minTime = val
+		}
+	}
+	return minTime
+}
+
+// Show_Version - выводит версию сервиса на экран
+func Show_Version(Version string) {
+	println("Service version: ", Version)
+}

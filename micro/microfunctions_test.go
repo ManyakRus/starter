@@ -1046,3 +1046,107 @@ func TestDeleteEndEndline(t *testing.T) {
 		})
 	}
 }
+
+func TestFind_ModifiedTime_Internal(t *testing.T) {
+	_, err := Find_Directory_ModifiedTime("vendor")
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestTimeMax(t *testing.T) {
+	// Testing when the first date is the maximum
+	x := time.Date(2023, 03, 13, 0, 0, 0, 0, time.UTC)
+	y1 := time.Date(2023, 03, 10, 0, 0, 0, 0, time.UTC)
+	y2 := time.Date(2023, 03, 11, 0, 0, 0, 0, time.UTC)
+	result := TimeMax(x, y1, y2)
+	if result != x {
+		t.Error("Expected first date as the maximum, but got: ", result)
+	}
+
+	// Testing when the last date is the maximum
+	x = time.Date(2023, 03, 10, 0, 0, 0, 0, time.UTC)
+	y1 = time.Date(2023, 03, 11, 0, 0, 0, 0, time.UTC)
+	y2 = time.Date(2023, 03, 12, 0, 0, 0, 0, time.UTC)
+	result = TimeMax(x, y1, y2)
+	if result != y2 {
+		t.Error("Expected last date as the maximum, but got: ", result)
+	}
+
+	// Testing when the middle date is the maximum
+	x = time.Date(2023, 03, 10, 0, 0, 0, 0, time.UTC)
+	y1 = time.Date(2023, 03, 12, 0, 0, 0, 0, time.UTC)
+	y2 = time.Date(2023, 03, 11, 0, 0, 0, 0, time.UTC)
+	result = TimeMax(x, y1, y2)
+	if result != y1 {
+		t.Error("Expected middle date as the maximum, but got: ", result)
+	}
+
+	// Testing when all dates are the same
+	x = time.Date(2023, 03, 10, 0, 0, 0, 0, time.UTC)
+	y1 = time.Date(2023, 03, 10, 0, 0, 0, 0, time.UTC)
+	y2 = time.Date(2023, 03, 10, 0, 0, 0, 0, time.UTC)
+	result = TimeMax(x, y1, y2)
+	if result != x {
+		t.Error("Expected all dates the same, should return the first date, but got: ", result)
+	}
+}
+
+func TestTimeMin(t *testing.T) {
+	// Case 1: Test when x is the only time provided
+	x := time.Date(2023, 3, 14, 12, 0, 0, 0, time.UTC)
+	result := TimeMin(x)
+	if result != x {
+		t.Errorf("Expected %v, but got %v", x, result)
+	}
+
+	// Case 2: Test when y is the only time provided
+	y := time.Date(2023, 3, 15, 12, 0, 0, 0, time.UTC)
+	result = TimeMin(y)
+	if result != y {
+		t.Errorf("Expected %v, but got %v", y, result)
+	}
+
+	// Case 3: Test when multiple times are provided and the minimum is in the middle
+	x = time.Date(2023, 3, 14, 12, 0, 0, 0, time.UTC)
+	y = time.Date(2023, 3, 15, 12, 0, 0, 0, time.UTC)
+	z := time.Date(2023, 3, 13, 12, 0, 0, 0, time.UTC)
+	result = TimeMin(x, y, z)
+	if result != z {
+		t.Errorf("Expected %v, but got %v", z, result)
+	}
+
+	// Case 4: Test when the minimum time is the first one provided
+	x = time.Date(2023, 3, 13, 12, 0, 0, 0, time.UTC)
+	y = time.Date(2023, 3, 15, 12, 0, 0, 0, time.UTC)
+	z = time.Date(2023, 3, 14, 12, 0, 0, 0, time.UTC)
+	result = TimeMin(x, y, z)
+	if result != x {
+		t.Errorf("Expected %v, but got %v", x, result)
+	}
+
+	// Case 5: Test when the minimum time is the last one provided
+	x = time.Date(2023, 3, 15, 12, 0, 0, 0, time.UTC)
+	y = time.Date(2023, 3, 14, 12, 0, 0, 0, time.UTC)
+	z = time.Date(2023, 3, 13, 12, 0, 0, 0, time.UTC)
+	result = TimeMin(x, y, z)
+	if result != z {
+		t.Errorf("Expected %v, but got %v", z, result)
+	}
+}
+
+func TestFind_Repository_Code_ModifiedTime(t *testing.T) {
+
+	_, err := Find_Repository_Code_ModifiedTime()
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestShow_Repository_Code_ModifiedTime(t *testing.T) {
+	Show_Repository_Code_ModifiedTime()
+}
+
+func TestShow_Version(t *testing.T) {
+	Show_Version("1")
+}
