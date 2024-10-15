@@ -9,17 +9,20 @@ NEW_REPO=github.com/ManyakRus/starter
 
 run:
 	clear
+	./make_version.sh
 	go build -race -o $(FILEAPP) $(FILEMAIN)
 	#	cd ./bin && \
 	./bin/app_race
 mod:
 	clear
+	./make_version.sh
 	go get -u ./...
 	go mod tidy -compat=1.22
 	go mod vendor
 	go fmt ./...
 build:
 	clear
+	./make_version.sh
 	go build -race -o $(FILEAPP) $(FILEMAIN)
 	cd ./cmd && \
 	./VersionToFile.py
@@ -46,6 +49,7 @@ conn:
 	image_connections ./ docs/connections.graphml $(SERVICENAME)
 lines:
 	clear
+	./make_version.sh
 	go_lines_count ./ ./docs/lines_count.txt 10
 licenses:
 	golicense -out-xlsx=./docs/licenses.xlsx $(FILEAPP)
