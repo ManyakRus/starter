@@ -27,7 +27,7 @@ type SettingsINI struct {
 }
 
 // WEBSERVER_PORT_DEFAULT - порт веб-сервера по умолчанию
-var WEBSERVER_PORT_DEFAULT = "3000"
+var WEBSERVER_PORT_DEFAULT = "80"
 
 // TEXT_OK - текст для ответа из веб-сервера
 const TEXT_OK = `{"status":"ok"}`
