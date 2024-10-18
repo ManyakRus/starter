@@ -4,4 +4,4 @@
 # v1.0.61 2024-10-14 14:25:20 +0300
 # git commit TAG + git commit HASH + git commit date and time
 
-echo $(git describe --tags $(git rev-parse HEAD)) $(git show --no-patch --format=%ci) >./pkg/version/version.txt
+echo $(git describe --always --tags $(git rev-parse HEAD)) $(git show --no-patch --format=%ci) >./pkg/version/version.txt
