@@ -13,3 +13,12 @@ func TestFindFolders(t *testing.T) {
 		t.Log("TestFindFolders() error: Otvet = nil")
 	}
 }
+
+func TestFindFiles_FromDirectory(t *testing.T) {
+
+	_, err := FindFiles_FromDirectory(micro.ProgramDir(), "")
+	if err != nil {
+		t.Log("TestFindFiles_FromDirectory() error: ", err)
+	}
+
+}
