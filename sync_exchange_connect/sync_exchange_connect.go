@@ -23,7 +23,7 @@ func LogInfo_Connected(err error) {
 	if err != nil {
 		log.Panicln("Can not start NATS, server: ", nats_connect.Settings.NATS_HOST, " error: ", err)
 	} else {
-		log.Info("NATS connected. OK., server: ", nats_connect.Settings.NATS_HOST, ":", nats_connect.Settings.NATS_PORT, " error: ", err)
+		log.Info("NATS connected. OK., server: ", nats_connect.Settings.NATS_HOST, ":", nats_connect.Settings.NATS_PORT)
 	}
 
 }
