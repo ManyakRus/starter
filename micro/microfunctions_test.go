@@ -1150,3 +1150,41 @@ func TestShow_Repository_Code_ModifiedTime(t *testing.T) {
 func TestShow_Version(t *testing.T) {
 	Show_Version("1")
 }
+
+func TestMassFrom_MapString(t *testing.T) {
+	// Test case for sorting a map by column names
+	t.Run("Sort map by keys", func(t *testing.T) {
+		input := map[string]int{"c": 3, "a": 1, "b": 2}
+		expected := []int{1, 2, 3}
+		result := MassFrom_MapString(input)
+		if !reflect.DeepEqual(result, expected) {
+			t.Errorf("Expected %v, but got %v", expected, result)
+		}
+	})
+
+	// Test case for handling a key not found in the map
+	t.Run("Key not found", func(t *testing.T) {
+		input := map[string]string{"a": "apple", "b": "banana"}
+		_ = MassFrom_MapString(input) // This call should print an error message for the missing key
+		// You can capture the output of fmt.Printf using https://stackoverflow.com/questions/10473800/in-go-how-do-i-capture-stdout-of-a-function-into-a-string
+	})
+}
+
+func TestMassFrom_Map(t *testing.T) {
+	// Test case for sorting a map by column names
+	t.Run("Sort map by keys", func(t *testing.T) {
+		input := map[string]int{"c": 3, "a": 1, "b": 2}
+		expected := []int{1, 2, 3}
+		result := MassFrom_Map(input)
+		if !reflect.DeepEqual(result, expected) {
+			t.Errorf("Expected %v, but got %v", expected, result)
+		}
+	})
+
+	// Test case for handling a key not found in the map
+	t.Run("Key not found", func(t *testing.T) {
+		input := map[string]string{"a": "apple", "b": "banana"}
+		_ = MassFrom_Map(input) // This call should print an error message for the missing key
+		// You can capture the output of fmt.Printf using https://stackoverflow.com/questions/10473800/in-go-how-do-i-capture-stdout-of-a-function-into-a-string
+	})
+}

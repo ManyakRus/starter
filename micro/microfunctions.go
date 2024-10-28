@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"golang.org/x/exp/constraints"
 	"hash/fnv"
 	"os/exec"
 	"reflect"
@@ -1151,4 +1152,57 @@ func TimeMin(x time.Time, y ...time.Time) time.Time {
 // Show_Version - выводит версию сервиса на экран
 func Show_Version(Version string) {
 	println("Service version: ", Version)
+}
+
+// MassFrom_MapString - сортирует map по названию колонок и возвращает слайс
+func MassFrom_MapString[V any](Map map[string]V) []V {
+	Otvet := make([]V, 0)
+
+	//сортировка по названию колонок
+	keys := make([]string, 0, len(Map))
+	for k := range Map {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	//
+	for _, key1 := range keys {
+		Value, ok := Map[key1]
+		if ok == false {
+			fmt.Printf("Map[%s] not found\n", key1)
+		}
+		Otvet = append(Otvet, Value)
+	}
+
+	return Otvet
+}
+
+// SortMass - сортирует слайс
+func SortMass[T constraints.Ordered](s []T) {
+	sort.Slice(s, func(i, j int) bool {
+		return s[i] < s[j]
+	})
+}
+
+// MassFrom_Map - сортирует map по названию колонок и возвращает слайс
+func MassFrom_Map[C constraints.Ordered, V any](Map map[C]V) []V {
+	Otvet := make([]V, 0)
+
+	//сортировка по названию колонок
+	keys := make([]C, 0, len(Map))
+	for k := range Map {
+		keys = append(keys, k)
+	}
+	SortMass(keys)
+
+	//
+	for _, key1 := range keys {
+		Value, ok := Map[key1]
+		if ok == false {
+			fmt.Printf("Map[%v] not found\n", key1)
+		}
+		Otvet = append(Otvet, Value)
+	}
+
+	return Otvet
 }
