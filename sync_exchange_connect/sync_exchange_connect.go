@@ -13,8 +13,8 @@ import (
 )
 
 // Connect - подключение к NATS SyncExchange
-func Connect(ServiceName string) {
-	err := Connect_err(ServiceName)
+func Connect(ServiceName, ServiceVersion string) {
+	err := Connect_err(ServiceName, ServiceVersion)
 	LogInfo_Connected(err)
 }
 
@@ -29,25 +29,25 @@ func LogInfo_Connected(err error) {
 }
 
 // Connect_err - подключение к NATS SyncExchange
-func Connect_err(ServiceName string) error {
+func Connect_err(ServiceName, ServiceVersion string) error {
 	var err error
 
 	nats_connect.FillSettings()
 	sNATS_PORT := (nats_connect.Settings.NATS_PORT)
 	url := "nats://" + nats_connect.Settings.NATS_HOST + ":" + sNATS_PORT
 
-	err = sync_exchange.InitSyncExchange(url, ServiceName, "")
+	err = sync_exchange.InitSyncExchange(url, ServiceName, ServiceVersion)
 
 	return err
 }
 
 // Start - необходимые процедуры для подключения к серверу Nats SyncExchange
-func Start(ServiceName string) {
+func Start(ServiceName, ServiceVersion string) {
 	var err error
 
 	ctx := contextmain.GetContext()
 	WaitGroup := stopapp.GetWaitGroup_Main()
-	err = Start_ctx(&ctx, WaitGroup, ServiceName)
+	err = Start_ctx(&ctx, WaitGroup, ServiceName, ServiceVersion)
 	LogInfo_Connected(err)
 
 }
@@ -55,7 +55,7 @@ func Start(ServiceName string) {
 // Start_ctx - необходимые процедуры для подключения к NATS с библиотекой SyncExchange
 // Свой контекст и WaitGroup нужны для остановки работы сервиса Graceful shutdown
 // Для тех кто пользуется этим репозиторием для старта и останова сервиса можно просто Start()
-func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, ServiceName string) error {
+func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, ServiceName, ServiceVersion string) error {
 	var err error
 
 	//запомним к себе контекст
@@ -71,7 +71,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, ServiceName stri
 	}
 
 	//
-	err = Connect_err(ServiceName)
+	err = Connect_err(ServiceName, ServiceVersion)
 	if err != nil {
 		return err
 	}
