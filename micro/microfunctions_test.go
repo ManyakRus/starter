@@ -1188,3 +1188,21 @@ func TestMassFrom_Map(t *testing.T) {
 		// You can capture the output of fmt.Printf using https://stackoverflow.com/questions/10473800/in-go-how-do-i-capture-stdout-of-a-function-into-a-string
 	})
 }
+
+func TestStringDateTime(t *testing.T) {
+	// Test case 1: Testing the output format for a specific date and time
+	expectedResult1 := "31.12.2022 23:59:59"
+	testTime1 := time.Date(2022, time.December, 31, 23, 59, 59, 0, time.UTC)
+	result1 := StringDateTime(testTime1)
+	if result1 != expectedResult1 {
+		t.Errorf("Test case 1 failed. Expected: %s, Got: %s", expectedResult1, result1)
+	}
+
+	// Test case 2: Testing the output format for a different date and time
+	expectedResult2 := "01.01.2023 00:00:00"
+	testTime2 := time.Date(2023, time.January, 1, 0, 0, 0, 0, time.UTC)
+	result2 := StringDateTime(testTime2)
+	if result2 != expectedResult2 {
+		t.Errorf("Test case 2 failed. Expected: %s, Got: %s", expectedResult2, result2)
+	}
+}

@@ -575,6 +575,15 @@ func StringDate(t time.Time) string {
 	return Otvet
 }
 
+// StringDateTime - возвращает строку дата и время, без миллисекунд
+func StringDateTime(t time.Time) string {
+	Otvet := ""
+
+	Otvet = t.Format("02.01.2006 15:04:05")
+
+	return Otvet
+}
+
 // ProgramDir_bin - возвращает каталог "bin" или каталог программы
 func ProgramDir_bin() string {
 	Otvet := ""
