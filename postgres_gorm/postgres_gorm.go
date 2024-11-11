@@ -52,7 +52,7 @@ type SettingsINI struct {
 // NamingStrategy - структура для хранения настроек наименования таблиц
 var NamingStrategy = schema.NamingStrategy{}
 
-// Connect_err - подключается к базе данных
+// Connect - подключается к базе данных
 func Connect() {
 
 	if Settings.DB_HOST == "" {
@@ -63,16 +63,6 @@ func Connect() {
 
 	err := Connect_err()
 	LogInfo_Connected(err)
-
-}
-
-// LogInfo_Connected - выводит сообщение в Лог, или паника при ошибке
-func LogInfo_Connected(err error) {
-	if err != nil {
-		log.Panicln("POSTGRES gorm Connect() to database host: ", Settings.DB_HOST, ", Error: ", err)
-	} else {
-		log.Info("POSTGRES gorm Connected. host: ", Settings.DB_HOST, ", base name: ", Settings.DB_NAME, ", schema: ", Settings.DB_SCHEMA)
-	}
 
 }
 
@@ -627,4 +617,14 @@ func ReplaceTemporaryTableNamesToUnique(TextSQL string) string {
 // true = не переименовывать
 func SetSingularTableNames(IsSingular bool) {
 	NamingStrategy.SingularTable = IsSingular
+}
+
+// LogInfo_Connected - выводит сообщение в Лог, или паника при ошибке
+func LogInfo_Connected(err error) {
+	if err != nil {
+		log.Panicln("POSTGRES gorm Connect() to database host: ", Settings.DB_HOST, ", Error: ", err)
+	} else {
+		log.Info("POSTGRES gorm Connected. host: ", Settings.DB_HOST, ", base name: ", Settings.DB_NAME, ", schema: ", Settings.DB_SCHEMA)
+	}
+
 }
