@@ -3,7 +3,7 @@ package telegram_bot
 import (
 	"errors"
 	"testing"
-	//log "github.com/sirupsen/logrus"
+	"time"
 
 	"github.com/ManyakRus/starter/config_main"
 	"github.com/ManyakRus/starter/contextmain"
@@ -60,14 +60,25 @@ func TestConnect(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
 	config_main.LoadEnv()
 	Connect()
-
-	CloseConnection()
+	defer CloseConnection()
 }
 
 func TestGetConnection(t *testing.T) {
-	//ProgramDir := micro.ProgramDir_Common()
 	config_main.LoadEnv()
 	GetConnection()
+	defer CloseConnection()
+}
 
-	CloseConnection()
+func TestSendMessage(t *testing.T) {
+	config_main.LoadEnv()
+	GetConnection()
+	defer CloseConnection()
+
+	Text := "test " + time.Now().String()
+	ID := Settings.TELEGRAM_CHAT_ID_TEST
+	_, err := SendMessage(ID, Text)
+	if err != nil {
+		t.Error("TestSendMessage() error: ", err)
+	}
+
 }

@@ -14,7 +14,8 @@ import (
 
 // SettingsINI - структура для хранения всех нужных переменных окружения
 type SettingsINI struct {
-	TELEGRAM_API_KEY string
+	TELEGRAM_API_KEY      string
+	TELEGRAM_CHAT_ID_TEST int64
 }
 
 // Settings хранит все нужные переменные окружения
@@ -32,10 +33,6 @@ var NeedReconnect bool
 // Connect - подключается к Telegram, или паника при ошибке
 func Connect() {
 
-	if Settings.TELEGRAM_API_KEY == "" {
-		FillSettings()
-	}
-
 	err := Connect_err()
 	LogInfo_Connected(err)
 
@@ -44,6 +41,10 @@ func Connect() {
 // Connect_err - подключается к Telegram, возвращает ошибку
 func Connect_err() error {
 	var err error
+
+	if Settings.TELEGRAM_API_KEY == "" {
+		FillSettings()
+	}
 
 	Client, err = botapi.NewBotAPI(Settings.TELEGRAM_API_KEY)
 	if err != nil {
@@ -110,6 +111,25 @@ func Connect_err() error {
 	//}
 
 	return err
+}
+
+// SendMessage - отправка сообщения в мессенджер Телеграм
+// возвращает:
+// id = id отправленного сообщения в telegram
+// err = error
+func SendMessage(ChatID int64, Text string) (int, error) {
+	var ID int
+	var err error
+
+	msg := botapi.NewMessage(ChatID, Text)
+
+	Message, err := Client.Send(msg)
+	if err != nil {
+		return ID, err
+	}
+	ID = Message.MessageID
+
+	return ID, err
 }
 
 // Reconnect повторное подключение к Telegram, если оно отключено
@@ -246,9 +266,35 @@ func FillSettings() {
 
 	// заполним из переменных оуружения
 	Settings.TELEGRAM_API_KEY = os.Getenv("TELEGRAM_API_KEY")
-	if Settings.TELEGRAM_API_KEY == "" {
-		log.Panicln("Need fill TELEGRAM_API_KEY ! in os.ENV ")
+
+	//
+	Name := ""
+	s := ""
+
+	//
+	Name = "TELEGRAM_API_KEY"
+	s = Getenv(Name, true)
+	Settings.TELEGRAM_API_KEY = s
+
+	Name = "TELEGRAM_CHAT_ID_TEST"
+	s = Getenv(Name, true)
+	i, err := micro.Int64FromString(s)
+	if err != nil {
+		log.Panicf("TELEGRAM_CHAT_ID_TEST: %s, error: %v", s, err)
 	}
+	Settings.TELEGRAM_CHAT_ID_TEST = i
+
+}
+
+// Getenv - возвращает переменную окружения
+func Getenv(Name string, IsRequired bool) string {
+	TextError := "Need fill OS environment variable: "
+	Otvet := os.Getenv(Name)
+	if IsRequired == true && Otvet == "" {
+		log.Error(TextError + Name)
+	}
+
+	return Otvet
 }
 
 // GetConnection - возвращает соединение к нужной базе данных
@@ -263,9 +309,9 @@ func GetConnection() *botapi.BotAPI {
 // LogInfo_Connected - выводит сообщение в Лог, или паника при ошибке
 func LogInfo_Connected(err error) {
 	if err != nil {
-		log.Panicf("Telegram bot not connected with API KEY: %s, error: %w", Settings.TELEGRAM_API_KEY, err)
+		log.Panicf("Telegram bot not connected with API KEY: %s, error: %v", Settings.TELEGRAM_API_KEY, err)
 	} else {
-		log.Info("Telegram bot Connected. With API KEY: %s", Settings.TELEGRAM_API_KEY)
+		log.Infof("Telegram bot Connected. With API KEY: %s", Settings.TELEGRAM_API_KEY)
 	}
 
 }
