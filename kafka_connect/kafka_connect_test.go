@@ -2,6 +2,7 @@ package kafka_connect
 
 import (
 	"context"
+	"fmt"
 	"github.com/ManyakRus/starter/config_main"
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/micro"
@@ -31,7 +32,7 @@ func TestCloseConnection(t *testing.T) {
 	CloseConnection()
 }
 
-func TestStartNats(t *testing.T) {
+func TestStart(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
 	config_main.LoadEnv()
 	StartKafka()
@@ -86,5 +87,26 @@ func TestReadTopic(t *testing.T) {
 		}
 	} else {
 		t.Logf("new message: %#v", mess)
+	}
+}
+
+func TestReadGroups(t *testing.T) {
+	config_main.LoadEnv()
+	Connect()
+	defer CloseConnection()
+
+	partitions, err := Conn.ReadPartitions("kol_atom_ul_uni.stack.documents")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	m := map[string]struct{}{}
+
+	for _, p := range partitions {
+		m[p.Topic] = struct{}{}
+
+	}
+	for k := range m {
+		fmt.Println(k)
 	}
 }
