@@ -131,28 +131,20 @@ func (m MessageTelegram) String() string {
 // err = error
 func SendMessage(phone_send_to string, text string) (int, error) {
 	var id int
-	//var is_sent bool
-	//
 
 	if Client == nil {
 		CreateTelegramClient(nil)
-		//if err != nil {
-		//	log.Error("Connect() error: ", err)
-		//	return 0, false, err
-		//}
 	}
 
 	if text == "" {
-		text1 := "Connect() text id empty ! "
-		log.Error(text1)
-		err := errors.New(text1)
+		err := fmt.Errorf("SendMessage() text id empty ! ")
+		log.Error(err)
 		return 0, err
 	}
 
 	if phone_send_to == "" {
-		text1 := "Connect() phone_send_to id empty ! "
-		log.Error(text1)
-		err := errors.New(text1)
+		err := fmt.Errorf("SendMessage() phone_send_to id empty ! ")
+		log.Error(err)
 		return 0, err
 	}
 
@@ -164,16 +156,13 @@ func SendMessage(phone_send_to string, text string) (int, error) {
 	//
 	api := Client.API()
 
-	//ctxMain := contextmain.GetContext()
+	//
 	ctxMain := context.Background()
 	ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second)
 	defer cancel()
 
+	//
 	sender := message.NewSender(api)
-
-	//peer := api.ContactsImportContacts()
-	//target0 := sender.To(peer)
-
 	target := sender.Resolve(phone_send_to)
 	target.NoForwards()
 
@@ -184,44 +173,69 @@ func SendMessage(phone_send_to string, text string) (int, error) {
 		return 0, err
 	}
 
-	//проверка на ошибки
-	//isFlood := false
-	//if err != nil {
-	//	textFind := "peer: can't resolve phone"
-	//	if micro.SubstringLeft(err.Error(), len(textFind)) == textFind {
-	//		err2 := AddContact(ctx, phone_send_to)
 	//
-	//		isFlood = FloodWait(ctx, err2) //ожидание при ошибке FloodWait
-	//		if isFlood {
-	//			return SendMessage(phone_send_to, text)
-	//		}
-	//
-	//		if err2 == nil {
-	//			return SendMessage(phone_send_to, text)
-	//		} else {
-	//			log.Error("not send, text: " + err.Error())
-	//			return 0, err
-	//		}
-	//	} else {
-	//		isFlood = FloodWait(ctx, err) //ожидание при ошибке FloodWait
-	//		if isFlood {
-	//			return SendMessage(phone_send_to, text)
-	//		}
-	//	}
-	//
-	//}
-
 	if UpdatesClass != nil {
 		id = findIdFromUpdatesClass(UpdatesClass)
 	}
-	//log.Debug("id: ", id, ", error: ", err, ", text: "+text)
 
-	//log.Print("Success")
-
-	// Return to close Client connection and free up resources.
-	// Client is closed.
 	return id, err
+}
 
+// SendStyledText - отправка сообщения в мессенджер Телеграм, все слова должны быть оформлены в StyledTextOption
+// возвращает:
+// id = id отправленного сообщения в telegram
+// err = error
+func SendStyledText(phone_send_to string, texts ...message.StyledTextOption) (int, error) {
+	var id int
+
+	if Client == nil {
+		CreateTelegramClient(nil)
+	}
+
+	if len(texts) == 0 {
+		err := fmt.Errorf("SendMessage() text id empty ! ")
+		log.Error(err)
+		return 0, err
+	}
+
+	if phone_send_to == "" {
+		err := fmt.Errorf("SendMessage() phone_send_to id empty ! ")
+		log.Error(err)
+		return 0, err
+	}
+
+	TimeLimit()
+	//text := texts.
+	//log.Debug("phone_send_to: ", phone_send_to, ", text: "+ text)
+
+	//text = micro.SubstringLeft(text, MAX_MESSAGE_LEN)
+
+	//
+	api := Client.API()
+
+	//
+	ctxMain := context.Background()
+	ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second)
+	defer cancel()
+
+	//
+	sender := message.NewSender(api)
+	target := sender.Resolve(phone_send_to)
+	target.NoForwards()
+
+	//отправка сообщения
+	UpdatesClass, err := target.StyledText(ctx, texts...)
+	if err != nil {
+		log.Error("Text() error: ", err)
+		return 0, err
+	}
+
+	//
+	if UpdatesClass != nil {
+		id = findIdFromUpdatesClass(UpdatesClass)
+	}
+
+	return id, err
 }
 
 // AddContact - добавляет новый контакт в список контактов Телеграм
