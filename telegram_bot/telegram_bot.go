@@ -14,7 +14,7 @@ import (
 
 // SettingsINI - структура для хранения всех нужных переменных окружения
 type SettingsINI struct {
-	API_KEY string
+	TELEGRAM_API_KEY string
 }
 
 // Settings хранит все нужные переменные окружения
@@ -32,7 +32,7 @@ var NeedReconnect bool
 // Connect - подключается к Telegram, или паника при ошибке
 func Connect() {
 
-	if Settings.API_KEY == "" {
+	if Settings.TELEGRAM_API_KEY == "" {
 		FillSettings()
 	}
 
@@ -45,7 +45,7 @@ func Connect() {
 func Connect_err() error {
 	var err error
 
-	Client, err = botapi.NewBotAPI(Settings.API_KEY)
+	Client, err = botapi.NewBotAPI(Settings.TELEGRAM_API_KEY)
 	if err != nil {
 		return err
 	}
@@ -245,9 +245,9 @@ func FillSettings() {
 	Settings = SettingsINI{}
 
 	// заполним из переменных оуружения
-	Settings.API_KEY = os.Getenv("API_KEY")
-	if Settings.API_KEY == "" {
-		log.Panicln("Need fill API_KEY ! in os.ENV ")
+	Settings.TELEGRAM_API_KEY = os.Getenv("TELEGRAM_API_KEY")
+	if Settings.TELEGRAM_API_KEY == "" {
+		log.Panicln("Need fill TELEGRAM_API_KEY ! in os.ENV ")
 	}
 }
 
@@ -263,9 +263,9 @@ func GetConnection() *botapi.BotAPI {
 // LogInfo_Connected - выводит сообщение в Лог, или паника при ошибке
 func LogInfo_Connected(err error) {
 	if err != nil {
-		log.Panicf("Telegram bot not connected with API KEY: %s, error: %w", Settings.API_KEY, err)
+		log.Panicf("Telegram bot not connected with API KEY: %s, error: %w", Settings.TELEGRAM_API_KEY, err)
 	} else {
-		log.Info("Telegram bot Connected. With API KEY: %s", Settings.API_KEY)
+		log.Info("Telegram bot Connected. With API KEY: %s", Settings.TELEGRAM_API_KEY)
 	}
 
 }
