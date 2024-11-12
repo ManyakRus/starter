@@ -32,7 +32,7 @@ require (
 	github.com/segmentio/kafka-go v0.4.47
 	github.com/xhit/go-simple-mail/v2 v2.16.0
 	gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange v0.0.31
-	gitlab.aescorp.ru/dsp_dev/claim/sync_service v1.2.184
+	gitlab.aescorp.ru/dsp_dev/claim/sync_service v1.2.185
 	go.etcd.io/bbolt v1.3.11
 	go.mau.fi/whatsmeow v0.0.0-20241106153717-65ee2390b147
 	go.uber.org/zap v1.27.0

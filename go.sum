@@ -297,8 +297,8 @@ github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9dec
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange v0.0.31 h1:tYsTkLlO1hNjPId7CTs9cLQ8Lx7vODXAIaG8t14Mw0Y=
 gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange v0.0.31/go.mod h1:+ZbwpurumFpi0GbiahOY4shV6WB2kguFxN486+76prs=
-gitlab.aescorp.ru/dsp_dev/claim/sync_service v1.2.184 h1:goKpeTmr34lenfcy/OWjewq/GOBtgrqGMkP9t6f4gEU=
-gitlab.aescorp.ru/dsp_dev/claim/sync_service v1.2.184/go.mod h1:mJ3a2VNxti5M/yHiZV3+nDea48g6dUQ6NUCStf7EEvQ=
+gitlab.aescorp.ru/dsp_dev/claim/sync_service v1.2.185 h1:sAatAlJl+HqutIoS9LdV9vKUR282ydU6YNepI5e8lBk=
+gitlab.aescorp.ru/dsp_dev/claim/sync_service v1.2.185/go.mod h1:mJ3a2VNxti5M/yHiZV3+nDea48g6dUQ6NUCStf7EEvQ=
 go.etcd.io/bbolt v1.3.11 h1:yGEzV1wPz2yVCLsD8ZAiGHhHVlczyC9d1rP43/VCRJ0=
 go.etcd.io/bbolt v1.3.11/go.mod h1:dksAq7YMXoljX0xu6VF5DMZGbhYYoLUalEiSySYAS4I=
 go.mau.fi/libsignal v0.1.1 h1:m/0PGBh4QKP/I1MQ44ti4C0fMbLMuHb95cmDw01FIpI=

@@ -585,7 +585,7 @@ gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/liveness
 gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/sync_confirm
 gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/sync_global
 gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/sync_types
-# gitlab.aescorp.ru/dsp_dev/claim/sync_service v1.2.184
+# gitlab.aescorp.ru/dsp_dev/claim/sync_service v1.2.185
 ## explicit; go 1.22
 gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/db/calc_struct_version
 gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/db/db_constants
