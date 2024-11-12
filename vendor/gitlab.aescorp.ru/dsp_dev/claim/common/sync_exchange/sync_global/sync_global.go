@@ -7,13 +7,14 @@ import (
 )
 
 const (
-	SyncRoot    = "/claim/"
+	SyncRoot    = "/claim_reqrepl/"
+	SyncQueue   = "sync_exchange"
 	SyncDestVer = "1.0"
 )
 
 var (
 	block       sync.RWMutex
-	syncService = "claim_service"
+	syncService = "unknown_service"
 )
 
 // SyncService -- возвращает имя сервиса для сетевого обмена по локальной шине

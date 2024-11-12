@@ -509,7 +509,7 @@ func (l Lunar) IsPigYear() bool {
 }
 
 func (g Gregorian) diffInDays(t time.Time) int {
-	return int(g.Time.Sub(t).Hours() / 24)
+	return int(g.Time.Truncate(time.Hour).Sub(t).Hours() / 24)
 }
 
 func (l Lunar) getOffsetInYear() int {

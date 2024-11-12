@@ -3,11 +3,12 @@ package sync_exchange
 import (
 	"fmt"
 	"log"
+	"os"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/nats-io/nats.go"
-	"github.com/syndtr/goleveldb/leveldb"
 
 	"gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/data_packer"
 	"gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/liveness"
@@ -19,20 +20,25 @@ import (
 // PRIVATE
 
 var (
-	nc       *nats.Conn
-	packer   *data_packer.DataPacker
-	db       *leveldb.DB
-	block    sync.RWMutex
-	block1   sync.Mutex
-	isInited bool
+	nc        *nats.Conn
+	packer    *data_packer.DataPacker
+	block     sync.RWMutex
+	block1    sync.Mutex
+	isInited  bool
+	confirmer sync_confirm.Confirmer
 )
 
-func requestTopic(topic string) string {
-	return sync_global.SyncRoot + topic + "/"
+func GetUseConfirmerEnv() bool {
+	val, ok := os.LookupEnv("SYNC_EXCHANGE_USE_CONFIRMER")
+	if !ok {
+		return false
+	} else {
+		return strings.EqualFold("true", val)
+	}
 }
 
-func responseTopic(pack *sync_types.SyncPackage) string {
-	return sync_global.SyncRoot + pack.Head.Sender + "/" + pack.Head.NetID + "/"
+func fullTopic(topic string) string {
+	return sync_global.SyncRoot + topic + "/"
 }
 
 func setIsInited(b bool) {
@@ -49,41 +55,35 @@ func getIsInited() bool {
 
 // doSendMessage Непосредственно отправка сообщения
 func doSendMessage(topic string, pack sync_types.SyncPackage, wait bool) error {
-	// block1.Lock()
-	// defer block1.Unlock()
-
-	// _json, _ := sync_types.SyncPackageToJSON(&pack)
-	// log.Printf("[DEBUG] SendMessage, topic: %s, message:\n\t%s", topic, _json)
-
 	// Новое сообщение
-	err := sync_confirm.NewConfirmation(db, pack.Head.NetID, wait)
+	err := confirmer.NewConfirmation(pack.Head.NetID, wait)
 	if err != nil {
 		// TODO: Лог
 		return fmt.Errorf("doSendMessage, Error: %v", err)
 	}
 
 	// Получаем JSON
-	raw_data, err := sync_types.SyncPackageToJSON(&pack)
+	rawData, err := sync_types.SyncPackageToJSON(&pack)
 	if err != nil {
 		// Создание сообщения неудачно
-		err1 := sync_confirm.MakeConfirmation(db, pack.Head.NetID, false)
+		err1 := confirmer.MakeConfirmation(pack.Head.NetID, false)
 		if err1 != nil {
 			return fmt.Errorf("doSendMessage, Error: %v, Error1: %v", err, err1)
 		}
 		return fmt.Errorf("doSendMessage, Error: %v", err)
 	}
 	// Пакуем сообщение
-	data, err := packer.Pack([]byte(raw_data))
+	data, err := packer.Pack([]byte(rawData))
 	if err != nil {
 		// Упаковка сообщения неудачна
-		err1 := sync_confirm.MakeConfirmation(db, pack.Head.NetID, false)
+		err1 := confirmer.MakeConfirmation(pack.Head.NetID, false)
 		if err1 != nil {
 			return fmt.Errorf("doSendMessage, Error: %v, Error1: %v", err, err1)
 		}
 		return fmt.Errorf("doSendMessage, Error: %v", err)
 	}
 	// Создание сообщения удачно
-	err = sync_confirm.MakeConfirmation(db, pack.Head.NetID, true)
+	err = confirmer.MakeConfirmation(pack.Head.NetID, true)
 	if err != nil {
 		return fmt.Errorf("doSendMessage, Error: %v", err)
 	}
@@ -92,14 +92,14 @@ func doSendMessage(topic string, pack sync_types.SyncPackage, wait bool) error {
 	err = nc.Publish(topic, data)
 	if err != nil {
 		// Отправка сообщения неудачна
-		err1 := sync_confirm.SentConfirmation(db, pack.Head.NetID, false)
+		err1 := confirmer.SentConfirmation(pack.Head.NetID, false)
 		if err1 != nil {
 			return fmt.Errorf("doSendMessage, Error: %v, Error1: %v", err, err1)
 		}
 		return fmt.Errorf("doSendMessage, Error: %v", err)
 	}
 	// Отправка сообщения удачна
-	err = sync_confirm.SentConfirmation(db, pack.Head.NetID, true)
+	err = confirmer.SentConfirmation(pack.Head.NetID, true)
 	if err != nil {
 		return fmt.Errorf("doSendMessage, Error: %v", err)
 	}
@@ -108,35 +108,19 @@ func doSendMessage(topic string, pack sync_types.SyncPackage, wait bool) error {
 }
 
 // doWaitMessage Ожидание сообщения
-func doWaitMessage(topic string, callback Callback) error {
+func doWaitMessage(topic string, queue string, callback Callback) error {
 	// log.Printf("[INFO] WaitMessage, topic: %s\n", topic)
 
-	// TODO: обернуть в свой обработчик запросов, чтобы обработать ошибку
-	_, err := nc.Subscribe(topic, func(msg *nats.Msg) {
+	_, err := nc.QueueSubscribe(topic, queue, func(msg *nats.Msg) {
 		_data, _ := packer.Unpack(msg.Data)
 		pack, err := sync_types.SyncPackageFromJSON(string(_data))
+		pack.Msg = msg
 		if err != nil {
 			log.Println(err)
 			return
 		}
 
-		// netID := pack.Body.Result["netID"]
-		// if netID != "" {
-		// 	err = sync_confirm.RecvConfirmation(db, netID, true)
-		// 	if err != nil {
-		// 		log.Println(err)
-		// 	}
-		// }
-
-		callback(&pack)
-
-		// if netID != "" {
-		// 	c, err := sync_confirm.GetConfirmation(db, netID)
-		// 	if err != nil {
-		// 		log.Println(err)
-		// 	}
-		// 	log.Printf("[DEBUG] Message: %v, CreateAt: %v, MakeAt: %v, SentAt: %v, RecvAt: %v\n", netID, c.CreateAt, c.MakeAt, c.SentAt, c.RecvAt)
-		// }
+		go callback(&pack)
 	})
 
 	if err != nil {
@@ -156,8 +140,10 @@ func InitSyncExchange(url string, serviceName string, version string) error {
 	block1.Lock()
 	defer block1.Unlock()
 
+	log.Printf("[INFO] sync_exchange, InitSyncExchange, url: %v, service: %v, version: %v", url, serviceName, version)
+
 	if getIsInited() {
-		log.Println("[INFO] InitSyncExchange, already inited")
+		log.Println("[INFO] sync_exchange, InitSyncExchange, already inited")
 		return nil
 	}
 
@@ -178,19 +164,23 @@ func InitSyncExchange(url string, serviceName string, version string) error {
 	status := nc.Status()
 	switch status {
 	case nats.DISCONNECTED, nats.CLOSED:
-		return fmt.Errorf("InitSyncExchange, NATS connection status: %v\n", status.String())
+		return fmt.Errorf("InitSyncExchange, NATS connection status: %v", status.String())
 	default:
-		log.Printf("[INFO] InitSyncExchange, NATS connection status: %v\n", status.String())
+		log.Printf("[INFO] sync_exchange, InitSyncExchange, NATS connection status: %v\n", status.String())
 	}
 
 	// TODO Вынести путь в параметр функции
 	storePath := "./store"
 	// TODO Тут обработать не подтверждённые пакеты
-	_db, err := sync_confirm.InitConfirm(storePath)
-	if err != nil {
-		return fmt.Errorf("InitSyncExchange, InitConfirm, path: %q, error: %v", storePath, err)
+
+	if GetUseConfirmerEnv() {
+		confirmer, err = sync_confirm.NewSyncConfirmer(storePath)
+	} else {
+		confirmer, err = sync_confirm.NewNoConfirmer(storePath)
 	}
-	db = _db
+	if err != nil {
+		return fmt.Errorf("InitSyncExchange, NewConfirmer, path: %q, error: %v", storePath, err)
+	}
 
 	setIsInited(true)
 
@@ -211,14 +201,13 @@ func DeInitSyncExchange() error {
 
 	nc.Close()
 
-	err := sync_confirm.DeInitConfirm()
+	err := confirmer.DeInitConfirm()
 	if err != nil {
 		return fmt.Errorf("DeInitSyncExchange, DeInitConfirm, error: %v", err)
 	}
 
 	nc = nil
 	packer = nil
-	db = nil
 
 	return nil
 }
@@ -231,7 +220,7 @@ func SendMessage(topic string, pack sync_types.SyncPackage) error {
 	if !getIsInited() {
 		return fmt.Errorf("SendMessage, not inited")
 	}
-	// log.Println("[DEBUG] SendMessage")
+
 	err := doSendMessage(topic, pack, false)
 	if err != nil {
 		return fmt.Errorf("SendMessage, Error: %v", err)
@@ -242,117 +231,128 @@ func SendMessage(topic string, pack sync_types.SyncPackage) error {
 
 // WaitMessage Ожидание сообщения из определённого топика
 func WaitMessage(topic string, callback Callback) error {
-	// block1.Lock()
-	// defer block1.Unlock()
-
 	if !getIsInited() {
 		return fmt.Errorf("WaitMessage, not inited")
 	}
-	// log.Println("[DEBUG] WaitMessage")
 
-	return doWaitMessage(topic, callback)
+	_topic := topic
+	if !strings.HasPrefix(_topic, sync_global.SyncRoot) {
+		_topic = fullTopic(topic)
+	}
+
+	return doWaitMessage(_topic, sync_global.SyncQueue, callback)
+}
+
+// QueueSubscribe Ожидание сообщения из определённого топика
+func QueueSubscribe(topic string, queue string, callback Callback) error {
+	if !getIsInited() {
+		return fmt.Errorf("WaitMessage, not inited")
+	}
+
+	return doWaitMessage(topic, queue, callback)
+}
+
+// Subscribe Ожидание сообщения из определённого топика
+func Subscribe(topic string, callback Callback) error {
+	if !getIsInited() {
+		return fmt.Errorf("subscribe, not inited")
+	}
+
+	_, err := nc.Subscribe(topic, func(msg *nats.Msg) {
+		_data, _ := packer.Unpack(msg.Data)
+		pack, err := sync_types.SyncPackageFromJSON(string(_data))
+		pack.Msg = msg
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		go callback(&pack)
+	})
+
+	if err != nil {
+		return fmt.Errorf("subscribe, Error: %v", err)
+	}
+
+	return nil
 }
 
 // SendRequest Отправка запроса с ожиданием ответа
 func SendRequest(receiver string, pack sync_types.SyncPackage, timeout int) (result sync_types.SyncPackage, err error) {
-	block1.Lock()
-	defer block1.Unlock()
-
 	result = sync_types.MakeSyncError("", 0, "")
 
 	if !getIsInited() {
 		return result, fmt.Errorf("SendRequest, not inited")
 	}
-	// log.Println("[DEBUG] SendRequest")
-	// _time := time.Now()
 
-	blockDone := sync.Mutex{}
-	done := false
-	topic1 := responseTopic(&pack)
-	sub, err := nc.Subscribe(topic1,
-		func(msg *nats.Msg) {
-			_data, err := packer.Unpack(msg.Data)
-			if err != nil {
-				log.Printf("[ERROR] SendRequest, Subscribe, Unpack, error: %s\n", err.Error())
-			}
-			_pack, err := sync_types.SyncPackageFromJSON(string(_data))
-			if err != nil {
-				log.Printf("[ERROR] SendRequest, Subscribe, SyncPackageFromJSON, error: %s\n", err.Error())
-			}
+	// Новое сообщение
+	if err = confirmer.NewConfirmation(pack.Head.NetID, true); err != nil {
+		log.Printf("[ERROR] SendRequest, NewConfirmation error: %s\n", err.Error())
+	}
 
-			netID := fmt.Sprintf("%v", _pack.Body.Result["netID"])
-			if netID != "" {
-				err = sync_confirm.RecvConfirmation(db, netID, true)
-				if err != nil {
-					log.Println(err)
-				}
-				_, err := sync_confirm.GetConfirmation(db, netID)
-				if err != nil {
-					log.Println(err)
-				}
-				// log.Printf("[DEBUG] Message: %v, CreateAt: %v, MakeAt: %v, SentAt: %v, RecvAt: %v\n", netID, c.CreateAt, c.MakeAt, c.SentAt, c.RecvAt)
-			}
+	_topic := fullTopic(receiver)
 
-			blockDone.Lock()
-			result = _pack
-			done = true
-			blockDone.Unlock()
-		})
+	rawData, err := sync_types.SyncPackageToJSON(&pack)
 	if err != nil {
-		result.Body.Error.Code = 1
+		// Создание сообщения неудачно
+		if err1 := confirmer.MakeConfirmation(pack.Head.NetID, false); err1 != nil {
+			log.Printf("[ERROR] SendRequest, SyncPackageToJSON error: %s, MakeConfirmation error: %s\n", err.Error(), err1.Error())
+		}
+		log.Printf("[ERROR] SendRequest, SyncPackageToJSON error: %s\n", err.Error())
 		return result, err
 	}
 
-	topic2 := requestTopic(receiver)
-	// log.Printf("[DEBUG] SendRequest, SendMessage, receiver: %s, sender: %s, command: %s\n", _topic, pack.Head.Sender, pack.Body.Command)
-
-	// _json, _ := sync_types.SyncPackageToJSON(&pack)
-	// log.Printf("[DEBUG] SendRequest, request, topic: %s\n\t%s", topic2, _json)
-	// log.Printf("[DEBUG] SendRequest, request, topic: %s\n", topic2)
-
-	err = doSendMessage(topic2, pack, true)
+	// Пакуем сообщение
+	data, err := packer.Pack([]byte(rawData))
 	if err != nil {
-		result.Body.Error.Code = 2
+		// Упаковка сообщения неудачна
+		if err1 := confirmer.MakeConfirmation(pack.Head.NetID, false); err1 != nil {
+			log.Printf("[ERROR] SendRequest, Pack error: %s, MakeConfirmation error: %s\n", err.Error(), err1.Error())
+		}
+		log.Printf("[ERROR] SendRequest, Pack error: %s\n", err.Error())
 		return result, err
 	}
 
-	// log.Printf("[DEBUG] SendRequest, wait timeout: %d\n", timeout)
+	// Создание сообщения удачно
+	if err = confirmer.MakeConfirmation(pack.Head.NetID, true); err != nil {
+		log.Printf("[ERROR] SendRequest ok, MakeConfirmation error: %s\n", err.Error())
+	}
+
 	if timeout == -1 {
-		for i := 0; i < 24*60*60*1000; i += 25 {
-			blockDone.Lock()
-			isDone := done
-			blockDone.Unlock()
-			if isDone {
-				break
-			}
-			time.Sleep(25 * time.Millisecond)
-		}
-	} else {
-		for i := 0; i < timeout; i += 25 {
-			blockDone.Lock()
-			isDone := done
-			blockDone.Unlock()
-			if isDone {
-				break
-			}
-			time.Sleep(25 * time.Millisecond)
-		}
+		timeout = 24 * 60 * 60 * 1000
 	}
 
-	err = sub.Unsubscribe()
+	msg, err := nc.Request(_topic, data, time.Duration(timeout)*time.Second)
 	if err != nil {
-		result.Body.Error.Code = 3
+		if err1 := confirmer.SentConfirmation(pack.Head.NetID, false); err1 != nil {
+			log.Printf("[ERROR] SendRequest (%v), Request error: %s, SentConfirmation error: %s\n", _topic, err.Error(), err1.Error())
+		}
+		log.Printf("[ERROR] SendRequest (%v), Request error: %s\n", _topic, err.Error())
 		return result, err
 	}
 
-	if !done {
-		result.Body.Error.Code = 4
-		return result, fmt.Errorf("timeout while waiting for a response")
+	// Отправка сообщения удачна
+	if err = confirmer.SentConfirmation(pack.Head.NetID, true); err != nil {
+		log.Printf("[ERROR] SendRequest, Request ok, SentConfirmation error: %s\n", err.Error())
 	}
 
-	// _json, _ = sync_types.SyncPackageToJSON(&result)
-	// log.Printf("[DEBUG] SendRequest, response, duration: %v, topic: %s\n\t%s", time.Since(_time), topic1, _json)
-	// log.Printf("[DEBUG] SendRequest, response, duration: %v, topic: %s\n", time.Since(_time), topic1)
+	_data, err := packer.Unpack(msg.Data)
+	if err != nil {
+		log.Printf("[ERROR] SendRequest, Unpack, error: %s\n", err.Error())
+		return result, err
+	}
+	result, err = sync_types.SyncPackageFromJSON(string(_data))
+	if err != nil {
+		log.Printf("[ERROR] SendRequest, SyncPackageFromJSON, error: %s\n", err.Error())
+		result.Body.Error.Code = 3
+		if err == nats.ErrTimeout {
+			result.Body.Error.Code = 4
+		}
+		return result, err
+	}
+
+	if err = confirmer.RecvConfirmation(pack.Head.NetID, true); err != nil {
+		log.Printf("[ERROR] SendRequest, Request ok, RecvConfirmation error: %s\n", err.Error())
+	}
 
 	return result, nil
 }
@@ -363,20 +363,53 @@ func SendResponse(packIn *sync_types.SyncPackage, packOut sync_types.SyncPackage
 		return fmt.Errorf("SendResponse, not inited")
 	}
 
-	// log.Println("[DEBUG] SendResponse")
-	_topic := responseTopic(packIn)
-
 	if packOut.Body.Result == nil {
 		packOut.Body.Result = make(sync_types.SyncResult)
 	}
 	packOut.Body.Result["netID"] = packIn.Head.NetID
 
-	// _json, _ := sync_types.SyncPackageToJSON(&packOut)
-	// log.Printf("[DEBUG] SendResponse, topic: %s\n\t%s", _topic, _json)
+	// Новое сообщение
+	if err := confirmer.NewConfirmation(packIn.Head.NetID, true); err != nil {
+		log.Printf("[ERROR] SendResponse, NewConfirmation error: %s\n", err.Error())
+	}
 
-	err := doSendMessage(_topic, packOut, false)
+	msg := packIn.Msg
+	if msg == nil {
+		return fmt.Errorf("SendResponse, Error: packIn.Msg is nil")
+	}
+
+	rawData, err := sync_types.SyncPackageToJSON(&packOut)
 	if err != nil {
-		return fmt.Errorf("SendResponse, Error: %v", err)
+		// Создание сообщения неудачно
+		if err1 := confirmer.MakeConfirmation(packIn.Head.NetID, false); err1 != nil {
+			log.Printf("[ERROR] SendResponse, SyncPackageToJSON error: %s, MakeConfirmation error: %s\n", err.Error(), err1.Error())
+		}
+		log.Printf("[ERROR] SendResponse SyncPackageToJSON error: %s\n", err.Error())
+		return fmt.Errorf("SendResponse, SyncPackageToJSON error: %v", err)
+	}
+	// Пакуем сообщение
+	data, err := packer.Pack([]byte(rawData))
+	if err != nil {
+		// Упаковка сообщения неудачна
+		if err1 := confirmer.MakeConfirmation(packIn.Head.NetID, false); err1 != nil {
+			log.Printf("[ERROR] SendResponse Pack error: %s, MakeConfirmation error: %s\n", err.Error(), err1.Error())
+		}
+		log.Printf("[ERROR] SendResponse, Pack error: %s\n", err.Error())
+		return fmt.Errorf("SendResponse, Pack error: %v", err)
+	}
+
+	err = msg.Respond(data)
+	if err != nil {
+		if err1 := confirmer.SentConfirmation(packIn.Head.NetID, false); err1 != nil {
+			log.Printf("[ERROR] SendResponse, Respond error: %s, SentConfirmation error: %s\n", err.Error(), err1.Error())
+		}
+		log.Printf("[ERROR] SendResponse, Respond error: %s\n", err.Error())
+		return fmt.Errorf("SendResponse, Respond error: %v", err)
+	}
+
+	// Отправка сообщения удачна
+	if err = confirmer.SentConfirmation(packIn.Head.NetID, true); err != nil {
+		log.Printf("[ERROR] SendResponse ok, SentConfirmation error: %s\n", err.Error())
 	}
 
 	return nil

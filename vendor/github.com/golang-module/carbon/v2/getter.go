@@ -7,6 +7,9 @@ import (
 // StdTime gets standard time.Time.
 // 获取标准 time.Time
 func (c Carbon) StdTime() time.Time {
+	if c.time.IsZero() {
+		return c.time
+	}
 	return c.time.In(c.loc)
 }
 
@@ -28,7 +31,7 @@ func (c Carbon) DaysInMonth() int {
 	if c.Error != nil {
 		return 0
 	}
-	return c.EndOfMonth().time.In(c.loc).Day()
+	return c.EndOfMonth().StdTime().Day()
 }
 
 // MonthOfYear gets month of year like 12.

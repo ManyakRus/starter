@@ -2,12 +2,13 @@ package sync_confirm
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/syndtr/goleveldb/leveldb"
-	"gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/sync_global"
-	"log"
 	"sync"
 	"time"
+
+	"github.com/syndtr/goleveldb/leveldb"
+	"gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/sync_global"
 )
 
 type Confirmation struct {
@@ -24,73 +25,71 @@ type Confirmation struct {
 	RecvAt       time.Time
 }
 
-var (
-	db       *leveldb.DB
-	block    sync.RWMutex
-	block1   sync.Mutex
-	isInited bool
-)
+type Confirmer interface {
+	DeInitConfirm() error
+	NewConfirmation(netID string, wait bool) error
+	GetConfirmation(netID string) (*Confirmation, error)
+	MakeConfirmation(netID string, b bool) error
+	SentConfirmation(netID string, b bool) error
+	RecvConfirmation(netID string, b bool) error
+}
 
-func setIsInited(b bool) {
+type SyncConfirmer struct {
+	db *leveldb.DB
+}
+
+var confirmer Confirmer
+var block sync.RWMutex
+
+func NewSyncConfirmer(path string) (h Confirmer, err error) {
 	block.Lock()
 	defer block.Unlock()
-	isInited = b
+	if confirmer == nil {
+		var sc SyncConfirmer
+		_db, err := leveldb.OpenFile(fmt.Sprintf("%s/%s.db", path, sync_global.SyncService()), nil)
+		if err != nil {
+			return nil, err
+		}
+		sc.db = _db
+		confirmer = &sc
+	}
+
+	return confirmer, err
 }
 
-func getIsInited() bool {
+func (s *SyncConfirmer) getIsInited() bool {
 	block.RLock()
 	defer block.RUnlock()
-	return isInited
+	return confirmer != nil
 }
 
-func InitConfirm(path string) (*leveldb.DB, error) {
-	block1.Lock()
-	defer block1.Unlock()
+func (s *SyncConfirmer) DeInitConfirm() error {
+	block.Lock()
+	defer block.Unlock()
 
-	if getIsInited() {
-		log.Println("[INFO] InitConfirm, already inited")
-		return db, nil
+	if confirmer == nil {
+		return nil
 	}
 
-	_db, err := leveldb.OpenFile(fmt.Sprintf("%s/%s.db", path, sync_global.SyncService()), nil)
-	if err != nil {
-		return nil, fmt.Errorf("InitConfirm, OpenFile, error: %v", err)
-	}
-	db = _db
-
-	setIsInited(true)
-
-	return db, nil
-}
-
-func DeInitConfirm() error {
-	block1.Lock()
-	defer block1.Unlock()
-
-	if !getIsInited() {
-		return fmt.Errorf("DeInitConfirm, not inited")
-	}
-	defer setIsInited(false)
-
-	err := db.Close()
+	err := s.db.Close()
 	if err != nil {
 		return fmt.Errorf("DeInitConfirm, Close, error: %v", err)
 	}
 
-	db = nil
+	s.db = nil
+	confirmer = nil
 
 	return nil
 }
 
-func NewConfirmation(db *leveldb.DB, netID string, wait bool) error {
-	if !getIsInited() {
-		return fmt.Errorf("NewConfirmation, not inited")
+func (s *SyncConfirmer) NewConfirmation(netID string, wait bool) error {
+	if !s.getIsInited() {
+		return errors.New("NewConfirmation, not inited")
 	}
 
 	conf := Confirmation{
 		CreateAt: time.Now(),
 		Wait:     wait,
-		// WaitDuration
 	}
 
 	value, err := json.Marshal(conf)
@@ -98,7 +97,7 @@ func NewConfirmation(db *leveldb.DB, netID string, wait bool) error {
 		return err
 	}
 
-	err = db.Put([]byte(netID), value, nil)
+	err = s.db.Put([]byte(netID), value, nil)
 	if err != nil {
 		return err
 	}
@@ -106,12 +105,12 @@ func NewConfirmation(db *leveldb.DB, netID string, wait bool) error {
 	return nil
 }
 
-func GetConfirmation(db *leveldb.DB, netID string) (*Confirmation, error) {
-	if !getIsInited() {
+func (s *SyncConfirmer) GetConfirmation(netID string) (*Confirmation, error) {
+	if !s.getIsInited() {
 		return nil, fmt.Errorf("GetConfirmation, not inited")
 	}
 
-	value, err := db.Get([]byte(netID), nil)
+	value, err := s.db.Get([]byte(netID), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -125,12 +124,12 @@ func GetConfirmation(db *leveldb.DB, netID string) (*Confirmation, error) {
 	return &conf, nil
 }
 
-func MakeConfirmation(db *leveldb.DB, netID string, b bool) error {
-	if !getIsInited() {
+func (s *SyncConfirmer) MakeConfirmation(netID string, b bool) error {
+	if !s.getIsInited() {
 		return fmt.Errorf("MakeConfirmation, not inited")
 	}
 
-	c, err := GetConfirmation(db, netID)
+	c, err := s.GetConfirmation(netID)
 	if err != nil {
 		return err
 	}
@@ -143,7 +142,7 @@ func MakeConfirmation(db *leveldb.DB, netID string, b bool) error {
 		return err
 	}
 
-	err = db.Put([]byte(netID), value, nil)
+	err = s.db.Put([]byte(netID), value, nil)
 	if err != nil {
 		return err
 	}
@@ -151,16 +150,16 @@ func MakeConfirmation(db *leveldb.DB, netID string, b bool) error {
 	return nil
 }
 
-func SentConfirmation(db *leveldb.DB, netID string, b bool) error {
-	if !getIsInited() {
+func (s *SyncConfirmer) SentConfirmation(netID string, b bool) error {
+	if !s.getIsInited() {
 		return fmt.Errorf("SentConfirmation, not inited")
 	}
 
-	if db == nil {
+	if s.db == nil {
 		return fmt.Errorf("db is not inited")
 	}
 
-	c, err := GetConfirmation(db, netID)
+	c, err := s.GetConfirmation(netID)
 	if err != nil {
 		return err
 	}
@@ -173,7 +172,7 @@ func SentConfirmation(db *leveldb.DB, netID string, b bool) error {
 		return err
 	}
 
-	err = db.Put([]byte(netID), value, nil)
+	err = s.db.Put([]byte(netID), value, nil)
 	if err != nil {
 		return err
 	}
@@ -181,12 +180,12 @@ func SentConfirmation(db *leveldb.DB, netID string, b bool) error {
 	return nil
 }
 
-func RecvConfirmation(db *leveldb.DB, netID string, b bool) error {
-	if !getIsInited() {
+func (s *SyncConfirmer) RecvConfirmation(netID string, b bool) error {
+	if !s.getIsInited() {
 		return fmt.Errorf("RecvConfirmation, not inited")
 	}
 
-	c, err := GetConfirmation(db, netID)
+	c, err := s.GetConfirmation(netID)
 	if err != nil {
 		return err
 	}
@@ -199,7 +198,7 @@ func RecvConfirmation(db *leveldb.DB, netID string, b bool) error {
 		return err
 	}
 
-	err = db.Put([]byte(netID), value, nil)
+	err = s.db.Put([]byte(netID), value, nil)
 	if err != nil {
 		return err
 	}

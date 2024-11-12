@@ -18,10 +18,10 @@ func (c Carbon) Closest(c1 Carbon, c2 Carbon) Carbon {
 // Farthest returns the farthest Carbon instance from the given Carbon instance.
 // 返回离给定 carbon 实例最远的 Carbon 实例
 func (c Carbon) Farthest(c1 Carbon, c2 Carbon) Carbon {
-	if c1.Error != nil {
+	if c1.IsZero() || c1.IsInvalid() {
 		return c2
 	}
-	if c2.Error != nil {
+	if c2.IsZero() || c2.IsInvalid() {
 		return c1
 	}
 	if c.DiffAbsInSeconds(c1) > c.DiffAbsInSeconds(c2) {

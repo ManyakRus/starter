@@ -3,15 +3,18 @@ package sync_types
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
-	"gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/sync_global"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/nats-io/nats.go"
+	"gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/sync_global"
 )
 
 // SyncPackage Пакет. Содержит заголовок и тело.
 type SyncPackage struct {
-	Head SyncHead `json:"head"`
-	Body SyncBody `json:"body"`
+	Head SyncHead  `json:"head"`
+	Body SyncBody  `json:"body"`
+	Msg  *nats.Msg `json:"-"`
 }
 
 // SyncHead Заголовок пакета. Содержит данные для идентификации.
@@ -121,7 +124,7 @@ func NewSyncResult() SyncResult {
 func MakeSyncCommand(command string, params SyncParams) SyncPackage {
 	_head := makeSyncHead(sync_global.SyncService())
 	_body := SyncBody{Command: command, Params: params}
-	_result := SyncPackage{_head, _body}
+	_result := SyncPackage{_head, _body, nil}
 
 	return _result
 }
@@ -130,7 +133,7 @@ func MakeSyncCommand(command string, params SyncParams) SyncPackage {
 func MakeSyncResult(result SyncResult) SyncPackage {
 	_head := makeSyncHead(sync_global.SyncService())
 	_body := SyncBody{Result: result}
-	_result := SyncPackage{_head, _body}
+	_result := SyncPackage{_head, _body, nil}
 
 	return _result
 }
@@ -139,7 +142,7 @@ func MakeSyncResult(result SyncResult) SyncPackage {
 func MakeSyncError(place string, code int, message string) SyncPackage {
 	_head := makeSyncHead(sync_global.SyncService())
 	_body := SyncBody{Error: SyncError{place, code, message}}
-	_result := SyncPackage{_head, _body}
+	_result := SyncPackage{_head, _body, nil}
 
 	return _result
 }
@@ -148,7 +151,7 @@ func MakeSyncError(place string, code int, message string) SyncPackage {
 func MakeSyncObject(object *SyncObject) SyncPackage {
 	_head := makeSyncHead(sync_global.SyncService())
 	_body := SyncBody{Object: *object}
-	_result := SyncPackage{_head, _body}
+	_result := SyncPackage{_head, _body, nil}
 
 	return _result
 }

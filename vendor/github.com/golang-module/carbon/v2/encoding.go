@@ -102,6 +102,23 @@ type TimestampNano struct {
 	Carbon
 }
 
+// MarshalJSON implements the interface json.Marshal for Carbon struct.
+// 实现 json.Marshaler 接口
+func (c Carbon) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf(`"%s"`, c.Layout(c.layout, c.Location()))), nil
+}
+
+// UnmarshalJSON implements the interface json.Unmarshal for Carbon struct.
+// 实现 json.Unmarshaler 接口
+func (c *Carbon) UnmarshalJSON(b []byte) error {
+	value := fmt.Sprintf("%s", bytes.Trim(b, `"`))
+	if value == "" || value == "null" {
+		return nil
+	}
+	*c = ParseByLayout(value, c.layout, c.Location())
+	return c.Error
+}
+
 // MarshalJSON implements the interface json.Marshal for DateTime struct.
 // 实现 MarshalJSON 接口
 func (t DateTime) MarshalJSON() ([]byte, error) {
@@ -111,7 +128,11 @@ func (t DateTime) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface json.Unmarshal for DateTime struct.
 // 实现 UnmarshalJSON 接口
 func (t *DateTime) UnmarshalJSON(b []byte) error {
-	c := ParseByLayout(string(bytes.Trim(b, `"`)), DateTimeLayout, t.Location())
+	value := fmt.Sprintf("%s", bytes.Trim(b, `"`))
+	if value == "" || value == "null" {
+		return nil
+	}
+	c := ParseByLayout(value, DateTimeLayout, t.Location())
 	if c.Error == nil {
 		*t = DateTime{Carbon: c}
 	}
@@ -127,7 +148,11 @@ func (t DateTimeMilli) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface json.Unmarshal for DateTimeMilli struct.
 // 实现 UnmarshalJSON 接口
 func (t *DateTimeMilli) UnmarshalJSON(b []byte) error {
-	c := ParseByLayout(string(bytes.Trim(b, `"`)), DateTimeMilliLayout, t.Location())
+	value := fmt.Sprintf("%s", bytes.Trim(b, `"`))
+	if value == "" || value == "null" {
+		return nil
+	}
+	c := ParseByLayout(value, DateTimeMilliLayout, t.Location())
 	if c.Error == nil {
 		*t = DateTimeMilli{Carbon: c}
 	}
@@ -143,7 +168,11 @@ func (t DateTimeMicro) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface json.Unmarshal for DateTimeMicro struct.
 // 实现 UnmarshalJSON 接口
 func (t *DateTimeMicro) UnmarshalJSON(b []byte) error {
-	c := ParseByLayout(string(bytes.Trim(b, `"`)), DateTimeMicroLayout, t.Location())
+	value := fmt.Sprintf("%s", bytes.Trim(b, `"`))
+	if value == "" || value == "null" {
+		return nil
+	}
+	c := ParseByLayout(value, DateTimeMicroLayout, t.Location())
 	if c.Error == nil {
 		*t = DateTimeMicro{Carbon: c}
 	}
@@ -159,7 +188,11 @@ func (t DateTimeNano) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface json.Unmarshal for DateTimeNano struct.
 // 实现 UnmarshalJSON 接口
 func (t *DateTimeNano) UnmarshalJSON(b []byte) error {
-	c := ParseByLayout(string(bytes.Trim(b, `"`)), DateTimeNanoLayout, t.Location())
+	value := fmt.Sprintf("%s", bytes.Trim(b, `"`))
+	if value == "" || value == "null" {
+		return nil
+	}
+	c := ParseByLayout(value, DateTimeNanoLayout, t.Location())
 	if c.Error == nil {
 		*t = DateTimeNano{Carbon: c}
 	}
@@ -175,7 +208,11 @@ func (t Date) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface json.Unmarshal for Date struct.
 // 实现 UnmarshalJSON 接口
 func (t *Date) UnmarshalJSON(b []byte) error {
-	c := ParseByLayout(string(bytes.Trim(b, `"`)), DateLayout, t.Location())
+	value := fmt.Sprintf("%s", bytes.Trim(b, `"`))
+	if value == "" || value == "null" {
+		return nil
+	}
+	c := ParseByLayout(value, DateLayout, t.Location())
 	if c.Error == nil {
 		*t = Date{Carbon: c}
 	}
@@ -191,7 +228,11 @@ func (t DateMilli) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface json.Unmarshal for DateMilli struct.
 // 实现 UnmarshalJSON 接口
 func (t *DateMilli) UnmarshalJSON(b []byte) error {
-	c := ParseByLayout(string(bytes.Trim(b, `"`)), DateMilliLayout, t.Location())
+	value := fmt.Sprintf("%s", bytes.Trim(b, `"`))
+	if value == "" || value == "null" {
+		return nil
+	}
+	c := ParseByLayout(value, DateMilliLayout, t.Location())
 	if c.Error == nil {
 		*t = DateMilli{Carbon: c}
 	}
@@ -207,7 +248,11 @@ func (t DateMicro) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface json.Unmarshal for DateMicro struct.
 // 实现 UnmarshalJSON 接口
 func (t *DateMicro) UnmarshalJSON(b []byte) error {
-	c := ParseByLayout(string(bytes.Trim(b, `"`)), DateMicroLayout, t.Location())
+	value := fmt.Sprintf("%s", bytes.Trim(b, `"`))
+	if value == "" || value == "null" {
+		return nil
+	}
+	c := ParseByLayout(value, DateMicroLayout, t.Location())
 	if c.Error == nil {
 		*t = DateMicro{Carbon: c}
 	}
@@ -223,7 +268,11 @@ func (t DateNano) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface json.Unmarshal for DateNano struct.
 // 实现 UnmarshalJSON 接口
 func (t *DateNano) UnmarshalJSON(b []byte) error {
-	c := ParseByLayout(string(bytes.Trim(b, `"`)), DateNanoLayout, t.Location())
+	value := fmt.Sprintf("%s", bytes.Trim(b, `"`))
+	if value == "" || value == "null" {
+		return nil
+	}
+	c := ParseByLayout(value, DateNanoLayout, t.Location())
 	if c.Error == nil {
 		*t = DateNano{Carbon: c}
 	}
@@ -239,7 +288,11 @@ func (t Time) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface json.Unmarshal for Time struct.
 // 实现 UnmarshalJSON 接口
 func (t *Time) UnmarshalJSON(b []byte) error {
-	c := ParseByLayout(string(bytes.Trim(b, `"`)), TimeLayout, t.Location())
+	value := fmt.Sprintf("%s", bytes.Trim(b, `"`))
+	if value == "" || value == "null" {
+		return nil
+	}
+	c := ParseByLayout(value, TimeLayout, t.Location())
 	if c.Error == nil {
 		*t = Time{Carbon: c}
 	}
@@ -255,7 +308,11 @@ func (t TimeMilli) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface json.Unmarshal for TimeMilli struct.
 // 实现 UnmarshalJSON 接口
 func (t *TimeMilli) UnmarshalJSON(b []byte) error {
-	c := ParseByLayout(string(bytes.Trim(b, `"`)), TimeMilliLayout, t.Location())
+	value := fmt.Sprintf("%s", bytes.Trim(b, `"`))
+	if value == "" || value == "null" {
+		return nil
+	}
+	c := ParseByLayout(value, TimeMilliLayout, t.Location())
 	if c.Error == nil {
 		*t = TimeMilli{Carbon: c}
 	}
@@ -271,7 +328,11 @@ func (t TimeMicro) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface json.Unmarshal for TimeMicro struct.
 // 实现 UnmarshalJSON 接口
 func (t *TimeMicro) UnmarshalJSON(b []byte) error {
-	c := ParseByLayout(string(bytes.Trim(b, `"`)), TimeMicroLayout, t.Location())
+	value := fmt.Sprintf("%s", bytes.Trim(b, `"`))
+	if value == "" || value == "null" {
+		return nil
+	}
+	c := ParseByLayout(value, TimeMicroLayout, t.Location())
 	if c.Error == nil {
 		*t = TimeMicro{Carbon: c}
 	}
@@ -287,7 +348,11 @@ func (t TimeNano) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface json.Unmarshal for TimeNano struct.
 // 实现 UnmarshalJSON 接口
 func (t *TimeNano) UnmarshalJSON(b []byte) error {
-	c := ParseByLayout(string(bytes.Trim(b, `"`)), TimeNanoLayout, t.Location())
+	value := fmt.Sprintf("%s", bytes.Trim(b, `"`))
+	if value == "" || value == "null" {
+		return nil
+	}
+	c := ParseByLayout(value, TimeNanoLayout, t.Location())
 	if c.Error == nil {
 		*t = TimeNano{Carbon: c}
 	}
@@ -303,7 +368,11 @@ func (t Timestamp) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface json.Unmarshal for Timestamp struct.
 // 实现 UnmarshalJSON 接口
 func (t *Timestamp) UnmarshalJSON(b []byte) error {
-	ts, _ := strconv.ParseInt(string(b), 10, 64)
+	value := fmt.Sprintf("%s", bytes.Trim(b, `"`))
+	if value == "" || value == "null" {
+		return nil
+	}
+	ts, _ := strconv.ParseInt(value, 10, 64)
 	c := CreateFromTimestamp(ts)
 	if c.Error == nil {
 		*t = Timestamp{Carbon: c}
@@ -320,7 +389,11 @@ func (t TimestampMilli) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface json.Unmarshal for TimestampMilli struct.
 // 实现 UnmarshalJSON 接口
 func (t *TimestampMilli) UnmarshalJSON(b []byte) error {
-	ts, _ := strconv.ParseInt(string(b), 10, 64)
+	value := fmt.Sprintf("%s", bytes.Trim(b, `"`))
+	if value == "" || value == "null" {
+		return nil
+	}
+	ts, _ := strconv.ParseInt(value, 10, 64)
 	c := CreateFromTimestampMilli(ts)
 	if c.Error == nil {
 		*t = TimestampMilli{Carbon: c}
@@ -337,7 +410,11 @@ func (t TimestampMicro) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface json.Unmarshal for TimestampMicro struct.
 // 实现 UnmarshalJSON 接口
 func (t *TimestampMicro) UnmarshalJSON(b []byte) error {
-	ts, _ := strconv.ParseInt(string(b), 10, 64)
+	value := fmt.Sprintf("%s", bytes.Trim(b, `"`))
+	if value == "" || value == "null" {
+		return nil
+	}
+	ts, _ := strconv.ParseInt(value, 10, 64)
 	c := CreateFromTimestampMicro(ts)
 	if c.Error == nil {
 		*t = TimestampMicro{Carbon: c}
@@ -354,56 +431,14 @@ func (t TimestampNano) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface json.Unmarshal for TimestampNano struct.
 // 实现 UnmarshalJSON 接口
 func (t *TimestampNano) UnmarshalJSON(b []byte) error {
-	ts, _ := strconv.ParseInt(string(b), 10, 64)
+	value := fmt.Sprintf("%s", bytes.Trim(b, `"`))
+	if value == "" || value == "null" {
+		return nil
+	}
+	ts, _ := strconv.ParseInt(value, 10, 64)
 	c := CreateFromTimestampNano(ts)
 	if c.Error == nil {
 		*t = TimestampNano{Carbon: c}
-	}
-	return c.Error
-}
-
-// MarshalJSON implements the json.Marshaler interface.
-// 实现 json.Marshaler 接口
-func (c Carbon) MarshalJSON() ([]byte, error) {
-	if c.Error != nil {
-		return nil, c.Error
-	}
-	key, value, tz := c.parseTag()
-	data := ""
-	if key == "layout" {
-		data = fmt.Sprintf(`"%s"`, c.Layout(value, tz))
-	}
-	if key == "format" {
-		// timestamp without double quotes in json
-		if value == "U" || value == "V" || value == "X" || value == "Z" {
-			data = fmt.Sprintf(`%s`, c.Format(value, tz))
-		} else {
-			data = fmt.Sprintf(`"%s"`, c.Format(value, tz))
-		}
-	}
-	return []byte(data), nil
-}
-
-// UnmarshalJSON implements the json.Unmarshaler interface.
-// 实现 json.Unmarshaler 接口
-func (c *Carbon) UnmarshalJSON(b []byte) error {
-	if c.Error != nil {
-		return c.Error
-	}
-	if len(b) == 0 || string(b) == "null" {
-		return nil
-	}
-	key, value, tz := c.parseTag()
-	data := fmt.Sprintf("%s", bytes.Trim(b, `"`))
-	if key == "layout" {
-		*c = ParseByLayout(data, value, tz)
-	}
-	if key == "format" {
-		*c = ParseByFormat(data, value, tz)
-	}
-	c.tag = &tag{
-		carbon: fmt.Sprintf("%s:%s", key, value),
-		tz:     tz,
 	}
 	return c.Error
 }
@@ -526,102 +561,6 @@ func (t TimestampMicro) String() string {
 // 实现 Stringer 接口
 func (t TimestampNano) String() string {
 	return strconv.FormatInt(t.TimestampNano(), 10)
-}
-
-// GormDataType implements the interface GormDataTypeInterface for DateTime struct.
-// 实现 GormDataTypeInterface 接口
-func (t DateTime) GormDataType() string {
-	return "time"
-}
-
-// GormDataType implements the interface GormDataTypeInterface for DateTimeMilli struct.
-// 实现 GormDataTypeInterface 接口
-func (t DateTimeMilli) GormDataType() string {
-	return "time"
-}
-
-// GormDataType implements the interface GormDataTypeInterface for DateTimeMicro struct.
-// 实现 GormDataTypeInterface 接口
-func (t DateTimeMicro) GormDataType() string {
-	return "time"
-}
-
-// GormDataType implements the interface GormDataTypeInterface for DateTimeNano struct.
-// 实现 GormDataTypeInterface 接口
-func (t DateTimeNano) GormDataType() string {
-	return "time"
-}
-
-// GormDataType implements the interface GormDataTypeInterface for Date struct.
-// 实现 GormDataTypeInterface 接口
-func (t Date) GormDataType() string {
-	return "time"
-}
-
-// GormDataType implements the interface GormDataTypeInterface for DateMilli struct.
-// 实现 GormDataTypeInterface 接口
-func (t DateMilli) GormDataType() string {
-	return "time"
-}
-
-// GormDataType implements the interface GormDataTypeInterface for DateMicro struct.
-// 实现 GormDataTypeInterface 接口
-func (t DateMicro) GormDataType() string {
-	return "time"
-}
-
-// GormDataType implements the interface GormDataTypeInterface for DateNano struct.
-// 实现 GormDataTypeInterface 接口
-func (t DateNano) GormDataType() string {
-	return "time"
-}
-
-// GormDataType implements the interface GormDataTypeInterface for Time struct.
-// 实现 GormDataTypeInterface 接口
-func (t Time) GormDataType() string {
-	return "time"
-}
-
-// GormDataType implements the interface GormDataTypeInterface for TimeMilli struct.
-// 实现 GormDataTypeInterface 接口
-func (t TimeMilli) GormDataType() string {
-	return "time"
-}
-
-// GormDataType implements the interface GormDataTypeInterface for TimeMicro struct.
-// 实现 GormDataTypeInterface 接口
-func (t TimeMicro) GormDataType() string {
-	return "time"
-}
-
-// GormDataType implements the interface GormDataTypeInterface for TimeNano struct.
-// 实现 GormDataTypeInterface 接口
-func (t TimeNano) GormDataType() string {
-	return "time"
-}
-
-// GormDataType implements the interface GormDataTypeInterface for Timestamp struct.
-// 实现 GormDataTypeInterface 接口
-func (t Timestamp) GormDataType() string {
-	return "int"
-}
-
-// GormDataType implements the interface GormDataTypeInterface for TimestampMilli struct.
-// 实现 GormDataTypeInterface 接口
-func (t TimestampMilli) GormDataType() string {
-	return "int"
-}
-
-// GormDataType implements the interface GormDataTypeInterface for TimestampMicro struct.
-// 实现 GormDataTypeInterface 接口
-func (t TimestampMicro) GormDataType() string {
-	return "int"
-}
-
-// GormDataType implements the interface GormDataTypeInterface for TimestampNano struct.
-// 实现 GormDataTypeInterface 接口
-func (t TimestampNano) GormDataType() string {
-	return "int"
 }
 
 // ToDateTimeStruct converts Carbon to DateTime.

@@ -12,6 +12,13 @@ mod:
 	go mod vendor
 	go fmt ./...
 
+## commit
+commit:
+	git commit -m "Update version"
+	git push origin master
+	git tag "v0.0.31"
+	git push origin master --tags
+
 ## lint
 lint:
 	clear

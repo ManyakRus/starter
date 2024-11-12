@@ -8,7 +8,7 @@ import (
 // Parse parses a standard time string as a Carbon instance.
 // 将标准格式时间字符串解析成 Carbon 实例
 func (c Carbon) Parse(value string, timezone ...string) Carbon {
-	if value == "" {
+	if len(value) == 0 {
 		c.Error = invalidValueError(value)
 		return c
 	}
@@ -65,8 +65,11 @@ func (c Carbon) ParseByLayout(value, layout string, timezone ...string) Carbon {
 	if c.Error != nil {
 		return c
 	}
-	if value == "" {
+	if len(value) == 0 {
 		return c
+	}
+	if len(layout) == 0 {
+		layout = defaultLayout
 	}
 	if layout == "timestamp" {
 		timestamp, _ := strconv.ParseInt(value, 10, 64)

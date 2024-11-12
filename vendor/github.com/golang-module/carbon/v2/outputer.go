@@ -11,14 +11,7 @@ import (
 // String implements the interface Stringer for Carbon struct.
 // 实现 Stringer 接口
 func (c Carbon) String() string {
-	key, value, tz := c.parseTag()
-	if key == "layout" {
-		return c.Layout(value, tz)
-	}
-	if key == "format" {
-		return c.Format(value, tz)
-	}
-	return c.ToDateTimeString(c.Location())
+	return c.Layout(c.layout, c.Location())
 }
 
 // GoString implements fmt.GoStringer and formats c to be printed in Go source code.

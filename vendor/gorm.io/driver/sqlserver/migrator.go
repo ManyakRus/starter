@@ -36,6 +36,58 @@ func (m Migrator) GetTables() (tableList []string, err error) {
 	return tableList, m.DB.Raw("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE  TABLE_CATALOG = ?", m.CurrentDatabase()).Scan(&tableList).Error
 }
 
+func (m Migrator) CreateTable(values ...interface{}) (err error) {
+	if err = m.Migrator.CreateTable(values...); err != nil {
+		return
+	}
+	for _, value := range m.ReorderModels(values, false) {
+		if err = m.RunWithValue(value, func(stmt *gorm.Statement) (err error) {
+			if stmt.Schema == nil {
+				return
+			}
+			for _, fieldName := range stmt.Schema.DBNames {
+				field := stmt.Schema.FieldsByDBName[fieldName]
+				if field.Comment == "" {
+					continue
+				}
+				if err = m.setColumnComment(stmt, field, true); err != nil {
+					return
+				}
+			}
+			return
+		}); err != nil {
+			return
+		}
+	}
+	return
+}
+
+func (m Migrator) setColumnComment(stmt *gorm.Statement, field *schema.Field, add bool) error {
+	schemaName := m.getTableSchemaName(stmt.Schema)
+	// add field comment
+	if add {
+		return m.DB.Exec(
+			"EXEC sp_addextendedproperty 'MS_Description', ?, 'SCHEMA', ?, 'TABLE', ?, 'COLUMN', ?",
+			field.Comment, schemaName, stmt.Table, field.DBName,
+		).Error
+	}
+	// update field comment
+	return m.DB.Exec(
+		"EXEC sp_updateextendedproperty 'MS_Description', ?, 'SCHEMA', ?, 'TABLE', ?, 'COLUMN', ?",
+		field.Comment, schemaName, stmt.Table, field.DBName,
+	).Error
+}
+
+func (m Migrator) getTableSchemaName(schema *schema.Schema) string {
+	// return the schema name if it is explicitly provided in the table name
+	// otherwise return default schema name
+	schemaName := getTableSchemaName(schema)
+	if schemaName == "" {
+		schemaName = m.DefaultSchema()
+	}
+	return schemaName
+}
+
 func getTableSchemaName(schema *schema.Schema) string {
 	// return the schema name if it is explicitly provided in the table name
 	// otherwise return a sql wildcard -> use any table_schema
@@ -141,6 +193,26 @@ func (m Migrator) RenameTable(oldName, newName interface{}) error {
 	).Error
 }
 
+func (m Migrator) AddColumn(value interface{}, name string) error {
+	if err := m.Migrator.AddColumn(value, name); err != nil {
+		return err
+	}
+
+	return m.RunWithValue(value, func(stmt *gorm.Statement) (err error) {
+		if stmt.Schema != nil {
+			if field := stmt.Schema.LookUpField(name); field != nil {
+				if field.Comment == "" {
+					return
+				}
+				if err = m.setColumnComment(stmt, field, true); err != nil {
+					return
+				}
+			}
+		}
+		return
+	})
+}
+
 func (m Migrator) HasColumn(value interface{}, field string) bool {
 	var count int64
 	m.RunWithValue(value, func(stmt *gorm.Statement) error {
@@ -200,6 +272,39 @@ func (m Migrator) RenameColumn(value interface{}, oldName, newName string) error
 	})
 }
 
+func (m Migrator) GetColumnComment(stmt *gorm.Statement, fieldDBName string) (description string) {
+	queryTx := m.DB
+	if m.DB.DryRun {
+		queryTx = m.DB.Session(&gorm.Session{})
+		queryTx.DryRun = false
+	}
+	var comment sql.NullString
+	queryTx.Raw("SELECT value FROM ?.sys.fn_listextendedproperty('MS_Description', 'SCHEMA', ?, 'TABLE', ?, 'COLUMN', ?)",
+		gorm.Expr(m.CurrentDatabase()), m.getTableSchemaName(stmt.Schema), stmt.Table, fieldDBName).Scan(&comment)
+	if comment.Valid {
+		description = comment.String
+	}
+	return
+}
+
+func (m Migrator) MigrateColumn(value interface{}, field *schema.Field, columnType gorm.ColumnType) error {
+	if err := m.Migrator.MigrateColumn(value, field, columnType); err != nil {
+		return err
+	}
+
+	return m.RunWithValue(value, func(stmt *gorm.Statement) (err error) {
+		description := m.GetColumnComment(stmt, field.DBName)
+		if field.Comment != description {
+			if description == "" {
+				err = m.setColumnComment(stmt, field, true)
+			} else {
+				err = m.setColumnComment(stmt, field, false)
+			}
+		}
+		return
+	})
+}
+
 var defaultValueTrimRegexp = regexp.MustCompile("^\\('?([^']*)'?\\)$")
 
 // ColumnTypes return columnTypes []gorm.ColumnType and execErr error
@@ -215,9 +320,20 @@ func (m Migrator) ColumnTypes(value interface{}) ([]gorm.ColumnType, error) {
 		rows.Close()
 
 		{
+			_, schemaName, tableName := splitFullQualifiedName(stmt.Table)
+
+			query := "SELECT COLUMN_NAME, DATA_TYPE, COLUMN_DEFAULT, IS_NULLABLE, CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_PRECISION_RADIX, NUMERIC_SCALE, DATETIME_PRECISION FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_CATALOG = ? AND TABLE_NAME = ?"
+
+			queryParameters := []interface{}{m.CurrentDatabase(), tableName}
+
+			if schemaName != "" {
+				query += " AND TABLE_SCHEMA = ?"
+				queryParameters = append(queryParameters, schemaName)
+			}
+
 			var (
-				columnTypeSQL   = "SELECT COLUMN_NAME, DATA_TYPE, COLUMN_DEFAULT, IS_NULLABLE, CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_PRECISION_RADIX, NUMERIC_SCALE, DATETIME_PRECISION FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_CATALOG = ? AND TABLE_NAME = ?"
-				columns, rowErr = m.DB.Raw(columnTypeSQL, m.CurrentDatabase(), stmt.Table).Rows()
+				columnTypeSQL   = query
+				columns, rowErr = m.DB.Raw(columnTypeSQL, queryParameters...).Rows()
 			)
 
 			if rowErr != nil {
@@ -256,8 +372,6 @@ func (m Migrator) ColumnTypes(value interface{}) ([]gorm.ColumnType, error) {
 						column.DefaultValueValue.String = matches[1]
 						matches = defaultValueTrimRegexp.FindStringSubmatch(column.DefaultValueValue.String)
 					}
-				} else {
-					column.DefaultValueValue.Valid = true
 				}
 
 				for _, c := range rawColumnTypes {
@@ -274,7 +388,17 @@ func (m Migrator) ColumnTypes(value interface{}) ([]gorm.ColumnType, error) {
 		}
 
 		{
-			columnTypeRows, err := m.DB.Raw("SELECT c.COLUMN_NAME, t.CONSTRAINT_TYPE FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS t JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE c ON c.CONSTRAINT_NAME=t.CONSTRAINT_NAME WHERE t.CONSTRAINT_TYPE IN ('PRIMARY KEY', 'UNIQUE') AND c.TABLE_CATALOG = ? AND c.TABLE_NAME = ?", m.CurrentDatabase(), stmt.Table).Rows()
+			_, schemaName, tableName := splitFullQualifiedName(stmt.Table)
+			query := "SELECT c.COLUMN_NAME, t.CONSTRAINT_TYPE FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS t JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE c ON c.CONSTRAINT_NAME=t.CONSTRAINT_NAME WHERE t.CONSTRAINT_TYPE IN ('PRIMARY KEY', 'UNIQUE') AND c.TABLE_CATALOG = ? AND c.TABLE_NAME = ?"
+
+			queryParameters := []interface{}{m.CurrentDatabase(), tableName}
+
+			if schemaName != "" {
+				query += " AND c.TABLE_SCHEMA = ?"
+				queryParameters = append(queryParameters, schemaName)
+			}
+
+			columnTypeRows, err := m.DB.Raw(query, queryParameters...).Rows()
 			if err != nil {
 				return err
 			}

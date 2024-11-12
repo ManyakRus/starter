@@ -21,7 +21,7 @@ by [awesome-go](https://github.com/avelino/awesome-go#date-and-time "awesome-go"
 
 #### Installation
 
-##### Go version >= 1.16 (recommend)
+##### Go version >= 1.17 (recommend)
 
 ```go
 // By github
@@ -35,7 +35,7 @@ go get -u gitee.com/golang-module/carbon/v2
 import "gitee.com/golang-module/carbon/v2"
 ```
 
-##### Go version < 1.16 (must)
+##### Go version < 1.17 (must)
 
 ```go
 // By github
@@ -62,7 +62,7 @@ carbon.SetDefault(carbon.Default{
   Layout: carbon.DateTimeLayout,
   Timezone: carbon.Local,
   WeekStartsAt: carbon.Sunday,
-  Locale: "en",
+  Locale: "en", // value range: translate file name in the lang directory, excluding file suffix
 })
 ```
 > Suggest setting in the entry file such as `main.go`
@@ -1205,85 +1205,11 @@ carbon.Parse("2020-08-05 13:14:15").IsWinter() // false
 
 ##### JSON
 
-###### Scene one: all time fields have the same format
-```go
-carbon.SetDefault(carbon.Default{
-  Layout: carbon.DateTimeLayout,
-})
-
-type Person struct {
-  Name string `json:"name"`
-  Age  int    `json:"age"`
-  
-  Field1 carbon.Carbon `json:"field1"`
-  Field2 carbon.Carbon `json:"field2"`
-  Field3 carbon.Carbon `json:"field3"`
-  Field4 carbon.Carbon `json:"field4"`
-  
-  Field5 carbon.Carbon `json:"field5"`
-  Field6 carbon.Carbon `json:"field6"`
-  Field7 carbon.Carbon `json:"field7"`
-  Field8 carbon.Carbon `json:"field8"`
-}
-
-now := carbon.Parse("2020-08-05 13:14:15", carbon.PRC)
-person := Person {
-  Name:   "gouguoyin",
-  Age:    18,
-  
-  Field1: now,
-  Field2: now,
-  Field3: now,
-  Field4: now,
-  Field5: now,
-  Field6: now,
-  Field7: now,
-  Field8: now,
-}
-
-data, marshalErr := json.Marshal(person)
-if marshalErr != nil {
-  // Error handle...
-  log.Fatal(marshalErr)
-}
-fmt.Printf("%s", data)
-// Output
-{
-  "name": "gouguoyin",
-  "age": 18,
-  "field1": "2020-08-05 13:14:15",
-  "field2": "2020-08-05 13:14:15",
-  "field3": "2020-08-05 13:14:15",
-  "field4": "2020-08-05 13:14:15",
-  "field5": "2020-08-05 13:14:15",
-  "field6": "2020-08-05 13:14:15",
-  "field7": "2020-08-05 13:14:15",
-  "field8": "2020-08-05 13:14:15"
-}
-
-var person Person
-unmarshalErr := json.Unmarshal(data, &person)
-if unmarshalErr != nil {
-  // Error handle...
-  log.Fatal(unmarshalErr)
-}
-
-fmt.Printf("%s", person.Field1) // 2020-08-05 13:14:15
-fmt.Printf("%s", person.Field2) // 2020-08-05 13:14:15
-fmt.Printf("%s", person.Field3) // 2020-08-05 13:14:15
-fmt.Printf("%s", person.Field4) // 2020-08-05 13:14:15
-
-fmt.Printf("%s", person.Field5) // 2020-08-05 13:14:15
-fmt.Printf("%s", person.Field6) // 2020-08-05 13:14:15
-fmt.Printf("%s", person.Field7) // 2020-08-05 13:14:15
-fmt.Printf("%s", person.Field8) // 2020-08-05 13:14:15
-```
-
-###### Scene two: different time fields have different formats
 ```go
 type Person struct {
   Name string `json:"name"`
   Age int `json:"age"`
+  Birthday0 carbon.Carbon `json:"birthday0"`
   Birthday1 carbon.DateTime `json:"birthday1"`
   Birthday2 carbon.DateTimeMilli `json:"birthday2"`
   Birthday3 carbon.DateTimeMicro `json:"birthday3"`
@@ -1305,6 +1231,7 @@ type Person struct {
 person := Person {
   Name:        "gouguoyin",
   Age:          18,
+  Birthday0:    carbon.Now().SubYears(18),
   Birthday1:    carbon.Now().SubYears(18).ToDateTimeStruct(),
   Birthday2:    carbon.Now().SubYears(18).ToDateTimeMilliStruct(),
   Birthday3:    carbon.Now().SubYears(18).ToDateTimeMicroStruct(),
@@ -1333,6 +1260,7 @@ fmt.Printf("%s", data)
 {
   "name": "gouguoyin",
   "age": 18,
+  "birthday0": "2003-07-16 13:14:15",
   "birthday1": "2003-07-16 13:14:15",
   "birthday2": "2003-07-16 13:14:15.999",
   "birthday3": "2003-07-16 13:14:15.999999",
@@ -1357,6 +1285,7 @@ if err != nil {
   log.Fatal(err)
 }
 
+person.Birthday0.String() // 2003-07-16 13:14:15
 person.Birthday1.String() // 2003-07-16 13:14:15
 person.Birthday2.String() // 2003-07-16 13:14:15.999
 person.Birthday3.String() // 2003-07-16 13:14:15.999999
@@ -1425,6 +1354,7 @@ The following languages are supported
 * [Hindi(hi)](./lang/hi.json "India"): translated by [chauhan17nitin](https://github.com/chauhan17nitin "chauhan17nitin")
 * [Polish(pl)](./lang/pl.json "Polish"): translated by [gouguoyin](https://github.com/gouguoyin "gouguoyin")
 * [Bulgarian(bg)](./lang/bg.json "Bulgarian"): translated by [yuksbg](https://github.com/yuksbg "yuksbg")
+* [Arabic(ar)](./lang/ar.json "Arabic"): translated by [zumoshi](https://github.com/zumoshi "zumoshi")
 
 The following methods are supported
 

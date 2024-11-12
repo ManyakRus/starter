@@ -10,6 +10,8 @@ import (
 func RunLiveness(nc *nats.Conn, service string, version string) {
 	topic := "sync_exchange.liveness"
 
+	log.Printf("[INFO] sync_exchange, RunLiveness, topic: %q, service: %q, version: %q", topic, service, version)
+
 	data := fmt.Sprintf("{%q: %q, %q: %q}",
 		"service", service, "version", version)
 
