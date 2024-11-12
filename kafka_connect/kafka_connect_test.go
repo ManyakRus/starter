@@ -6,6 +6,7 @@ import (
 	"github.com/ManyakRus/starter/config_main"
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/micro"
+	"github.com/segmentio/kafka-go"
 	"testing"
 	"time"
 
@@ -90,23 +91,47 @@ func TestReadTopic(t *testing.T) {
 	}
 }
 
-func TestReadGroups(t *testing.T) {
+func TestOffsetFetch(t *testing.T) {
+	t.SkipNow() //ненужный, только для АЭС
+
 	config_main.LoadEnv()
-	Connect()
-	defer CloseConnection()
+	FillSettings()
+	CreateClient()
+	//Connect()
+	//defer CloseConnection()
 
-	partitions, err := Conn.ReadPartitions("kol_atom_ul_uni.stack.documents")
+	//
+	Addr := GetAddr()
+
+	//
+	ctx := context.Background()
+	MapTopics := make(map[string][]int)
+	MapTopics["kol_atom_ul_uni.stack.documents"] = []int{0}
+
+	OFR := kafka.OffsetFetchRequest{}
+	OFR.Addr = Addr
+	OFR.GroupID = "debezium_adapter_dev_documents"
+	OFR.Topics = MapTopics
+	Response, err := Client.OffsetFetch(ctx, &OFR)
 	if err != nil {
-		panic(err.Error())
+		t.Errorf("TestOffsetFetch() error: %v", err)
+		return
 	}
+	fmt.Printf("%v", *Response)
+}
 
-	m := map[string]struct{}{}
+func TestGetOffsetFromGroupID(t *testing.T) {
+	t.SkipNow() //ненужный, только для АЭС
 
-	for _, p := range partitions {
-		m[p.Topic] = struct{}{}
+	config_main.LoadEnv()
+	FillSettings()
+	CreateClient()
 
+	TopicName := "kol_atom_ul_uni.stack.documents"
+	GroupID := "debezium_adapter_dev_documents"
+	Otvet, err := GetOffsetFromGroupID(TopicName, GroupID)
+	if err != nil {
+		t.Error("TestGetOffsetFromGroupID() error: ", err)
 	}
-	for k := range m {
-		fmt.Println(k)
-	}
+	fmt.Printf("Otvet: %v", Otvet)
 }

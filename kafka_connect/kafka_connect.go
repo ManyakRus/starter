@@ -2,9 +2,12 @@ package kafka_connect
 
 import (
 	"context"
+	"fmt"
 	"github.com/ManyakRus/starter/logger"
+	"net"
 	"os"
 	"sync"
+	"time"
 
 	//"github.com/ManyakRus/starter/common/v0/micro"
 	"github.com/ManyakRus/starter/contextmain"
@@ -29,6 +32,9 @@ type SettingsINI struct {
 	KAFKA_LOGIN    string
 	KAFKA_PASSWORD string
 }
+
+// Client - клиент для Kafka
+var Client *kafka.Client
 
 // Connect - подключается к серверу Nats
 func Connect() {
@@ -61,8 +67,39 @@ func Connect_err() error {
 	//UserInfo := nats.UserInfo(Settings.KAFKA_LOGIN, Settings.KAFKA_PASSWORD)
 	Conn, err = kafka.Dial("tcp", Settings.KAFKA_HOST+":"+Settings.KAFKA_PORT)
 
+	//
+	err = CreateClient()
+	if err != nil {
+		return err
+	}
+
 	//nats.ManualAck()
 	return err
+}
+
+// CreateClient - создаёт клиент для Kafka
+func CreateClient() error {
+	var err error
+
+	//Addr, err := GetAddr()
+	//if err != nil {
+	//	err = fmt.Errorf("GetAddr() error: %w", err)
+	//}
+
+	Addr := kafka.TCP("localhost:9092")
+
+	Client = &kafka.Client{}
+	Client.Addr = Addr
+
+	return err
+}
+
+// GetAddr - создаёт Addr
+func GetAddr() net.Addr {
+	URL := Settings.KAFKA_HOST + ":" + Settings.KAFKA_PORT
+	Otvet := kafka.TCP(URL)
+
+	return Otvet
 }
 
 // StartKafka - необходимые процедуры для подключения к серверу Kafka
@@ -181,4 +218,36 @@ func ConnectTopic(TopicName, GroupID string) *kafka.Reader {
 	})
 
 	return KafkaReader
+}
+
+// GetOffsetFromGroupID - получает оффсет группы для конкретного топика, партиция 0
+func GetOffsetFromGroupID(TopicName, GroupID string) (*kafka.OffsetFetchResponse, error) {
+	var Otvet *kafka.OffsetFetchResponse
+	var err error
+
+	//
+	ctxMain := contextmain.GetContext()
+	ctx, ctxCancelFunc := context.WithTimeout(ctxMain, time.Duration(60)*time.Second)
+	defer ctxCancelFunc()
+
+	//
+	PartitionNumber := 0
+	MapTopics := make(map[string][]int)
+	MapTopics[TopicName] = []int{PartitionNumber}
+
+	//
+	Addr := GetAddr()
+	OFR := kafka.OffsetFetchRequest{}
+	OFR.Addr = Addr
+	OFR.GroupID = GroupID
+	OFR.Topics = MapTopics
+
+	//
+	Otvet, err = Client.OffsetFetch(ctx, &OFR)
+	if err != nil {
+		err = fmt.Errorf("OffsetFetch() error: %w", err)
+		return Otvet, err
+	}
+
+	return Otvet, err
 }
