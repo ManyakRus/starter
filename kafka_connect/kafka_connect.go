@@ -36,7 +36,7 @@ type SettingsINI struct {
 // Client - клиент для Kafka
 var Client *kafka.Client
 
-// Connect - подключается к серверу Nats
+// Connect - подключается к серверу Kafka
 func Connect() {
 	var err error
 
@@ -54,7 +54,7 @@ func LogInfo_Connected(err error) {
 
 }
 
-// Connect_err - подключается к серверу Nats и возвращает ошибку
+// Connect_err - подключается к серверу Kafka и возвращает ошибку
 func Connect_err() error {
 	var err error
 
@@ -143,7 +143,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	return err
 }
 
-// CloseConnection - закрывает соединение с сервером Nats
+// CloseConnection - закрывает соединение с сервером Kafka
 func CloseConnection() {
 	var err error
 
@@ -157,6 +157,9 @@ func CloseConnection() {
 	} else {
 		log.Info("KAFKA stopped")
 	}
+
+	//
+	Client = nil
 
 	return
 }
