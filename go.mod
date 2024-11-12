@@ -1,8 +1,6 @@
 module github.com/ManyakRus/starter
 
-go 1.22.7
-
-toolchain go1.22.9
+go 1.22.1
 
 require (
 	github.com/ManyakRus/logrus v0.0.0-20231019115155-9e6fede0d792
