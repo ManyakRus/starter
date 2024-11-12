@@ -15,7 +15,7 @@ import (
 // SettingsINI - структура для хранения всех нужных переменных окружения
 type SettingsINI struct {
 	TELEGRAM_API_KEY      string
-	TELEGRAM_CHAT_ID_TEST int64
+	TELEGRAM_CHAT_ID_TEST string
 }
 
 // Settings хранит все нужные переменные окружения
@@ -113,15 +113,34 @@ func Connect_err() error {
 	return err
 }
 
-// SendMessage - отправка сообщения в мессенджер Телеграм
+// SendMessageChatID - отправка сообщения в мессенджер Телеграм
 // возвращает:
 // id = id отправленного сообщения в telegram
 // err = error
-func SendMessage(ChatID int64, Text string) (int, error) {
+func SendMessageChatID(ChatID int64, Text string) (int, error) {
 	var ID int
 	var err error
 
 	msg := botapi.NewMessage(ChatID, Text)
+
+	Message, err := Client.Send(msg)
+	if err != nil {
+		return ID, err
+	}
+	ID = Message.MessageID
+
+	return ID, err
+}
+
+// SendMessage - отправка сообщения в мессенджер Телеграм
+// возвращает:
+// id = id отправленного сообщения в telegram
+// err = error
+func SendMessage(UserName string, Text string) (int, error) {
+	var ID int
+	var err error
+
+	msg := botapi.NewMessageToChannel(UserName, Text)
 
 	Message, err := Client.Send(msg)
 	if err != nil {
@@ -278,11 +297,7 @@ func FillSettings() {
 
 	Name = "TELEGRAM_CHAT_ID_TEST"
 	s = Getenv(Name, true)
-	i, err := micro.Int64FromString(s)
-	if err != nil {
-		log.Panicf("TELEGRAM_CHAT_ID_TEST: %s, error: %v", s, err)
-	}
-	Settings.TELEGRAM_CHAT_ID_TEST = i
+	Settings.TELEGRAM_CHAT_ID_TEST = s
 
 }
 

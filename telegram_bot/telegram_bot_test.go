@@ -69,6 +69,27 @@ func TestGetConnection(t *testing.T) {
 	defer CloseConnection()
 }
 
+func TestSendMessageChatID(t *testing.T) {
+	t.SkipNow()
+
+	config_main.LoadEnv()
+	GetConnection()
+	defer CloseConnection()
+
+	s := Settings.TELEGRAM_CHAT_ID_TEST
+	i, err := micro.Int64FromString(s)
+	if err != nil {
+		t.Errorf("TELEGRAM_CHAT_ID_TEST: %s, error: %v", s, err)
+	}
+
+	Text := "test " + time.Now().String()
+	_, err = SendMessageChatID(i, Text)
+	if err != nil {
+		t.Error("TestSendMessage() error: ", err)
+	}
+
+}
+
 func TestSendMessage(t *testing.T) {
 	config_main.LoadEnv()
 	GetConnection()
