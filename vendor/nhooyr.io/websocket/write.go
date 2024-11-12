@@ -23,8 +23,6 @@ import (
 // Writer returns a writer bounded by the context that will write
 // a WebSocket message of type dataType to the connection.
 //
-// Deprecated: coder now maintains this library at https://github.com/coder/websocket.
-//
 // You must close the writer once you have written the entire message.
 //
 // Only one writer can be open at a time, multiple calls will block until the previous writer
@@ -38,8 +36,6 @@ func (c *Conn) Writer(ctx context.Context, typ MessageType) (io.WriteCloser, err
 }
 
 // Write writes a message to the connection.
-//
-// Deprecated: coder now maintains this library at https://github.com/coder/websocket.
 //
 // See the Writer method if you want to stream a message.
 //

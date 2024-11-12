@@ -90,7 +90,7 @@ type EventProcessor func(event *Event, hint *EventHint) *Event
 // ApplyToEvent changes an event based on external data and/or
 // an event hint.
 type EventModifier interface {
-	ApplyToEvent(event *Event, hint *EventHint, client *Client) *Event
+	ApplyToEvent(event *Event, hint *EventHint) *Event
 }
 
 var globalEventProcessors []EventProcessor
@@ -685,7 +685,7 @@ func (client *Client) prepareEvent(event *Event, hint *EventHint, scope EventMod
 	}
 
 	if scope != nil {
-		event = scope.ApplyToEvent(event, hint, client)
+		event = scope.ApplyToEvent(event, hint)
 		if event == nil {
 			return nil
 		}

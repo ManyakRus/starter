@@ -35,11 +35,8 @@ type oauthBearerClient struct {
 }
 
 func (a *oauthBearerClient) Start() (mech string, ir []byte, err error) {
-	var authzid string
-	if a.Username != "" {
-		authzid = "a=" + a.Username
-	}
-	str := "n," + authzid + ","
+	mech = OAuthBearer
+	var str = "n,a=" + a.Username + ","
 
 	if a.Host != "" {
 		str += "\x01host=" + a.Host
@@ -50,7 +47,7 @@ func (a *oauthBearerClient) Start() (mech string, ir []byte, err error) {
 	}
 	str += "\x01auth=Bearer " + a.Token + "\x01\x01"
 	ir = []byte(str)
-	return OAuthBearer, ir, nil
+	return
 }
 
 func (a *oauthBearerClient) Next(challenge []byte) ([]byte, error) {
@@ -84,7 +81,7 @@ func (a *oauthBearerServer) fail(descr string) ([]byte, bool, error) {
 	if err != nil {
 		panic(err) // wtf
 	}
-	a.failErr = errors.New("sasl: client error: " + descr)
+	a.failErr = errors.New(descr)
 	return blob, false, nil
 }
 
@@ -98,7 +95,7 @@ func (a *oauthBearerServer) Next(response []byte) (challenge []byte, done bool, 
 		// indirectly OAUTHBEARER) defines a protocol-independent way to do so
 		// using 0x01.
 		if len(response) != 1 && response[0] != 0x01 {
-			return nil, true, errors.New("sasl: invalid response")
+			return nil, true, errors.New("unexpected response")
 		}
 		return nil, true, a.failErr
 	}
@@ -124,18 +121,14 @@ func (a *oauthBearerServer) Next(response []byte) (challenge []byte, done bool, 
 	if len(parts) != 3 {
 		return a.fail("Invalid response")
 	}
-	flag := parts[0]
-	authzid := parts[1]
-	if !bytes.Equal(flag, []byte{'n'}) {
-		return a.fail("Invalid response, missing 'n' in gs2-cb-flag")
+	if !bytes.Equal(parts[0], []byte{'n'}) {
+		return a.fail("Invalid response, missing 'n'")
 	}
 	opts := OAuthBearerOptions{}
-	if len(authzid) > 0 {
-		if !bytes.HasPrefix(authzid, []byte("a=")) {
-			return a.fail("Invalid response, missing 'a=' in gs2-authzid")
-		}
-		opts.Username = string(bytes.TrimPrefix(authzid, []byte("a=")))
+	if !bytes.HasPrefix(parts[1], []byte("a=")) {
+		return a.fail("Invalid response, missing 'a'")
 	}
+	opts.Username = string(bytes.TrimPrefix(parts[1], []byte("a=")))
 
 	// Cut \x01host=...\x01auth=...\x01\x01
 	// into
