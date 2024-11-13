@@ -215,7 +215,7 @@ func CloseConnection_err() error {
 	}
 
 	Client.StopReceivingUpdates()
-	Client = nil
+	//Client = nil
 
 	return err
 }
