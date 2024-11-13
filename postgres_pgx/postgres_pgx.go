@@ -111,7 +111,8 @@ func Connect_WithApplicationName_err(ApplicationName string) error {
 	Conn, err = pgx.ConnectConfig(ctx, config)
 
 	if err != nil {
-		log.Panicln("Unable to connect to database host: ", Settings.DB_HOST, " Error: ", err)
+		err = fmt.Errorf("ConnectConfig() error: %w", err)
+		//log.Panicln("Unable to connect to database host: ", Settings.DB_HOST, " Error: ", err)
 	}
 
 	if err == nil {
