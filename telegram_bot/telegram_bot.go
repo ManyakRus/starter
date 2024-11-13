@@ -296,7 +296,7 @@ func FillSettings() {
 	Settings.TELEGRAM_API_KEY = s
 
 	Name = "TELEGRAM_CHAT_ID_TEST"
-	s = Getenv(Name, true)
+	s = Getenv(Name, false)
 	Settings.TELEGRAM_CHAT_ID_TEST = s
 
 }
