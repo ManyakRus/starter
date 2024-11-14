@@ -773,11 +773,19 @@ func WaitStop() {
 
 // CloseConnection - остановка работы клиента Телеграм
 func CloseConnection() {
+	var err error
+
 	if stopTelegramFunc != nil {
 		err := stopTelegramFunc()
 		if err != nil {
 			log.Error("error: ", err)
 		}
+	}
+
+	if err != nil {
+		log.Error("Telegram client CloseConnection() error: ", err)
+	} else {
+		log.Info("Telegram client connection closed")
 	}
 
 }

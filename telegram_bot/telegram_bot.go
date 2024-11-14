@@ -199,9 +199,9 @@ func CloseConnection() {
 
 	err := CloseConnection_err()
 	if err != nil {
-		log.Error("Postgres gorm CloseConnection() error: ", err)
+		log.Error("Telegram bot CloseConnection() error: ", err)
 	} else {
-		log.Info("Postgres gorm connection closed")
+		log.Info("Telegram bot connection closed")
 	}
 
 	return
