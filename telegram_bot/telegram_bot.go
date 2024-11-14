@@ -122,6 +122,7 @@ func SendMessageChatID(ChatID int64, Text string) (int, error) {
 	var err error
 
 	msg := botapi.NewMessage(ChatID, Text)
+	msg.ParseMode = "HTML"
 
 	Message, err := Client.Send(msg)
 	if err != nil {
@@ -141,6 +142,7 @@ func SendMessage(UserName string, Text string) (int, error) {
 	var err error
 
 	msg := botapi.NewMessageToChannel(UserName, Text)
+	msg.ParseMode = "HTML"
 
 	Message, err := Client.Send(msg)
 	if err != nil {
