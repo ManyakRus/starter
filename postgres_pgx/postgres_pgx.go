@@ -350,16 +350,16 @@ loop:
 	for {
 		select {
 		case <-contextmain.GetContext().Done():
-			log.Warn("Context app is canceled. postgres_gorm.ping")
+			log.Warn("Context app is canceled. postgres_pgx.ping")
 			break loop
 		case <-ticker.C:
 			err := port_checker.CheckPort_err(Settings.DB_HOST, Settings.DB_PORT)
 			//log.Debug("ticker, ping err: ", err) //удалить
 			if err != nil {
 				NeedReconnect = true
-				log.Warn("postgres_gorm CheckPort(", addr, ") error: ", err)
+				log.Warn("postgres_pgx CheckPort(", addr, ") error: ", err)
 			} else if NeedReconnect == true {
-				log.Warn("postgres_gorm CheckPort(", addr, ") OK. Start Reconnect()")
+				log.Warn("postgres_pgx CheckPort(", addr, ") OK. Start Reconnect()")
 				NeedReconnect = false
 				Connect()
 			}
