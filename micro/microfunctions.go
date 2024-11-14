@@ -1215,3 +1215,18 @@ func MassFrom_Map[C constraints.Ordered, V any](Map map[C]V) []V {
 
 	return Otvet
 }
+
+// Substring - take at most last n characters, from start index
+func Substring(input string, StartIndex int, length int) string {
+	asRunes := []rune(input)
+
+	if StartIndex >= len(asRunes) {
+		return ""
+	}
+
+	if StartIndex+length > len(asRunes) {
+		length = len(asRunes) - StartIndex
+	}
+
+	return string(asRunes[StartIndex : StartIndex+length])
+}

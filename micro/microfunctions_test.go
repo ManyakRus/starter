@@ -1206,3 +1206,25 @@ func TestStringDateTime(t *testing.T) {
 		t.Errorf("Test case 2 failed. Expected: %s, Got: %s", expectedResult2, result2)
 	}
 }
+
+func TestSubstring(t *testing.T) {
+	tests := []struct {
+		input       string
+		startIndex  int
+		length      int
+		expected    string
+		description string
+	}{
+		{"hello", 0, 2, "he", "Getting the first 2 characters"},
+		{"world", 2, 3, "rld", "Getting characters from index 2 to 4"},
+		{"test", 5, 2, "", "Start index beyond the length of the string"},
+		{"", 0, 2, "", "Empty input string"},
+	}
+
+	for _, test := range tests {
+		result := Substring(test.input, test.startIndex, test.length)
+		if result != test.expected {
+			t.Errorf("Test case failed: %s. Expected: %s, but got: %s", test.description, test.expected, result)
+		}
+	}
+}
