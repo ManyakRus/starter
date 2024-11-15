@@ -319,9 +319,10 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 // Start - делает соединение с БД, отключение и др.
 func Start(ApplicationName string) {
 	err := Connect_WithApplicationName_err(ApplicationName)
-	if err != nil {
-		log.Panic("Postgres gorm Start() error: ", err)
-	}
+	LogInfo_Connected(err)
+	//if err != nil {
+	//	log.Panic("Postgres gorm Start() error: ", err)
+	//}
 
 	stopapp.GetWaitGroup_Main().Add(1)
 	go WaitStop()

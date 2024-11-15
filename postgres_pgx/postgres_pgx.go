@@ -292,7 +292,8 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 
 // Start - делает соединение с БД, отключение и др.
 func Start(ApplicationName string) {
-	Connect_WithApplicationName_err(ApplicationName)
+	err := Connect_WithApplicationName_err(ApplicationName)
+	LogInfo_Connected(err)
 
 	stopapp.GetWaitGroup_Main().Add(1)
 	go WaitStop()
