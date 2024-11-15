@@ -93,7 +93,12 @@ func Connect_WithApplicationName_err(ApplicationName string) error {
 		FillSettings()
 	}
 
-	//ctxMain := context.Background()
+	//
+	if contextmain.GetContext().Err() != nil {
+		return contextmain.GetContext().Err()
+	}
+
+	//
 	ctxMain := contextmain.GetContext()
 	ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second)
 	defer cancel()

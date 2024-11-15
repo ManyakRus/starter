@@ -109,6 +109,11 @@ func Connect_WithApplicationName_err(ApplicationName string) error {
 		FillSettings()
 	}
 
+	//
+	if contextmain.GetContext().Err() != nil {
+		return contextmain.GetContext().Err()
+	}
+
 	//get the database connection URL.
 	dsn := GetDSN(ApplicationName)
 
