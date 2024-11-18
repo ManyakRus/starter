@@ -1230,3 +1230,17 @@ func Substring(input string, StartIndex int, length int) string {
 
 	return string(asRunes[StartIndex : StartIndex+length])
 }
+
+// IntNot0 - возвращает первое ненулевое значение
+func IntNot0(MassInt ...int) int {
+	Otvet := 0
+
+	for _, v := range MassInt {
+		if v != 0 {
+			Otvet = v
+			break
+		}
+	}
+
+	return Otvet
+}

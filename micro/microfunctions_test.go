@@ -1228,3 +1228,23 @@ func TestSubstring(t *testing.T) {
 		}
 	}
 }
+
+func TestIntNot0(t *testing.T) {
+	// Testing when all input integers are 0
+	result1 := IntNot0(0, 0, 0)
+	if result1 != 0 {
+		t.Errorf("Expected 0, but got %d", result1)
+	}
+
+	// Testing when some input integers are 0 and some are non-zero
+	result2 := IntNot0(0, 5, 0, 10)
+	if result2 != 5 {
+		t.Errorf("Expected 5, but got %d", result2)
+	}
+
+	// Testing when all input integers are non-zero
+	result3 := IntNot0(3, 7, 2)
+	if result3 != 3 {
+		t.Errorf("Expected 3, but got %d", result3)
+	}
+}
