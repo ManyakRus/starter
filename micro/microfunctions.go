@@ -1218,17 +1218,22 @@ func MassFrom_Map[C constraints.Ordered, V any](Map map[C]V) []V {
 
 // Substring - take at most last n characters, from start index
 func Substring(input string, StartIndex int, length int) string {
-	asRunes := []rune(input)
+	//asRunes := []rune(input)
 
-	if StartIndex >= len(asRunes) {
+	if StartIndex >= len(input) {
 		return ""
 	}
 
-	if StartIndex+length > len(asRunes) {
-		length = len(asRunes) - StartIndex
+	if (StartIndex + length) >= len(input) {
+		length = len(input) - StartIndex
 	}
 
-	return string(asRunes[StartIndex : StartIndex+length])
+	//if StartIndex+length > len(asRunes) {
+	//	length = len(asRunes) - StartIndex
+	//}
+
+	Otvet := string(input[StartIndex : StartIndex+length])
+	return Otvet
 }
 
 // IntNot0 - возвращает первое ненулевое значение
@@ -1260,9 +1265,12 @@ func InsertTextFrom(Text string, TextAdd string, IndexFrom int) string {
 	}
 
 	//
-	buffer.WriteString(Substring(Text, 0, IndexFrom))
+	s2 := SubstringLeft(Text, IndexFrom+1)
+	buffer.WriteString(s2)
 	buffer.WriteString(TextAdd)
-	buffer.WriteString(Substring(Text, IndexFrom, len(Text)))
+	s3 := Substring(Text, IndexFrom, len(Text+TextAdd))
+	buffer.WriteString(s3)
 
-	return buffer.String()
+	Otvet := buffer.String()
+	return Otvet
 }
