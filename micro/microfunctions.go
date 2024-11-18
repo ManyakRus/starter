@@ -1244,3 +1244,25 @@ func IntNot0(MassInt ...int) int {
 
 	return Otvet
 }
+
+// InsertTextFrom - вставляет текст в середину строки
+func InsertTextFrom(Text string, TextAdd string, IndexFrom int) string {
+	var buffer bytes.Buffer
+
+	//
+	if IndexFrom >= len(Text) {
+		return Text + TextAdd
+	}
+
+	//
+	if IndexFrom < 0 {
+		return TextAdd + Text
+	}
+
+	//
+	buffer.WriteString(Substring(Text, 0, IndexFrom))
+	buffer.WriteString(TextAdd)
+	buffer.WriteString(Substring(Text, IndexFrom, len(Text)))
+
+	return buffer.String()
+}

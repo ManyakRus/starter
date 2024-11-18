@@ -1248,3 +1248,27 @@ func TestIntNot0(t *testing.T) {
 		t.Errorf("Expected 3, but got %d", result3)
 	}
 }
+
+func TestInsertTextFrom_EndOfString(t *testing.T) {
+	expected := "Hello, World!"
+	result := InsertTextFrom("Hello, ", "World!", 7)
+	if result != expected {
+		t.Errorf("Expected %s, but got %s", expected, result)
+	}
+}
+
+func TestInsertTextFrom_BeginningOfString(t *testing.T) {
+	expected := "Hi, there"
+	result := InsertTextFrom(", there", "Hi", 0)
+	if result != expected {
+		t.Errorf("Expected %s, but got %s", expected, result)
+	}
+}
+
+func TestInsertTextFrom_MiddleOfString(t *testing.T) {
+	expected := "The quick brown fox jumps over the lazy dog."
+	result := InsertTextFrom("The quick fox jumps over the lazy dog.", "brown ", 10)
+	if result != expected {
+		t.Errorf("Expected %s, but got %s", expected, result)
+	}
+}
