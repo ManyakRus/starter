@@ -25,7 +25,7 @@ type SettingsINI struct {
 var Settings SettingsINI
 
 // Conn - подключение к серверу GRPC
-var Conn *investgo.Client
+var Client *investgo.Client
 
 // mutex_Connect - защита от многопоточности Reconnect()
 var mutex_Connect = &sync.Mutex{}
@@ -70,8 +70,8 @@ func Connect_err() error {
 	ctx := contextmain.GetContext()
 
 	//addr := Settings.Host + ":" + Settings.Port
-	Config := investgo.Config{}
-	Conn, err = investgo.NewClient(ctx, Config, log.GetLog())
+	Config := Settings.Config
+	Client, err = investgo.NewClient(ctx, Config, log.GetLog())
 	if err != nil {
 		return err
 	}
@@ -184,7 +184,7 @@ func CloseConnection() {
 
 // CloseConnection - закрывает подключение к GRPC, и возвращает ошибку
 func CloseConnection_err() error {
-	err := Conn.Stop()
+	err := Client.Stop()
 	return err
 }
 

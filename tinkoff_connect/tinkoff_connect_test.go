@@ -12,3 +12,16 @@ func TestFillSettings(t *testing.T) {
 		t.Error("FillSettings() error: ", err)
 	}
 }
+
+func TestConnect_err(t *testing.T) {
+	config_main.LoadEnv()
+	err := Connect_err()
+	if err != nil {
+		t.Error("TestConnect error: ", err)
+	}
+
+	err = CloseConnection_err()
+	if err != nil {
+		t.Error("TestConnect() error: ", err)
+	}
+}
