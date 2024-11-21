@@ -24,8 +24,6 @@ build:
 	clear
 	./make_version.sh
 	go build -race -o $(FILEAPP) $(FILEMAIN)
-	cd ./cmd && \
-	./VersionToFile.py
 lint:
 	clear
 	go fmt ./...
