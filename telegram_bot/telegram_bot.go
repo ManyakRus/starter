@@ -8,7 +8,6 @@ import (
 	"github.com/ManyakRus/starter/micro"
 	"github.com/ManyakRus/starter/stopapp"
 	botapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"html"
 	"os"
 	"sync"
 )
@@ -143,7 +142,7 @@ func SendMessage(UserName string, Text string) (int, error) {
 	var err error
 
 	//экранируем запрещённые символы
-	Text = html.EscapeString(Text)
+	//Text = html.EscapeString(Text)
 
 	//
 	msg := botapi.NewMessageToChannel(UserName, Text)
