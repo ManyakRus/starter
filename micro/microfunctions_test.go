@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/google/uuid"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"os"
 	"reflect"
 	"strings"
@@ -1270,5 +1271,14 @@ func TestInsertTextFrom_MiddleOfString(t *testing.T) {
 	result := InsertTextFrom("The quick fox jumps over the lazy dog.", "brown ", 10)
 	if result != expected {
 		t.Errorf("Expected %s, but got %s", expected, result)
+	}
+}
+
+func TestDate_from_TimestampReference(t *testing.T) {
+	var Timestamp1 *timestamppb.Timestamp
+
+	result := Date_from_TimestampReference(Timestamp1)
+	if result.IsZero() == false {
+		t.Errorf("Expected time.Time{}, but got %s", result)
 	}
 }

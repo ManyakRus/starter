@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"golang.org/x/exp/constraints"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"hash/fnv"
 	"os/exec"
 	"reflect"
@@ -1272,5 +1273,16 @@ func InsertTextFrom(Text string, TextAdd string, IndexFrom int) string {
 	buffer.WriteString(s3)
 
 	Otvet := buffer.String()
+	return Otvet
+}
+
+// Date_from_TimestampReference - возвращает дату из *Timestamp
+func Date_from_TimestampReference(Timestamp *timestamppb.Timestamp) time.Time {
+	Otvet := time.Time{}
+
+	if Timestamp != nil {
+		Otvet = Timestamp.AsTime()
+	}
+
 	return Otvet
 }
