@@ -1282,3 +1282,29 @@ func TestDate_from_TimestampReference(t *testing.T) {
 		t.Errorf("Expected time.Time{}, but got %s", result)
 	}
 }
+
+func TestSetFieldValue(t *testing.T) {
+	type Struct1 struct {
+		Field1 string
+	}
+
+	Struct := &Struct1{}
+	SetFieldValue(Struct, "Field1", "Test")
+
+	if Struct.Field1 != "Test" {
+		t.Errorf("Expected 'Test', but got %s", Struct.Field1)
+	}
+}
+
+func TestSetFieldValue2(t *testing.T) {
+	type Struct1 struct {
+		Field1 int
+	}
+
+	Struct := &Struct1{}
+	SetFieldValue(Struct, "Field1", "1")
+
+	if Struct.Field1 != 1 {
+		t.Errorf("Expected 'Test', but got %v", Struct.Field1)
+	}
+}

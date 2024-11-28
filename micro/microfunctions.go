@@ -1286,3 +1286,41 @@ func Date_from_TimestampReference(Timestamp *timestamppb.Timestamp) time.Time {
 
 	return Otvet
 }
+
+// SetFieldValue - устанавливает значение поля в структуре
+// Параметры:
+// Object - ссылка(&) на структуру
+// FieldName - название поля
+// Value - значение нужного типа
+// Возвращает ошибку
+func SetFieldValue(Object any, FieldName string, Value any) error {
+	var err error
+
+	ref := reflect.ValueOf(Object)
+
+	//sanek
+	if ref.Kind() != reflect.Ptr {
+		err = fmt.Errorf("expected pointer but got %s", ref.Kind().String())
+		return err
+	}
+
+	// if its a pointer, resolve its Value
+	if ref.Kind() == reflect.Ptr {
+		ref = reflect.Indirect(ref)
+	}
+
+	if ref.Kind() == reflect.Interface {
+		ref = ref.Elem()
+	}
+
+	//should double check we now have a struct (could still be anything)
+	if ref.Kind() != reflect.Struct {
+		err = fmt.Errorf("expected struct but got %s", ref.Kind().String())
+		return err
+	}
+
+	prop := ref.FieldByName(FieldName)
+	prop.Set(reflect.ValueOf(Value))
+
+	return err
+}
