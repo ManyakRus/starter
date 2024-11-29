@@ -1190,6 +1190,25 @@ func TestMassFrom_Map(t *testing.T) {
 	})
 }
 
+func TestMassFrom_Map_DESC(t *testing.T) {
+	// Test case for sorting a map by column names
+	t.Run("Sort map by keys", func(t *testing.T) {
+		input := map[string]int{"c": 3, "a": 1, "b": 2}
+		expected := []int{3, 2, 1}
+		result := MassFrom_Map_DESC(input)
+		if !reflect.DeepEqual(result, expected) {
+			t.Errorf("Expected %v, but got %v", expected, result)
+		}
+	})
+
+	// Test case for handling a key not found in the map
+	t.Run("Key not found", func(t *testing.T) {
+		input := map[string]string{"a": "apple", "b": "banana"}
+		_ = MassFrom_Map(input) // This call should print an error message for the missing key
+		// You can capture the output of fmt.Printf using https://stackoverflow.com/questions/10473800/in-go-how-do-i-capture-stdout-of-a-function-into-a-string
+	})
+}
+
 func TestStringDateTime(t *testing.T) {
 	// Test case 1: Testing the output format for a specific date and time
 	expectedResult1 := "31.12.2022 23:59:59"

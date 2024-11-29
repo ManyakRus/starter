@@ -1194,6 +1194,13 @@ func SortMass[T constraints.Ordered](s []T) {
 	})
 }
 
+// SortMass_DESC - сортирует слайс, в обратном порядке
+func SortMass_DESC[T constraints.Ordered](s []T) {
+	sort.Slice(s, func(i, j int) bool {
+		return s[i] > s[j]
+	})
+}
+
 // MassFrom_Map - сортирует map по названию колонок и возвращает слайс
 func MassFrom_Map[C constraints.Ordered, V any](Map map[C]V) []V {
 	Otvet := make([]V, 0)
@@ -1204,6 +1211,29 @@ func MassFrom_Map[C constraints.Ordered, V any](Map map[C]V) []V {
 		keys = append(keys, k)
 	}
 	SortMass(keys)
+
+	//
+	for _, key1 := range keys {
+		Value, ok := Map[key1]
+		if ok == false {
+			fmt.Printf("Map[%v] not found\n", key1)
+		}
+		Otvet = append(Otvet, Value)
+	}
+
+	return Otvet
+}
+
+// MassFrom_Map_DESC - сортирует map по названию колонок и возвращает слайс, с обратной сортировкой
+func MassFrom_Map_DESC[C constraints.Ordered, V any](Map map[C]V) []V {
+	Otvet := make([]V, 0)
+
+	//сортировка по названию колонок
+	keys := make([]C, 0, len(Map))
+	for k := range Map {
+		keys = append(keys, k)
+	}
+	SortMass_DESC(keys)
 
 	//
 	for _, key1 := range keys {
