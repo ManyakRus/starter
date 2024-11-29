@@ -857,6 +857,13 @@ func ShowTimePassed(StartAt time.Time) {
 	fmt.Printf("Time passed: %s\n", time.Since(StartAt))
 }
 
+// ShowTimePassed_FormatText - показывает время прошедшее с момента старта
+// запускать:
+// defer micro.ShowTimePassed(time.Now())
+func ShowTimePassed_FormatText(FormatText string, StartAt time.Time) {
+	fmt.Printf(FormatText, time.Since(StartAt))
+}
+
 // ShowTimePassedSeconds - показывает время секунд прошедшее с момента старта
 // запускать:
 // defer micro.ShowTimePassedSeconds(time.Now())
@@ -1350,7 +1357,8 @@ func SetFieldValue(Object any, FieldName string, Value any) error {
 	}
 
 	prop := ref.FieldByName(FieldName)
-	prop.Set(reflect.ValueOf(Value))
+	ValueNew := reflect.ValueOf(Value)
+	prop.Set(ValueNew)
 
 	return err
 }

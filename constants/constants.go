@@ -5,6 +5,12 @@ import (
 	"time"
 )
 
+// LayoutDateTimeRus - формат текстовой даты и времени для России
+var LayoutDateTimeRus = "02.01.2006 15:04:05"
+
+// LayoutDateRus - формат текстовой даты для России
+var LayoutDateRus = "02.01.2006"
+
 var Loc = time.Local
 
 // CONNECTION_ID - ИД в БД Рапира в таблице connections
