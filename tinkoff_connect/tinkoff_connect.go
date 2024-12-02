@@ -113,7 +113,7 @@ func FillSettings() error {
 
 	//
 	Name = "INVEST_ACCOUNTID"
-	s = microl.Getenv(Name, true)
+	s = microl.Getenv(Name, false)
 	Settings.AccountId = s
 
 	return err
