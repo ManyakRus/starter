@@ -179,3 +179,31 @@ func Set_FieldFromEnv_Bool(StructReference any, FieldName string, IsRequired boo
 		return
 	}
 }
+
+// ShowTimePassed - показывает время прошедшее с момента старта
+// запускать:
+// defer micro.ShowTimePassed(time.Now())
+func ShowTimePassed(StartAt time.Time) {
+	log.Debugf("Time passed: %s\n", time.Since(StartAt))
+}
+
+// ShowTimePassed_FormatText - показывает время прошедшее с момента старта
+// запускать:
+// defer micro.ShowTimePassed(time.Now())
+func ShowTimePassed_FormatText(FormatText string, StartAt time.Time) {
+	log.Debugf(FormatText, time.Since(StartAt))
+}
+
+// ShowTimePassedSeconds - показывает время секунд прошедшее с момента старта
+// запускать:
+// defer micro.ShowTimePassedSeconds(time.Now())
+func ShowTimePassedSeconds(StartAt time.Time) {
+	log.Debugf("Time passed: %s\n", time.Since(StartAt).Round(time.Second))
+}
+
+// ShowTimePassedMilliSeconds - показывает время миллисекунд прошедшее с момента старта
+// запускать:
+// defer micro.ShowTimePassedMilliSeconds(time.Now())
+func ShowTimePassedMilliSeconds(StartAt time.Time) {
+	log.Debugf("Time passed: %s\n", time.Since(StartAt).Round(time.Millisecond))
+}
