@@ -119,3 +119,20 @@ func TestSet_FieldFromEnv_Date(t *testing.T) {
 	}
 
 }
+
+func TestSet_FieldFromEnv_Bool(t *testing.T) {
+	type Struct1 struct {
+		TestSet_FieldFromEnv bool
+	}
+
+	Name := "TestSet_FieldFromEnv"
+	os.Setenv(Name, "1")
+
+	Struct := Struct1{}
+	Set_FieldFromEnv_Bool(&Struct, Name, true)
+
+	if Struct.TestSet_FieldFromEnv != true {
+		t.Error("TestSet_FieldFromEnv_Bool() error")
+	}
+
+}

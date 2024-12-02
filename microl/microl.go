@@ -160,3 +160,22 @@ func Set_FieldFromEnv_Date(StructReference any, FieldName string, IsRequired boo
 		return
 	}
 }
+
+// Set_FieldFromEnv_Bool - устанавливает значение поля из переменной окружения
+// Параметры:
+// Object - указатель на структуру
+// FieldName - имя поля
+// IsRequired - обязательное ли поле
+func Set_FieldFromEnv_Bool(StructReference any, FieldName string, IsRequired bool) {
+	sValue := Getenv(FieldName, IsRequired)
+
+	Value := micro.BoolFromString(sValue)
+
+	err := micro.SetFieldValue(StructReference, FieldName, Value)
+
+	if err != nil {
+		err = fmt.Errorf("SetFieldFrom() FieldName: %s error: %w", FieldName, err)
+		log.Error(err)
+		return
+	}
+}
