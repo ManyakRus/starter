@@ -378,7 +378,12 @@ loop:
 // GetConnection - возвращает соединение к нужной базе данных
 func GetConnection() *pgx.Conn {
 	if Conn == nil || Conn.IsClosed() {
-		Connect()
+		err := Connect_err()
+		if err != nil {
+			log.Error("POSTGRES pgx Connect() to database host: ", Settings.DB_HOST, ", error: ", err)
+		} else {
+			log.Info("POSTGRES pgx Connected. host: ", Settings.DB_HOST, ", base name: ", Settings.DB_NAME, ", schema: ", Settings.DB_SCHEMA)
+		}
 	}
 
 	return Conn
