@@ -412,7 +412,12 @@ func GetDSN(ApplicationName string) string {
 // GetConnection - возвращает соединение к нужной базе данных
 func GetConnection() *gorm.DB {
 	if Conn == nil {
-		Connect()
+		err := Connect_err()
+		if err != nil {
+			log.Error("POSTGRES gorm Connect() to database host: ", Settings.DB_HOST, ", error: ", err)
+		} else {
+			log.Info("POSTGRES gorm Connected. host: ", Settings.DB_HOST, ", base name: ", Settings.DB_NAME, ", schema: ", Settings.DB_SCHEMA)
+		}
 	}
 
 	return Conn
