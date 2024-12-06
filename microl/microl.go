@@ -15,8 +15,14 @@ import (
 // Getenv - возвращает переменную окружения
 func Getenv(Name string, IsRequired bool) string {
 	TextError := "Need fill OS environment variable: "
-	Otvet := os.Getenv(Name)
-	if IsRequired == true && Otvet == "" {
+	Otvet, IsFind := os.LookupEnv(Name)
+	if IsFind == true {
+		return Otvet
+	}
+
+	if IsRequired == true {
+		log.Panic(TextError + Name)
+	} else {
 		log.Error(TextError + Name)
 	}
 
