@@ -23,7 +23,7 @@ func Getenv(Name string, IsRequired bool) string {
 	if IsRequired == true {
 		log.Panic(TextError + Name)
 	} else {
-		log.Error(TextError + Name)
+		log.Warn(TextError + Name)
 	}
 
 	return Otvet
