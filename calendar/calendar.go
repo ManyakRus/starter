@@ -1,6 +1,7 @@
 package calendar
 
 import (
+	"github.com/dromara/carbon/v2"
 	"time"
 )
 
@@ -21,7 +22,7 @@ func FindPreviousWorkDay(DateNow time.Time) time.Time {
 		CarbonDate = CarbonDate.AddDays(-1)
 	}
 
-	Otvet = CarbonDate.ToStdTime()
+	Otvet = CarbonDate.StdTime()
 
 	return Otvet
 }
@@ -32,16 +33,16 @@ func FindPreviousWorkDay(DateNow time.Time) time.Time {
 //	var Otvet time.Time
 //
 //	//DateNow := time.Now()
-//	Otvet = carbon.CreateFromStdTime(DateNow).StartOfDay().ToStdTime()
+//	Otvet = carbon.CreateFromStdTime(DateNow).StartOfDay().StdTime()
 //
 //	Weekday := int(DateNow.Weekday())
 //	switch Weekday {
 //	case 0: //воскресенье
-//		Otvet = carbon.CreateFromStdTime(Otvet).AddDays(-2).ToStdTime()
+//		Otvet = carbon.CreateFromStdTime(Otvet).AddDays(-2).StdTime()
 //	case 1: //понедельник
-//		Otvet = carbon.CreateFromStdTime(Otvet).AddDays(-3).ToStdTime()
+//		Otvet = carbon.CreateFromStdTime(Otvet).AddDays(-3).StdTime()
 //	default:
-//		Otvet = carbon.CreateFromStdTime(Otvet).AddDays(-1).ToStdTime()
+//		Otvet = carbon.CreateFromStdTime(Otvet).AddDays(-1).StdTime()
 //	}
 //
 //	return Otvet

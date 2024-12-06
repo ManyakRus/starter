@@ -7,6 +7,7 @@ require (
 	github.com/camunda/zeebe/clients/go/v8 v8.5.10
 	github.com/cockroachdb/pebble v1.1.2
 	github.com/denisenkom/go-mssqldb v0.12.3
+	github.com/dromara/carbon/v2 v2.5.2
 	github.com/emersion/go-imap v1.2.1
 	github.com/emersion/go-message v0.18.1
 	github.com/go-faster/errors v0.7.1
