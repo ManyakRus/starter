@@ -59,12 +59,12 @@ type Client struct {
 	// Ref: https://pkg.go.dev/sync/atomic#pkg-note-BUG
 
 	// Connection factory fields.
-	connsCounter atomic.Int64
-	create       connConstructor        // immutable
-	resolver     dcs.Resolver           // immutable
-	onDead       func()                 // immutable
-	connBackoff  func() backoff.BackOff // immutable
-	defaultMode  manager.ConnMode       // immutable
+	connsCounter   atomic.Int64
+	create         connConstructor        // immutable
+	resolver       dcs.Resolver           // immutable
+	onDead         func()                 // immutable
+	newConnBackoff func() backoff.BackOff // immutable
+	defaultMode    manager.ConnMode       // immutable
 
 	// Migration state.
 	migrationTimeout time.Duration // immutable
@@ -90,10 +90,11 @@ type Client struct {
 	testDC bool // immutable
 
 	// Connection state. Guarded by connMux.
-	session *pool.SyncSession
-	cfg     *manager.AtomicConfig
-	conn    clientConn
-	connMux sync.Mutex
+	session     *pool.SyncSession
+	cfg         *manager.AtomicConfig
+	conn        clientConn
+	connBackoff atomic.Pointer[backoff.BackOff]
+	connMux     sync.Mutex
 
 	// Restart signal channel.
 	restart chan struct{} // immutable
@@ -133,6 +134,9 @@ type Client struct {
 
 	// onTransfer is called in transfer.
 	onTransfer AuthTransferHandler
+
+	// onSelfError is called on error calling Self().
+	onSelfError func(ctx context.Context, err error) error
 }
 
 // NewClient creates new unstarted client.
@@ -160,7 +164,7 @@ func NewClient(appID int, appHash string, opt Options) *Client {
 		create:           defaultConstructor(),
 		resolver:         opt.Resolver,
 		defaultMode:      mode,
-		connBackoff:      opt.ReconnectionBackoff,
+		newConnBackoff:   opt.ReconnectionBackoff,
 		onDead:           opt.OnDead,
 		clock:            opt.Clock,
 		device:           opt.Device,
@@ -168,6 +172,7 @@ func NewClient(appID int, appHash string, opt Options) *Client {
 		noUpdatesMode:    opt.NoUpdates,
 		mw:               opt.Middlewares,
 		onTransfer:       opt.OnTransfer,
+		onSelfError:      opt.OnSelfError,
 	}
 	if opt.TracerProvider != nil {
 		client.tracer = opt.TracerProvider.Tracer(oteltg.Name)

@@ -8,7 +8,6 @@ import (
 	"github.com/ManyakRus/starter/logger"
 	"time"
 
-	"github.com/golang-module/carbon/v2"
 	"gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/object_model/entities/connections"
 
 	//"github.com/ManyakRus/starter/common/pkg/v0/stopapp"

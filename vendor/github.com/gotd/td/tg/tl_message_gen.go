@@ -296,6 +296,17 @@ type Message struct {
 	// If set, the message was sent because of a scheduled action by the message sender, for
 	// example, as away, or a greeting service message.
 	Offline bool
+	// The video contained in the message is currently being processed by the server (i.e. to
+	// generate alternative qualities, that will be contained in the final
+	// messageMediaDocument¹.alt_document), and will be sent once the video is processed,
+	// which will happen approximately at the specified date (i.e. messages with this flag
+	// set should be treated similarly to scheduled messages², but instead of the scheduled
+	// date, date contains the estimated conversion date).
+	//
+	// Links:
+	//  1) https://core.telegram.org/constructor/messageMediaDocument
+	//  2) https://core.telegram.org/api/scheduled-messages
+	VideoProcessingPending bool
 	// ID of the message
 	ID int
 	// ID of the sender of the message
@@ -499,6 +510,9 @@ func (m *Message) Zero() bool {
 	if !(m.Offline == false) {
 		return false
 	}
+	if !(m.VideoProcessingPending == false) {
+		return false
+	}
 	if !(m.ID == 0) {
 		return false
 	}
@@ -604,6 +618,7 @@ func (m *Message) FillFrom(from interface {
 	GetNoforwards() (value bool)
 	GetInvertMedia() (value bool)
 	GetOffline() (value bool)
+	GetVideoProcessingPending() (value bool)
 	GetID() (value int)
 	GetFromID() (value PeerClass, ok bool)
 	GetFromBoostsApplied() (value int, ok bool)
@@ -643,6 +658,7 @@ func (m *Message) FillFrom(from interface {
 	m.Noforwards = from.GetNoforwards()
 	m.InvertMedia = from.GetInvertMedia()
 	m.Offline = from.GetOffline()
+	m.VideoProcessingPending = from.GetVideoProcessingPending()
 	m.ID = from.GetID()
 	if val, ok := from.GetFromID(); ok {
 		m.FromID = val
@@ -821,6 +837,11 @@ func (m *Message) TypeInfo() tdp.Type {
 			Null:       !m.Flags2.Has(1),
 		},
 		{
+			Name:       "VideoProcessingPending",
+			SchemaName: "video_processing_pending",
+			Null:       !m.Flags2.Has(4),
+		},
+		{
 			Name:       "ID",
 			SchemaName: "id",
 		},
@@ -987,6 +1008,9 @@ func (m *Message) SetFlags() {
 	}
 	if !(m.Offline == false) {
 		m.Flags2.Set(1)
+	}
+	if !(m.VideoProcessingPending == false) {
+		m.Flags2.Set(4)
 	}
 	if !(m.FromID == nil) {
 		m.Flags.Set(8)
@@ -1239,6 +1263,7 @@ func (m *Message) DecodeBare(b *bin.Buffer) error {
 		}
 	}
 	m.Offline = m.Flags2.Has(1)
+	m.VideoProcessingPending = m.Flags2.Has(4)
 	{
 		value, err := b.Int()
 		if err != nil {
@@ -1662,6 +1687,25 @@ func (m *Message) GetOffline() (value bool) {
 		return
 	}
 	return m.Flags2.Has(1)
+}
+
+// SetVideoProcessingPending sets value of VideoProcessingPending conditional field.
+func (m *Message) SetVideoProcessingPending(value bool) {
+	if value {
+		m.Flags2.Set(4)
+		m.VideoProcessingPending = true
+	} else {
+		m.Flags2.Unset(4)
+		m.VideoProcessingPending = false
+	}
+}
+
+// GetVideoProcessingPending returns value of VideoProcessingPending conditional field.
+func (m *Message) GetVideoProcessingPending() (value bool) {
+	if m == nil {
+		return
+	}
+	return m.Flags2.Has(4)
 }
 
 // GetID returns value of ID field.

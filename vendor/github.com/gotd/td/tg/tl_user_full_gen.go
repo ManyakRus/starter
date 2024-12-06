@@ -119,6 +119,13 @@ type UserFull struct {
 	// Links:
 	//  1) https://core.telegram.org/api/business#re-enable-ads
 	SponsoredEnabled bool
+	// If set, this user can view ad revenue statistics »¹ for this bot.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/revenue#revenue-statistics
+	CanViewRevenue bool
+	// BotCanManageEmojiStatus field of UserFull.
+	BotCanManageEmojiStatus bool
 	// User ID
 	ID int64
 	// Bio of the user
@@ -270,7 +277,10 @@ type UserFull struct {
 	//
 	// Use SetPersonalChannelMessage and GetPersonalChannelMessage helpers.
 	PersonalChannelMessage int
-	// StargiftsCount field of UserFull.
+	// Number of gifts¹ the user has chosen to display on their profile
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/gifts
 	//
 	// Use SetStargiftsCount and GetStargiftsCount helpers.
 	StargiftsCount int
@@ -337,6 +347,12 @@ func (u *UserFull) Zero() bool {
 		return false
 	}
 	if !(u.SponsoredEnabled == false) {
+		return false
+	}
+	if !(u.CanViewRevenue == false) {
+		return false
+	}
+	if !(u.BotCanManageEmojiStatus == false) {
 		return false
 	}
 	if !(u.ID == 0) {
@@ -452,6 +468,8 @@ func (u *UserFull) FillFrom(from interface {
 	GetContactRequirePremium() (value bool)
 	GetReadDatesPrivate() (value bool)
 	GetSponsoredEnabled() (value bool)
+	GetCanViewRevenue() (value bool)
+	GetBotCanManageEmojiStatus() (value bool)
 	GetID() (value int64)
 	GetAbout() (value string, ok bool)
 	GetSettings() (value PeerSettings)
@@ -495,6 +513,8 @@ func (u *UserFull) FillFrom(from interface {
 	u.ContactRequirePremium = from.GetContactRequirePremium()
 	u.ReadDatesPrivate = from.GetReadDatesPrivate()
 	u.SponsoredEnabled = from.GetSponsoredEnabled()
+	u.CanViewRevenue = from.GetCanViewRevenue()
+	u.BotCanManageEmojiStatus = from.GetBotCanManageEmojiStatus()
 	u.ID = from.GetID()
 	if val, ok := from.GetAbout(); ok {
 		u.About = val
@@ -691,6 +711,16 @@ func (u *UserFull) TypeInfo() tdp.Type {
 			Null:       !u.Flags2.Has(7),
 		},
 		{
+			Name:       "CanViewRevenue",
+			SchemaName: "can_view_revenue",
+			Null:       !u.Flags2.Has(9),
+		},
+		{
+			Name:       "BotCanManageEmojiStatus",
+			SchemaName: "bot_can_manage_emoji_status",
+			Null:       !u.Flags2.Has(10),
+		},
+		{
 			Name:       "ID",
 			SchemaName: "id",
 		},
@@ -873,6 +903,12 @@ func (u *UserFull) SetFlags() {
 	}
 	if !(u.SponsoredEnabled == false) {
 		u.Flags2.Set(7)
+	}
+	if !(u.CanViewRevenue == false) {
+		u.Flags2.Set(9)
+	}
+	if !(u.BotCanManageEmojiStatus == false) {
+		u.Flags2.Set(10)
 	}
 	if !(u.About == "") {
 		u.Flags.Set(1)
@@ -1137,6 +1173,8 @@ func (u *UserFull) DecodeBare(b *bin.Buffer) error {
 		}
 	}
 	u.SponsoredEnabled = u.Flags2.Has(7)
+	u.CanViewRevenue = u.Flags2.Has(9)
+	u.BotCanManageEmojiStatus = u.Flags2.Has(10)
 	{
 		value, err := b.Long()
 		if err != nil {
@@ -1586,6 +1624,44 @@ func (u *UserFull) GetSponsoredEnabled() (value bool) {
 		return
 	}
 	return u.Flags2.Has(7)
+}
+
+// SetCanViewRevenue sets value of CanViewRevenue conditional field.
+func (u *UserFull) SetCanViewRevenue(value bool) {
+	if value {
+		u.Flags2.Set(9)
+		u.CanViewRevenue = true
+	} else {
+		u.Flags2.Unset(9)
+		u.CanViewRevenue = false
+	}
+}
+
+// GetCanViewRevenue returns value of CanViewRevenue conditional field.
+func (u *UserFull) GetCanViewRevenue() (value bool) {
+	if u == nil {
+		return
+	}
+	return u.Flags2.Has(9)
+}
+
+// SetBotCanManageEmojiStatus sets value of BotCanManageEmojiStatus conditional field.
+func (u *UserFull) SetBotCanManageEmojiStatus(value bool) {
+	if value {
+		u.Flags2.Set(10)
+		u.BotCanManageEmojiStatus = true
+	} else {
+		u.Flags2.Unset(10)
+		u.BotCanManageEmojiStatus = false
+	}
+}
+
+// GetBotCanManageEmojiStatus returns value of BotCanManageEmojiStatus conditional field.
+func (u *UserFull) GetBotCanManageEmojiStatus() (value bool) {
+	if u == nil {
+		return
+	}
+	return u.Flags2.Has(10)
 }
 
 // GetID returns value of ID field.
