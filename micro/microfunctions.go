@@ -1362,3 +1362,13 @@ func SetFieldValue(Object any, FieldName string, Value any) error {
 
 	return err
 }
+
+// Float64FromString - возвращает float64 из строки
+func Float64FromString(s string) (float64, error) {
+	var Otvet float64
+	var err error
+
+	Otvet, err = strconv.ParseFloat(s, 64)
+
+	return Otvet, err
+}
