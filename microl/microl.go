@@ -213,3 +213,18 @@ func ShowTimePassedSeconds(StartAt time.Time) {
 func ShowTimePassedMilliSeconds(StartAt time.Time) {
 	log.Debugf("Time passed: %s\n", time.Since(StartAt).Round(time.Millisecond))
 }
+
+// Set_StructField - устанавливает значение поля из переменной окружения
+// Параметры:
+// Object - указатель на структуру
+// FieldName - имя поля
+// Value - значение
+func Set_StructField(StructReference any, FieldName string, Value any) {
+	err := micro.SetFieldValue(StructReference, FieldName, Value)
+
+	if err != nil {
+		err = fmt.Errorf("Set_StructField() FieldName: %s error: %w", FieldName, err)
+		log.Error(err)
+		return
+	}
+}
