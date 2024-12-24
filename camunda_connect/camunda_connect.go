@@ -182,7 +182,7 @@ func WorkComplete(client worker.JobClient, jobKey int64, variables map[string]in
 }
 
 // WorkFails - отправляет статус ошибки на сервер Camunda
-func WorkFails(err error, client worker.JobClient, jobKey int64) error {
+func WorkFails(err error, client worker.JobClient, job entities.Job) error {
 	if err == nil {
 		log.Panicln("err =nil")
 	}
@@ -190,7 +190,10 @@ func WorkFails(err error, client worker.JobClient, jobKey int64) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
 	defer cancel()
 
-	_, err1 := client.NewFailJobCommand().JobKey(jobKey).Retries(0).ErrorMessage(err.Error()).Send(ctx)
+	jobKey := job.GetKey()
+	retries := job.GetRetries()
+
+	_, err1 := client.NewFailJobCommand().JobKey(jobKey).Retries(retries - 1).ErrorMessage(err.Error()).Send(ctx)
 	if err1 != nil {
 		log.Error("camunda_connect.WorkFails() error: ", err1)
 	}
