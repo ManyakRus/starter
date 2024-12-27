@@ -286,6 +286,13 @@ func TestStringFromInt64(t *testing.T) {
 	}
 }
 
+func TestStringFromInt32(t *testing.T) {
+	Otvet := StringFromInt32(0)
+	if Otvet != "0" {
+		t.Error("TestStringFromInt64() error: != '0'")
+	}
+}
+
 func TestStringDate(t *testing.T) {
 	Otvet := StringDate(time.Now())
 	if Otvet == "" {

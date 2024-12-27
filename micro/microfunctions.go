@@ -558,11 +558,20 @@ func CheckINNControlSum12(Inn string) error {
 	return err
 }
 
-// StringFromInt64 - возвращает строку из числа
+// StringFromInt64 - возвращает строку из числа int64
 func StringFromInt64(i int64) string {
 	Otvet := ""
 
 	Otvet = strconv.FormatInt(i, 10)
+
+	return Otvet
+}
+
+// StringFromInt32 - возвращает строку из числа int32
+func StringFromInt32(i int32) string {
+	Otvet := ""
+
+	Otvet = fmt.Sprintf("%d", i)
 
 	return Otvet
 }
