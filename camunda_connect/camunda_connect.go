@@ -256,9 +256,9 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, HandleJob func(c
 		return err
 	}
 
-	JobWorker = Client.NewJobWorker().JobType(CAMUNDA_JOBTYPE).Handler(HandleJob).Open()
-
 	Send_BPMN_File(BPMN_filename)
+
+	JobWorker = Client.NewJobWorker().JobType(CAMUNDA_JOBTYPE).Handler(HandleJob).Open()
 
 	stopapp.GetWaitGroup_Main().Add(1)
 	go WaitStop()
