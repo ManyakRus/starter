@@ -1338,3 +1338,10 @@ func TestSetFieldValue2(t *testing.T) {
 		t.Errorf("Expected 'Test', but got %v", Struct.Field1)
 	}
 }
+
+func TestAbs(t *testing.T) {
+	Otvet := Abs(-1)
+	if Otvet != 1 {
+		t.Errorf("Expected 1, but got %d", Otvet)
+	}
+}

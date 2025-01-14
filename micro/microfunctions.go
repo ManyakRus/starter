@@ -1381,3 +1381,11 @@ func Float64FromString(s string) (float64, error) {
 
 	return Otvet, err
 }
+
+// Abs - возвращает абсолютное значение
+func Abs[T constraints.Integer](x T) T {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
