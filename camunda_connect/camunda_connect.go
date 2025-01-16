@@ -32,10 +32,6 @@ var NeedReconnect bool
 type SettingsINI struct {
 	CAMUNDA_HOST string
 	CAMUNDA_PORT string
-	// // CAMUNDA_ID - имя сервиса в CAMUNDA
-	// CAMUNDA_ID       string
-	// CAMUNDA_BPMNFILE string
-	// CAMUNDA_JOBTYPE  string
 }
 
 // Client - клиент подключения к CAMUNDA_ID
@@ -49,9 +45,6 @@ func FillSettings() {
 	Settings = SettingsINI{}
 	Settings.CAMUNDA_HOST = os.Getenv("CAMUNDA_HOST")
 	Settings.CAMUNDA_PORT = os.Getenv("CAMUNDA_PORT")
-	// Settings.CAMUNDA_ID = os.Getenv("CAMUNDA_ID")
-	// Settings.CAMUNDA_BPMNFILE = os.Getenv("CAMUNDA_BPMNFILE")
-	// Settings.CAMUNDA_JOBTYPE = os.Getenv("CAMUNDA_JOBTYPE")
 	if Settings.CAMUNDA_HOST == "" {
 		log.Panic("Need fill CAMUNDA_HOST ! in OS Environment ")
 	}
@@ -59,19 +52,6 @@ func FillSettings() {
 	if Settings.CAMUNDA_PORT == "" {
 		log.Panic("Need fill CAMUNDA_PORT ! in OS Environment ")
 	}
-
-	// if Settings.CAMUNDA_ID == "" {
-	//	log.Panic("Need fill CAMUNDA_ID ! in OS Environment ")
-	// }
-	//
-	// if Settings.CAMUNDA_JOBTYPE == "" {
-	//	log.Panic("Need fill CAMUNDA_JOBTYPE ! in OS Environment ")
-	// }
-	//
-	// if Settings.CAMUNDA_BPMNFILE == "" {
-	//	log.Debug("Need fill CAMUNDA_BPMNFILE ! in OS Environment ")
-	// }
-	//
 
 }
 
@@ -162,7 +142,6 @@ func GetURL() string {
 
 // WorkComplete - отправляет статус ОК на сервер Camunda
 func WorkComplete(client worker.JobClient, jobKey int64, variables map[string]interface{}) error {
-	// log.Debugf("[DEBUG] HandleJob, %v, out params: %v\n", jobKey, variables)
 
 	request, err := client.NewCompleteJobCommand().JobKey(jobKey).VariablesFromMap(variables)
 	if err != nil {
