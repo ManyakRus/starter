@@ -128,7 +128,7 @@ func WaitStop() {
 	}
 
 	// ждём пока отправляемых сейчас сообщений будет =0
-	stopapp.WaitTotalMessagesSendingNow("sync_service_client")
+	stopapp.WaitTotalMessagesSendingNow("tinkoff_connect")
 
 	// закрываем соединение
 	CloseConnection()
