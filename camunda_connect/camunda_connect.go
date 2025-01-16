@@ -264,7 +264,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, HandleJob func(c
 	go WaitStop()
 
 	stopapp.GetWaitGroup_Main().Add(1)
-	go ping_go()
+	go ping_go(HandleJob, CAMUNDA_JOBTYPE)
 
 	return err
 }
@@ -298,7 +298,7 @@ func Send_BPMN_File(BPMN_filename string) {
 }
 
 // ping_go - делает пинг каждые 60 секунд, и реконнект
-func ping_go() {
+func ping_go(HandleJob func(client worker.JobClient, job entities.Job), CAMUNDA_JOBTYPE string) {
 
 	ticker := time.NewTicker(60 * time.Second)
 
@@ -321,6 +321,7 @@ loop:
 				log.Warn("CAMUNDA CheckPort(", addr, ") OK. Start Reconnect()")
 				NeedReconnect = false
 				Connect()
+				JobWorker = Client.NewJobWorker().JobType(CAMUNDA_JOBTYPE).Handler(HandleJob).Open()
 			}
 		}
 	}
