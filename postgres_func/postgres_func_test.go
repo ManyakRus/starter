@@ -24,3 +24,14 @@ func TestStringSQLTime_WithoutTimeZone(t *testing.T) {
 		t.Error("postgres_func_test.TestStringSQLTime() error")
 	}
 }
+
+func TestReplaceSchemaName(t *testing.T) {
+
+	TextSQL := "select * from schema1.table1"
+	SchemaNameFrom := "schema1"
+	SchemaNameTo := "schema2"
+	Otvet := ReplaceSchemaName(TextSQL, SchemaNameFrom, SchemaNameTo)
+	if Otvet != "select * from schema2.table1" {
+		t.Error("postgres_func_test.TestReplaceSchemaName() error")
+	}
+}
