@@ -1,4 +1,4 @@
-package camunda_connect
+package camunda_connect2
 
 import (
 	"encoding/json"
