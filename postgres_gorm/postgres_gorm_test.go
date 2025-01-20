@@ -336,3 +336,13 @@ func TestSetSingularTableNames(t *testing.T) {
 		t.Errorf("Expected SingularTable to be %v, but got %v", IsSingular, NamingStrategy.SingularTable)
 	}
 }
+
+func TestReplaceSchemaName(t *testing.T) {
+	TextSQL := "SELECT * FROM public.users"
+	Settings.DB_SCHEMA = "myschema"
+	ExpectedSQL := "SELECT * FROM myschema.users"
+	ActualSQL := ReplaceSchemaName(TextSQL, "public")
+	if ActualSQL != ExpectedSQL {
+		t.Errorf("Expected %v, but got %v", ExpectedSQL, ActualSQL)
+	}
+}

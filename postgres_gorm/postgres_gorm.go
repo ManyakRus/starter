@@ -562,6 +562,15 @@ func ReplaceSchema(TextSQL string) string {
 	return Otvet
 }
 
+// ReplaceSchemaName - заменяет имя схемы в тексте SQL
+func ReplaceSchemaName(TextSQL, SchemaNameFrom string) string {
+	Otvet := TextSQL
+
+	Otvet = strings.ReplaceAll(Otvet, SchemaNameFrom+".", Settings.DB_SCHEMA+".")
+
+	return Otvet
+}
+
 // ReplaceTemporaryTableNamesToUnique - заменяет "public.TableName" на "public.TableName_UUID"
 func ReplaceTemporaryTableNamesToUnique(TextSQL string) string {
 	Otvet := TextSQL
