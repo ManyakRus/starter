@@ -40,6 +40,16 @@ var Client zbc.Client
 // JobWorker - worker который выполняет подключение к приему сообщений от CAMUNDA
 var JobWorker worker.JobWorker
 
+// StartSettings - параметры для запуска камунды
+type StartSettings struct {
+	HandleJob       func(client worker.JobClient, job entities.Job)
+	CAMUNDA_JOBTYPE string
+	BPMN_filename   string
+	TimeOut         time.Duration
+	MaxJobsActive   int
+	MaxConcurrency  int
+}
+
 // FillSettings загружает переменные окружения в структуру из файла или из переменных окружения
 func FillSettings() {
 	Settings = SettingsINI{}
@@ -209,6 +219,40 @@ func StartCamunda(HandleJob func(client worker.JobClient, job entities.Job), CAM
 	LogInfo_Connected(err)
 }
 
+// Start_WithSettings - необходимые процедуры для подключения к серверу Camunda
+func Start_WithSettings(settings StartSettings) error {
+	var err error
+
+	//
+	err = Connect_err()
+	LogInfo_Connected(err)
+	if err != nil {
+		return err
+	}
+
+	Send_BPMN_File(settings.BPMN_filename)
+
+	JobWorkerStep3 := Client.NewJobWorker().JobType(settings.CAMUNDA_JOBTYPE).Handler(settings.HandleJob)
+	if settings.MaxConcurrency > 0 {
+		JobWorkerStep3 = JobWorkerStep3.Concurrency(settings.MaxConcurrency)
+	}
+	if settings.MaxJobsActive > 0 {
+		JobWorkerStep3 = JobWorkerStep3.MaxJobsActive(settings.MaxJobsActive)
+	}
+	if settings.TimeOut.Seconds() > 0 {
+		JobWorkerStep3 = JobWorkerStep3.Timeout(settings.TimeOut)
+	}
+	JobWorker = JobWorkerStep3.Open()
+
+	stopapp.GetWaitGroup_Main().Add(1)
+	go WaitStop()
+
+	stopapp.GetWaitGroup_Main().Add(1)
+	go ping_go(settings.HandleJob, settings.CAMUNDA_JOBTYPE)
+
+	return err
+}
+
 // Start_ctx - необходимые процедуры для подключения к серверу Camunda
 // Свой контекст и WaitGroup нужны для остановки работы сервиса Graceful shutdown
 // Для тех кто пользуется этим репозиторием для старта и останова сервиса можно просто StartCamunda()
@@ -227,23 +271,27 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, HandleJob func(c
 		stopapp.StartWaitStop()
 	}
 
+	settings := StartSettings{}
+	settings.HandleJob = HandleJob
+	settings.CAMUNDA_JOBTYPE = CAMUNDA_JOBTYPE
+	settings.BPMN_filename = BPMN_filename
+	err = Start_WithSettings(settings)
+
+	////
+	//err = Connect_err()
+	//if err != nil {
+	//	return err
+	//}
 	//
-	// var err error
-
-	err = Connect_err()
-	if err != nil {
-		return err
-	}
-
-	Send_BPMN_File(BPMN_filename)
-
-	JobWorker = Client.NewJobWorker().JobType(CAMUNDA_JOBTYPE).Handler(HandleJob).Open()
-
-	stopapp.GetWaitGroup_Main().Add(1)
-	go WaitStop()
-
-	stopapp.GetWaitGroup_Main().Add(1)
-	go ping_go(HandleJob, CAMUNDA_JOBTYPE)
+	//Send_BPMN_File(BPMN_filename)
+	//
+	//JobWorker = Client.NewJobWorker().JobType(CAMUNDA_JOBTYPE).Handler(HandleJob).Open()
+	//
+	//stopapp.GetWaitGroup_Main().Add(1)
+	//go WaitStop()
+	//
+	//stopapp.GetWaitGroup_Main().Add(1)
+	//go ping_go(HandleJob, CAMUNDA_JOBTYPE)
 
 	return err
 }
