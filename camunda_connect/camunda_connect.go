@@ -220,15 +220,12 @@ func StartCamunda(HandleJob func(client worker.JobClient, job entities.Job), CAM
 }
 
 // Start_WithSettings - необходимые процедуры для подключения к серверу Camunda
-func Start_WithSettings(settings StartSettings) error {
+func Start_WithSettings(settings StartSettings) {
 	var err error
 
 	//
 	err = Connect_err()
 	LogInfo_Connected(err)
-	if err != nil {
-		return err
-	}
 
 	Send_BPMN_File(settings.BPMN_filename)
 
@@ -250,7 +247,7 @@ func Start_WithSettings(settings StartSettings) error {
 	stopapp.GetWaitGroup_Main().Add(1)
 	go ping_go(settings.HandleJob, settings.CAMUNDA_JOBTYPE)
 
-	return err
+	return
 }
 
 // Start_ctx - необходимые процедуры для подключения к серверу Camunda
@@ -275,7 +272,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, HandleJob func(c
 	settings.HandleJob = HandleJob
 	settings.CAMUNDA_JOBTYPE = CAMUNDA_JOBTYPE
 	settings.BPMN_filename = BPMN_filename
-	err = Start_WithSettings(settings)
+	Start_WithSettings(settings)
 
 	////
 	//err = Connect_err()
