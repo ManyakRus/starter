@@ -318,7 +318,7 @@ func Send_BPMN_File(BPMN_filename string) {
 	if err != nil {
 		log.Panicln(err)
 	}
-	log.Info("Send .bpmn file, result: %v", res)
+	log.Infof("Send .bpmn file, result: %v", res)
 }
 
 // ping_go - делает пинг каждые 60 секунд, и реконнект
