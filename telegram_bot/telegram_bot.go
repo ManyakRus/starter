@@ -3,6 +3,7 @@ package telegram_bot
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/micro"
@@ -121,6 +122,12 @@ func SendMessageChatID(ChatID int64, Text string) (int, error) {
 	var ID int
 	var err error
 
+	//
+	if Client == nil {
+		err = fmt.Errorf("error: telegram Client == nil")
+		return ID, err
+	}
+
 	msg := botapi.NewMessage(ChatID, Text)
 	msg.ParseMode = "HTML"
 
@@ -140,6 +147,12 @@ func SendMessageChatID(ChatID int64, Text string) (int, error) {
 func SendMessage(UserName string, Text string) (int, error) {
 	var ID int
 	var err error
+
+	//
+	if Client == nil {
+		err = fmt.Errorf("error: telegram Client == nil")
+		return ID, err
+	}
 
 	//экранируем запрещённые символы
 	//Text = html.EscapeString(Text)
