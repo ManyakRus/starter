@@ -335,36 +335,84 @@ func Trim(s string) string {
 	return Otvet
 }
 
-// Max returns the largest of x or y.
-func Max(x, y int) int {
-	if x < y {
-		return y
+// Max returns the largest value
+func Max(Mass ...int) int {
+	var Otvet int
+
+	//
+	if len(Mass) == 0 {
+		return Otvet
 	}
-	return x
+
+	//
+	Otvet = Mass[0]
+	for _, val := range Mass {
+		if val > Otvet {
+			Otvet = val
+		}
+	}
+
+	return Otvet
 }
 
-// Min returns the smallest of x or y.
-func Min(x, y int) int {
-	if x > y {
-		return y
+// Min returns the smallest value
+func Min(Mass ...int) int {
+	var Otvet int
+
+	//
+	if len(Mass) == 0 {
+		return Otvet
 	}
-	return x
+
+	//
+	Otvet = Mass[0]
+	for _, val := range Mass {
+		if val < Otvet {
+			Otvet = val
+		}
+	}
+
+	return Otvet
 }
 
-// Max returns the largest of x or y.
-func MaxInt64(x, y int64) int64 {
-	if x < y {
-		return y
+// MaxInt64 returns the largest value
+func MaxInt64(Mass ...int64) int64 {
+	var Otvet int64
+
+	//
+	if len(Mass) == 0 {
+		return Otvet
 	}
-	return x
+
+	//
+	Otvet = Mass[0]
+	for _, val := range Mass {
+		if val > Otvet {
+			Otvet = val
+		}
+	}
+
+	return Otvet
 }
 
-// Min returns the smallest of x or y.
-func MinInt64(x, y int64) int64 {
-	if x > y {
-		return y
+// MinInt64 returns the smallest value
+func MinInt64(Mass ...int64) int64 {
+	var Otvet int64
+
+	//
+	if len(Mass) == 0 {
+		return Otvet
 	}
-	return x
+
+	//
+	Otvet = Mass[0]
+	for _, val := range Mass {
+		if val < Otvet {
+			Otvet = val
+		}
+	}
+
+	return Otvet
 }
 
 // MaxDate returns the largest of x or y.

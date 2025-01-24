@@ -205,15 +205,15 @@ func TestMin(t *testing.T) {
 	}
 }
 
-func TestMaxInt60(t *testing.T) {
-	Otvet := MaxInt64(1, 2)
-	if Otvet != 2 {
+func TestMaxInt64(t *testing.T) {
+	Otvet := MaxInt64(1, 2, 3, 4)
+	if Otvet != 4 {
 		t.Error("microfunctions_test.TestMax() error: Otvet != 2")
 	}
 }
 
 func TestMinInt64(t *testing.T) {
-	Otvet := MinInt64(1, 2)
+	Otvet := MinInt64(1, 2, 3, 4)
 	if Otvet != 1 {
 		t.Error("microfunctions_test.TestMin() error: Otvet != 1")
 	}
