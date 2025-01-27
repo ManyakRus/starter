@@ -6,7 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/port_checker"
 	"github.com/jackc/pgx/v5"
 	"strings"
@@ -30,9 +30,6 @@ import (
 
 // Conn - соединение к базе данных
 var Conn *pgx.Conn
-
-// log - глобальный логгер
-var log = logger.GetLog()
 
 // mutexReconnect - защита от многопоточности Reconnect()
 var mutexReconnect = &sync.Mutex{}
@@ -367,7 +364,11 @@ loop:
 			} else if NeedReconnect == true {
 				log.Warn("postgres_pgx CheckPort(", addr, ") OK. Start Reconnect()")
 				NeedReconnect = false
-				Connect()
+				err = Connect_err()
+				if err != nil {
+					NeedReconnect = true
+					log.Error("Connect_err() error: ", err)
+				}
 			}
 		}
 	}

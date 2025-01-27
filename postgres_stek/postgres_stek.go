@@ -370,7 +370,11 @@ loop:
 				} else if NeedReconnect == true {
 					log.Warn("postgres_stek CheckPort(", addr, ") OK. Start Reconnect()")
 					NeedReconnect = false
-					Connect(Connection)
+					err = Connect_err(Connection)
+					if err != nil {
+						NeedReconnect = true
+						log.Error("Connect_err() error: ", err)
+					}
 				}
 			}
 		}
