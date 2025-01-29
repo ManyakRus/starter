@@ -1437,3 +1437,14 @@ func Abs[T constraints.Integer](x T) T {
 	}
 	return x
 }
+
+// StringFromBool - возвращает строку из булевского значения
+func StringFromBool(value bool) string {
+	Otvet := "true"
+
+	if value == false {
+		Otvet = "false"
+	}
+
+	return Otvet
+}

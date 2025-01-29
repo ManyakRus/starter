@@ -1345,3 +1345,10 @@ func TestAbs(t *testing.T) {
 		t.Errorf("Expected 1, but got %d", Otvet)
 	}
 }
+
+func TestStringFromBool(t *testing.T) {
+	Otvet := StringFromBool(true)
+	if Otvet != "true" {
+		t.Errorf("Expected 'true', but got %s", Otvet)
+	}
+}
