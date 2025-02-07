@@ -160,6 +160,7 @@ func SendMessage(UserName string, Text string) (int, error) {
 	//
 	msg := botapi.NewMessageToChannel(UserName, Text)
 	msg.ParseMode = "HTML"
+	msg.DisableWebPagePreview = true
 
 	Message, err := Client.Send(msg)
 	if err != nil {
