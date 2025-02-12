@@ -8,7 +8,6 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
-	"github.com/ManyakRus/starter/stopapp"
 	"github.com/google/uuid"
 	"golang.org/x/exp/constraints"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -31,16 +30,6 @@ import (
 //type Time time.Time
 
 //var log = logger.GetLog()
-
-// IEnable - интерфейс для включения
-type IEnable interface {
-	Enable()
-}
-
-// IDisable - интерфейс для отключения
-type IDisable interface {
-	Disable()
-}
 
 // IsTestApp - возвращает true если это тестовая среда выполнения приложения
 func IsTestApp() bool {
@@ -1499,35 +1488,3 @@ func StringFromBool(value bool) string {
 //	*d = Time(t)
 //	return nil
 //}
-
-// EnableAfterDuration - выполняет Enable() после паузы
-func EnableAfterDuration(Object IEnable, Duration time.Duration) {
-	if Object == nil {
-		return
-	}
-	stopapp.GetWaitGroup_Main().Add(1)
-	go EnableAfterDuration_go(Object, Duration)
-}
-
-// EnableAfterMilliSeconds - выполняет Enable() после паузы
-func EnableAfterMilliSeconds(Object IEnable, MilliSeconds int) {
-	if Object == nil {
-		return
-	}
-	stopapp.GetWaitGroup_Main().Add(1)
-	go EnableAfterDuration_go(Object, time.Duration(MilliSeconds)*time.Millisecond)
-}
-
-// EnableAfterDuration_go - горутина, выполняет Enable() после паузы
-func EnableAfterDuration_go(Object IEnable, Duration time.Duration) {
-	defer stopapp.GetWaitGroup_Main().Done()
-
-	if Object == nil {
-		return
-	}
-
-	//
-	time.Sleep(Duration)
-	Object.Enable()
-
-}
