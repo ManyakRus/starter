@@ -1356,7 +1356,7 @@ func TestStringFromBool(t *testing.T) {
 //func TestTime_UnmarshalByte(t *testing.T) {
 //	var Otvet Time
 //	Test := []byte("10:05:01")
-//	err := (&Otvet).UnmarshalByte(Test)
+//	err := (&Otvet).UnmarshalJSON(Test)
 //	if err != nil {
 //		t.Errorf("TestTime_UnmarshalByte() error: %v", err)
 //	}

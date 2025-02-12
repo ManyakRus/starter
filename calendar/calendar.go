@@ -70,8 +70,8 @@ func IsWorkDay(Date time.Time) bool {
 	return Otvet
 }
 
-// UnmarshalByte - преобразует байты время в HoursMinutesSeconds{}
-func (d *HoursMinutesSeconds) UnmarshalByte(b []byte) error {
+// UnmarshalJSON - преобразует байты время в HoursMinutesSeconds{}
+func (d *HoursMinutesSeconds) UnmarshalJSON(b []byte) error {
 	str := string(b)
 	err := d.UnmarshalString(str)
 

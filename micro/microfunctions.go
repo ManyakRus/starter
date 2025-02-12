@@ -1452,8 +1452,8 @@ func StringFromBool(value bool) string {
 	return Otvet
 }
 
-//// UnmarshalByte - преобразует строку время в time.Time
-//func (d *Time) UnmarshalByte(b []byte) error {
+//// UnmarshalJSON - преобразует строку время в time.Time
+//func (d *Time) UnmarshalJSON(b []byte) error {
 //	str := string(b)
 //	if str != "" && str[0] == '"' && str[len(str)-1] == '"' {
 //		str = str[1 : len(str)-1]
