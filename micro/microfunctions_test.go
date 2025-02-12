@@ -1352,3 +1352,13 @@ func TestStringFromBool(t *testing.T) {
 		t.Errorf("Expected 'true', but got %s", Otvet)
 	}
 }
+
+//func TestTime_UnmarshalByte(t *testing.T) {
+//	var Otvet Time
+//	Test := []byte("10:05:01")
+//	err := (&Otvet).UnmarshalByte(Test)
+//	if err != nil {
+//		t.Errorf("TestTime_UnmarshalByte() error: %v", err)
+//	}
+//	t.Log(time.Time(Otvet))
+//}

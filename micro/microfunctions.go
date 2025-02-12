@@ -26,6 +26,9 @@ import (
 	"time"
 )
 
+//// Time - тип для хранения времени
+//type Time time.Time
+
 //var log = logger.GetLog()
 
 // IsTestApp - возвращает true если это тестовая среда выполнения приложения
@@ -1448,3 +1451,40 @@ func StringFromBool(value bool) string {
 
 	return Otvet
 }
+
+//// UnmarshalByte - преобразует строку время в time.Time
+//func (d *Time) UnmarshalByte(b []byte) error {
+//	str := string(b)
+//	if str != "" && str[0] == '"' && str[len(str)-1] == '"' {
+//		str = str[1 : len(str)-1]
+//	}
+//
+//	// parse string
+//	t, err := time.ParseInLocation(constants.LayoutTime, str, constants.Loc)
+//	if err != nil {
+//		err = fmt.Errorf("invalid time string: %s, error: %w", b, err)
+//		return err
+//	}
+//
+//	//
+//	*d = Time(t)
+//	return nil
+//}
+
+//// UnmarshalString - преобразует строку время в time.Time
+//func (d *Time) UnmarshalString(str string) error {
+//	if str != "" && str[0] == '"' && str[len(str)-1] == '"' {
+//		str = str[1 : len(str)-1]
+//	}
+//
+//	// parse string
+//	t, err := time.Parse(constants.LayoutTime, str)
+//	if err != nil {
+//		err = fmt.Errorf("invalid time string: %s, error: %w", str, err)
+//		return err
+//	}
+//
+//	//
+//	*d = Time(t)
+//	return nil
+//}

@@ -20,3 +20,6 @@ var CONNECTION_ID int64 = 3 //7
 var BRANCH_ID int64 = 2 //20954
 
 var TIME_ZONE = "Europe/Moscow"
+
+// LayoutTime - формат текстового времени для загрузки из json
+const LayoutTime = "15:04:05"

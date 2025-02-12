@@ -1,9 +1,18 @@
 package calendar
 
 import (
+	"fmt"
+	"github.com/ManyakRus/starter/constants"
 	"github.com/dromara/carbon/v2"
 	"time"
 )
+
+// HoursMinutesSeconds - структура для хранения часов, минут и секунд
+type HoursMinutesSeconds struct {
+	Hours   int
+	Minutes int
+	Seconds int
+}
 
 // FindPreviousWorkDay - возвращает дату начала предыдущего рабочего(!) дня
 // доделать БД Postgres Календарь
@@ -59,4 +68,32 @@ func IsWorkDay(Date time.Time) bool {
 	}
 
 	return Otvet
+}
+
+// UnmarshalByte - преобразует байты время в HoursMinutesSeconds{}
+func (d *HoursMinutesSeconds) UnmarshalByte(b []byte) error {
+	str := string(b)
+	err := d.UnmarshalString(str)
+
+	return err
+}
+
+// UnmarshalString - преобразует строку время в HoursMinutesSeconds{}
+func (d *HoursMinutesSeconds) UnmarshalString(str string) error {
+	if str != "" && str[0] == '"' && str[len(str)-1] == '"' {
+		str = str[1 : len(str)-1]
+	}
+
+	// parse string
+	t, err := time.Parse(constants.LayoutTime, str)
+	if err != nil {
+		err = fmt.Errorf("invalid time string: %s, error: %w", str, err)
+		return err
+	}
+
+	d.Hours = t.Hour()
+	d.Minutes = t.Minute()
+	d.Seconds = t.Second()
+
+	return nil
 }

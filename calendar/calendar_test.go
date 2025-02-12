@@ -23,3 +23,12 @@ func TestIsWorkDay(t *testing.T) {
 		t.Error("TestIsWorkDay error")
 	}
 }
+
+func TestHoursMinutesSeconds_UnmarshalByte(t *testing.T) {
+
+	Otvet := HoursMinutesSeconds{}
+	Otvet.UnmarshalByte([]byte("01:02:03"))
+	if Otvet.Hours != 1 || Otvet.Minutes != 2 || Otvet.Seconds != 3 {
+		t.Error("TestHoursMinutesSeconds_UnmarshalByte error")
+	}
+}
