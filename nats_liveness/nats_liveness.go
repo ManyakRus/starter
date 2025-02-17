@@ -43,8 +43,8 @@ type Message struct {
 }
 
 // Connect - подключается к серверу Nats-sync_exchange
-func Connect() {
-	err := Connect_err()
+func Connect(ServiceName string) {
+	err := Connect_err(ServiceName)
 	LogInfo_Connected(err)
 }
 
@@ -59,10 +59,10 @@ func LogInfo_Connected(err error) {
 }
 
 // Connect_err - подключается к серверу Nats-sync_exchange и возвращает ошибку
-func Connect_err() error {
+func Connect_err(ServiceName string) error {
 	var err error
 
-	err = nats_connect.Connect_err()
+	err = nats_connect.Connect_err(ServiceName)
 
 	nats_connect.FillSettings()
 
@@ -232,7 +232,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, ServiceName stri
 	//
 	FillSettings(ServiceName)
 
-	err = Connect_err()
+	err = Connect_err(ServiceName)
 	if err != nil {
 		return err
 	}

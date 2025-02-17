@@ -32,10 +32,10 @@ type SettingsINI struct {
 }
 
 // Connect - подключается к серверу Nats
-func Connect() {
+func Connect(ServiceName string) {
 	var err error
 
-	err = Connect_err()
+	err = Connect_err(ServiceName)
 	LogInfo_Connected(err)
 }
 
@@ -50,7 +50,7 @@ func LogInfo_Connected(err error) {
 }
 
 // Connect_err - подключается к серверу Nats и возвращает ошибку
-func Connect_err() error {
+func Connect_err(ServiceName string) error {
 	var err error
 
 	if Settings.NATS_HOST == "" {
@@ -62,6 +62,8 @@ func Connect_err() error {
 	sNATS_PORT := Settings.NATS_PORT
 	URL := "nats://" + Settings.NATS_HOST + ":" + sNATS_PORT
 	UserInfo := nats.UserInfo(Settings.NATS_LOGIN, Settings.NATS_PASSWORD)
+	Options := nats.GetDefaultOptions()
+	Options.Name = ServiceName
 	Conn, err = nats.Connect(URL, UserInfo)
 
 	//nats.ManualAck()
@@ -69,12 +71,12 @@ func Connect_err() error {
 }
 
 // StartNats - необходимые процедуры для подключения к серверу Nats
-func StartNats() {
+func StartNats(ServiceName string) {
 	var err error
 
 	ctx := contextmain.GetContext()
 	WaitGroup := stopapp.GetWaitGroup_Main()
-	err = Start_ctx(&ctx, WaitGroup)
+	err = Start_ctx(&ctx, WaitGroup, ServiceName)
 	LogInfo_Connected(err)
 
 }
@@ -82,7 +84,7 @@ func StartNats() {
 // Start_ctx - необходимые процедуры для подключения к серверу NATS
 // Свой контекст и WaitGroup нужны для остановки работы сервиса Graceful shutdown
 // Для тех кто пользуется этим репозиторием для старта и останова сервиса можно просто StartNats()
-func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
+func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, ServiceName string) error {
 	var err error
 
 	//запомним к себе контекст
@@ -98,7 +100,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	}
 
 	//
-	err = Connect_err()
+	err = Connect_err(ServiceName)
 	if err != nil {
 		return err
 	}

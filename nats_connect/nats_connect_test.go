@@ -3,6 +3,7 @@ package nats_connect
 import (
 	"context"
 	"github.com/ManyakRus/starter/config_main"
+	"github.com/ManyakRus/starter/constants"
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/micro"
 	"testing"
@@ -15,7 +16,7 @@ import (
 func TestConnect_err(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
 	config_main.LoadEnv()
-	err := Connect_err()
+	err := Connect_err(constants.SERVICE_NAME + "_test")
 	if err != nil {
 		t.Error("nats_connect.TestConnect_err() error: ", err)
 	}
@@ -25,14 +26,14 @@ func TestConnect_err(t *testing.T) {
 func TestCloseConnection(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
 	config_main.LoadEnv()
-	Connect()
+	Connect(constants.SERVICE_NAME + "_test")
 	CloseConnection()
 }
 
 func TestStartNats(t *testing.T) {
 	//ProgramDir := micro.ProgramDir_Common()
 	config_main.LoadEnv()
-	StartNats()
+	StartNats(constants.SERVICE_NAME + "_test")
 	micro.Pause(20)
 
 	_ = contextmain.GetContext()
@@ -58,14 +59,14 @@ func TestWaitStop(t *testing.T) {
 
 func TestConnect(t *testing.T) {
 	config_main.LoadEnv()
-	Connect()
+	Connect(constants.SERVICE_NAME + "_test")
 	defer CloseConnection()
 }
 
 func TestSendMessageCtx(t *testing.T) {
 
 	config_main.LoadEnv()
-	Connect()
+	Connect(constants.SERVICE_NAME + "_test")
 	defer CloseConnection()
 
 	ctxMain := contextmain.GetContext()

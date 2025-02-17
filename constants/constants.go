@@ -23,3 +23,6 @@ var TIME_ZONE = "Europe/Moscow"
 
 // LayoutTime - формат текстового времени для загрузки из json
 const LayoutTime = "15:04:05"
+
+// SERVICE_NAME - имя сервиса
+const SERVICE_NAME = "starter"
