@@ -2,13 +2,12 @@ package sync_exchange
 
 import (
 	"fmt"
+	"github.com/nats-io/nats.go"
 	"log"
 	"os"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/nats-io/nats.go"
 
 	"gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/data_packer"
 	"gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/liveness"
@@ -155,7 +154,7 @@ func InitSyncExchange(url string, serviceName string, version string) error {
 	_packer := data_packer.NewDataPacker()
 	packer = _packer
 
-	_nc, err := nats.Connect(url)
+	_nc, err := nats.Connect(url, nats.Name(serviceName))
 	if err != nil {
 		return fmt.Errorf("InitSyncExchange, Connect, error: %v", err)
 	}
