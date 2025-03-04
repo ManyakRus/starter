@@ -380,7 +380,7 @@ func FillSettings() {
 	}
 
 	if Settings.DB_SCHEMA == "" {
-		log.Panicln("Need fill DB_SCHEMA2 ! in os.ENV ")
+		log.Panicln("Need fill DB_SCHEME2 ! in os.ENV ")
 	}
 
 	if Settings.DB_USER == "" {
