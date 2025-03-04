@@ -1488,3 +1488,35 @@ func StringFromBool(value bool) string {
 //	*d = Time(t)
 //	return nil
 //}
+
+// IsFalseString - возвращает true если строка = false, или =0
+func IsFalseString(s string) bool {
+	Otvet := false
+
+	s = strings.Trim(s, " ")
+	s = strings.Trim(s, "\n")
+	s = strings.ToLower(s)
+
+	switch s {
+	case "0", "нет", "no", "off", "false":
+		Otvet = true
+	}
+
+	return Otvet
+}
+
+// IsTrueString - возвращает true если строка = true, или =1
+func IsTrueString(s string) bool {
+	Otvet := false
+
+	s = strings.Trim(s, " ")
+	s = strings.Trim(s, "\n")
+	s = strings.ToLower(s)
+
+	switch s {
+	case "1", "да", "yes", "on", "true":
+		Otvet = true
+	}
+
+	return Otvet
+}

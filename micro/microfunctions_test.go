@@ -1362,3 +1362,17 @@ func TestStringFromBool(t *testing.T) {
 //	}
 //	t.Log(time.Time(Otvet))
 //}
+
+func TestIsFalseString(t *testing.T) {
+	Otvet := IsFalseString("false")
+	if Otvet != true {
+		t.Errorf("Expected true, but got %v", Otvet)
+	}
+}
+
+func TestIsTrueString(t *testing.T) {
+	Otvet := IsTrueString("true")
+	if Otvet != true {
+		t.Errorf("Expected true, but got %v", Otvet)
+	}
+}
