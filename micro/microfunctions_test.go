@@ -1353,6 +1353,20 @@ func TestStringFromBool(t *testing.T) {
 	}
 }
 
+func TestStringFromBool_Rus(t *testing.T) {
+	Otvet := StringFromBool_Rus(true)
+	if Otvet != "Да" {
+		t.Errorf("Expected 'Да', but got %s", Otvet)
+	}
+}
+
+func TestStringFromBool_Rus_lower(t *testing.T) {
+	Otvet := StringFromBool_Rus_lower(true)
+	if Otvet != "да" {
+		t.Errorf("Expected 'да', but got %s", Otvet)
+	}
+}
+
 //func TestTime_UnmarshalByte(t *testing.T) {
 //	var Otvet Time
 //	Test := []byte("10:05:01")

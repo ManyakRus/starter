@@ -1452,6 +1452,28 @@ func StringFromBool(value bool) string {
 	return Otvet
 }
 
+// StringFromBool_Rus - возвращает строку из булевского значения, Да/Нет
+func StringFromBool_Rus(value bool) string {
+	Otvet := "Да"
+
+	if value == false {
+		Otvet = "Нет"
+	}
+
+	return Otvet
+}
+
+// StringFromBool_Rus_lower - возвращает строку из булевского значения, да/нет
+func StringFromBool_Rus_lower(value bool) string {
+	Otvet := "да"
+
+	if value == false {
+		Otvet = "нет"
+	}
+
+	return Otvet
+}
+
 //// UnmarshalJSON - преобразует строку время в time.Time
 //func (d *Time) UnmarshalJSON(b []byte) error {
 //	str := string(b)
