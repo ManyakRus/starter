@@ -108,6 +108,20 @@ func Pause_ctx(ctx context.Context, ms int) {
 	}
 }
 
+// Pause_duration - приостановка работы программы на время duration
+func Pause_duration(duration time.Duration) {
+	time.Sleep(duration)
+}
+
+// Pause_duration_ctx - приостановка работы программы на время duration, с учётом глобального контекста
+func Pause_duration_ctx(ctx context.Context, duration time.Duration) {
+
+	select {
+	case <-ctx.Done():
+	case <-time.After(duration):
+	}
+}
+
 // FindDirUp - возвращает строку с именем каталога на уровень выше
 func FindDirUp(dir string) string {
 	otvet := dir

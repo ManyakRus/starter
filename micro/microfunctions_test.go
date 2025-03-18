@@ -1390,3 +1390,11 @@ func TestIsTrueString(t *testing.T) {
 		t.Errorf("Expected true, but got %v", Otvet)
 	}
 }
+
+func TestPause_duration(t *testing.T) {
+	Pause_duration(time.Millisecond)
+}
+
+func TestPause_duration_ctx(t *testing.T) {
+	Pause_duration_ctx(context.Background(), time.Millisecond)
+}
