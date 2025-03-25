@@ -66,6 +66,10 @@ func GetWaitGroup_Main() *sync.WaitGroup {
 
 // StartWaitStop - запускает ожидание сигнала завершения приложения
 func StartWaitStop() {
+	//создадим контекст, т.к. попозже уже гонка данных
+	contextmain.GetContext()
+
+	//
 	SignalInterrupt = make(chan os.Signal, 1)
 
 	fnWait := func() {
