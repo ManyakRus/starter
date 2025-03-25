@@ -65,15 +65,15 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) {
 	fiber_connect.Settings.WEBSERVER_HOST = Settings.LIVENESS_HOST
 	fiber_connect.Settings.WEBSERVER_PORT = Settings.LIVENESS_PORT
 
+	fiber_connect.Start()
+
 	Client := fiber_connect.Client
-	if Client == nil {
-		fiber_connect.Connect()
-		Client = fiber_connect.Client
-	}
+	//if Client == nil {
+	//	fiber_connect.Connect()
+	//	Client = fiber_connect.Client
+	//}
 
 	Client.Get(LIVENESS_URL, Handlerliveness)
-
-	fiber_connect.Start()
 
 	log.Info("Liveness start OK. URL: ", LIVENESS_URL)
 
