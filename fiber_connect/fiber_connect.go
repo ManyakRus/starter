@@ -57,8 +57,15 @@ func LogInfo_Connected() {
 // FillSettings загружает переменные окружения в структуру из переменных окружения
 func FillSettings() {
 	Settings = SettingsINI{}
-	Settings.WEBSERVER_HOST = os.Getenv("WEBSERVER_HOST")
-	Settings.WEBSERVER_PORT = os.Getenv("WEBSERVER_PORT")
+
+	if Settings.WEBSERVER_HOST == "" {
+		Settings.WEBSERVER_HOST = os.Getenv("WEBSERVER_HOST")
+	}
+
+	if Settings.WEBSERVER_PORT == "" {
+		Settings.WEBSERVER_PORT = os.Getenv("WEBSERVER_PORT")
+	}
+
 	if Settings.WEBSERVER_HOST == "" {
 		log.Debug("Need fill WEBSERVER_HOST ! in OS Environment ")
 	}
