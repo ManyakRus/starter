@@ -22,7 +22,7 @@ var PackageName = filepath.Base(reflect.TypeOf(empty{}).PkgPath())
 var log = logger.GetLog()
 
 // Settings хранит все нужные переменные окружения
-var Settings SettingsINI
+var Settings = SettingsINI{}
 
 // SettingsINI - структура для хранения всех нужных переменных окружения
 type SettingsINI struct {
@@ -56,7 +56,7 @@ func LogInfo_Connected() {
 
 // FillSettings загружает переменные окружения в структуру из переменных окружения
 func FillSettings() {
-	Settings = SettingsINI{}
+	//Settings = SettingsINI{}
 
 	if Settings.WEBSERVER_HOST == "" {
 		Settings.WEBSERVER_HOST = os.Getenv("WEBSERVER_HOST")
