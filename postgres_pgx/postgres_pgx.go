@@ -401,21 +401,21 @@ func GetConnection_WithApplicationName(ApplicationName string) *pgx.Conn {
 
 // RawMultipleSQL - выполняет текст запроса, отдельно для каждого запроса
 func RawMultipleSQL(tx pgx.Tx, TextSQL string) (pgx.Rows, error) {
-	var Rows pgx.Rows
+	var rows pgx.Rows
 	var err error
 
 	if tx == nil {
 		TextError := "RawMultipleSQL() error: tx =nil"
 		log.Error(TextError)
 		err = errors.New(TextError)
-		return Rows, err
+		return rows, err
 	}
 
 	//if tx.IsClosed() {
 	//	TextError := "RawMultipleSQL() error: tx is closed"
 	//	log.Error(TextError)
 	//	err = errors.New(TextError)
-	//	return Rows, err
+	//	return rows, err
 	//}
 
 	ctx := contextmain.GetContext()
@@ -424,7 +424,7 @@ func RawMultipleSQL(tx pgx.Tx, TextSQL string) (pgx.Rows, error) {
 	//tx, err := tx.Begin(ctx)
 	//if err != nil {
 	//	log.Error(err)
-	//	return Rows, err
+	//	return rows, err
 	//}
 	//defer tx.Commit()
 
@@ -442,17 +442,18 @@ func RawMultipleSQL(tx pgx.Tx, TextSQL string) (pgx.Rows, error) {
 			TextError := fmt.Sprint("tx.Exec() error: ", err, ", TextSQL: \n", TextSQL1)
 			err = errors.New(TextError)
 			log.Error(err)
-			return Rows, err
+			return rows, err
 		}
 	}
 
 	//запустим последний запрос, с возвратом результата
-	Rows, err = tx.Query(ctx, TextSQL2)
+	rows, err = tx.Query(ctx, TextSQL2)
 	if err != nil {
 		TextError := fmt.Sprint("tx.Raw() error: ", err, ", TextSQL: \n", TextSQL2)
 		err = errors.New(TextError)
-		return Rows, err
+		return rows, err
 	}
+	defer rows.Close()
 
-	return Rows, err
+	return rows, err
 }
