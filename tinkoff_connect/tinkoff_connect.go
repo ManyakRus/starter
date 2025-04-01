@@ -190,6 +190,7 @@ func CloseConnection_err() error {
 
 // ping_go - делает пинг каждые 60 секунд, и реконнект
 func ping_go() {
+	var err error
 
 	ticker := time.NewTicker(60 * time.Second)
 	defer ticker.Stop()
@@ -204,7 +205,7 @@ loop:
 			log.Warn("Context app is canceled. grpc_client.ping")
 			break loop
 		case <-ticker.C:
-			err := port_checker.CheckPort_err(Settings.Host, Settings.Port)
+			err = port_checker.CheckPort_err(Settings.Host, Settings.Port)
 			//log.Debug("ticker, ping err: ", err) //удалить
 			if err != nil {
 				NeedReconnect = true

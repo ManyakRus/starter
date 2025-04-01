@@ -268,6 +268,7 @@ func FillSettings() {
 
 // ping_go - делает пинг каждые 60 секунд, и реконнект
 func ping_go() {
+	var err error
 
 	ticker := time.NewTicker(60 * time.Second)
 
@@ -281,7 +282,7 @@ loop:
 			log.Warn("Context app is canceled. minio_connect.ping")
 			break loop
 		case <-ticker.C:
-			err := port_checker.CheckPort_err(Settings.MINIO_HOST, Settings.MINIO_PORT)
+			err = port_checker.CheckPort_err(Settings.MINIO_HOST, Settings.MINIO_PORT)
 			//log.Debug("ticker, ping err: ", err) //удалить
 			if err != nil {
 				NeedReconnect = true

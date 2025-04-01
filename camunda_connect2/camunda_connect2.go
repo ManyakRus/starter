@@ -279,6 +279,7 @@ func Send_BPMN_File(BPMN_filename string) {
 
 // ping_go - делает пинг каждые 60 секунд, и реконнект
 func ping_go(HandleJob func(client worker.JobClient, job entities.Job), CAMUNDA_JOBTYPE string) {
+	var err error
 
 	ticker := time.NewTicker(60 * time.Second)
 
@@ -292,7 +293,7 @@ loop:
 			log.Warn("Context app is canceled. camunda_connect.ping")
 			break loop
 		case <-ticker.C:
-			err := port_checker.CheckPort_err(Settings.CAMUNDA_HOST, Settings.CAMUNDA_PORT)
+			err = port_checker.CheckPort_err(Settings.CAMUNDA_HOST, Settings.CAMUNDA_PORT)
 			// log.Debug("ticker, ping err: ", err) //удалить
 			if err != nil {
 				NeedReconnect = true
