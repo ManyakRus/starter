@@ -346,6 +346,7 @@ func ping_go() {
 	var err error
 
 	ticker := time.NewTicker(60 * time.Second)
+	defer ticker.Stop()
 
 	addr := Settings.DB_HOST + ":" + Settings.DB_PORT
 

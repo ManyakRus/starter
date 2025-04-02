@@ -326,6 +326,7 @@ func ping_go(HandleJob func(client worker.JobClient, job entities.Job), CAMUNDA_
 	var err error
 
 	ticker := time.NewTicker(60 * time.Second)
+	defer ticker.Stop()
 
 	addr := Settings.CAMUNDA_HOST + ":" + Settings.CAMUNDA_PORT
 

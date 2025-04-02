@@ -346,6 +346,7 @@ func ping_go() {
 	var err error
 
 	ticker := time.NewTicker(60 * time.Second)
+	defer ticker.Stop()
 
 	//бесконечный цикл
 loop:

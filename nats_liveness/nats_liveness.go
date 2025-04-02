@@ -257,6 +257,11 @@ func WaitStop() {
 		log.Warn("Context app is canceled. NATS_Liveness.")
 	}
 
+	if Ticker != nil {
+		Ticker.Stop()
+	}
+
+	//
 	CloseConnection()
 
 }
