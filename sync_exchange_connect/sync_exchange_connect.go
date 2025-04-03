@@ -2,15 +2,22 @@
 package sync_exchange_connect
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/nats_connect"
 	"github.com/ManyakRus/starter/stopapp"
 	"gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange"
 	"gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/sync_types"
+	"runtime/pprof"
 	"sync"
+	"time"
 )
+
+// serviceName - имя сервиса который подключается
+var serviceName string
 
 // Connect - подключение к NATS SyncExchange
 func Connect(ServiceName, ServiceVersion string) {
@@ -124,4 +131,63 @@ func SendResponseError(sp *sync_types.SyncPackage, err error) {
 		log.Error("SendResponse() Error: ", err)
 	}
 
+}
+
+// Start_PprofNats - профилирование памяти отправляет в NATS, бесконечно + WaitGroup
+func Start_PprofNats() {
+	stopapp.GetWaitGroup_Main().Add(1)
+	go pprofNats_forever_go()
+}
+
+// pprofNats_forever_go - профилирование памяти отправляет в NATS, бесконечно + WaitGroup
+func pprofNats_forever_go() {
+	defer stopapp.GetWaitGroup_Main().Done()
+	PprofNats_forever()
+}
+
+// PprofNats_forever - профилирование памяти отправляет в NATS, бесконечно
+func PprofNats_forever() {
+	var err error
+
+	ticker := time.NewTicker(60 * time.Second)
+	defer ticker.Stop()
+
+loop:
+	for {
+		select {
+		case <-contextmain.GetContext().Done():
+			log.Warn("Context app is canceled. postgres_pgx.ping")
+			break loop
+		case <-ticker.C:
+			err = PprofNats1()
+			if err != nil {
+				err = fmt.Errorf("PprofNats1(), error: %w", err)
+				log.Error(err)
+				time.Sleep(60 * time.Second)
+			}
+		}
+	}
+}
+
+// PprofNats1 - профилирование памяти отправляет в NATS 1 раз
+func PprofNats1() error {
+	var err error
+	topicHeapProfile := serviceName + ".heap_profile"
+	var buf bytes.Buffer
+	err = pprof.WriteHeapProfile(&buf)
+	if err != nil {
+		err = fmt.Errorf("pprof.WriteHeapProfile(), topic: %v, error: %w", topicHeapProfile, err)
+		log.Error(err)
+		time.Sleep(10 * time.Second)
+		return err
+	}
+	err = sync_exchange.SendRawMessage(topicHeapProfile, buf.Bytes())
+	if err != nil {
+		err = fmt.Errorf("sync_exchange.SendRawMessage(), topic: %v, error: %w", topicHeapProfile, err)
+		log.Error(err)
+		time.Sleep(10 * time.Second)
+		return err
+	}
+
+	return err
 }

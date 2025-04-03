@@ -35,6 +35,7 @@ type ICrud_Connection interface {
 	Update_Name(*Connection) error
 	Update_Password(*Connection) error
 	Update_Port(*Connection) error
+	Update_Prefix(*Connection) error
 	Update_Server(*Connection) error
 }
 

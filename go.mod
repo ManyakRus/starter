@@ -7,7 +7,7 @@ require (
 	github.com/camunda/zeebe/clients/go/v8 v8.5.10
 	github.com/cockroachdb/pebble v1.1.2
 	github.com/denisenkom/go-mssqldb v0.12.3
-	github.com/dromara/carbon/v2 v2.5.2
+	github.com/dromara/carbon/v2 v2.6.1
 	github.com/emersion/go-imap v1.2.1
 	github.com/emersion/go-message v0.18.1
 	github.com/go-faster/errors v0.7.1
@@ -30,13 +30,13 @@ require (
 	github.com/segmentio/kafka-go v0.4.47
 	github.com/tinkoff/invest-api-go-sdk v1.4.6
 	github.com/xhit/go-simple-mail/v2 v2.16.0
-	gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange v0.0.33
-	gitlab.aescorp.ru/dsp_dev/claim/sync_service v1.2.242
+	gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange v0.0.34
+	gitlab.aescorp.ru/dsp_dev/claim/sync_service v1.2.268
 	go.etcd.io/bbolt v1.3.11
 	go.mau.fi/whatsmeow v0.0.0-20241202173457-b2dd543e5721
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.32.0
-	golang.org/x/exp v0.0.0-20250106191152-7588d65b2ba8
+	golang.org/x/exp v0.0.0-20250128182459-e0ece0dbea4c
 	google.golang.org/protobuf v1.36.4
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gorm.io/driver/postgres v1.5.11
@@ -123,11 +123,11 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
-	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
+	golang.org/x/sync v0.11.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/term v0.28.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250127172529-29210b9bc287 // indirect
+	golang.org/x/text v0.22.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250204164813-702378808489 // indirect
 	google.golang.org/grpc v1.70.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.17 // indirect

@@ -413,3 +413,16 @@ func SendResponse(packIn *sync_types.SyncPackage, packOut sync_types.SyncPackage
 
 	return nil
 }
+
+func SendRawMessage(topic string, data []byte) error {
+	if !getIsInited() {
+		return fmt.Errorf("SendRawMessage, not inited")
+	}
+
+	// Отправка сообщения
+	err := nc.Publish(topic, data)
+	if err != nil {
+		return fmt.Errorf("SendRawMessage, Error: %v", err)
+	}
+	return nil
+}

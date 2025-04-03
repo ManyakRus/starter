@@ -11,6 +11,7 @@ type Table_Connection struct {
 	Name     string `json:"name" gorm:"column:name;default:\"\""`              //Наименование
 	Password string `json:"password" gorm:"column:password;default:\"\""`      //Пароль
 	Port     string `json:"port" gorm:"column:port;default:\"\""`              //Номер порта
+	Prefix   string `json:"prefix" gorm:"column:prefix;default:\"\""`          //Префикс для автоматизации
 	Server   string `json:"server" gorm:"column:server;default:\"\""`          //Имя сервера, или ip-адрес
 
 }

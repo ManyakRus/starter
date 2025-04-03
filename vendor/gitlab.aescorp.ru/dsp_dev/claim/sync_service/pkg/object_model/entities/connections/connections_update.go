@@ -92,6 +92,17 @@ func (m *Connection) Update_Port() error {
 	return err
 }
 
+// Update_Prefix - изменяет объект в БД по ID, присваивает Prefix
+func (m *Connection) Update_Prefix() error {
+	if Crud_Connection == nil {
+		return db_constants.ErrorCrudIsNotInit
+	}
+
+	err := Crud_Connection.Update_Prefix(m)
+
+	return err
+}
+
 // Update_Server - изменяет объект в БД по ID, присваивает Server
 func (m *Connection) Update_Server() error {
 	if Crud_Connection == nil {
