@@ -66,7 +66,10 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, ServiceName, Ser
 	var err error
 
 	//запомним к себе контекст
-	contextmain.Ctx = ctx
+	if contextmain.Ctx != ctx {
+		contextmain.SetContext(ctx)
+	}
+	//contextmain.Ctx = ctx
 	if ctx == nil {
 		contextmain.GetContext()
 	}

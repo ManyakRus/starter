@@ -18,24 +18,26 @@ var CancelContext func()
 // onceCtx - гарантирует единственное создание контеста
 var onceCtx sync.Once
 
-// lockContextMain - гарантирует единственное создание контеста
-// var lockContextMain sync.Mutex
+// MutexContextMain - гарантирует единственное создание контеста
+var MutexContextMain sync.RWMutex
 
 // GetContext - возвращает глобальный контекст приложения
 func GetContext() context.Context {
-	//lockContextMain.Lock()
-	//defer lockContextMain.Unlock()
-	//
+	MutexContextMain.RLock()
+	defer MutexContextMain.RUnlock()
+
 	//if Ctx == nil {
 	//	CtxBg := context.Background()
 	//	Ctx, CancelContext = context.WithCancel(CtxBg)
 	//}
 
 	onceCtx.Do(func() {
-		CtxBg := context.Background()
-		var Ctx0 context.Context
-		Ctx0, CancelContext = context.WithCancel(CtxBg)
-		Ctx = &Ctx0
+		if Ctx == nil { //можно заполнить свой контекст, поэтому if
+			CtxBg := context.Background()
+			var Ctx0 context.Context
+			Ctx0, CancelContext = context.WithCancel(CtxBg)
+			Ctx = &Ctx0
+		}
 	})
 
 	return *Ctx
@@ -49,4 +51,18 @@ func GetNewContext() context.Context {
 	Ctx = &Ctx0
 
 	return *Ctx
+}
+
+// SetContext - устанавливает глобальный контекст, с учётом Mutex
+func SetContext(ctx *context.Context) {
+	MutexContextMain.Lock()
+	defer MutexContextMain.Unlock()
+	Ctx = ctx
+}
+
+// SetCancelContext - устанавливает функцию глобального отмены контекста, с учётом Mutex
+func SetCancelContext(cancelContext func()) {
+	MutexContextMain.Lock()
+	defer MutexContextMain.Unlock()
+	CancelContext = cancelContext
 }

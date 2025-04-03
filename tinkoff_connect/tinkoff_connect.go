@@ -155,7 +155,10 @@ func Start() {
 // wg - глобальный WaitGroup приложения
 func Start_ctx(ctx *context.Context, wg *sync.WaitGroup) error {
 	var err error
-	contextmain.Ctx = ctx
+	if contextmain.Ctx != ctx {
+		contextmain.SetContext(ctx)
+	}
+	//contextmain.Ctx = ctx
 	stopapp.SetWaitGroup_Main(wg)
 
 	err = Connect_err()
