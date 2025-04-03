@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/log"
 	"time"
 
 	"gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/object_model/entities/connections"
@@ -16,7 +16,7 @@ import (
 )
 
 // log - глобальный логгер
-var log = logger.GetLog()
+//var log = logger.GetLog()
 
 // Loc - Локация (страна)
 var Loc = time.Local

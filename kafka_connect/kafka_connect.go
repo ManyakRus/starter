@@ -3,7 +3,7 @@ package kafka_connect
 import (
 	"context"
 	"fmt"
-	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/log"
 	"net"
 	"os"
 	"sync"
@@ -20,7 +20,7 @@ import (
 var Conn *kafka.Conn
 
 // log - глобальный логгер
-var log = logger.GetLog()
+//var log = logger.GetLog()
 
 // Settings хранит все нужные переменные окружения
 var Settings SettingsINI

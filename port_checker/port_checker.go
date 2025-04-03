@@ -1,13 +1,13 @@
 package port_checker
 
 import (
-	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/log"
 	"net"
 	"time"
 )
 
 // log - глобальный логгер
-var log = logger.GetLog()
+//var log = logger.GetLog()
 
 // CheckPort_err - проверяет доступность порта, возвращает ошибку
 func CheckPort_err(IP, Port string) error {

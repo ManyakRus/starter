@@ -5,7 +5,7 @@ package chatgpt_proxy
 import (
 	"context"
 	"errors"
-	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/log"
 	"time"
 
 	//"github.com/jackc/pgconn"
@@ -24,7 +24,7 @@ import (
 var Conn *gogpt.Client
 
 // log - глобальный логгер
-var log = logger.GetLog()
+//var log = logger.GetLog()
 
 // mutexReconnect - защита от многопоточности Reconnect()
 var mutexReconnect = &sync.Mutex{}

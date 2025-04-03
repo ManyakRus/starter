@@ -2,7 +2,7 @@ package nats_connect
 
 import (
 	"context"
-	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/micro"
 	"github.com/ManyakRus/starter/port_checker"
 	"github.com/nats-io/nats.go"
@@ -18,7 +18,7 @@ import (
 var Conn *nats.Conn
 
 // log - глобальный логгер
-var log = logger.GetLog()
+//var log = logger.GetLog()
 
 // Settings хранит все нужные переменные окружения
 var Settings SettingsINI

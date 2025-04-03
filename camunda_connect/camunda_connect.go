@@ -4,7 +4,7 @@ package camunda_connect
 import (
 	"context"
 	"github.com/ManyakRus/starter/contextmain"
-	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/micro"
 	"github.com/ManyakRus/starter/port_checker"
 	"github.com/ManyakRus/starter/stopapp"
@@ -20,7 +20,7 @@ import (
 )
 
 // log - глобальный логгер
-var log = logger.GetLog()
+//var log = logger.GetLog()
 
 // Settings хранит все нужные переменные окружения
 var Settings SettingsINI

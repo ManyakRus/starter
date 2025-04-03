@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/ManyakRus/starter/contextmain"
-	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/log"
 	//"github.com/ManyakRus/starter/micro"
 	"github.com/ManyakRus/starter/stopapp"
 
@@ -26,7 +26,7 @@ import (
 )
 
 // log - глобальный логгер приложения
-var log = logger.GetLog()
+//var log = logger.GetLog()
 
 // lastSendTime - время последней отправки сообщения и мьютекс
 var lastSendTime = lastSendTimeMutex{}

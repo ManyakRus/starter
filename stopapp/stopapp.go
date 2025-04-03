@@ -3,7 +3,7 @@
 package stopapp
 
 import (
-	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/log"
 	"os"
 	"os/signal"
 	"sync"
@@ -21,7 +21,7 @@ import (
 )
 
 // log - глобальный логгер
-var log = logger.GetLog()
+//var log = logger.GetLog()
 
 // SignalInterrupt - канал для ожидания сигнала остановки приложения
 var SignalInterrupt chan os.Signal

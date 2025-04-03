@@ -5,7 +5,7 @@ package postgres_connect
 import (
 	"context"
 	"errors"
-	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/port_checker"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -22,7 +22,7 @@ import (
 var Conn *sqlx.DB
 
 // log - глобальный логгер
-var log = logger.GetLog()
+//var log = logger.GetLog()
 
 // mutexReconnect - защита от многопоточности Reconnect()
 var mutexReconnect = &sync.Mutex{}

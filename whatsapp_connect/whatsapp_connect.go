@@ -9,7 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/log"
 	"go.mau.fi/whatsmeow/types/events"
 	"os"
 	"strings"
@@ -33,7 +33,7 @@ import (
 var ClientWhatsApp *whatsmeow.Client
 
 // log - глобальный логгер приложения
-var log = logger.GetLog()
+//var log = logger.GetLog()
 
 // filenameDB - имя файла локально базы данных sqllite
 var filenameDB string

@@ -3,7 +3,7 @@ package fiber_connect
 import (
 	"context"
 	"github.com/ManyakRus/starter/contextmain"
-	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/stopapp"
 	"github.com/gofiber/fiber/v2"
 	"os"
@@ -19,7 +19,7 @@ type empty struct{}
 var PackageName = filepath.Base(reflect.TypeOf(empty{}).PkgPath())
 
 // log - глобальный логгер
-var log = logger.GetLog()
+//var log = logger.GetLog()
 
 // Settings хранит все нужные переменные окружения
 var Settings = SettingsINI{}

@@ -5,7 +5,7 @@ package postgres_stek
 import (
 	"context"
 	"errors"
-	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/port_checker"
 	"gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/object_model/entities/connections"
 	"time"
@@ -37,7 +37,7 @@ var MapConn = make(map[int64]*gorm.DB)
 var MapConnection = make(map[int64]connections.Connection)
 
 // log - глобальный логгер
-var log = logger.GetLog()
+//var log = logger.GetLog()
 
 // mutexReconnect - защита от многопоточности Reconnect()
 var mutexReconnect = &sync.Mutex{}

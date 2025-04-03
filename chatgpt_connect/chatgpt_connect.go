@@ -3,7 +3,7 @@ package chatgpt_connect
 import (
 	"context"
 	"errors"
-	"github.com/ManyakRus/starter/logger"
+	"github.com/ManyakRus/starter/log"
 	"github.com/rugatling/go-openai"
 	"time"
 
@@ -23,7 +23,7 @@ import (
 var Conn *gogpt.Client
 
 // log - глобальный логгер
-var log = logger.GetLog()
+//var log = logger.GetLog()
 
 // mutexReconnect - защита от многопоточности Reconnect()
 var mutexReconnect = &sync.Mutex{}
