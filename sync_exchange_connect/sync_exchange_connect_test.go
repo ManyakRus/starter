@@ -57,3 +57,10 @@ func TestPprofNats1(t *testing.T) {
 
 	PprofNats1()
 }
+
+func TestTextTestOrEmpty(t *testing.T) {
+	Otvet := TextTestOrEmpty()
+	if Otvet != "" && Otvet != "_test" {
+		t.Errorf("TextTestOrEmpty() error: Otvet=%v", Otvet)
+	}
+}

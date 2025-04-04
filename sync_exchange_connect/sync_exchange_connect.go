@@ -11,6 +11,7 @@ import (
 	"github.com/ManyakRus/starter/stopapp"
 	"gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange"
 	"gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/sync_types"
+	"os"
 	"runtime/pprof"
 	"sync"
 	"time"
@@ -175,7 +176,9 @@ loop:
 // PprofNats1 - профилирование памяти отправляет в NATS 1 раз
 func PprofNats1() error {
 	var err error
-	topicHeapProfile := serviceName + ".heap_profile"
+
+	TextTest := TextTestOrEmpty()
+	topicHeapProfile := serviceName + TextTest + ".heap_profile"
 	var buf bytes.Buffer
 	err = pprof.WriteHeapProfile(&buf)
 	if err != nil {
@@ -193,4 +196,18 @@ func PprofNats1() error {
 	}
 
 	return err
+}
+
+// TextTestOrEmpty - возвращает "_test" или ""
+func TextTestOrEmpty() string {
+	Otvet := "_test"
+	stage := os.Getenv("STAGE")
+	switch stage {
+	case "dev":
+		Otvet = ""
+	case "prod":
+		Otvet = ""
+	}
+
+	return Otvet
 }
