@@ -17,6 +17,9 @@ import (
 	"time"
 )
 
+// TopicNamePprofSuffix - имя суффикса топика с профилем памяти
+const TopicNamePprofSuffix = ".heap_profile"
+
 // serviceName - имя сервиса который подключается
 var serviceName string
 
@@ -139,6 +142,10 @@ func SendResponseError(sp *sync_types.SyncPackage, err error) {
 
 // Start_PprofNats - профилирование памяти отправляет в NATS, бесконечно + WaitGroup
 func Start_PprofNats() {
+	TextTest := TextTestOrEmpty()
+	topicHeapProfile := serviceName + TextTest + TopicNamePprofSuffix
+	log.Info("Start_PprofNats(), topic: ", topicHeapProfile)
+
 	stopapp.GetWaitGroup_Main().Add(1)
 	go pprofNats_forever_go()
 }
@@ -178,7 +185,7 @@ func PprofNats1() error {
 	var err error
 
 	TextTest := TextTestOrEmpty()
-	topicHeapProfile := serviceName + TextTest + ".heap_profile"
+	topicHeapProfile := serviceName + TextTest + TopicNamePprofSuffix
 	var buf bytes.Buffer
 	err = pprof.WriteHeapProfile(&buf)
 	if err != nil {
