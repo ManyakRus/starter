@@ -43,6 +43,12 @@ func LogInfo_Connected(err error) {
 func Connect_err(ServiceName, ServiceVersion string) error {
 	var err error
 
+	//запомним ServiceName
+	if serviceName == "" {
+		serviceName = ServiceName
+	}
+
+	//
 	nats_connect.FillSettings()
 	sNATS_PORT := (nats_connect.Settings.NATS_PORT)
 	url := "nats://" + nats_connect.Settings.NATS_HOST + ":" + sNATS_PORT
