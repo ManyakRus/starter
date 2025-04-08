@@ -17,8 +17,11 @@ import (
 	"time"
 )
 
-// TopicNamePprofSuffix - имя суффикса топика с профилем памяти
-const TopicNamePprofSuffix = ".heap_profile"
+// TopicNamePprof_Heap_Suffix - имя суффикса топика с профилем памяти
+const TopicNamePprof_Heap_Suffix = ".heap_profile"
+
+// TopicNamePprof_Goroutine_Suffix - имя суффикса топика с профилем памяти
+const TopicNamePprof_Goroutine_Suffix = ".goroutine_profile"
 
 // serviceName - имя сервиса который подключается
 var serviceName string
@@ -149,7 +152,7 @@ func SendResponseError(sp *sync_types.SyncPackage, err error) {
 // Start_PprofNats - профилирование памяти отправляет в NATS, бесконечно + WaitGroup
 func Start_PprofNats() {
 	TextTest := TextTestOrEmpty()
-	topicHeapProfile := serviceName + TextTest + TopicNamePprofSuffix
+	topicHeapProfile := serviceName + TextTest + TopicNamePprof_Heap_Suffix
 	log.Info("Start_PprofNats(), topic: ", topicHeapProfile)
 
 	stopapp.GetWaitGroup_Main().Add(1)
@@ -190,10 +193,58 @@ loop:
 func PprofNats1() error {
 	var err error
 
+	//память
+	err = PprofMemoryProfile1()
+	if err != nil {
+		err = fmt.Errorf("PprofMemoryProfile1(), error: %w", err)
+		log.Error(err)
+		return err
+	}
+
+	//горутины
+	err = PprofGoroutines1()
+	if err != nil {
+		err = fmt.Errorf("PprofMemoryProfile1(), error: %w", err)
+		log.Error(err)
+		return err
+	}
+
+	return err
+}
+
+// PprofMemoryProfile1 - профилирование памяти отправляет в NATS 1 раз
+func PprofMemoryProfile1() error {
+	var err error
+
 	TextTest := TextTestOrEmpty()
-	topicHeapProfile := serviceName + TextTest + TopicNamePprofSuffix
+	topicHeapProfile := serviceName + TextTest + TopicNamePprof_Heap_Suffix
 	var buf bytes.Buffer
 	err = pprof.WriteHeapProfile(&buf)
+	if err != nil {
+		err = fmt.Errorf("pprof.WriteHeapProfile(), topic: %v, error: %w", topicHeapProfile, err)
+		log.Error(err)
+		time.Sleep(10 * time.Second)
+		return err
+	}
+	err = sync_exchange.SendRawMessage(topicHeapProfile, buf.Bytes())
+	if err != nil {
+		err = fmt.Errorf("sync_exchange.SendRawMessage(), topic: %v, error: %w", topicHeapProfile, err)
+		log.Error(err)
+		time.Sleep(10 * time.Second)
+		return err
+	}
+
+	return err
+}
+
+// PprofGoroutines1 - профилирование горутин отправляет в NATS 1 раз
+func PprofGoroutines1() error {
+	var err error
+
+	TextTest := TextTestOrEmpty()
+	topicHeapProfile := serviceName + TextTest + TopicNamePprof_Goroutine_Suffix
+	var buf bytes.Buffer
+	err = pprof.Lookup("goroutine").WriteTo(&buf, 2)
 	if err != nil {
 		err = fmt.Errorf("pprof.WriteHeapProfile(), topic: %v, error: %w", topicHeapProfile, err)
 		log.Error(err)

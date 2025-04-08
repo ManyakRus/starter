@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-var SERVICE_NAME_TEST = "NIKITIN"
+var SERVICE_NAME_TEST = "starter_test"
 
 func TestConnect(t *testing.T) {
 	config_main.LoadEnv()

@@ -112,7 +112,7 @@ func SendMessage() {
 	Message1 := Message{}
 	Message1.ServiceName = Settings.SERVICE_NAME_FULL
 	Message1.ServiceNum = Settings.SERVICE_NUMBER
-	Message1.KernelType = "nikitin"
+	Message1.KernelType = "starter"
 	Message1.KernelVers = ""
 	Message1.ServiceTime = now //time.Now().UTC().Format("2006-01-02 15:04:05.000")
 	Message1.ServiceUptime = sDuration
