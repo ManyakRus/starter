@@ -361,8 +361,21 @@ loop:
 			log.Warn("Context app is canceled. postgres_pgx.ping")
 			break loop
 		case <-ticker.C:
+			//IsClosed
+			if Conn.IsClosed() == true {
+				NeedReconnect = true
+				log.Error("postgres_pgx error: IsClosed() = true")
+			}
+
+			//ping в базе данных
+			err = Conn.Ping(contextmain.GetContext())
+			if err != nil {
+				NeedReconnect = true
+				log.Error("postgres_pgx Ping() error: ", err)
+			}
+
+			//ping порта
 			err = port_checker.CheckPort_err(Settings.DB_HOST, Settings.DB_PORT)
-			//log.Debug("ticker, ping err: ", err) //удалить
 			if err != nil {
 				NeedReconnect = true
 				log.Warn("postgres_pgx CheckPort(", addr, ") error: ", err)

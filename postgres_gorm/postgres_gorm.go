@@ -440,7 +440,7 @@ func GetConnection_WithApplicationName(ApplicationName string) *gorm.DB {
 
 // ping_go - делает пинг каждые 60 секунд, и реконнект
 func ping_go() {
-	var err error
+	//var err error
 
 	ticker := time.NewTicker(60 * time.Second)
 	defer ticker.Stop()
@@ -455,8 +455,21 @@ loop:
 			log.Warn("Context app is canceled. postgres_gorm.ping")
 			break loop
 		case <-ticker.C:
+			//ping в базе данных
+			DB, err := Conn.DB()
+			if err != nil {
+				NeedReconnect = true
+				log.Error("Conn.DB() error: ", err)
+			} else {
+				err = DB.PingContext(contextmain.GetContext())
+				if err != nil {
+					NeedReconnect = true
+					log.Error("DB.PingContext() error: ", err)
+				}
+			}
+
+			//ping порта
 			err = port_checker.CheckPort_err(Settings.DB_HOST, Settings.DB_PORT)
-			//log.Debug("ticker, ping err: ", err) //удалить
 			if err != nil {
 				NeedReconnect = true
 				log.Warn("postgres_gorm CheckPort(", addr, ") error: ", err)
