@@ -432,6 +432,46 @@ func MinInt64(Mass ...int64) int64 {
 	return Otvet
 }
 
+// MaxFloat64 returns the largest value
+func MaxFloat64(Mass ...float64) float64 {
+	var Otvet float64
+
+	//
+	if len(Mass) == 0 {
+		return Otvet
+	}
+
+	//
+	Otvet = Mass[0]
+	for _, val := range Mass {
+		if val > Otvet {
+			Otvet = val
+		}
+	}
+
+	return Otvet
+}
+
+// MinFloat64 returns the smallest value
+func MinFloat64(Mass ...float64) float64 {
+	var Otvet float64
+
+	//
+	if len(Mass) == 0 {
+		return Otvet
+	}
+
+	//
+	Otvet = Mass[0]
+	for _, val := range Mass {
+		if val < Otvet {
+			Otvet = val
+		}
+	}
+
+	return Otvet
+}
+
 // MaxDate returns the largest of x or y.
 func MaxDate(x, y time.Time) time.Time {
 	if x.Before(y) == true {

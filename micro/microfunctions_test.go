@@ -1398,3 +1398,17 @@ func TestPause_duration(t *testing.T) {
 func TestPause_duration_ctx(t *testing.T) {
 	Pause_duration_ctx(context.Background(), time.Millisecond)
 }
+
+func TestMaxFloat64(t *testing.T) {
+	Otvet := MaxFloat64(1.0, 2.0)
+	if Otvet != 2.0 {
+		t.Errorf("Expected 2.0, but got %f", Otvet)
+	}
+}
+
+func TestMinFloat64(t *testing.T) {
+	Otvet := MinFloat64(1.0, 2.0)
+	if Otvet != 1.0 {
+		t.Errorf("Expected 1.0, but got %f", Otvet)
+	}
+}
