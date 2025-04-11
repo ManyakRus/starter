@@ -255,7 +255,7 @@ func CloseConnection_err() error {
 	if err != nil {
 		log.Error("DB.Close() error: ", err)
 	}
-	Conn = nil
+	//Conn = nil
 
 	return err
 }
