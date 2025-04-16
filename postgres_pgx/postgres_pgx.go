@@ -50,6 +50,9 @@ type SettingsINI struct {
 	DB_PASSWORD string
 }
 
+// TextConnBusy - текст ошибки "conn busy"
+const TextConnBusy = "conn busy"
+
 // Connect_err - подключается к базе данных
 func Connect() {
 
@@ -370,8 +373,18 @@ loop:
 			//ping в базе данных
 			err = Conn.Ping(contextmain.GetContext())
 			if err != nil {
-				NeedReconnect = true
-				log.Error("postgres_pgx Ping() error: ", err)
+				switch err.Error() {
+				case TextConnBusy:
+					{
+						log.Warn("postgres_pgx Ping() warning: ", err)
+					}
+				default:
+					{
+						NeedReconnect = true
+						log.Error("postgres_pgx Ping() error: ", err)
+					}
+				}
+
 			}
 
 			//ping порта
