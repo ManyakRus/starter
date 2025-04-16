@@ -320,6 +320,8 @@ gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange v0.0.33 h1:sLKDG4x4Ov72Nd9L
 gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange v0.0.33/go.mod h1:+ZbwpurumFpi0GbiahOY4shV6WB2kguFxN486+76prs=
 gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange v0.0.34 h1:1w3epO1MYB3GAHYDEPNlJWtrSDt+eL+dCX1IqTI0HEk=
 gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange v0.0.34/go.mod h1:+ZbwpurumFpi0GbiahOY4shV6WB2kguFxN486+76prs=
+gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange v0.0.35 h1:Cgp9Q86ySYlx6l4YCrgR88gff9LKrF7TozSW/M9wQP8=
+gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange v0.0.35/go.mod h1:+ZbwpurumFpi0GbiahOY4shV6WB2kguFxN486+76prs=
 gitlab.aescorp.ru/dsp_dev/claim/sync_service v1.2.242 h1:bS4Cq65lLs0LYOV9hzXW0Gv2lIqXi1I1TBzwhln4iWw=
 gitlab.aescorp.ru/dsp_dev/claim/sync_service v1.2.242/go.mod h1:VB93+iYc+6r5Jka9gRgQksjjW2MHtDltXAsHVP6ZELc=
 gitlab.aescorp.ru/dsp_dev/claim/sync_service v1.2.268 h1:lPdwJ8heNvDu+5prMK2cqj+qd4IO43r6bc2kth+Y8Mo=

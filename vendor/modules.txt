@@ -592,7 +592,7 @@ github.com/vmihailenco/tagparser/v2/internal/parser
 # github.com/xhit/go-simple-mail/v2 v2.16.0
 ## explicit; go 1.13
 github.com/xhit/go-simple-mail/v2
-# gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange v0.0.34
+# gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange v0.0.35
 ## explicit; go 1.22
 gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange
 gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/data_packer

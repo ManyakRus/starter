@@ -2,43 +2,53 @@
 package data_packer
 
 import (
-	"bytes"
 	"fmt"
-
 	"github.com/klauspost/compress/zstd"
+	//"sync"
 )
 
 // DataPacker -- архиватор данных движка хранилища
 type DataPacker struct {
-	bufIn  *bytes.Buffer // Временный буфер для входящих данных
-	bufOut *bytes.Buffer // Временный буфер для исходящих данных
-	enc    *zstd.Encoder
-	dec    *zstd.Decoder
+	enc *zstd.Encoder
+	dec *zstd.Decoder
 }
 
 // NewDataPacker -- возвращает новый *DataPacker
 func NewDataPacker() *DataPacker {
-	sf := &DataPacker{
-		bufIn:  bytes.NewBuffer([]byte{}),
-		bufOut: bytes.NewBuffer([]byte{}),
+	dp := &DataPacker{}
+
+	dp.enc, _ = zstd.NewWriter(nil, zstd.WithEncoderLevel(zstd.SpeedBetterCompression))
+	dp.dec, _ = zstd.NewReader(nil)
+
+	return dp
+}
+
+func (dp *DataPacker) Close() error {
+	var errs []error
+
+	if dp.enc != nil {
+		if err := dp.enc.Close(); err != nil {
+			errs = append(errs, fmt.Errorf("encoder close: %w", err))
+		}
 	}
-	// Здесь ошибки быть не может
-	sf.enc, _ = zstd.NewWriter(sf.bufOut, zstd.WithEncoderLevel(3))
-	sf.dec, _ = zstd.NewReader(sf.bufOut) // Куда писать выход
-	return sf
+
+	if dp.dec != nil {
+		dp.dec.Close()
+	}
+
+	// Возвращаем первую ошибку (если есть)
+	if len(errs) > 0 {
+		return errs[0]
+	}
+	return nil
 }
 
 // Pack -- сжимает данные для сохранения
-func (sf *DataPacker) Pack(binIn []byte) (binOut []byte, err error) {
-	binOut = sf.enc.EncodeAll(binIn, binOut)
-	return binOut, nil
+func (dp *DataPacker) Pack(binIn []byte) (binOut []byte, err error) {
+	return dp.enc.EncodeAll(binIn, nil), nil
 }
 
 // Unpack -- разжимает данные для отдачи
-func (sf *DataPacker) Unpack(binIn []byte) (binOut []byte, err error) {
-	binOut, err = sf.dec.DecodeAll(binIn, binOut)
-	if err != nil {
-		return nil, fmt.Errorf("DataPacker.Unpack(): in decode zstd, err=\n\t%w", err)
-	}
-	return binOut, nil
+func (dp *DataPacker) Unpack(binIn []byte) ([]byte, error) {
+	return dp.dec.DecodeAll(binIn, nil)
 }

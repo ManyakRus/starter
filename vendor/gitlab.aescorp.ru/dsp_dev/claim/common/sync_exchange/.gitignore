@@ -2,3 +2,5 @@
 cover.out
 store
 sync_confirm/claim_service.db
+
+data_packer/stress.prof
