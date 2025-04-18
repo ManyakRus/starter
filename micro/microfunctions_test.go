@@ -566,41 +566,41 @@ func TestFindLastPos(t *testing.T) {
 	}
 }
 
-func TestStringFloat64_Dimension2(t *testing.T) {
+func TestStringFromFloat64_Dimension2(t *testing.T) {
 	// Testing for a positive float number
-	result := StringFloat64_Dimension2(3.14159)
+	result := StringFromFloat64_Dimension2(3.14159)
 	if result != "3.14" {
 		t.Errorf("Expected '3.14' but got %s", result)
 	}
 
 	// Testing for a negative float number
-	result = StringFloat64_Dimension2(-123.456)
+	result = StringFromFloat64_Dimension2(-123.456)
 	if result != "-123.46" {
 		t.Errorf("Expected '-123.46' but got %s", result)
 	}
 
 	// Testing for zero
-	result = StringFloat64_Dimension2(0.0)
+	result = StringFromFloat64_Dimension2(0.0)
 	if result != "0.00" {
 		t.Errorf("Expected '0.00' but got %s", result)
 	}
 }
 
-func TestStringFloat32_Dimension2(t *testing.T) {
+func TestStringFromFloat32_Dimension2(t *testing.T) {
 	// Testing for a positive float number
-	result := StringFloat32_Dimension2(3.14159)
+	result := StringFromFloat32_Dimension2(3.14159)
 	if result != "3.14" {
 		t.Errorf("Expected '3.14' but got %s", result)
 	}
 
 	// Testing for a negative float number
-	result = StringFloat32_Dimension2(-123.456)
+	result = StringFromFloat32_Dimension2(-123.456)
 	if result != "-123.46" {
 		t.Errorf("Expected '-123.46' but got %s", result)
 	}
 
 	// Testing for zero
-	result = StringFloat32_Dimension2(0.0)
+	result = StringFromFloat32_Dimension2(0.0)
 	if result != "0.00" {
 		t.Errorf("Expected '0.00' but got %s", result)
 	}
@@ -1410,5 +1410,37 @@ func TestMinFloat64(t *testing.T) {
 	Otvet := MinFloat64(1.0, 2.0)
 	if Otvet != 1.0 {
 		t.Errorf("Expected 1.0, but got %f", Otvet)
+	}
+}
+
+func TestStringFromFloat64_Dimension0(t *testing.T) {
+	var f float64 = 1.0
+	Otvet := StringFromFloat64_Dimension0(f)
+	if Otvet != "1" {
+		t.Errorf("Expected '1', but got %s", Otvet)
+	}
+}
+
+func TestStringFromFloat32_Dimension0(t *testing.T) {
+	var f float32 = 1.0
+	Otvet := StringFromFloat32_Dimension0(f)
+	if Otvet != "1" {
+		t.Errorf("Expected '1', but got %s", Otvet)
+	}
+}
+
+func TestStringFromFloat64_Dimension(t *testing.T) {
+	var f float64 = 1.0
+	Otvet := StringFromFloat64_Dimension(f, 0)
+	if Otvet != "1" {
+		t.Errorf("Expected '1', but got %s", Otvet)
+	}
+}
+
+func TestStringFromFloat32_Dimension(t *testing.T) {
+	var f float32 = 1.0
+	Otvet := StringFromFloat32_Dimension(f, 0)
+	if Otvet != "1" {
+		t.Errorf("Expected '1', but got %s", Otvet)
 	}
 }

@@ -950,16 +950,44 @@ func FindLastPos(s, TextFind string) int {
 	return Otvet
 }
 
-// StringFloat64_Dimension2 - возвращает строку с 2 знака после запятой
-func StringFloat64_Dimension2(f float64) string {
+// StringFromFloat64_Dimension2 - возвращает строку с 2 знака после запятой
+func StringFromFloat64_Dimension2(f float64) string {
 	Otvet := fmt.Sprintf("%.2f", f)
 
 	return Otvet
 }
 
-// StringFloat32_Dimension2 - возвращает строку с 2 знака после запятой
-func StringFloat32_Dimension2(f float32) string {
+// StringFromFloat32_Dimension2 - возвращает строку с 2 знака после запятой
+func StringFromFloat32_Dimension2(f float32) string {
 	Otvet := fmt.Sprintf("%.2f", f)
+
+	return Otvet
+}
+
+// StringFromFloat64_Dimension0 - возвращает строку с 0 знаков после запятой
+func StringFromFloat64_Dimension0(f float64) string {
+	Otvet := fmt.Sprintf("%.0f", f)
+
+	return Otvet
+}
+
+// StringFromFloat32_Dimension0 - возвращает строку с 0 знаков после запятой
+func StringFromFloat32_Dimension0(f float32) string {
+	Otvet := fmt.Sprintf("%.0f", f)
+
+	return Otvet
+}
+
+// StringFromFloat64_Dimension - возвращает строку с Dimension знаков после запятой
+func StringFromFloat64_Dimension(f float64, Dimension int) string {
+	Otvet := fmt.Sprintf("%."+strconv.Itoa(Dimension)+"f", f)
+
+	return Otvet
+}
+
+// StringFromFloat32_Dimension - возвращает строку с Dimension знаков после запятой
+func StringFromFloat32_Dimension(f float32, Dimension int) string {
+	Otvet := fmt.Sprintf("%."+strconv.Itoa(Dimension)+"f", f)
 
 	return Otvet
 }
