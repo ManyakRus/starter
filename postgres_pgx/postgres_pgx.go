@@ -431,6 +431,11 @@ func GetConnection_WithApplicationName(ApplicationName string) *pgx.Conn {
 }
 
 // RawMultipleSQL - выполняет текст запроса, отдельно для каждого запроса
+// после вызова, в конце необходимо закрыть rows!
+// if err != nil {
+// }
+// defer rows.Close()
+
 func RawMultipleSQL(tx pgx.Tx, TextSQL string) (pgx.Rows, error) {
 	var rows pgx.Rows
 	var err error
