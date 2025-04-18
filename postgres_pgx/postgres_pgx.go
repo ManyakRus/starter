@@ -364,11 +364,6 @@ loop:
 			log.Warn("Context app is canceled. postgres_pgx.ping")
 			break loop
 		case <-ticker.C:
-			//IsClosed
-			if Conn.IsClosed() == true {
-				NeedReconnect = true
-				log.Error("postgres_pgx error: IsClosed() = true")
-			}
 
 			//ping в базе данных
 			err = Conn.Ping(contextmain.GetContext())
@@ -385,6 +380,12 @@ loop:
 					}
 				}
 
+			} else {
+				//IsClosed
+				if Conn.IsClosed() == true {
+					NeedReconnect = true
+					log.Error("postgres_pgx error: IsClosed() = true")
+				}
 			}
 
 			//ping порта
