@@ -489,7 +489,7 @@ func RawMultipleSQL(tx pgx.Tx, TextSQL string) (pgx.Rows, error) {
 		err = errors.New(TextError)
 		return rows, err
 	}
-	defer rows.Close()
+	//defer rows.Close()
 
 	return rows, err
 }
