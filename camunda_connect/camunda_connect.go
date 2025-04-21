@@ -3,9 +3,9 @@ package camunda_connect
 
 import (
 	"context"
+	"fmt"
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/log"
-	"github.com/ManyakRus/starter/micro"
 	"github.com/ManyakRus/starter/port_checker"
 	"github.com/ManyakRus/starter/stopapp"
 	"github.com/camunda/zeebe/clients/go/v8/pkg/entities"
@@ -308,17 +308,14 @@ func Send_BPMN_File(BPMN_filename string) {
 	defer ctxCancelFunc()
 
 	FileName := BPMN_filename
-	dir := micro.ProgramDir_Common()
-	FlagFind, err := micro.FileExists(dir + "bin")
-	if FlagFind == true {
-		dir = dir + "bin" + micro.SeparatorFile()
-	}
+	//dir := micro.ProgramDir_bin()
 
-	FileName = dir + FileName
+	//FileName = dir + FileName
 	log.Info("Load .bpmn file from: ", FileName)
 
 	res, err := Client.NewDeployResourceCommand().AddResourceFile(FileName).Send(ctx)
 	if err != nil {
+		err = fmt.Errorf("AddResourceFile().Send() error: %w", err)
 		log.Panicln(err)
 	}
 	log.Infof("Send .bpmn file, result: %v", res)

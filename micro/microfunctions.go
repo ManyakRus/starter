@@ -699,7 +699,7 @@ func StringDateTime(t time.Time) string {
 	return Otvet
 }
 
-// ProgramDir_bin - возвращает каталог "bin" или каталог программы
+// ProgramDir_bin - возвращает каталог "bin" или каталог программы, в конце "/" (или "\")
 func ProgramDir_bin() string {
 	Otvet := ""
 
