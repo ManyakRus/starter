@@ -1498,3 +1498,12 @@ func TestStringDateSPo_rus(t *testing.T) {
 		t.Errorf("error: Expected not empty string, but got %s", Otvet)
 	}
 }
+
+func TestStringIntWithSeparator(t *testing.T) {
+	x := 1222333
+	//var r rune = '_'
+	s := StringIntWithSeparator(x, '_')
+	if s == "" {
+		t.Error()
+	}
+}

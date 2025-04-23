@@ -1689,3 +1689,41 @@ func StringDatePeriod_rus(Date1, Date2 time.Time) string {
 
 	return Otvet
 }
+
+// StringIntWithSeparator - возвращает строку с разделителем по 3 разрядам
+// пример:
+// s := StringIntWithSeparator(1222333, '_')
+// Ответ: "1_222_333"
+func StringIntWithSeparator(n int, separator rune) string {
+
+	s := strconv.Itoa(n)
+
+	startOffset := 0
+	var buff bytes.Buffer
+
+	if n < 0 {
+		startOffset = 1
+		buff.WriteByte('-')
+	}
+
+	l := len(s)
+
+	commaIndex := 3 - ((l - startOffset) % 3)
+
+	if commaIndex == 3 {
+		commaIndex = 0
+	}
+
+	for i := startOffset; i < l; i++ {
+
+		if commaIndex == 3 {
+			buff.WriteRune(separator)
+			commaIndex = 0
+		}
+		commaIndex++
+
+		buff.WriteByte(s[i])
+	}
+
+	return buff.String()
+}
