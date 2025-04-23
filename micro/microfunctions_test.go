@@ -1479,3 +1479,10 @@ func TestDateFromToToday_rus(t *testing.T) {
 		t.Errorf("error: DateFrom == DateTo")
 	}
 }
+
+func TestStringDatePeriod_rus(t *testing.T) {
+	Otvet := StringDatePeriod_rus(time.Now(), time.Now())
+	if Otvet == "" {
+		t.Errorf("error: Expected not empty string, but got %s", Otvet)
+	}
+}
