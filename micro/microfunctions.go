@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ManyakRus/starter/constants"
+	"github.com/dromara/carbon/v2"
 	"github.com/google/uuid"
 	"golang.org/x/exp/constraints"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -31,6 +32,11 @@ import (
 //type Time time.Time
 
 //var log = logger.GetLog()
+
+func init() {
+	//время всегда московское (из константы)
+	carbon.SetLocation(constants.Loc)
+}
 
 // IsTestApp - возвращает true если это тестовая среда выполнения приложения
 func IsTestApp() bool {
@@ -1628,7 +1634,7 @@ func IsTrueString(s string) bool {
 
 // DateTimeFromString_rus - возвращает дату из строки, из формата "02.01.2006 15:04:05"
 func DateTimeFromString_rus(s string) (time.Time, error) {
-	t, err := time.Parse(constants.LayoutDateTimeRus, s)
+	t, err := time.ParseInLocation(constants.LayoutDateTimeRus, s, constants.Loc)
 	return t, err
 }
 
@@ -1641,6 +1647,15 @@ func DateFromString_rus(s string) (time.Time, error) {
 	}
 
 	//
-	t, err := time.Parse(constants.LayoutDateRus, s)
+	t, err := time.ParseInLocation(constants.LayoutDateRus, s, constants.Loc)
 	return t, err
+}
+
+// DateFromToToday_rus - возвращает дату начала и конца дня
+func DateFromToToday_rus() (time.Time, time.Time) {
+	//carbon.SetLocation(constants.Loc)
+	Date1 := carbon.Now().StartOfDay().StdTime()
+	Date2 := carbon.CreateFromStdTime(Date1).EndOfDay().StdTime()
+
+	return Date1, Date2
 }

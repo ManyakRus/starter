@@ -1453,7 +1453,7 @@ func TestDateTimeFromString_rus(t *testing.T) {
 		t.Errorf("Error: Expected nil, but got %v", err)
 	}
 
-	TextGood := "2025-04-23 10:05:01 +0000 UTC"
+	TextGood := "2025-04-23 10:05:01 +0300 MSK"
 	if Otvet.String() != TextGood {
 		t.Errorf("Expected '2025-04-23 10:05:01', but got %s", Otvet)
 	}
@@ -1467,8 +1467,15 @@ func TestDateFromString_rus(t *testing.T) {
 		t.Errorf("Error: Expected nil, but got %v", err)
 	}
 
-	TextGood := "2025-04-23 00:00:00 +0000 UTC"
+	TextGood := "2025-04-23 00:00:00 +0300 MSK"
 	if Otvet.String() != TextGood {
 		t.Errorf("Expected '2025-04-23 00:00:00', but got %s", Otvet)
+	}
+}
+
+func TestDateFromToToday_rus(t *testing.T) {
+	DateFrom, DateTo := DateFromToToday_rus()
+	if DateFrom == DateTo {
+		t.Errorf("error: DateFrom == DateTo")
 	}
 }
