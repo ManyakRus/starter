@@ -1444,3 +1444,31 @@ func TestStringFromFloat32_Dimension(t *testing.T) {
 		t.Errorf("Expected '1', but got %s", Otvet)
 	}
 }
+
+func TestDateTimeFromString_rus(t *testing.T) {
+	Text := "23.04.2025 10:05:01"
+
+	Otvet, err := DateTimeFromString_rus(Text)
+	if err != nil {
+		t.Errorf("Error: Expected nil, but got %v", err)
+	}
+
+	TextGood := "2025-04-23 10:05:01 +0000 UTC"
+	if Otvet.String() != TextGood {
+		t.Errorf("Expected '2025-04-23 10:05:01', but got %s", Otvet)
+	}
+}
+
+func TestDateFromString_rus(t *testing.T) {
+	Text := "23.04.2025 10:05:01"
+
+	Otvet, err := DateFromString_rus(Text)
+	if err != nil {
+		t.Errorf("Error: Expected nil, but got %v", err)
+	}
+
+	TextGood := "2025-04-23 00:00:00 +0000 UTC"
+	if Otvet.String() != TextGood {
+		t.Errorf("Expected '2025-04-23 00:00:00', but got %s", Otvet)
+	}
+}

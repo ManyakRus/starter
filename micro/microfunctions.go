@@ -8,6 +8,7 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
+	"github.com/ManyakRus/starter/constants"
 	"github.com/google/uuid"
 	"golang.org/x/exp/constraints"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -1623,4 +1624,23 @@ func IsTrueString(s string) bool {
 	}
 
 	return Otvet
+}
+
+// DateTimeFromString_rus - возвращает дату из строки, из формата "02.01.2006 15:04:05"
+func DateTimeFromString_rus(s string) (time.Time, error) {
+	t, err := time.Parse(constants.LayoutDateTimeRus, s)
+	return t, err
+}
+
+// DateFromString_rus - возвращает дату из строки, из формата "02.01.2006"
+func DateFromString_rus(s string) (time.Time, error) {
+
+	//
+	if len(s) > 10 {
+		s = s[:10]
+	}
+
+	//
+	t, err := time.Parse(constants.LayoutDateRus, s)
+	return t, err
 }
