@@ -1660,6 +1660,21 @@ func DateFromToToday_rus() (time.Time, time.Time) {
 	return Date1, Date2
 }
 
+// StringDateSPo_rus - возвращает строку с периодом дат
+func StringDateSPo_rus(Date1, Date2 time.Time) string {
+	Otvet := ""
+
+	Date1_00 := carbon.CreateFromStdTime(Date1).StartOfDay().StdTime()
+	Date2_00 := carbon.CreateFromStdTime(Date2).StartOfDay().StdTime()
+	if Date1_00 == Date2_00 {
+		Otvet = "на дату: " + StringDate(Date1_00)
+	} else {
+		Otvet = fmt.Sprintf("с %s по %s", StringDate(Date1_00), StringDate(Date2_00))
+	}
+
+	return Otvet
+}
+
 // StringDatePeriod_rus - возвращает строку с периодом дат
 func StringDatePeriod_rus(Date1, Date2 time.Time) string {
 	Otvet := ""
@@ -1669,7 +1684,7 @@ func StringDatePeriod_rus(Date1, Date2 time.Time) string {
 	if Date1_00 == Date2_00 {
 		Otvet = "на дату: " + StringDate(Date1_00)
 	} else {
-		Otvet = fmt.Sprintf("с %s по %s", StringDate(Date1_00), StringDate(Date2_00))
+		Otvet = fmt.Sprintf("%s - %s", StringDate(Date1_00), StringDate(Date2_00))
 	}
 
 	return Otvet
