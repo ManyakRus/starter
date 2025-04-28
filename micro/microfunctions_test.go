@@ -220,6 +220,20 @@ func TestMinInt64(t *testing.T) {
 	}
 }
 
+func TestMaxInt(t *testing.T) {
+	Otvet := MaxInt(1, 2, 3, 4)
+	if Otvet != 4 {
+		t.Error("microfunctions_test.TestMaxInt() error: Otvet != 2")
+	}
+}
+
+func TestMinInt(t *testing.T) {
+	Otvet := MinInt(1, 2, 3, 4)
+	if Otvet != 1 {
+		t.Error("microfunctions_test.TestMinInt() error: Otvet != 1")
+	}
+}
+
 func TestGoGo(t *testing.T) {
 	fn := func() error {
 		Pause(2000)

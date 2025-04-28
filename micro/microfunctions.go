@@ -439,6 +439,46 @@ func MinInt64(Mass ...int64) int64 {
 	return Otvet
 }
 
+// MaxInt returns the largest value
+func MaxInt(Mass ...int) int {
+	var Otvet int
+
+	//
+	if len(Mass) == 0 {
+		return Otvet
+	}
+
+	//
+	Otvet = Mass[0]
+	for _, val := range Mass {
+		if val > Otvet {
+			Otvet = val
+		}
+	}
+
+	return Otvet
+}
+
+// MinInt returns the smallest value
+func MinInt(Mass ...int) int {
+	var Otvet int
+
+	//
+	if len(Mass) == 0 {
+		return Otvet
+	}
+
+	//
+	Otvet = Mass[0]
+	for _, val := range Mass {
+		if val < Otvet {
+			Otvet = val
+		}
+	}
+
+	return Otvet
+}
+
 // MaxFloat64 returns the largest value
 func MaxFloat64(Mass ...float64) float64 {
 	var Otvet float64
