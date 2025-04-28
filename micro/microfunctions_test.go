@@ -1521,3 +1521,10 @@ func TestStringIntWithSeparator(t *testing.T) {
 		t.Error()
 	}
 }
+
+func TestRoundFloat64(t *testing.T) {
+	Otvet := RoundFloat64(1.1, 1)
+	if Otvet != 1.1 {
+		t.Errorf("Expected 1.1, but got %f", Otvet)
+	}
+}

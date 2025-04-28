@@ -14,6 +14,7 @@ import (
 	"golang.org/x/exp/constraints"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"hash/fnv"
+	"math"
 	"os/exec"
 	"reflect"
 	"runtime"
@@ -1766,4 +1767,13 @@ func StringIntWithSeparator(n int, separator rune) string {
 	}
 
 	return buff.String()
+}
+
+// RoundFloat64 - округляет float64 до precision цифр после запятой
+// пример:
+// RoundFloat64(123.456, 2) = 123.46
+// RoundFloat64(123.456, 1) = 123.5
+func RoundFloat64(value float64, precision int) float64 {
+	ratio := math.Pow(10, float64(precision))
+	return math.Round(value*ratio) / ratio
 }
