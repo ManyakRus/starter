@@ -32,7 +32,7 @@ import (
 var Conn *pgx.Conn
 
 // mutexReconnect - защита от многопоточности Reconnect()
-var mutexReconnect = &sync.Mutex{}
+var mutexReconnect = &sync.RWMutex{}
 
 // Settings хранит все нужные переменные окружения
 var Settings SettingsINI
@@ -230,6 +230,10 @@ func CloseConnection_err() error {
 	ctxMain := contextmain.GetContext()
 	ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second)
 	defer cancel()
+
+	mutexReconnect.Lock()
+	defer mutexReconnect.Unlock()
+
 	err := Conn.Close(ctx)
 
 	return err
@@ -356,17 +360,22 @@ func ping_go() {
 
 	addr := Settings.DB_HOST + ":" + Settings.DB_PORT
 
+	var ctx context.Context
 	//бесконечный цикл
 loop:
 	for {
+		ctx = contextmain.GetContext()
+
 		select {
-		case <-contextmain.GetContext().Done():
+		case <-ctx.Done():
 			log.Warn("Context app is canceled. postgres_pgx.ping")
 			break loop
 		case <-ticker.C:
 
 			//ping в базе данных
-			err = Conn.Ping(contextmain.GetContext())
+			mutexReconnect.RLock() //race
+			err = Conn.Ping(ctx)
+			mutexReconnect.RUnlock()
 			if err != nil {
 				switch err.Error() {
 				case TextConnBusy:
