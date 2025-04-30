@@ -346,7 +346,17 @@ loop:
 			} else if NeedReconnect == true {
 				log.Warn("CAMUNDA CheckPort(", addr, ") OK. Start Reconnect()")
 				NeedReconnect = false
-				Connect()
+				err = Connect_err()
+				if err != nil {
+					NeedReconnect = true
+					log.Error("Connect_err() error: ", err)
+					break
+				}
+
+				//новый JobWorker
+				if JobWorker != nil {
+					JobWorker.Close()
+				}
 				JobWorker = Client.NewJobWorker().JobType(CAMUNDA_JOBTYPE).Handler(HandleJob).Open()
 			}
 		}
