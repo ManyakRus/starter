@@ -53,6 +53,9 @@ type SettingsINI struct {
 // TextConnBusy - текст ошибки "conn busy"
 const TextConnBusy = "conn busy"
 
+// timeOutSeconds - время ожидания для Ping()
+const timeOutSeconds = 60
+
 // Connect_err - подключается к базе данных
 func Connect() {
 
@@ -374,7 +377,8 @@ loop:
 
 			//ping в базе данных
 			mutexReconnect.RLock() //race
-			err = GetConnection().Ping(ctx)
+			//err = GetConnection().Ping(ctx) //ping делать нельзя т.к. data race
+			err = Ping_err(ctx)
 			mutexReconnect.RUnlock()
 			if err != nil {
 				switch err.Error() {
@@ -502,4 +506,15 @@ func RawMultipleSQL(tx pgx.Tx, TextSQL string) (pgx.Rows, error) {
 	//defer rows.Close()
 
 	return rows, err
+}
+
+// Ping_err - выполняет пустой запрос для теста соединения
+func Ping_err(ctxMain context.Context) error {
+	var err error
+
+	ctx, cancelFunc := context.WithTimeout(ctxMain, timeOutSeconds*time.Second)
+	defer cancelFunc()
+
+	_, err = GetConnection().Exec(ctx, ";")
+	return err
 }
