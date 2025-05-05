@@ -121,7 +121,7 @@ func Connect_WithApplicationName_err(ApplicationName string) error {
 	}
 
 	if err == nil {
-		err = Conn.Ping(ctx)
+		err = GetConnection().Ping(ctx)
 	}
 
 	return err
@@ -149,7 +149,7 @@ func IsClosed() bool {
 	}
 
 	ctx := contextmain.GetContext()
-	err := Conn.Ping(ctx)
+	err := GetConnection().Ping(ctx)
 	if err != nil {
 		otvet = true
 	}
@@ -234,7 +234,7 @@ func CloseConnection_err() error {
 	mutexReconnect.Lock()
 	defer mutexReconnect.Unlock()
 
-	err := Conn.Close(ctx)
+	err := GetConnection().Close(ctx)
 
 	return err
 }
@@ -374,7 +374,7 @@ loop:
 
 			//ping в базе данных
 			mutexReconnect.RLock() //race
-			err = Conn.Ping(ctx)
+			err = GetConnection().Ping(ctx)
 			mutexReconnect.RUnlock()
 			if err != nil {
 				switch err.Error() {
@@ -391,7 +391,7 @@ loop:
 
 			} else {
 				//IsClosed
-				if Conn.IsClosed() == true {
+				if GetConnection().IsClosed() == true {
 					NeedReconnect = true
 					log.Error("postgres_pgx error: IsClosed() = true")
 				}
@@ -419,7 +419,7 @@ loop:
 
 // GetConnection - возвращает соединение к нужной базе данных
 func GetConnection() *pgx.Conn {
-	if Conn == nil || Conn.IsClosed() {
+	if Conn == nil || GetConnection().IsClosed() {
 		err := Connect_err()
 		if err != nil {
 			log.Error("POSTGRES pgx Connect() to database host: ", Settings.DB_HOST, ", error: ", err)
