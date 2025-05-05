@@ -124,7 +124,7 @@ func Connect_WithApplicationName_err(ApplicationName string) error {
 	}
 
 	if err == nil {
-		err = GetConnection().Ping(ctx)
+		err = Conn.Ping(ctx)
 	}
 
 	return err
