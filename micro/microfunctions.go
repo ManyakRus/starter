@@ -949,7 +949,12 @@ func StringFromUpperCase(s string) string {
 		return Otvet
 	}
 
-	Otvet = strings.ToUpper(Otvet[:1]) + Otvet[1:]
+	//преобразуем в руны т.к. есть русские буквы
+	MassRunes := []rune(Otvet)
+	MassRunes[0] = unicode.ToUpper(MassRunes[0])
+	Otvet = string(MassRunes)
+
+	//Otvet = strings.ToUpper(Otvet[:1]) + Otvet[1:]
 
 	return Otvet
 }

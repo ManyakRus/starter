@@ -464,6 +464,13 @@ func TestStringFromUpperCase(t *testing.T) {
 	if result := StringFromUpperCase("gOoD mOrNiNg"); result != "GOoD mOrNiNg" {
 		t.Errorf("Expected 'GOoD mOrNiNg', but got %s", result)
 	}
+
+	// Testing russian
+	result := StringFromUpperCase("продажа")
+	if result != "Продажа" {
+		t.Errorf("Expected 'Продажа', but got %s", result)
+	}
+
 }
 
 func TestStringFromLowerCase(t *testing.T) {
