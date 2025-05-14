@@ -24,7 +24,7 @@ type SettingsINI struct {
 // Settings - структура для хранения настроек подключения
 var Settings SettingsINI
 
-// Conn - подключение к серверу GRPC
+// Conn - подключение к серверу Tinkoff-GRPC
 var Client *investgo.Client
 
 // mutex_Connect - защита от многопоточности Reconnect()
@@ -50,7 +50,7 @@ func GetConnection() *investgo.Client {
 	return Client
 }
 
-// Connect - подключается к серверу GRPC, при ошибке вызывает панику
+// Connect - подключается к серверу Tinkoff-GRPC, при ошибке вызывает панику
 func Connect() {
 	var err error
 
@@ -79,7 +79,7 @@ func LogInfo_Connected_Panic(err error) {
 	}
 }
 
-// Connect_err - подключается к серверу GRPC, возвращает ошибку
+// Connect_err - подключается к серверу Tinkoff-GRPC, возвращает ошибку
 func Connect_err() error {
 	var err error
 
@@ -152,7 +152,7 @@ func WaitStop() {
 
 	select {
 	case <-contextmain.GetContext().Done():
-		log.Warn("Context app is canceled. grpc_connect")
+		log.Warn("Context app is canceled. tinkoff_connect")
 	}
 
 	// ждём пока отправляемых сейчас сообщений будет =0
@@ -163,7 +163,7 @@ func WaitStop() {
 	stopapp.GetWaitGroup_Main().Done()
 }
 
-// Start - необходимые процедуры для запуска сервера GRPC
+// Start - необходимые процедуры для запуска сервера Tinkoff-GRPC
 // если контекст хранится в contextmain.GetContext()
 // и есть stopapp.GetWaitGroup_Main()
 // при ошибке вызывает панику
@@ -178,7 +178,7 @@ func Start() {
 
 }
 
-// Start_ctx - необходимые процедуры для запуска сервера GRPC
+// Start_ctx - необходимые процедуры для запуска сервера Tinkoff-GRPC
 // ctx - глобальный контекст приложения
 // wg - глобальный WaitGroup приложения
 func Start_ctx(ctx *context.Context, wg *sync.WaitGroup) error {
@@ -203,17 +203,17 @@ func Start_ctx(ctx *context.Context, wg *sync.WaitGroup) error {
 	return err
 }
 
-// CloseConnection - закрывает подключение к GRPC, и пишет лог
+// CloseConnection - закрывает подключение к Tinkoff-GRPC, и пишет лог
 func CloseConnection() {
 	err := CloseConnection_err()
 	if err != nil {
-		log.Error("GRPC client CloseConnection() error: ", err)
+		log.Error("tinkoff_connect client CloseConnection() error: ", err)
 	} else {
-		log.Info("GRPC client connection closed")
+		log.Info("tinkoff_connect client connection closed")
 	}
 }
 
-// CloseConnection - закрывает подключение к GRPC, и возвращает ошибку
+// CloseConnection - закрывает подключение к Tinkoff-GRPC, и возвращает ошибку
 func CloseConnection_err() error {
 	err := Client.Stop()
 	return err
@@ -233,22 +233,22 @@ loop:
 	for {
 		select {
 		case <-contextmain.GetContext().Done():
-			log.Warn("Context app is canceled. grpc_client.ping")
+			log.Warn("Context app is canceled. tinkoff_connect.ping")
 			break loop
 		case <-ticker.C:
 			err = port_checker.CheckPort_err(Settings.Host, Settings.Port)
 			//log.Debug("ticker, ping err: ", err) //удалить
 			if err != nil {
 				NeedReconnect = true
-				log.Warn("grpc_client CheckPort(", addr, ") error: ", err)
+				log.Warn("tinkoff_connect CheckPort(", addr, ") error: ", err)
 			} else if NeedReconnect == true {
-				log.Warn("grpc_client CheckPort(", addr, ") OK. Start Reconnect()")
+				log.Warn("tinkoff_connect CheckPort(", addr, ") OK. Start Reconnect()")
 				NeedReconnect = false
 				err = Connect_err()
 				LogInfo_Connected(err)
 				if err != nil {
 					NeedReconnect = true
-					//log.Error("grpc_client Connect() error: ", err)
+					//log.Error("tinkoff_connect Connect() error: ", err)
 				}
 			}
 		}
