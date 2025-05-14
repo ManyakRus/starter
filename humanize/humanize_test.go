@@ -2,18 +2,34 @@ package humanize
 
 import "testing"
 
-func TestStringFromFloat64_underline(t *testing.T) {
+func TestStringFromFloat64_underline_dimension2(t *testing.T) {
 
-	Otvet := StringFromFloat64_underline(1123.456)
+	Otvet := StringFromFloat64_underline_dimension2(1123.456)
 	if Otvet != "1_123.46" {
 		t.Error("Error")
 	}
 }
 
-func TestStringFromFloat32_underline(t *testing.T) {
+func TestStringFromFloat32_underline_dimension2(t *testing.T) {
 
-	Otvet := StringFromFloat32_underline(1123.456)
+	Otvet := StringFromFloat32_underline_dimension2(1123.456)
 	if Otvet != "1_123.46" {
+		t.Error("Error")
+	}
+}
+
+func TestStringFromFloat64_underline_dimension0(t *testing.T) {
+
+	Otvet := StringFromFloat64_underline_dimension0(1123.456)
+	if Otvet != "1_123" {
+		t.Error("Error")
+	}
+}
+
+func TestStringFromFloat32_underline_dimension0(t *testing.T) {
+
+	Otvet := StringFromFloat32_underline_dimension0(1123.456)
+	if Otvet != "1_123" {
 		t.Error("Error")
 	}
 }

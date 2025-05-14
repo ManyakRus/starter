@@ -2,8 +2,8 @@ package humanize
 
 import "github.com/dustin/go-humanize"
 
-// StringFromFloat64_underline - преобразование float64 в строку, с разделителями тысяч
-func StringFromFloat64_underline(f float64) string {
+// StringFromFloat64_underline_dimension2 - преобразование float64 в строку, с разделителями тысяч
+func StringFromFloat64_underline_dimension2(f float64) string {
 	Otvet := ""
 
 	Otvet = humanize.FormatFloat("#_###.##", f)
@@ -11,11 +11,29 @@ func StringFromFloat64_underline(f float64) string {
 	return Otvet
 }
 
-// StringFromFloat32_underline - преобразование float64 в строку, с разделителями тысяч
-func StringFromFloat32_underline(f float32) string {
+// StringFromFloat32_underline_dimension2 - преобразование float64 в строку, с разделителями тысяч
+func StringFromFloat32_underline_dimension2(f float32) string {
 	Otvet := ""
 
 	Otvet = humanize.FormatFloat("#_###.##", float64(f))
+
+	return Otvet
+}
+
+// StringFromFloat64_underline_dimension0 - преобразование float64 в строку, с разделителями тысяч
+func StringFromFloat64_underline_dimension0(f float64) string {
+	Otvet := ""
+
+	Otvet = humanize.FormatFloat("#_###.", f)
+
+	return Otvet
+}
+
+// StringFromFloat32_underline_dimension0 - преобразование float64 в строку, с разделителями тысяч
+func StringFromFloat32_underline_dimension0(f float32) string {
+	Otvet := ""
+
+	Otvet = humanize.FormatFloat("#_###.", float64(f))
 
 	return Otvet
 }
