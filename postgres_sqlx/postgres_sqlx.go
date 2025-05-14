@@ -1,6 +1,6 @@
 // модуль для работы с базой данных
 
-package postgres_connect
+package postgres_sqlx
 
 import (
 	"context"
@@ -24,8 +24,8 @@ var Conn *sqlx.DB
 // log - глобальный логгер
 //var log = logger.GetLog()
 
-// mutexReconnect - защита от многопоточности Reconnect()
-var mutexReconnect = &sync.Mutex{}
+// mutex_Connect - защита от многопоточности Reconnect()
+var mutex_Connect = &sync.RWMutex{}
 
 // Settings хранит все нужные переменные окружения
 var Settings SettingsINI
@@ -115,8 +115,8 @@ func IsClosed() bool {
 // Reconnect повторное подключение к базе данных, если оно отключено
 // или полная остановка программы
 func Reconnect(err error) {
-	mutexReconnect.Lock()
-	defer mutexReconnect.Unlock()
+	mutex_Connect.Lock()
+	defer mutex_Connect.Unlock()
 
 	if err == nil {
 		return

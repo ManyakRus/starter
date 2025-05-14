@@ -42,6 +42,7 @@ func GetConnection() *investgo.Client {
 	mutex_Connect.RLock()
 	defer mutex_Connect.RUnlock()
 
+	//
 	if Client == nil {
 		err := Connect_err()
 		LogInfo_Connected(err)

@@ -39,13 +39,13 @@ var MapConnection = make(map[int64]connections.Connection)
 // log - глобальный логгер
 //var log = logger.GetLog()
 
-// mutexReconnect - защита от многопоточности Reconnect()
-var mutexReconnect = &sync.Mutex{}
+// mutex_Connect - защита от многопоточности Reconnect()
+var mutex_Connect = &sync.RWMutex{}
 
 // NeedReconnect - флаг необходимости переподключения
 var NeedReconnect bool
 
-var MutexConnection sync.Mutex
+//var MutexConnection sync.Mutex
 
 // Connect_err - подключается к базе данных
 func Connect(Connection connections.Connection) {
@@ -107,12 +107,12 @@ func Connect_err(Connection connections.Connection) error {
 		err = DB.Ping()
 	}
 
-	MutexConnection.Lock() //race
+	mutex_Connect.Lock() //race
 
 	MapConnection[Connection.ID] = Connection
 	MapConn[Connection.ID] = Conn
 
-	MutexConnection.Unlock()
+	mutex_Connect.Unlock()
 
 	return err
 }
@@ -142,8 +142,8 @@ func IsClosed(Connection connections.Connection) bool {
 // Reconnect повторное подключение к базе данных, если оно отключено
 // или полная остановка программы
 func Reconnect(Connection connections.Connection, err error) {
-	mutexReconnect.Lock()
-	defer mutexReconnect.Unlock()
+	mutex_Connect.Lock()
+	defer mutex_Connect.Unlock()
 
 	if err == nil {
 		return
@@ -248,12 +248,12 @@ func CloseConnection_err(Connection connections.Connection) error {
 	}
 	Conn = nil
 
-	MutexConnection.Lock() //race
+	mutex_Connect.Lock() //race
 
 	delete(MapConnection, Connection.ID)
 	delete(MapConn, Connection.ID)
 
-	MutexConnection.Unlock()
+	mutex_Connect.Unlock()
 
 	return err
 }
@@ -335,6 +335,15 @@ func GetDSN(Connection connections.Connection) string {
 
 // GetConnection - возвращает соединение к нужной базе данных
 func GetConnection(Connection connections.Connection) *gorm.DB {
+	//мьютекс чтоб не подключаться одновременно
+	mutex_Connect.RLock()
+	defer mutex_Connect.RUnlock()
+
+	//мьютекс чтоб не подключаться одновременно
+	mutex_Connect.RLock()
+	defer mutex_Connect.RUnlock()
+
+	//
 	Conn := MapConn[Connection.ID]
 	if Conn == nil {
 		Connect(Connection)

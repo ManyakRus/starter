@@ -30,8 +30,8 @@ var Conn *gorm.DB
 // log - глобальный логгер
 //var log = logger.GetLog()
 
-// mutexReconnect - защита от многопоточности Reconnect()
-var mutexReconnect = &sync.Mutex{}
+// mutex_Connect - защита от многопоточности Connect()
+var mutex_Connect = &sync.RWMutex{}
 
 // NeedReconnect - флаг необходимости переподключения
 var NeedReconnect bool
@@ -170,8 +170,8 @@ func IsClosed() bool {
 // Reconnect повторное подключение к базе данных, если оно отключено
 // или полная остановка программы
 func Reconnect(err error) {
-	mutexReconnect.Lock()
-	defer mutexReconnect.Unlock()
+	mutex_Connect.Lock()
+	defer mutex_Connect.Unlock()
 
 	if err == nil {
 		return
@@ -414,6 +414,11 @@ func GetDSN(ApplicationName string) string {
 
 // GetConnection - возвращает соединение к нужной базе данных
 func GetConnection() *gorm.DB {
+	//мьютекс чтоб не подключаться одновременно
+	mutex_Connect.RLock()
+	defer mutex_Connect.RUnlock()
+
+	//
 	if Conn == nil {
 		err := Connect_err()
 		if err != nil {

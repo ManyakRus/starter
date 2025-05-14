@@ -31,8 +31,8 @@ import (
 // Conn - соединение к базе данных
 var Conn *pgx.Conn
 
-// mutexReconnect - защита от многопоточности Reconnect()
-var mutexReconnect = &sync.RWMutex{}
+// mutex_Connect - защита от многопоточности Connect()
+var mutex_Connect = &sync.RWMutex{}
 
 // Settings хранит все нужные переменные окружения
 var Settings SettingsINI
@@ -162,8 +162,8 @@ func IsClosed() bool {
 // Reconnect повторное подключение к базе данных, если оно отключено
 // или полная остановка программы
 func Reconnect(err error) {
-	mutexReconnect.Lock()
-	defer mutexReconnect.Unlock()
+	mutex_Connect.Lock()
+	defer mutex_Connect.Unlock()
 
 	if err == nil {
 		return
@@ -234,8 +234,8 @@ func CloseConnection_err() error {
 	ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second)
 	defer cancel()
 
-	mutexReconnect.Lock()
-	defer mutexReconnect.Unlock()
+	mutex_Connect.Lock()
+	defer mutex_Connect.Unlock()
 
 	err := GetConnection().Close(ctx)
 
@@ -376,10 +376,10 @@ loop:
 		case <-ticker.C:
 
 			//ping в базе данных
-			mutexReconnect.RLock() //race
+			mutex_Connect.RLock() //race
 			//err = GetConnection().Ping(ctx) //ping делать нельзя т.к. data race
 			err = Ping_err(ctx)
-			mutexReconnect.RUnlock()
+			mutex_Connect.RUnlock()
 			if err != nil {
 				switch err.Error() {
 				case TextConnBusy:
@@ -423,6 +423,11 @@ loop:
 
 // GetConnection - возвращает соединение к нужной базе данных
 func GetConnection() *pgx.Conn {
+	//мьютекс чтоб не подключаться одновременно
+	mutex_Connect.RLock()
+	defer mutex_Connect.RUnlock()
+
+	//
 	if Conn == nil || Conn.IsClosed() {
 		err := Connect_err()
 		if err != nil {

@@ -1,4 +1,4 @@
-package postgres_connect
+package postgres_sqlx
 
 import (
 	"errors"
