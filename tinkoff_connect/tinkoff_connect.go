@@ -28,7 +28,7 @@ var Settings SettingsINI
 var Client *investgo.Client
 
 // mutex_Connect - защита от многопоточности Reconnect()
-var mutex_Connect = &sync.Mutex{}
+var mutex_Connect = &sync.RWMutex{}
 
 // NeedReconnect - флаг необходимости переподключения
 var NeedReconnect bool
@@ -36,26 +36,54 @@ var NeedReconnect bool
 // timeoutSeconds - время ожидания запроса в Тинькофф, в секундах
 var timeoutSeconds = 60
 
+// GetConnection - возвращает соединение
+func GetConnection() *investgo.Client {
+	//мьютекс чтоб не подключаться одновременно
+	mutex_Connect.RLock()
+	defer mutex_Connect.RUnlock()
+
+	if Client == nil {
+		err := Connect_err()
+		LogInfo_Connected(err)
+	}
+
+	return Client
+}
+
 // Connect - подключается к серверу GRPC, при ошибке вызывает панику
 func Connect() {
 	var err error
 
 	err = Connect_err()
 
+	LogInfo_Connected_Panic(err)
+
+}
+
+// LogInfo_Connected - выводит сообщение в Лог
+func LogInfo_Connected(err error) {
 	if err != nil {
-		log.Panicf("GRPC Connect() error: %v", err)
+		log.Errorf("Tinkoff connection ERROR. EndPoint: %s, AccountId: %s, error: %s", Settings.EndPoint, Settings.AccountId, err)
 	} else {
-		addr := Settings.EndPoint
-		log.Info("GRPC client connected. Address: ", addr)
+		log.Infof("Tinkoff connection OK. EndPoint: %s, AccountId: %s", Settings.EndPoint, Settings.AccountId)
 	}
 
+}
+
+// LogInfo_Connected_Panic - выводит сообщение в Лог или панику
+func LogInfo_Connected_Panic(err error) {
+	LogInfo_Connected(err)
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Connect_err - подключается к серверу GRPC, возвращает ошибку
 func Connect_err() error {
 	var err error
 
-	//
+	//мьютекс чтоб не подключаться одновременно
 	mutex_Connect.Lock()
 	defer mutex_Connect.Unlock()
 
@@ -217,9 +245,10 @@ loop:
 				log.Warn("grpc_client CheckPort(", addr, ") OK. Start Reconnect()")
 				NeedReconnect = false
 				err = Connect_err()
+				LogInfo_Connected(err)
 				if err != nil {
 					NeedReconnect = true
-					log.Error("grpc_client Connect() error: ", err)
+					//log.Error("grpc_client Connect() error: ", err)
 				}
 			}
 		}
