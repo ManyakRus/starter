@@ -237,7 +237,7 @@ func CloseConnection_err() error {
 	mutex_Connect.Lock()
 	defer mutex_Connect.Unlock()
 
-	err := GetConnection().Close(ctx)
+	err := Conn.Close(ctx)
 
 	return err
 }
@@ -248,11 +248,11 @@ func WaitStop() {
 
 	select {
 	case <-contextmain.GetContext().Done():
-		log.Warn("Context app is canceled.")
+		log.Warn("Context app is canceled. postgres_pgx")
 	}
 
 	//
-	stopapp.WaitTotalMessagesSendingNow("Postgres pgx")
+	stopapp.WaitTotalMessagesSendingNow("postgres_pgx")
 
 	//
 	CloseConnection()

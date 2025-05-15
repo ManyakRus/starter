@@ -135,7 +135,7 @@ func WaitStop() {
 
 	select {
 	case <-contextmain.GetContext().Done():
-		log.Warn("Context app is canceled. NATS_Connect.")
+		log.Warn("Context app is canceled. nats_connect.")
 	}
 
 	CloseConnection()

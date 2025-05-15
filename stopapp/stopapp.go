@@ -115,7 +115,7 @@ func WaitStop() {
 			contextmain.CancelContext()
 		}
 	case <-contextmain.GetContext().Done():
-		log.Warn("Context app is canceled.")
+		log.Warn("Context app is canceled. stopapp")
 	}
 
 	GetWaitGroup_Main().Done()

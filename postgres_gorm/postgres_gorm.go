@@ -266,7 +266,7 @@ func WaitStop() {
 
 	select {
 	case <-contextmain.GetContext().Done():
-		log.Warn("Context app is canceled. Postgres gorm.")
+		log.Warn("Context app is canceled. postgres_gorm")
 	}
 
 	//

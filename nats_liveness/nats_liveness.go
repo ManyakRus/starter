@@ -257,7 +257,7 @@ func WaitStop() {
 
 	select {
 	case <-contextmain.GetContext().Done():
-		log.Warn("Context app is canceled. NATS_Liveness.")
+		log.Warn("Context app is canceled. nats_liveness.")
 	}
 
 	if Ticker != nil {

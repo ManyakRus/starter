@@ -123,11 +123,11 @@ func WaitStop() {
 
 	select {
 	case <-contextmain.GetContext().Done():
-		log.Warn("Context app is canceled. NATS.")
+		log.Warn("Context app is canceled. sync_exchange_connect")
 	}
 
 	//ждём пока отправляемых сейчас сообщений будет =0
-	stopapp.WaitTotalMessagesSendingNow("nats SyncExchange")
+	stopapp.WaitTotalMessagesSendingNow("sync_exchange_connect")
 
 	//закрываем соединение
 	CloseConnection()
@@ -176,7 +176,7 @@ loop:
 	for {
 		select {
 		case <-contextmain.GetContext().Done():
-			log.Warn("Context app is canceled. postgres_pgx.ping")
+			log.Warn("Context app is canceled. sync_exchange_connect.ping")
 			break loop
 		case <-ticker.C:
 			err = PprofNats1()

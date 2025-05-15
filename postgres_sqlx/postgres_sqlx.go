@@ -204,11 +204,11 @@ func WaitStop() {
 
 	select {
 	case <-contextmain.GetContext().Done():
-		log.Warn("Context app is canceled.")
+		log.Warn("Context app is canceled. postgres_sqlx")
 	}
 
 	//
-	stopapp.WaitTotalMessagesSendingNow("Postgres sqlx")
+	stopapp.WaitTotalMessagesSendingNow("postgres_sqlx")
 
 	//
 	err := CloseConnection()
@@ -316,7 +316,7 @@ loop:
 	for {
 		select {
 		case <-contextmain.GetContext().Done():
-			log.Warn("Context app is canceled. postgres_connect.ping")
+			log.Warn("Context app is canceled. postgres_sqlx.ping")
 			break loop
 		case <-ticker.C:
 			err = port_checker.CheckPort_err(Settings.DB_HOST, Settings.DB_PORT)

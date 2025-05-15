@@ -106,7 +106,7 @@ func WaitStop() {
 
 	select {
 	case <-contextmain.GetContext().Done():
-		log.Warn("Context app is canceled.")
+		log.Warn("Context app is canceled. fiber_connect")
 	}
 
 	//ждём пока отправляемых сейчас сообщений будет =0
