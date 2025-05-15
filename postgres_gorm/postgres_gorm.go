@@ -33,6 +33,9 @@ var Conn *gorm.DB
 // mutex_Connect - защита от многопоточности Connect()
 var mutex_Connect = &sync.RWMutex{}
 
+// mutex_ReConnect - защита от многопоточности ReConnect()
+var mutex_ReConnect = &sync.RWMutex{}
+
 // NeedReconnect - флаг необходимости переподключения
 var NeedReconnect bool
 
@@ -170,8 +173,8 @@ func IsClosed() bool {
 // Reconnect повторное подключение к базе данных, если оно отключено
 // или полная остановка программы
 func Reconnect(err error) {
-	mutex_Connect.Lock()
-	defer mutex_Connect.Unlock()
+	mutex_ReConnect.Lock()
+	defer mutex_ReConnect.Unlock()
 
 	if err == nil {
 		return
