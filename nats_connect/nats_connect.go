@@ -131,6 +131,7 @@ func CloseConnection() {
 
 // WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
+	defer stopapp.GetWaitGroup_Main().Done()
 
 	select {
 	case <-contextmain.GetContext().Done():
@@ -139,7 +140,6 @@ func WaitStop() {
 
 	CloseConnection()
 
-	stopapp.GetWaitGroup_Main().Done()
 }
 
 // FillSettings загружает переменные окружения в структуру из файла или из переменных окружения

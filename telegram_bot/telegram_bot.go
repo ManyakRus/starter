@@ -242,6 +242,7 @@ func CloseConnection_err() error {
 
 // WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
+	defer stopapp.GetWaitGroup_Main().Done()
 
 	select {
 	case <-contextmain.GetContext().Done():
@@ -254,7 +255,6 @@ func WaitStop() {
 	//
 	CloseConnection()
 
-	stopapp.GetWaitGroup_Main().Done()
 }
 
 // Start_ctx - необходимые процедуры для подключения к серверу Telegram

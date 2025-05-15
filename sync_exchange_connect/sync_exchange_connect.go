@@ -119,6 +119,7 @@ func CloseConnection() {
 
 // WaitStop - ожидает отмену глобального контекста или сигнала завершения приложения
 func WaitStop() {
+	defer stopapp.GetWaitGroup_Main().Done()
 
 	select {
 	case <-contextmain.GetContext().Done():
@@ -130,7 +131,6 @@ func WaitStop() {
 
 	//закрываем соединение
 	CloseConnection()
-	stopapp.GetWaitGroup_Main().Done()
 }
 
 // SendResponseError - Отправляет ответ в NATS SyncExchange

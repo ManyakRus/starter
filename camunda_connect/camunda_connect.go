@@ -193,6 +193,7 @@ func WorkFails(err error, client worker.JobClient, job entities.Job) error {
 
 // WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
+	defer stopapp.GetWaitGroup_Main().Done()
 
 	select {
 	case <-contextmain.GetContext().Done():
@@ -206,7 +207,6 @@ func WaitStop() {
 
 	// закрываем соединение
 	CloseConnection()
-	stopapp.GetWaitGroup_Main().Done()
 }
 
 // StartCamunda - необходимые процедуры для подключения к серверу Camunda
@@ -325,6 +325,8 @@ func Send_BPMN_File(BPMN_filename string) {
 func ping_go(HandleJob func(client worker.JobClient, job entities.Job), CAMUNDA_JOBTYPE string) {
 	var err error
 
+	defer stopapp.GetWaitGroup_Main().Done()
+
 	ticker := time.NewTicker(60 * time.Second)
 	defer ticker.Stop()
 
@@ -362,5 +364,4 @@ loop:
 		}
 	}
 
-	stopapp.GetWaitGroup_Main().Done()
 }

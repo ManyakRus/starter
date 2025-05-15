@@ -231,6 +231,7 @@ func StopWhatsApp() {
 
 // WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
+	defer stopapp.GetWaitGroup_Main().Done()
 
 	select {
 	case <-contextmain.GetContext().Done():
@@ -242,7 +243,6 @@ func WaitStop() {
 
 	//
 	StopWhatsApp()
-	stopapp.GetWaitGroup_Main().Done()
 }
 
 // ParseJID parses a JID out of the given string. It supports both regular and AD JIDs.

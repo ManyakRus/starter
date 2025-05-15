@@ -264,6 +264,7 @@ func CloseConnection_err() error {
 
 // WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
+	defer stopapp.GetWaitGroup_Main().Done()
 
 	select {
 	case <-contextmain.GetContext().Done():
@@ -276,7 +277,6 @@ func WaitStop() {
 	//
 	CloseConnection()
 
-	stopapp.GetWaitGroup_Main().Done()
 }
 
 // StartDB - делает соединение с БД, отключение и др.
@@ -444,6 +444,8 @@ func GetConnection_WithApplicationName(ApplicationName string) *gorm.DB {
 func ping_go() {
 	var err error
 
+	defer stopapp.GetWaitGroup_Main().Done()
+
 	ticker := time.NewTicker(60 * time.Second)
 	defer ticker.Stop()
 
@@ -474,7 +476,6 @@ loop:
 		}
 	}
 
-	stopapp.GetWaitGroup_Main().Done()
 }
 
 //// RawMultipleSQL - выполняет текст запроса, отдельно для каждого запроса

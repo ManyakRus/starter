@@ -128,6 +128,7 @@ func CloseConnection_err() error {
 
 // WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
+	defer stopapp.GetWaitGroup_Main().Done()
 
 	select {
 	case <-contextmain.GetContext().Done():
@@ -142,7 +143,6 @@ func WaitStop() {
 	if err != nil {
 		log.Error("CloseConnection() error: ", err)
 	}
-	stopapp.GetWaitGroup_Main().Done()
 }
 
 // Start - необходимые процедуры для подключения к серверу ChatGPT

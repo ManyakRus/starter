@@ -190,6 +190,7 @@ func CloseConnection_err() error {
 
 // WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
+	defer stopapp.GetWaitGroup_Main().Done()
 
 	select {
 	case <-contextmain.GetContext().Done():
@@ -202,7 +203,6 @@ func WaitStop() {
 	//
 	CloseConnection()
 
-	stopapp.GetWaitGroup_Main().Done()
 }
 
 // StartDB - делает соединение с БД, отключение и др.

@@ -755,7 +755,8 @@ func FindMessageByID(ctx context.Context, id int) (*tg.Message, error) {
 
 // WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
-	//stopapp.GetWaitGroup_Main().Add(1)
+	defer stopapp.GetWaitGroup_Main().Done()
+
 	select {
 	case <-contextmain.GetContext().Done():
 		log.Warn("Context app is canceled.")
@@ -767,8 +768,6 @@ func WaitStop() {
 	//
 	CloseConnection()
 
-	//
-	stopapp.GetWaitGroup_Main().Done()
 }
 
 // CloseConnection - остановка работы клиента Телеграм

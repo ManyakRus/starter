@@ -257,6 +257,7 @@ func ForwardMessage(msg *imap.Message, email_send_to string) error {
 
 // WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
+	defer stopapp.GetWaitGroup_Main().Done()
 
 	select {
 	case <-contextmain.GetContext().Done():
@@ -268,7 +269,6 @@ func WaitStop() {
 
 	//
 	CloseConnection()
-	stopapp.GetWaitGroup_Main().Done()
 }
 
 // Start - необходимые процедуры для подключения к серверу email imap

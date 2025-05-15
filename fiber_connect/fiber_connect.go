@@ -102,6 +102,7 @@ func Listen_err() error {
 
 // WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
+	defer stopapp.GetWaitGroup_Main().Done()
 
 	select {
 	case <-contextmain.GetContext().Done():
@@ -113,7 +114,6 @@ func WaitStop() {
 
 	//закрываем соединение
 	CloseConnection()
-	stopapp.GetWaitGroup_Main().Done()
 }
 
 func GetHost() string {

@@ -150,6 +150,7 @@ func FillSettings() error {
 
 // WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
+	defer stopapp.GetWaitGroup_Main().Done()
 
 	select {
 	case <-contextmain.GetContext().Done():
@@ -161,7 +162,6 @@ func WaitStop() {
 
 	// закрываем соединение
 	CloseConnection()
-	stopapp.GetWaitGroup_Main().Done()
 }
 
 // Start - необходимые процедуры для запуска сервера Tinkoff-GRPC
@@ -224,6 +224,8 @@ func CloseConnection_err() error {
 func ping_go() {
 	var err error
 
+	defer stopapp.GetWaitGroup_Main().Done()
+
 	ticker := time.NewTicker(60 * time.Second)
 	defer ticker.Stop()
 
@@ -255,7 +257,6 @@ loop:
 		}
 	}
 
-	stopapp.GetWaitGroup_Main().Done()
 }
 
 // GetTimeoutSeconds - возвращает время ожидания ответа
