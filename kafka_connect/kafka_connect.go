@@ -81,15 +81,8 @@ func Connect_err() error {
 func CreateClient() error {
 	var err error
 
-	//Addr, err := GetAddr()
-	//if err != nil {
-	//	err = fmt.Errorf("GetAddr() error: %w", err)
-	//}
-
-	Addr := kafka.TCP("localhost:9092")
-
 	Client = &kafka.Client{}
-	Client.Addr = Addr
+	Client.Addr = GetAddr()
 
 	return err
 }
