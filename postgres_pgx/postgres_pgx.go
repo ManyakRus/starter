@@ -524,6 +524,9 @@ func Ping_err(ctxMain context.Context) error {
 	ctx, cancelFunc := context.WithTimeout(ctxMain, timeOutSeconds*time.Second)
 	defer cancelFunc()
 
-	_, err = GetConnection().Exec(ctx, ";")
+	mutex_Connect.Lock()
+	defer mutex_Connect.Unlock()
+
+	_, err = Conn.Exec(ctx, ";")
 	return err
 }
