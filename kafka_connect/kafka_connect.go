@@ -212,7 +212,7 @@ func ConnectTopic(TopicName, GroupID string) *kafka.Reader {
 		Brokers:  []string{Settings.KAFKA_HOST + ":" + Settings.KAFKA_PORT},
 		GroupID:  GroupID,
 		Topic:    TopicName,
-		MinBytes: 10,   // 10KB 10e3
+		MinBytes: 1,    // 10KB 10e3
 		MaxBytes: 10e6, // 10MB
 	})
 
