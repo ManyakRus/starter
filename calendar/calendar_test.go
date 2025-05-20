@@ -32,3 +32,13 @@ func TestHoursMinutesSeconds_UnmarshalByte(t *testing.T) {
 		t.Error("TestHoursMinutesSeconds_UnmarshalByte error")
 	}
 }
+
+func TestDiff_dates(t *testing.T) {
+
+	Date1 := time.Date(2023, 03, 19, 0, 0, 0, 0, constants.Loc)
+	Date2 := time.Date(2023, 03, 20, 0, 0, 0, 0, constants.Loc)
+	_, _, days, _, _, _ := Diff_dates(Date1, Date2)
+	if days != 1 {
+		t.Error("TestDiff_dates error")
+	}
+}
