@@ -521,7 +521,8 @@ func RawMultipleSQL(tx pgx.Tx, TextSQL string) (pgx.Rows, error) {
 func Ping_err(ctxMain context.Context) error {
 	var err error
 
-	ctx, cancelFunc := context.WithTimeout(ctxMain, timeOutSeconds*time.Second)
+	//ctx, cancelFunc := context.WithTimeout(ctxMain, timeOutSeconds*time.Second)
+	ctx, cancelFunc := context.WithTimeout(ctxMain, 1*time.Second)
 	defer cancelFunc()
 
 	mutex_Connect.Lock()
