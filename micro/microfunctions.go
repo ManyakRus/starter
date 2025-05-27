@@ -1782,3 +1782,23 @@ func RoundFloat64(value float64, precision int) float64 {
 	ratio := math.Pow(10, float64(precision))
 	return math.Round(value*ratio) / ratio
 }
+
+// StringSplitBylength - разбивает строку на подстроки по n символов, с учётом рун
+func StringSplitBylength(s string, n int) []string {
+	sub := ""
+	subs := []string{}
+
+	runes := bytes.Runes([]byte(s))
+	l := len(runes)
+	for i, r := range runes {
+		sub = sub + string(r)
+		if (i+1)%n == 0 {
+			subs = append(subs, sub)
+			sub = ""
+		} else if (i + 1) == l {
+			subs = append(subs, sub)
+		}
+	}
+
+	return subs
+}

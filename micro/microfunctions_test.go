@@ -1535,3 +1535,11 @@ func TestRoundFloat64(t *testing.T) {
 		t.Errorf("Expected 1.1, but got %f", Otvet)
 	}
 }
+
+func TestStringSplitBylength(t *testing.T) {
+	Text1 := "Привет мир"
+	MassOtvet := StringSplitBylength(Text1, 5)
+	if MassOtvet[0] != "Приве" {
+		t.Errorf("Expected 'Приве', but got %s", MassOtvet[0])
+	}
+}
