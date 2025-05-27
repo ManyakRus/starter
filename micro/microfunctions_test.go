@@ -1543,3 +1543,11 @@ func TestStringSplitBylength(t *testing.T) {
 		t.Errorf("Expected 'Приве', but got %s", MassOtvet[0])
 	}
 }
+
+func TestStringSplitBylength_WithLastWord(t *testing.T) {
+	Text1 := "Привет мир"
+	MassOtvet := StringSplitBylength_WithLastWord(Text1, 5, ' ')
+	if MassOtvet[0] != "Приве" {
+		t.Errorf("Expected 'Приве', but got %s", MassOtvet[0])
+	}
+}

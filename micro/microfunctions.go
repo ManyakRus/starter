@@ -1802,3 +1802,49 @@ func StringSplitBylength(s string, n int) []string {
 
 	return subs
 }
+
+// StringSplitBylength_WithLastWord - разбивает строку на подстроки по n символов, с учётом рун
+func StringSplitBylength_WithLastWord(s string, n int, LastWord rune) []string {
+	Otvet := make([]string, 0)
+
+	runes := bytes.Runes([]byte(s))
+	for {
+		Otvet1, pos1 := stringSplitBylength_WithLastWord1(runes, n, LastWord)
+		Otvet = append(Otvet, string(Otvet1))
+		if len(runes) >= pos1 {
+			runes = runes[pos1:]
+		} else {
+			break
+		}
+
+		if len(runes) <= 0 {
+			break
+		}
+	}
+
+	return Otvet
+}
+
+// stringSplitBylength_WithLastWord1 - возвращает первые n строк, заканчивая на LastWord
+func stringSplitBylength_WithLastWord1(s []rune, n int, LastWord rune) ([]rune, int) {
+	Otvet := make([]rune, 0)
+	pos1 := 0
+	runes := s
+	length1 := len(runes)
+	length := MinInt(n, length1)
+	Otvet = runes[:length]
+
+	for i := length; i > 0; i-- {
+		if runes[i-1] == LastWord {
+			pos1 = i
+			Otvet = Otvet[:pos1]
+			break
+		}
+	}
+
+	if pos1 == 0 {
+		pos1 = len(Otvet)
+	}
+
+	return Otvet, pos1
+}
