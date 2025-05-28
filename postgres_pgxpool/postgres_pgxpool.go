@@ -1,6 +1,6 @@
 // модуль для работы с базой данных
 
-package postgres_pgx
+package postgres_pgxpool
 
 import (
 	"context"
@@ -10,27 +10,19 @@ import (
 	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/port_checker"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"strings"
 	"time"
-
-	//"github.com/jackc/pgconn"
-	"os"
-	"sync"
-	//"time"
-
-	//_ "github.com/jackc/pgconn"
-	//_ "github.com/jackc/pgx/v4"
-	//"github.com/jmoiron/sqlx"
-	//_ "github.com/lib/pq"
-	//log "github.com/sirupsen/logrus"
 
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/micro"
 	"github.com/ManyakRus/starter/stopapp"
+	"os"
+	"sync"
 )
 
-// Conn - соединение к базе данных
-var Conn *pgx.Conn
+// PgxPool - пул соединений к базе данных
+var PgxPool *pgxpool.Pool
 
 // mutex_Connect - защита от многопоточности Connect()
 var mutex_Connect = &sync.RWMutex{}
@@ -77,9 +69,9 @@ func Connect() {
 // LogInfo_Connected - выводит сообщение в Лог, или паника при ошибке
 func LogInfo_Connected(err error) {
 	if err != nil {
-		log.Panicln("POSTGRES pgx Connect() to database host: ", Settings.DB_HOST, ", Error: ", err)
+		log.Panicln("POSTGRES pgxpool Connect() to database host: ", Settings.DB_HOST, ", Error: ", err)
 	} else {
-		log.Info("POSTGRES pgx Connected. host: ", Settings.DB_HOST, ", base name: ", Settings.DB_NAME, ", schema: ", Settings.DB_SCHEMA)
+		log.Info("POSTGRES pgxpool Connected. host: ", Settings.DB_HOST, ", base name: ", Settings.DB_NAME, ", schema: ", Settings.DB_SCHEMA)
 	}
 
 }
@@ -110,25 +102,19 @@ func Connect_WithApplicationName_err(ApplicationName string) error {
 	ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second)
 	defer cancel()
 
-	// get the database connection URL.
-	//databaseUrl := "postgres://" + Settings.DB_USER + ":" + Settings.DB_PASSWORD
-	//databaseUrl += "@" + Settings.DB_HOST + ":" + Settings.DB_PORT + "/" + Settings.DB_NAME
-
 	databaseUrl := GetConnectionString(ApplicationName)
 
 	//
-	config, err := pgx.ParseConfig(databaseUrl)
+	config, err := pgxpool.ParseConfig(databaseUrl)
 	//config.PreferSimpleProtocol = true //для мульти-запросов
-	Conn = nil
-	Conn, err = pgx.ConnectConfig(ctx, config)
-
+	PgxPool = nil
+	PgxPool, err = pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
-		err = fmt.Errorf("ConnectConfig() error: %w", err)
-		//log.Panicln("Unable to connect to database host: ", Settings.DB_HOST, " Error: ", err)
+		err = fmt.Errorf("pgxpool.NewWithConfig() error: %w", err)
 	}
 
 	if err == nil {
-		err = Conn.Ping(ctx)
+		err = PgxPool.Ping(ctx)
 	}
 
 	return err
@@ -150,17 +136,22 @@ func GetConnectionString(ApplicationName string) string {
 
 // IsClosed проверка что база данных закрыта
 func IsClosed() bool {
-	var otvet bool
-	if Conn == nil {
+	var Otvet bool
+
+	if PgxPool == nil {
 		return true
 	}
 
 	ctx := contextmain.GetContext()
-	err := GetConnection().Ping(ctx)
+	conn, err := GetConnection_err()
 	if err != nil {
-		otvet = true
+		return true
 	}
-	return otvet
+	err = conn.Ping(ctx)
+	if err != nil {
+		return true
+	}
+	return Otvet
 }
 
 // Reconnect повторное подключение к базе данных, если оно отключено
@@ -177,7 +168,7 @@ func Reconnect(err error) {
 		return
 	}
 
-	if Conn == nil {
+	if PgxPool == nil {
 		log.Warn("Reconnect()")
 		err := Connect_err()
 		if err != nil {
@@ -197,7 +188,7 @@ func Reconnect(err error) {
 	}
 
 	sError := err.Error()
-	if sError == "Conn closed" {
+	if sError == "PgxPool closed" {
 		micro.Pause(1000)
 		log.Warn("Reconnect()")
 		err := Connect_err()
@@ -215,33 +206,36 @@ func Reconnect(err error) {
 
 // CloseConnection - закрытие соединения с базой данных
 func CloseConnection() {
-	if Conn == nil {
+	if PgxPool == nil {
 		return
 	}
 
 	err := CloseConnection_err()
 	if err != nil {
-		log.Error("Postgres pgx CloseConnection() error: ", err)
+		log.Error("POSTGRES pgxpool CloseConnection() error: ", err)
 	} else {
-		log.Info("Postgres pgx connection closed")
+		log.Info("POSTGRES pgxpool connection closed")
 	}
 
 }
 
-// CloseConnection - закрытие соединения с базой данных
+// CloseConnection_err - закрытие соединения с базой данных
 func CloseConnection_err() error {
-	if Conn == nil {
-		return nil
+	var err error
+
+	if PgxPool == nil {
+		return err
 	}
 
-	ctxMain := contextmain.GetContext()
-	ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second)
-	defer cancel()
+	//ctxMain := contextmain.GetContext()
+	//ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second)
+	//defer cancel()
 
 	mutex_Connect.Lock()
 	defer mutex_Connect.Unlock()
 
-	err := Conn.Close(ctx)
+	PgxPool.Reset()
+	//PgxPool.Close()
 
 	return err
 }
@@ -252,11 +246,11 @@ func WaitStop() {
 
 	select {
 	case <-contextmain.GetContext().Done():
-		log.Warn("Context app is canceled. postgres_pgx")
+		log.Warn("Context app is canceled. postgres_pgxpool")
 	}
 
 	//
-	stopapp.WaitTotalMessagesSendingNow("postgres_pgx")
+	stopapp.WaitTotalMessagesSendingNow("postgres_pgxpool")
 
 	//
 	CloseConnection()
@@ -377,43 +371,37 @@ loop:
 
 		select {
 		case <-ctx.Done():
-			log.Warn("Context app is canceled. postgres_pgx.ping")
+			log.Warn("Context app is canceled. postgres_pgxpool.ping")
 			break loop
 		case <-ticker.C:
 
-			////ping в базе данных
+			//ping в базе данных
 			//mutex_Connect.RLock() //race
-			////err = GetConnection().Ping(ctx) //ping делать нельзя т.к. data race
-			//err = Ping_err(ctx)
+			//err = GetConnection_err().Ping(ctx) //ping делать нельзя т.к. data race
+			err = Ping_err(ctx)
 			//mutex_Connect.RUnlock()
-			//if err != nil {
-			//	switch err.Error() {
-			//	case TextConnBusy:
-			//		{
-			//			log.Warn("postgres_pgx Ping() warning: ", err)
-			//		}
-			//	default:
-			//		{
-			//			NeedReconnect = true
-			//			log.Error("postgres_pgx Ping() error: ", err)
-			//		}
-			//	}
-			//
-			//} else {
-			//	//IsClosed
-			//	if GetConnection().IsClosed() == true {
-			//		NeedReconnect = true
-			//		log.Error("postgres_pgx error: IsClosed() = true")
-			//	}
-			//}
+			if err != nil {
+				switch err.Error() {
+				case TextConnBusy:
+					{
+						log.Warn("postgres_pgxpool Ping() warning: ", err)
+					}
+				default:
+					{
+						NeedReconnect = true
+						log.Error("postgres_pgxpool Ping() error: ", err)
+					}
+				}
+
+			}
 
 			//ping порта
 			err = port_checker.CheckPort_err(Settings.DB_HOST, Settings.DB_PORT)
 			if err != nil {
 				NeedReconnect = true
-				log.Warn("postgres_pgx CheckPort(", addr, ") error: ", err)
+				log.Warn("postgres_pgxpool CheckPort(", addr, ") error: ", err)
 			} else if NeedReconnect == true {
-				log.Warn("postgres_pgx CheckPort(", addr, ") OK. Start Reconnect()")
+				log.Warn("postgres_pgxpool CheckPort(", addr, ") OK. Start Reconnect()")
 				NeedReconnect = false
 				err = Connect_err()
 				if err != nil {
@@ -426,33 +414,42 @@ loop:
 
 }
 
-// GetConnection - возвращает соединение к нужной базе данных
-func GetConnection() *pgx.Conn {
+// GetConnection_err - возвращает соединение к нужной базе данных
+func GetConnection_err() (*pgxpool.Conn, error) {
 	//мьютекс чтоб не подключаться одновременно
-	mutex_Connect.RLock()
-	defer mutex_Connect.RUnlock()
+	//mutex_Connect.RLock()
+	//defer mutex_Connect.RUnlock()
 
 	//
-	if Conn == nil || Conn.IsClosed() {
+	if PgxPool == nil {
 		err := Connect_err()
 		if err != nil {
-			log.Error("POSTGRES pgx Connect() to database host: ", Settings.DB_HOST, ", error: ", err)
+			log.Error("POSTGRES pgxpool Connect() to database host: ", Settings.DB_HOST, ", error: ", err)
 		} else {
-			log.Info("POSTGRES pgx Connected. host: ", Settings.DB_HOST, ", base name: ", Settings.DB_NAME, ", schema: ", Settings.DB_SCHEMA)
+			log.Info("POSTGRES pgxpool Connected. host: ", Settings.DB_HOST, ", base name: ", Settings.DB_NAME, ", schema: ", Settings.DB_SCHEMA)
 		}
 	}
 
-	return Conn
+	ctxMain := contextmain.GetContext()
+	ctx, cancelFunc := context.WithTimeout(ctxMain, timeOutSeconds*time.Second)
+	defer cancelFunc()
+
+	connection, err := PgxPool.Acquire(ctx)
+	if err != nil {
+		err = fmt.Errorf("Ошибка при получении соединения из пула базы данных, error: %w", err)
+		return connection, nil
+	}
+	return connection, nil
 }
 
 // GetConnection_WithApplicationName - возвращает соединение к нужной базе данных, с указанием имени приложения
-func GetConnection_WithApplicationName(ApplicationName string) *pgx.Conn {
-	if Conn == nil {
+func GetConnection_WithApplicationName(ApplicationName string) *pgxpool.Pool {
+	if PgxPool == nil {
 		err := Connect_WithApplicationName_err(ApplicationName)
 		LogInfo_Connected(err)
 	}
 
-	return Conn
+	return PgxPool
 }
 
 // RawMultipleSQL - выполняет текст запроса, отдельно для каждого запроса
@@ -461,7 +458,7 @@ func GetConnection_WithApplicationName(ApplicationName string) *pgx.Conn {
 // }
 // defer rows.Close()
 
-func RawMultipleSQL(tx pgx.Tx, TextSQL string) (pgx.Rows, error) {
+func RawMultipleSQL(tx *pgxpool.Conn, TextSQL string) (pgx.Rows, error) {
 	var rows pgx.Rows
 	var err error
 
@@ -471,13 +468,6 @@ func RawMultipleSQL(tx pgx.Tx, TextSQL string) (pgx.Rows, error) {
 		err = errors.New(TextError)
 		return rows, err
 	}
-
-	//if tx.IsClosed() {
-	//	TextError := "RawMultipleSQL() error: tx is closed"
-	//	log.Error(TextError)
-	//	err = errors.New(TextError)
-	//	return rows, err
-	//}
 
 	ctx := contextmain.GetContext()
 
@@ -530,6 +520,6 @@ func Ping_err(ctxMain context.Context) error {
 	//mutex_Connect.Lock() //убрал т.к. зависает всё
 	//defer mutex_Connect.Unlock()
 
-	_, err = Conn.Exec(ctx, ";")
+	_, err = PgxPool.Exec(ctx, ";")
 	return err
 }

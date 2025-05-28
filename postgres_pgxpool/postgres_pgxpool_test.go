@@ -1,8 +1,7 @@
-package postgres_pgx
+package postgres_pgxpool
 
 import (
 	"errors"
-	"golang.org/x/net/context"
 	"testing"
 	"time"
 
@@ -116,8 +115,9 @@ func TestConnect_WithApplicationName_err(t *testing.T) {
 
 func TestRawMultipleSQL(t *testing.T) {
 	config_main.LoadEnv()
-	GetConnection()
-	defer CloseConnection()
+	connection, _ := GetConnection_err()
+	defer connection.Release()
+	//defer CloseConnection()
 
 	TimeStart := time.Now()
 
@@ -131,11 +131,7 @@ select 1;
 SELECT * FROM temp_TestRawMultipleSQL2
 `
 	//TextSQL := "SELECT 1; SELECT 2"
-	ctx := context.Background()
-	tx, err := Conn.Begin(ctx)
-	defer tx.Commit(ctx)
-	Rows, err := RawMultipleSQL(tx, TextSQL)
-	defer Rows.Close()
+	Rows, err := RawMultipleSQL(connection, TextSQL)
 	if err != nil {
 		t.Error("TestRawMultipleSQL() error: ", err)
 		return
@@ -144,6 +140,7 @@ SELECT * FROM temp_TestRawMultipleSQL2
 		t.Error("TestRawMultipleSQL() error: Rows == nil")
 		return
 	}
+	defer Rows.Close()
 
 	Otvet := 0
 	for Rows.Next() {
@@ -159,7 +156,7 @@ SELECT * FROM temp_TestRawMultipleSQL2
 // TestRawMultipleSQL2 - negative test, with error
 func TestRawMultipleSQL2(t *testing.T) {
 	config_main.LoadEnv()
-	GetConnection()
+	GetConnection_err()
 	defer CloseConnection()
 
 	TimeStart := time.Now()
@@ -176,7 +173,7 @@ SELECT * FROM temp_TestRawMultipleSQL2
 `
 
 	ctx := contextmain.GetContext()
-	Rows, err := Conn.Query(ctx, TextSQL)
+	Rows, err := PgxPool.Query(ctx, TextSQL)
 	if err == nil {
 		t.Error("TestRawMultipleSQL2() Query() error: ", err)
 		return
