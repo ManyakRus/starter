@@ -115,9 +115,9 @@ func TestConnect_WithApplicationName_err(t *testing.T) {
 
 func TestRawMultipleSQL(t *testing.T) {
 	config_main.LoadEnv()
-	connection, _ := GetConnection_err()
-	defer connection.Release()
-	//defer CloseConnection()
+	connection := GetConnection()
+	//defer connection.Release()
+	defer CloseConnection()
 
 	TimeStart := time.Now()
 
@@ -156,7 +156,7 @@ SELECT * FROM temp_TestRawMultipleSQL2
 // TestRawMultipleSQL2 - negative test, with error
 func TestRawMultipleSQL2(t *testing.T) {
 	config_main.LoadEnv()
-	GetConnection_err()
+	GetConnection()
 	defer CloseConnection()
 
 	TimeStart := time.Now()

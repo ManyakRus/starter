@@ -24,8 +24,8 @@ import (
 // PgxPool - пул соединений к базе данных
 var PgxPool *pgxpool.Pool
 
-// mutex_Connect - защита от многопоточности Connect()
-var mutex_Connect = &sync.RWMutex{}
+//// mutex_Connect - защита от многопоточности Connect()
+//var mutex_Connect = &sync.RWMutex{}
 
 // mutex_ReConnect - защита от многопоточности ReConnect()
 var mutex_ReConnect = &sync.RWMutex{}
@@ -50,7 +50,7 @@ type SettingsINI struct {
 const TextConnBusy = "conn busy"
 
 // timeOutSeconds - время ожидания для Ping()
-const timeOutSeconds = 60
+const timeOutSeconds = 1
 
 // Connect_err - подключается к базе данных
 func Connect() {
@@ -142,15 +142,15 @@ func IsClosed() bool {
 		return true
 	}
 
-	ctx := contextmain.GetContext()
-	conn, err := GetConnection_err()
+	ctxMain := contextmain.GetContext()
+	ctx, cancelFunc := context.WithTimeout(ctxMain, timeOutSeconds*time.Second)
+	defer cancelFunc()
+
+	err := GetConnection().Ping(ctx)
 	if err != nil {
 		return true
 	}
-	err = conn.Ping(ctx)
-	if err != nil {
-		return true
-	}
+
 	return Otvet
 }
 
@@ -231,11 +231,11 @@ func CloseConnection_err() error {
 	//ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second)
 	//defer cancel()
 
-	mutex_Connect.Lock()
-	defer mutex_Connect.Unlock()
+	//mutex_Connect.Lock()
+	//defer mutex_Connect.Unlock()
 
-	PgxPool.Reset()
-	//PgxPool.Close()
+	//PgxPool.Reset()
+	PgxPool.Close()
 
 	return err
 }
@@ -377,7 +377,7 @@ loop:
 
 			//ping в базе данных
 			//mutex_Connect.RLock() //race
-			//err = GetConnection_err().Ping(ctx) //ping делать нельзя т.к. data race
+			//err = GetConnection().Ping(ctx) //ping делать нельзя т.к. data race
 			err = Ping_err(ctx)
 			//mutex_Connect.RUnlock()
 			if err != nil {
@@ -414,8 +414,8 @@ loop:
 
 }
 
-// GetConnection_err - возвращает соединение к нужной базе данных
-func GetConnection_err() (*pgxpool.Conn, error) {
+// GetConnection - возвращает соединение к нужной базе данных
+func GetConnection() *pgxpool.Pool {
 	//мьютекс чтоб не подключаться одновременно
 	//mutex_Connect.RLock()
 	//defer mutex_Connect.RUnlock()
@@ -430,16 +430,16 @@ func GetConnection_err() (*pgxpool.Conn, error) {
 		}
 	}
 
-	ctxMain := contextmain.GetContext()
-	ctx, cancelFunc := context.WithTimeout(ctxMain, timeOutSeconds*time.Second)
-	defer cancelFunc()
+	//ctxMain := contextmain.GetContext()
+	//ctx, cancelFunc := context.WithTimeout(ctxMain, timeOutSeconds*time.Second)
+	//defer cancelFunc()
 
-	connection, err := PgxPool.Acquire(ctx)
-	if err != nil {
-		err = fmt.Errorf("Ошибка при получении соединения из пула базы данных, error: %w", err)
-		return connection, nil
-	}
-	return connection, nil
+	//connection, err := PgxPool.Acquire(ctx)
+	//if err != nil {
+	//	err = fmt.Errorf("Ошибка при получении соединения из пула базы данных, error: %w", err)
+	//	return connection
+	//}
+	return PgxPool
 }
 
 // GetConnection_WithApplicationName - возвращает соединение к нужной базе данных, с указанием имени приложения
@@ -458,7 +458,7 @@ func GetConnection_WithApplicationName(ApplicationName string) *pgxpool.Pool {
 // }
 // defer rows.Close()
 
-func RawMultipleSQL(tx *pgxpool.Conn, TextSQL string) (pgx.Rows, error) {
+func RawMultipleSQL(tx *pgxpool.Pool, TextSQL string) (pgx.Rows, error) {
 	var rows pgx.Rows
 	var err error
 
@@ -513,13 +513,17 @@ func RawMultipleSQL(tx *pgxpool.Conn, TextSQL string) (pgx.Rows, error) {
 func Ping_err(ctxMain context.Context) error {
 	var err error
 
-	//ctx, cancelFunc := context.WithTimeout(ctxMain, timeOutSeconds*time.Second)
-	ctx, cancelFunc := context.WithTimeout(ctxMain, 1*time.Second)
+	ctx, cancelFunc := context.WithTimeout(ctxMain, timeOutSeconds*time.Second)
+	//ctx, cancelFunc := context.WithTimeout(ctxMain, 1*time.Second)
 	defer cancelFunc()
 
 	//mutex_Connect.Lock() //убрал т.к. зависает всё
 	//defer mutex_Connect.Unlock()
 
-	_, err = PgxPool.Exec(ctx, ";")
+	_, err = GetConnection().Exec(ctx, ";")
+	if err != nil {
+		err = fmt.Errorf("Ping_err() Exec() error: %w", err)
+		return err
+	}
 	return err
 }
