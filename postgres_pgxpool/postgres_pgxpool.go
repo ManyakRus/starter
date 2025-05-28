@@ -458,7 +458,7 @@ func GetConnection_WithApplicationName(ApplicationName string) *pgxpool.Pool {
 // }
 // defer rows.Close()
 
-func RawMultipleSQL(tx *pgxpool.Pool, TextSQL string) (pgx.Rows, error) {
+func RawMultipleSQL(tx pgx.Tx, TextSQL string) (pgx.Rows, error) {
 	var rows pgx.Rows
 	var err error
 
