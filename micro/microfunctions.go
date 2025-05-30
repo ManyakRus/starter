@@ -1848,3 +1848,10 @@ func stringSplitBylength_WithLastWord1(s []rune, n int, LastWord rune) ([]rune, 
 
 	return Otvet, pos1
 }
+
+// Round_Float64_WithPrecision округляет float64 до указанного количества знаков после запятой
+func Round_Float64_WithPrecision(x float64, precision int) float64 {
+	pow := math.Pow(10, float64(precision))
+	Otvet := math.Round(x*pow) / pow
+	return Otvet
+}

@@ -1551,3 +1551,10 @@ func TestStringSplitBylength_WithLastWord(t *testing.T) {
 		t.Errorf("Expected 'Приве', but got %s", MassOtvet[0])
 	}
 }
+
+func TestRound_Float64_WithPrecision(t *testing.T) {
+	Otvet := Round_Float64_WithPrecision(1.11, 1)
+	if Otvet != 1.1 {
+		t.Errorf("Expected 1.1, but got %f", Otvet)
+	}
+}
