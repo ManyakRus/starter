@@ -111,11 +111,10 @@ func Connect_err(Connection connections.Connection) error {
 	}
 
 	mutex_Connect.Lock() //race
+	defer mutex_Connect.Unlock()
 
 	MapConnection[Connection.ID] = Connection
 	MapConn[Connection.ID] = Conn
-
-	mutex_Connect.Unlock()
 
 	return err
 }
@@ -252,11 +251,10 @@ func CloseConnection_err(Connection connections.Connection) error {
 	Conn = nil
 
 	mutex_Connect.Lock() //race
+	defer mutex_Connect.Unlock()
 
 	delete(MapConnection, Connection.ID)
 	delete(MapConn, Connection.ID)
-
-	mutex_Connect.Unlock()
 
 	return err
 }
@@ -338,10 +336,6 @@ func GetDSN(Connection connections.Connection) string {
 
 // GetConnection - возвращает соединение к нужной базе данных
 func GetConnection(Connection connections.Connection) *gorm.DB {
-	//мьютекс чтоб не подключаться одновременно
-	mutex_Connect.RLock()
-	defer mutex_Connect.RUnlock()
-
 	//мьютекс чтоб не подключаться одновременно
 	mutex_Connect.RLock()
 	defer mutex_Connect.RUnlock()

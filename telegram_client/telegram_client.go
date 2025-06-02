@@ -389,6 +389,7 @@ func (s *memorySession) StoreSession(ctx context.Context, data []byte) error {
 	}
 
 	s.mux.Lock()
+	defer s.mux.Unlock()
 	//s.data = data
 
 	// write the whole body at once
@@ -396,8 +397,6 @@ func (s *memorySession) StoreSession(ctx context.Context, data []byte) error {
 	if err != nil {
 		panic(err)
 	}
-
-	s.mux.Unlock()
 
 	return nil
 }
