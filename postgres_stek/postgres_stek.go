@@ -110,8 +110,8 @@ func Connect_err(Connection connections.Connection) error {
 		err = DB.Ping()
 	}
 
-	mutex_Connect.Lock() //race
-	defer mutex_Connect.Unlock()
+	//mutex_Connect.Lock() //race
+	//defer mutex_Connect.Unlock()
 
 	MapConnection[Connection.ID] = Connection
 	MapConn[Connection.ID] = Conn
