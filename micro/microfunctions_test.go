@@ -1558,3 +1558,10 @@ func TestRound_Float64_WithPrecision(t *testing.T) {
 		t.Errorf("Expected 1.1, but got %f", Otvet)
 	}
 }
+
+func TestRound_Float64_WithPrecision2(t *testing.T) {
+	Otvet := Round_Float64_WithPrecision(1.9999999999, 9)
+	if Otvet != 2 {
+		t.Errorf("Expected 1.1, but got %f", Otvet)
+	}
+}
