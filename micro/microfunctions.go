@@ -1843,7 +1843,6 @@ func stringSplitBylength_WithLastWord1(s []rune, n int, LastWord rune) ([]rune, 
 
 	//весь текст меньше n
 	if len(s) <= n {
-		Otvet = append(Otvet, s...)
 		return Otvet, len(s)
 	}
 

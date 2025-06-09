@@ -1553,7 +1553,7 @@ func TestStringSplitBylength_WithLastWord(t *testing.T) {
 }
 
 func TestStringSplitBylength_WithLastWord2(t *testing.T) {
-	Text1 := "Покупка RU000A10A9Z1 (https://www.tbank.ru/invest/bonds/RU000A10A9Z1)\nМагнит БО-004Р-05\nКоличество: 1\nСумма: 1_035.10 руб.\nЦена: 103.51% = 1_035.10 руб.\nПроцент годовых: 23.52%"
+	Text1 := "Заявка на продажу RU000A1082G5 (https://www.tbank.ru/invest/bonds/RU000A1082G5)\nЕвроТранс 002Р-01\nКоличество: 1\nСумма: 806.91 руб.\nЦена: 80.69% = 806.91 руб.\n\nКоличество: 1\nСумма: 806.92 руб.\nЦена: 80.69% = 806.92 руб.\n\nКоличество: 1\nСумма: 806.93 руб.\nЦена: 80.69% = 806.93 руб.\n\nКоличество: 1\nСумма: 806.94 руб.\nЦена: 80.69% = 806.94 руб.\n\nКоличество: 1\nСумма: 806.95 руб.\nЦена: 80.70% = 806.95 руб.\n\nКоличество: 1\nСумма: 806.96 руб.\nЦена: 80.70% = 806.96 руб."
 	MassOtvet := StringSplitBylength_WithLastWord(Text1, 4000, '\n')
 	if MassOtvet[0] != "Приве" {
 		//t.Errorf("Expected 'Приве', but got %s", MassOtvet[0])
