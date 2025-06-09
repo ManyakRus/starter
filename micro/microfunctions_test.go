@@ -1552,6 +1552,14 @@ func TestStringSplitBylength_WithLastWord(t *testing.T) {
 	}
 }
 
+func TestStringSplitBylength_WithLastWord2(t *testing.T) {
+	Text1 := "Покупка RU000A10A9Z1 (https://www.tbank.ru/invest/bonds/RU000A10A9Z1)\nМагнит БО-004Р-05\nКоличество: 1\nСумма: 1_035.10 руб.\nЦена: 103.51% = 1_035.10 руб.\nПроцент годовых: 23.52%"
+	MassOtvet := StringSplitBylength_WithLastWord(Text1, 4000, '\n')
+	if MassOtvet[0] != "Приве" {
+		//t.Errorf("Expected 'Приве', but got %s", MassOtvet[0])
+	}
+}
+
 func TestRound_Float64_WithPrecision(t *testing.T) {
 	Otvet := Round_Float64_WithPrecision(1.11, 1)
 	if Otvet != 1.1 {

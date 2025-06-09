@@ -1788,6 +1788,13 @@ func StringSplitBylength(s string, n int) []string {
 	sub := ""
 	subs := []string{}
 
+	//весь текст меньше n
+	if len(s) <= n {
+		subs = append(subs, s)
+		return subs
+	}
+
+	//
 	runes := bytes.Runes([]byte(s))
 	l := len(runes)
 	for i, r := range runes {
@@ -1834,6 +1841,13 @@ func stringSplitBylength_WithLastWord1(s []rune, n int, LastWord rune) ([]rune, 
 	length := MinInt(n, length1)
 	Otvet = runes[:length]
 
+	//весь текст меньше n
+	if len(s) <= n {
+		Otvet = append(Otvet, s...)
+		return Otvet, len(s)
+	}
+
+	//
 	for i := length; i > 0; i-- {
 		if runes[i-1] == LastWord {
 			pos1 = i
