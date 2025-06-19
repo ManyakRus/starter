@@ -38,12 +38,12 @@ var NeedReconnect bool
 
 // SettingsINI - структура для хранения всех нужных переменных окружения
 type SettingsINI struct {
-	MINIO_HOST           string
-	MINIO_PORT           string
-	MINIO_KEY            string
-	MINIO_SECRET_KEY     string
-	MINIO_USE_SSL        bool
-	INSECURE_SKIP_VERIFY bool
+	MINIO_HOST                 string
+	MINIO_PORT                 string
+	MINIO_KEY                  string
+	MINIO_SECRET_KEY           string
+	MINIO_USE_SSL              bool
+	MINIO_INSECURE_SKIP_VERIFY bool
 }
 
 // Connect_err - подключается к Minio
@@ -87,7 +87,7 @@ func Connect_err() error {
 	options := &miniogo.Options{
 		Creds:     credentials.NewStaticV4(Settings.MINIO_KEY, Settings.MINIO_SECRET_KEY, ""),
 		Secure:    Settings.MINIO_USE_SSL,
-		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: Settings.INSECURE_SKIP_VERIFY}},
+		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: Settings.MINIO_INSECURE_SKIP_VERIFY}},
 	}
 	Conn, err = miniogo.New(addr, options)
 	if err == nil {
@@ -265,12 +265,12 @@ func FillSettings() {
 	Settings.MINIO_USE_SSL = MINIO_USE_SSL
 
 	//
-	sINSECURE_SKIP_VERIFY := os.Getenv("INSECURE_SKIP_VERIFY")
+	sINSECURE_SKIP_VERIFY := os.Getenv("MINIO_INSECURE_SKIP_VERIFY")
 	INSECURE_SKIP_VERIFY := micro.BoolFromString(sINSECURE_SKIP_VERIFY)
 	if sINSECURE_SKIP_VERIFY == "" {
 		INSECURE_SKIP_VERIFY = true
 	}
-	Settings.INSECURE_SKIP_VERIFY = INSECURE_SKIP_VERIFY
+	Settings.MINIO_INSECURE_SKIP_VERIFY = INSECURE_SKIP_VERIFY
 
 	if Settings.MINIO_HOST == "" {
 		log.Panicln("Need fill MINIO_HOST ! in os.ENV ")
