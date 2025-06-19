@@ -84,6 +84,12 @@ func Connect_err() error {
 	return err
 }
 
+// Connect_WithApplicationName - подключается к базе данных, с указанием имени приложения
+func Connect_WithApplicationName(ApplicationName string) {
+	err := Connect_WithApplicationName_err(ApplicationName)
+	LogInfo_Connected(err)
+}
+
 // Connect_WithApplicationName_err - подключается к базе данных, с указанием имени приложения
 func Connect_WithApplicationName_err(ApplicationName string) error {
 	var err error
