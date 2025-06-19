@@ -378,9 +378,9 @@ func UploadFileCtx(ctx context.Context, bucketName, objectName, filePath string)
 	Otvet, err := UploadFileCtx_err(ctx, bucketName, objectName, filePath)
 
 	if err != nil {
-		log.Panic("UploadFileCtx() objectName: ", objectName, " error: ", err)
+		log.Panicf("UploadFileCtx() objectName: %s, bucketName: %s, error: %v", objectName, bucketName, err)
 	} else {
-		log.Debug("UploadFileCtx() objectName: ", objectName, " OK")
+		log.Debugf("UploadFileCtx() objectName: %s, bucketName: %s, OK", objectName, bucketName)
 	}
 
 	return Otvet
@@ -392,9 +392,9 @@ func DownloadFileCtx(ctx context.Context, bucketName, objectName string) []byte 
 	Otvet, err := DownloadFileCtx_err(ctx, bucketName, objectName)
 
 	if err != nil {
-		log.Panic("UploadFileCtx() objectName: ", objectName, " error: ", err)
+		log.Panic("UploadFileCtx() objectName: %s, bucketName: %s, error: %v", objectName, bucketName, err)
 	} else {
-		log.Debug("UploadFileCtx() objectName: ", objectName, " OK")
+		log.Debug("UploadFileCtx() objectName: %s, bucketName: %s, OK", objectName, bucketName)
 	}
 
 	return Otvet
