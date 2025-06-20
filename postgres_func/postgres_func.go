@@ -126,6 +126,19 @@ func NullFloat64_DefaultNull(Value float64) sql.NullFloat64 {
 	return Otvet
 }
 
+// NullFloat32_DefaultNull - преобразует значение в sql.NullFloat64, если пусто то Valid = false
+func NullFloat32_DefaultNull(Value float32) sql.NullFloat64 {
+	Otvet := sql.NullFloat64{}
+	Otvet.Float64 = float64(Value)
+	Otvet.Valid = true
+
+	if Value == 0 {
+		Otvet.Valid = false
+	}
+
+	return Otvet
+}
+
 // NullNullBool_DefaultNull - преобразует значение в sql.NullBool, если пусто то Valid = false
 func NullNullBool_DefaultNull(Value bool) sql.NullBool {
 	Otvet := sql.NullBool{}
