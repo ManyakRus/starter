@@ -140,3 +140,7 @@ func TestSet_FieldFromEnv_Bool(t *testing.T) {
 func TestShowTimePassed_FormatText(t *testing.T) {
 	ShowTimePassed_FormatText("start offer Download_and_Save_All(), time passed: %s", time.Now())
 }
+
+func TestShow_Stage(t *testing.T) {
+	Show_Stage()
+}

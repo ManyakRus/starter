@@ -228,3 +228,9 @@ func Set_StructField(StructReference any, FieldName string, Value any) {
 		return
 	}
 }
+
+// Show_Stage - показывает в логе переменную окружения STAGE
+func Show_Stage() {
+	Stage := os.Getenv("STAGE")
+	log.Debugf("STAGE: %s", Stage)
+}
