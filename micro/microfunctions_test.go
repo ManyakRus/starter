@@ -1573,3 +1573,17 @@ func TestRound_Float64_WithPrecision2(t *testing.T) {
 		t.Errorf("Expected 1.1, but got %f", Otvet)
 	}
 }
+
+func TestFind_Tag_JSON(t *testing.T) {
+	type StructTest struct {
+		Test string `json:"test"`
+	}
+	StructTest1 := &StructTest{}
+	Otvet, err := Find_Tag_JSON(StructTest1, "Test")
+	if err != nil {
+		t.Errorf("Error: Expected nil, but got %v", err)
+	}
+	if Otvet != "test" {
+		t.Errorf("Expected 'test', but got %s", Otvet)
+	}
+}

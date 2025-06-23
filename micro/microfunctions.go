@@ -1868,3 +1868,19 @@ func Round_Float64_WithPrecision(x float64, precision int) float64 {
 	Otvet := math.Round(x*pow) / pow
 	return Otvet
 }
+
+// Find_Tag_JSON - возвращает тег json для полей структуры
+func Find_Tag_JSON(Struct1 any, FieldName string) (string, error) {
+	var Otvet string
+	var err error
+
+	field, ok := reflect.TypeOf(Struct1).Elem().FieldByName(FieldName)
+	if !ok {
+		err = fmt.Errorf("Field %s not found in type %T", FieldName, Struct1)
+		return Otvet, err
+	}
+
+	Otvet = field.Tag.Get("json")
+
+	return Otvet, err
+}
