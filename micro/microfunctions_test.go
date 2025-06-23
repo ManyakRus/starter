@@ -1587,3 +1587,17 @@ func TestFind_Tag_JSON(t *testing.T) {
 		t.Errorf("Expected 'test', but got %s", Otvet)
 	}
 }
+
+func TestGetStructValue(t *testing.T) {
+	type StructTest struct {
+		Test string `json:"test"`
+	}
+	StructTest1 := &StructTest{"111"}
+	Otvet, err := GetStructValue(StructTest1, "Test")
+	if err != nil {
+		t.Errorf("Error: Expected nil, but got %v", err)
+	}
+	if Otvet != "111" {
+		t.Errorf("Expected 'test', but got %s", Otvet)
+	}
+}

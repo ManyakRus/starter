@@ -1884,3 +1884,25 @@ func Find_Tag_JSON(Struct1 any, FieldName string) (string, error) {
 
 	return Otvet, err
 }
+
+// GetStructValue - возвращает значение 1 поля структуры по его имени
+func GetStructValue(Struct1 any, FieldName string) (any, error) {
+	// Проверяем, что переданный аргумент является структурой
+	val := reflect.ValueOf(Struct1)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+
+	if val.Kind() != reflect.Struct {
+		return nil, errors.New("переданный аргумент не является структурой")
+	}
+
+	// Получаем поле структуры по имени
+	field := val.FieldByName(FieldName)
+	if !field.IsValid() {
+		return nil, errors.New("поле не найдено")
+	}
+
+	// Возвращаем значение поля как interface{}
+	return field.Interface(), nil
+}
