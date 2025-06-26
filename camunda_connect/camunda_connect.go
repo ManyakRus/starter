@@ -9,6 +9,7 @@ import (
 	"github.com/ManyakRus/starter/port_checker"
 	"github.com/ManyakRus/starter/stopapp"
 	"github.com/camunda/zeebe/clients/go/v8/pkg/entities"
+	"github.com/camunda/zeebe/clients/go/v8/pkg/pb"
 	"github.com/camunda/zeebe/clients/go/v8/pkg/worker"
 	"github.com/camunda/zeebe/clients/go/v8/pkg/zbc"
 	"sync"
@@ -168,6 +169,26 @@ func WorkComplete(client worker.JobClient, jobKey int64, variables map[string]in
 
 	// log.Debugf("[INFO] HandleJob, %v, complete\n", jobKey)
 	return err
+}
+
+// WorkComplete_answer - отправляет статус ОК на сервер Camunda, и возвращает ответ
+func WorkComplete_answer(client worker.JobClient, jobKey int64, variables map[string]interface{}) (*pb.CompleteJobResponse, error) {
+
+	request, err := client.NewCompleteJobCommand().JobKey(jobKey).VariablesFromMap(variables)
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
+	defer cancel()
+
+	Otvet, err := request.Send(ctx)
+	if err != nil {
+		log.Error("camunda_connect.WorkComplete() error: ", err)
+	}
+
+	// log.Debugf("[INFO] HandleJob, %v, complete\n", jobKey)
+	return Otvet, err
 }
 
 // WorkFails - отправляет статус ошибки на сервер Camunda
