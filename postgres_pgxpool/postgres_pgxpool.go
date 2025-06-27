@@ -9,6 +9,7 @@ import (
 	"github.com/ManyakRus/starter/constants"
 	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/port_checker"
+	"github.com/ManyakRus/starter/postgres_pgx"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"strings"
@@ -464,7 +465,7 @@ func GetConnection_WithApplicationName(ApplicationName string) *pgxpool.Pool {
 // }
 // defer rows.Close()
 
-func RawMultipleSQL(tx pgx.Tx, TextSQL string) (pgx.Rows, error) {
+func RawMultipleSQL(tx postgres_pgx.IConnectionTransaction, TextSQL string) (pgx.Rows, error) {
 	var rows pgx.Rows
 	var err error
 
