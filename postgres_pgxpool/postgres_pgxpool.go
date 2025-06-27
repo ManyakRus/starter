@@ -533,3 +533,27 @@ func Ping_err(ctxMain context.Context) error {
 	}
 	return err
 }
+
+// ReplaceSchema - заменяет "public." на Settings.DB_SCHEMA
+func ReplaceSchema(TextSQL string) string {
+	Otvet := TextSQL
+
+	if Settings.DB_SCHEMA == "" {
+		return Otvet
+	}
+
+	Otvet = strings.ReplaceAll(Otvet, "\tpublic.", "\t"+Settings.DB_SCHEMA+".")
+	Otvet = strings.ReplaceAll(Otvet, "\npublic.", "\n"+Settings.DB_SCHEMA+".")
+	Otvet = strings.ReplaceAll(Otvet, " public.", " "+Settings.DB_SCHEMA+".")
+
+	return Otvet
+}
+
+// ReplaceSchemaName - заменяет имя схемы в тексте SQL
+func ReplaceSchemaName(TextSQL, SchemaNameFrom string) string {
+	Otvet := TextSQL
+
+	Otvet = strings.ReplaceAll(Otvet, SchemaNameFrom+".", Settings.DB_SCHEMA+".")
+
+	return Otvet
+}
