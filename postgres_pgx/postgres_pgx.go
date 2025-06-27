@@ -10,6 +10,7 @@ import (
 	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/port_checker"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"strings"
 	"time"
 
@@ -538,4 +539,23 @@ func Ping_err(ctxMain context.Context) error {
 
 	_, err = Conn.Exec(ctx, ";")
 	return err
+}
+
+// IConnectionTransaction - интерфейс для работы с базой данных
+// объединяет в себе функции pgx.Conn, pgxpool.Pool и pgx.Tx
+// чтобы передавать в функцию любой их них
+type IConnectionTransaction interface {
+	// Transaction management
+	Begin(ctx context.Context) (pgx.Tx, error)
+
+	// Query execution
+	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+
+	// Batch operations
+	SendBatch(ctx context.Context, b *pgx.Batch) pgx.BatchResults
+
+	// Bulk copy operations
+	CopyFrom(ctx context.Context, tableName pgx.Identifier, columnNames []string, rowSrc pgx.CopyFromSource) (int64, error)
 }
