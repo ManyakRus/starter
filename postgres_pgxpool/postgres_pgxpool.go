@@ -136,7 +136,8 @@ func GetConnectionString(ApplicationName string) string {
 	dsn += "password=" + Settings.DB_PASSWORD + " "
 	dsn += "dbname=" + Settings.DB_NAME + " "
 	dsn += "port=" + Settings.DB_PORT + " sslmode=disable TimeZone=" + constants.TIME_ZONE + " "
-	dsn += "application_name=" + ApplicationName
+	dsn += "application_name=" + ApplicationName + " "
+	dsn += "search_path=" + Settings.DB_SCHEMA + " "
 
 	return dsn
 }
