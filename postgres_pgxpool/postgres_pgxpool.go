@@ -77,22 +77,6 @@ func Connect_err() error {
 	return err
 }
 
-// Connect_NoNull - подключается к базе данных
-// запросы вместо null возвращают значение по умолчанию (пока только дата)
-func Connect_NoNull() {
-
-	if Settings.DB_HOST == "" {
-		FillSettings()
-	}
-	Settings.NoNUll = true
-
-	port_checker.CheckPort(Settings.DB_HOST, Settings.DB_PORT)
-
-	err := Connect_err()
-	LogInfo_Connected(err)
-
-}
-
 // LogInfo_Connected - выводит сообщение в Лог, или паника при ошибке
 func LogInfo_Connected(err error) {
 	if err != nil {
@@ -101,6 +85,14 @@ func LogInfo_Connected(err error) {
 		log.Info("POSTGRES pgxpool Connected. host: ", Settings.DB_HOST, ", base name: ", Settings.DB_NAME, ", schema: ", Settings.DB_SCHEMA)
 	}
 
+}
+
+// Connect_NoNull - подключается к базе данных, с указанием имени приложения
+func Connect_NoNull(ApplicationName string) {
+	Settings.NoNUll = true
+	
+	err := Connect_WithApplicationName_err(ApplicationName)
+	LogInfo_Connected(err)
 }
 
 // Connect_WithApplicationName - подключается к базе данных, с указанием имени приложения
