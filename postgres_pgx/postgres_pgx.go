@@ -40,7 +40,7 @@ var mutex_Connect = &sync.RWMutex{}
 var mutex_ReConnect = &sync.RWMutex{}
 
 // Settings хранит все нужные переменные окружения
-var Settings SettingsINI
+var Settings = SettingsINI{}
 
 // NeedReconnect - флаг необходимости переподключения
 var NeedReconnect bool
@@ -332,7 +332,7 @@ func Start(ApplicationName string) {
 
 // FillSettings загружает переменные окружения в структуру из файла или из переменных окружения
 func FillSettings() {
-	Settings = SettingsINI{}
+	//Settings = SettingsINI{}
 	Settings.DB_HOST = os.Getenv("DB_HOST")
 	Settings.DB_PORT = os.Getenv("DB_PORT")
 	Settings.DB_NAME = os.Getenv("DB_NAME")

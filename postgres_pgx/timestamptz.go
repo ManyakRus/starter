@@ -1,3 +1,6 @@
+// копия файла из https://github.com/jackc/pgtype/timestamptz.go
+// чтоб не выдавала ошибку на null
+// чтобы дата NULL = time.Time{}
 package postgres_pgx
 
 import (
@@ -6,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgtype"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -20,13 +24,13 @@ const (
 	infinityMicrosecondOffset         = 9223372036854775807
 )
 
-type TimestamptzScanner interface {
-	ScanTimestamptz(v Timestamptz) error
-}
-
-type TimestamptzValuer interface {
-	TimestamptzValue() (Timestamptz, error)
-}
+//type TimestamptzScanner interface {
+//	ScanTimestamptz(v Timestamptz) error
+//}
+//
+//type TimestamptzValuer interface {
+//	TimestamptzValue() (Timestamptz, error)
+//}
 
 // Timestamptz represents the PostgreSQL timestamptz type.
 type Timestamptz struct {
@@ -47,7 +51,8 @@ func (tstz Timestamptz) TimestamptzValue() (Timestamptz, error) {
 // Scan implements the database/sql Scanner interface.
 func (tstz *Timestamptz) Scan(src any) error {
 	if src == nil {
-		*tstz = Timestamptz{}
+		*tstz = Timestamptz{Valid: true} //sanek
+		//*tstz = Timestamptz{}
 		return nil
 	}
 
@@ -138,7 +143,7 @@ func (*TimestamptzCodec) PreferredFormat() int16 {
 }
 
 func (*TimestamptzCodec) PlanEncode(m *pgtype.Map, oid uint32, format int16, value any) pgtype.EncodePlan {
-	if _, ok := value.(TimestamptzValuer); !ok {
+	if _, ok := value.(pgtype.TimestamptzValuer); !ok {
 		return nil
 	}
 
@@ -155,7 +160,7 @@ func (*TimestamptzCodec) PlanEncode(m *pgtype.Map, oid uint32, format int16, val
 type encodePlanTimestamptzCodecBinary struct{}
 
 func (encodePlanTimestamptzCodecBinary) Encode(value any, buf []byte) (newBuf []byte, err error) {
-	ts, err := value.(TimestamptzValuer).TimestamptzValue()
+	ts, err := value.(pgtype.TimestamptzValuer).TimestamptzValue()
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +188,7 @@ func (encodePlanTimestamptzCodecBinary) Encode(value any, buf []byte) (newBuf []
 type encodePlanTimestamptzCodecText struct{}
 
 func (encodePlanTimestamptzCodecText) Encode(value any, buf []byte) (newBuf []byte, err error) {
-	ts, err := value.(TimestamptzValuer).TimestamptzValue()
+	ts, err := value.(pgtype.TimestamptzValuer).TimestamptzValue()
 	if err != nil {
 		return nil, err
 	}
@@ -227,13 +232,15 @@ func (c *TimestamptzCodec) PlanScan(m *pgtype.Map, oid uint32, format int16, tar
 
 	switch format {
 	case pgtype.BinaryFormatCode:
-		switch target.(type) {
-		case TimestamptzScanner:
+		name := getInterfaceName(target) //sanek
+		switch name {
+		case "*pgtype.timeWrapper":
 			return &scanPlanBinaryTimestamptzToTimestamptzScanner{location: c.ScanLocation}
 		}
 	case pgtype.TextFormatCode:
-		switch target.(type) {
-		case TimestamptzScanner:
+		name := getInterfaceName(target) //sanek
+		switch name {
+		case "*pgtype.timeWrapper":
 			return &scanPlanTextTimestamptzToTimestamptzScanner{location: c.ScanLocation}
 		}
 	}
@@ -241,27 +248,32 @@ func (c *TimestamptzCodec) PlanScan(m *pgtype.Map, oid uint32, format int16, tar
 	return nil
 }
 
+func getInterfaceName(v interface{}) string {
+	return reflect.TypeOf(v).String()
+}
+
 type scanPlanBinaryTimestamptzToTimestamptzScanner struct{ location *time.Location }
 
 func (plan *scanPlanBinaryTimestamptzToTimestamptzScanner) Scan(src []byte, dst any) error {
-	scanner := (dst).(TimestamptzScanner)
+	scanner := (dst).(pgtype.TimestamptzScanner)
 
 	if src == nil {
-		return scanner.ScanTimestamptz(Timestamptz{})
+		return scanner.ScanTimestamptz(pgtype.Timestamptz{Valid: true})
+		//return scanner.ScanTimestamptz(pgtype.Timestamptz{})
 	}
 
 	if len(src) != 8 {
 		return fmt.Errorf("invalid length for timestamptz: %v", len(src))
 	}
 
-	var tstz Timestamptz
+	var tstz pgtype.Timestamptz
 	microsecSinceY2K := int64(binary.BigEndian.Uint64(src))
 
 	switch microsecSinceY2K {
 	case infinityMicrosecondOffset:
-		tstz = Timestamptz{Valid: true, InfinityModifier: pgtype.Infinity}
+		tstz = pgtype.Timestamptz{Valid: true, InfinityModifier: pgtype.Infinity}
 	case negativeInfinityMicrosecondOffset:
-		tstz = Timestamptz{Valid: true, InfinityModifier: -pgtype.Infinity}
+		tstz = pgtype.Timestamptz{Valid: true, InfinityModifier: -pgtype.Infinity}
 	default:
 		tim := time.Unix(
 			microsecFromUnixEpochToY2K/1000000+microsecSinceY2K/1000000,
@@ -270,7 +282,7 @@ func (plan *scanPlanBinaryTimestamptzToTimestamptzScanner) Scan(src []byte, dst 
 		if plan.location != nil {
 			tim = tim.In(plan.location)
 		}
-		tstz = Timestamptz{Time: tim, Valid: true}
+		tstz = pgtype.Timestamptz{Time: tim, Valid: true}
 	}
 
 	return scanner.ScanTimestamptz(tstz)
@@ -279,19 +291,19 @@ func (plan *scanPlanBinaryTimestamptzToTimestamptzScanner) Scan(src []byte, dst 
 type scanPlanTextTimestamptzToTimestamptzScanner struct{ location *time.Location }
 
 func (plan *scanPlanTextTimestamptzToTimestamptzScanner) Scan(src []byte, dst any) error {
-	scanner := (dst).(TimestamptzScanner)
+	scanner := (dst).(pgtype.TimestamptzScanner)
 
 	if src == nil {
-		return scanner.ScanTimestamptz(Timestamptz{})
+		return scanner.ScanTimestamptz(pgtype.Timestamptz{})
 	}
 
-	var tstz Timestamptz
+	var tstz pgtype.Timestamptz
 	sbuf := string(src)
 	switch sbuf {
 	case "infinity":
-		tstz = Timestamptz{Valid: true, InfinityModifier: pgtype.Infinity}
+		tstz = pgtype.Timestamptz{Valid: true, InfinityModifier: pgtype.Infinity}
 	case "-infinity":
-		tstz = Timestamptz{Valid: true, InfinityModifier: -pgtype.Infinity}
+		tstz = pgtype.Timestamptz{Valid: true, InfinityModifier: -pgtype.Infinity}
 	default:
 		bc := false
 		if strings.HasSuffix(sbuf, " BC") {
@@ -322,7 +334,7 @@ func (plan *scanPlanTextTimestamptzToTimestamptzScanner) Scan(src []byte, dst an
 			tim = tim.In(plan.location)
 		}
 
-		tstz = Timestamptz{Time: tim, Valid: true}
+		tstz = pgtype.Timestamptz{Time: tim, Valid: true}
 	}
 
 	return scanner.ScanTimestamptz(tstz)

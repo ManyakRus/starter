@@ -33,7 +33,7 @@ var PgxPool *pgxpool.Pool
 var mutex_ReConnect = &sync.RWMutex{}
 
 // Settings хранит все нужные переменные окружения
-var Settings SettingsINI
+var Settings = SettingsINI{}
 
 // NeedReconnect - флаг необходимости переподключения
 var NeedReconnect bool
@@ -90,7 +90,7 @@ func LogInfo_Connected(err error) {
 // Connect_NoNull - подключается к базе данных, с указанием имени приложения
 func Connect_NoNull(ApplicationName string) {
 	Settings.NoNUll = true
-	
+
 	err := Connect_WithApplicationName_err(ApplicationName)
 	LogInfo_Connected(err)
 }
@@ -355,7 +355,7 @@ func Start(ApplicationName string) {
 
 // FillSettings загружает переменные окружения в структуру из файла или из переменных окружения
 func FillSettings() {
-	Settings = SettingsINI{}
+	//Settings = SettingsINI{}
 	Settings.DB_HOST = os.Getenv("DB_HOST")
 	Settings.DB_PORT = os.Getenv("DB_PORT")
 	Settings.DB_NAME = os.Getenv("DB_NAME")
