@@ -9,6 +9,7 @@ import (
 	"github.com/ManyakRus/starter/constants"
 	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/port_checker"
+	"github.com/ManyakRus/starter/postgres_pgtype"
 	"github.com/ManyakRus/starter/postgres_pgx"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -589,12 +590,44 @@ func ReplaceSchemaName(TextSQL, SchemaNameFrom string) string {
 	return Otvet
 }
 
+// AfterConnect_NoNull - регистрирует обработчики для нужных типов
+// чтобы NULL=default value
 func AfterConnect_NoNull(ctx context.Context, conn *pgx.Conn) error {
-	// Регистрируем zeronull обработчики для нужных типов
+	// Регистрируем обработчики для нужных типов,
+
+	//timestamptz
 	conn.TypeMap().RegisterType(&pgtype.Type{
 		Name:  "timestamptz",
 		OID:   pgtype.TimestamptzOID,
-		Codec: &postgres_pgx.TimestamptzCodec{},
+		Codec: &postgres_pgtype.TimestamptzCodec{},
+	})
+
+	//timestamp
+	conn.TypeMap().RegisterType(&pgtype.Type{
+		Name:  "timestamp",
+		OID:   pgtype.TimestampOID,
+		Codec: &postgres_pgtype.TimestampCodec{},
+	})
+
+	//timetz
+	conn.TypeMap().RegisterType(&pgtype.Type{
+		Name:  "timetz",
+		OID:   pgtype.TimetzOID,
+		Codec: &postgres_pgtype.TimeCodec{},
+	})
+
+	//time
+	conn.TypeMap().RegisterType(&pgtype.Type{
+		Name:  "time",
+		OID:   pgtype.TimeOID,
+		Codec: &postgres_pgtype.TimeCodec{},
+	})
+
+	//date
+	conn.TypeMap().RegisterType(&pgtype.Type{
+		Name:  "date",
+		OID:   pgtype.DateOID,
+		Codec: &postgres_pgtype.DateCodec{},
 	})
 
 	return nil

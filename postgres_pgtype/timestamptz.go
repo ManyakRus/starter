@@ -1,7 +1,7 @@
 // копия файла из https://github.com/jackc/pgtype/timestamptz.go
 // чтоб не выдавала ошибку на null
 // чтобы дата NULL = time.Time{}
-package postgres_pgx
+package postgres_pgtype
 
 import (
 	"database/sql/driver"
@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgtype"
-	"reflect"
 	"strings"
 	"time"
 )
@@ -246,10 +245,6 @@ func (c *TimestamptzCodec) PlanScan(m *pgtype.Map, oid uint32, format int16, tar
 	}
 
 	return nil
-}
-
-func getInterfaceName(v interface{}) string {
-	return reflect.TypeOf(v).String()
 }
 
 type scanPlanBinaryTimestamptzToTimestamptzScanner struct{ location *time.Location }
