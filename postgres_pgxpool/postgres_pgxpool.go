@@ -11,6 +11,7 @@ import (
 	"github.com/ManyakRus/starter/port_checker"
 	"github.com/ManyakRus/starter/postgres_pgx"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"strings"
 	"time"
@@ -45,6 +46,7 @@ type SettingsINI struct {
 	DB_SCHEMA   string
 	DB_USER     string
 	DB_PASSWORD string
+	NoNUll      bool
 }
 
 // TextConnBusy - текст ошибки "conn busy"
@@ -53,12 +55,36 @@ const TextConnBusy = "conn busy"
 // timeOutSeconds - время ожидания для Ping()
 const timeOutSeconds = 1
 
-// Connect_err - подключается к базе данных
+// Connect - подключается к базе данных
 func Connect() {
 
 	if Settings.DB_HOST == "" {
 		FillSettings()
 	}
+
+	port_checker.CheckPort(Settings.DB_HOST, Settings.DB_PORT)
+
+	err := Connect_err()
+	LogInfo_Connected(err)
+
+}
+
+// Connect_err - подключается к базе данных, возвращает ошибку
+func Connect_err() error {
+	var err error
+	err = Connect_WithApplicationName_err("")
+
+	return err
+}
+
+// Connect_NoNull - подключается к базе данных
+// запросы вместо null возвращают значение по умолчанию (пока только дата)
+func Connect_NoNull() {
+
+	if Settings.DB_HOST == "" {
+		FillSettings()
+	}
+	Settings.NoNUll = true
 
 	port_checker.CheckPort(Settings.DB_HOST, Settings.DB_PORT)
 
@@ -75,14 +101,6 @@ func LogInfo_Connected(err error) {
 		log.Info("POSTGRES pgxpool Connected. host: ", Settings.DB_HOST, ", base name: ", Settings.DB_NAME, ", schema: ", Settings.DB_SCHEMA)
 	}
 
-}
-
-// Connect_err - подключается к базе данных
-func Connect_err() error {
-	var err error
-	err = Connect_WithApplicationName_err("")
-
-	return err
 }
 
 // Connect_WithApplicationName - подключается к базе данных, с указанием имени приложения
@@ -113,6 +131,9 @@ func Connect_WithApplicationName_err(ApplicationName string) error {
 
 	//
 	config, err := pgxpool.ParseConfig(databaseUrl)
+	if Settings.NoNUll == true {
+		config.AfterConnect = AfterConnect_NoNull
+	}
 	//config.PreferSimpleProtocol = true //для мульти-запросов
 	PgxPool = nil
 	PgxPool, err = pgxpool.NewWithConfig(ctx, config)
@@ -309,6 +330,22 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	go ping_go()
 
 	return err
+}
+
+// Start_NoNull - делает соединение с БД, отключение и др.
+// запросы вместо null возвращают значение по умолчанию (пока только дата)
+func Start_NoNull(ApplicationName string) {
+	Settings.NoNUll = true
+
+	err := Connect_WithApplicationName_err(ApplicationName)
+	LogInfo_Connected(err)
+
+	stopapp.GetWaitGroup_Main().Add(1)
+	go WaitStop()
+
+	stopapp.GetWaitGroup_Main().Add(1)
+	go ping_go()
+
 }
 
 // Start - делает соединение с БД, отключение и др.
@@ -558,4 +595,15 @@ func ReplaceSchemaName(TextSQL, SchemaNameFrom string) string {
 	Otvet = strings.ReplaceAll(Otvet, SchemaNameFrom+".", Settings.DB_SCHEMA+".")
 
 	return Otvet
+}
+
+func AfterConnect_NoNull(ctx context.Context, conn *pgx.Conn) error {
+	// Регистрируем zeronull обработчики для нужных типов
+	conn.TypeMap().RegisterType(&pgtype.Type{
+		Name:  "timestamptz",
+		OID:   pgtype.TimestamptzOID,
+		Codec: &postgres_pgx.TimestamptzCodec{},
+	})
+
+	return nil
 }
