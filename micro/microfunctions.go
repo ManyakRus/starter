@@ -272,7 +272,9 @@ func ProgramDir_Common() string {
 		//Windows
 		substr = "\\temp\\"
 		pos1 = strings.Index(sdir, substr)
-		if pos1 >= 0 {
+		substr = "\\tmp\\"
+		pos2 := strings.Index(sdir, substr)
+		if pos1 >= 0 || pos2 >= 0 {
 			filename = CurrentFilename()
 			dir = filepath.Dir(filename)
 
