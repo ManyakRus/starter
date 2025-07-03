@@ -251,7 +251,8 @@ func (scanPlanBinaryDateToDateScanner) Scan(src []byte, dst any) error {
 	scanner := (dst).(pgtype.DateScanner)
 
 	if src == nil {
-		return scanner.ScanDate(pgtype.Date{})
+		return scanner.ScanDate(pgtype.Date{Valid: true})
+		//return scanner.ScanDate(pgtype.Date{})
 	}
 
 	if len(src) != 4 {
