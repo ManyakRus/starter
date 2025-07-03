@@ -206,7 +206,8 @@ func (scanPlanBinaryTimeToTextScanner) Scan(src []byte, dst any) error {
 	}
 
 	if src == nil {
-		return ts.ScanText(pgtype.Text{})
+		return ts.ScanText(pgtype.Text{Valid: true}) //sanek
+		//return ts.ScanText(pgtype.Text{})
 	}
 
 	if len(src) != 8 {
@@ -231,7 +232,8 @@ func (scanPlanTextAnyToTimeScanner) Scan(src []byte, dst any) error {
 	scanner := (dst).(pgtype.TimeScanner)
 
 	if src == nil {
-		return scanner.ScanTime(pgtype.Time{})
+		return scanner.ScanTime(pgtype.Time{Valid: true}) //sanek
+		//return scanner.ScanTime(pgtype.Time{})
 	}
 
 	s := string(src)

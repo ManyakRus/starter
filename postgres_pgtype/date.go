@@ -280,7 +280,8 @@ func (scanPlanTextAnyToDateScanner) Scan(src []byte, dst any) error {
 	scanner := (dst).(pgtype.DateScanner)
 
 	if src == nil {
-		return scanner.ScanDate(pgtype.Date{})
+		return scanner.ScanDate(pgtype.Date{Valid: true}) //sanek
+		//return scanner.ScanDate(pgtype.Date{})
 	}
 
 	sbuf := string(src)

@@ -289,7 +289,8 @@ func (plan *scanPlanTextTimestampToTimestampScanner) Scan(src []byte, dst any) e
 	scanner := (dst).(pgtype.TimestampScanner)
 
 	if src == nil {
-		return scanner.ScanTimestamp(pgtype.Timestamp{})
+		return scanner.ScanTimestamp(pgtype.Timestamp{Valid: true}) //sanek
+		//return scanner.ScanTimestamp(pgtype.Timestamp{})
 	}
 
 	var ts pgtype.Timestamp
