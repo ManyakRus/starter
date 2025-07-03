@@ -182,7 +182,8 @@ func (scanPlanBinaryIntervalToIntervalScanner) Scan(src []byte, dst any) error {
 	scanner := (dst).(IntervalScanner)
 
 	if src == nil {
-		return scanner.ScanInterval(Interval{})
+		return scanner.ScanInterval(Interval{Valid: true})
+		//return scanner.ScanInterval(Interval{})
 	}
 
 	if len(src) != 16 {

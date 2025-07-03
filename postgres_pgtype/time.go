@@ -167,7 +167,8 @@ func (scanPlanBinaryTimeToTimeScanner) Scan(src []byte, dst any) error {
 	scanner := (dst).(pgtype.TimeScanner)
 
 	if src == nil {
-		return scanner.ScanTime(pgtype.Time{})
+		return scanner.ScanTime(pgtype.Time{Valid: true})
+		//return scanner.ScanTime(pgtype.Time{})
 	}
 
 	if len(src) != 8 {

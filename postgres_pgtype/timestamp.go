@@ -253,7 +253,8 @@ func (plan *scanPlanBinaryTimestampToTimestampScanner) Scan(src []byte, dst any)
 	scanner := (dst).(pgtype.TimestampScanner)
 
 	if src == nil {
-		return scanner.ScanTimestamp(pgtype.Timestamp{})
+		return scanner.ScanTimestamp(pgtype.Timestamp{Valid: true})
+		//return scanner.ScanTimestamp(pgtype.Timestamp{})
 	}
 
 	if len(src) != 8 {
