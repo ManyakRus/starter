@@ -11,10 +11,10 @@ import (
 	"strconv"
 )
 
-//type TimeScanner interface {
-//	ScanTime(v Time) error
-//}
-//
+type TimeScanner interface {
+	ScanTime(v Time) error
+}
+
 //type TimeValuer interface {
 //	TimeValue() (Time, error)
 //}
@@ -167,8 +167,7 @@ func (scanPlanBinaryTimeToTimeScanner) Scan(src []byte, dst any) error {
 	scanner := (dst).(pgtype.TimeScanner)
 
 	if src == nil {
-		return scanner.ScanTime(pgtype.Time{Valid: true})
-		//return scanner.ScanTime(pgtype.Time{})
+		return scanner.ScanTime(pgtype.Time{Valid: true, Microseconds: -63082281600000000}) //sanek минус 2000 лет
 	}
 
 	if len(src) != 8 {
@@ -179,6 +178,24 @@ func (scanPlanBinaryTimeToTimeScanner) Scan(src []byte, dst any) error {
 
 	return scanner.ScanTime(pgtype.Time{Microseconds: usec, Valid: true})
 }
+
+//func (scanPlanBinaryTimeToTimeScanner) Scan(src []byte, dst any) error {
+//	scanner := (dst).(TimeScanner) //sanek
+//	//scanner := (dst).(pgtype.TimeScanner)
+//
+//	if src == nil {
+//		return scanner.ScanTime(Time{Valid: true})
+//		//return scanner.ScanTime(pgtype.Time{})
+//	}
+//
+//	if len(src) != 8 {
+//		return fmt.Errorf("invalid length for time: %v", len(src))
+//	}
+//
+//	usec := int64(binary.BigEndian.Uint64(src))
+//
+//	return scanner.ScanTime(Time{Microseconds: usec, Valid: true})
+//}
 
 type scanPlanBinaryTimeToTextScanner struct{}
 
