@@ -1906,3 +1906,129 @@ func GetStructValue(Struct1 any, FieldName string) (any, error) {
 	// Возвращаем значение поля как interface{}
 	return field.Interface(), nil
 }
+
+// String_DefaultNil - возвращает *string, если пустая строка то nil
+func String_DefaultNil(Value string) *string {
+	var Otvet *string
+
+	if Value != "" {
+		Otvet = &Value
+	}
+
+	return Otvet
+}
+
+// Int64_DefaultNil - возвращает *int64, если пустая строка то nil
+func Int64_DefaultNil(Value int64) *int64 {
+	var Otvet *int64
+
+	if Value != 0 {
+		Otvet = &Value
+	}
+
+	return Otvet
+}
+
+// Int_DefaultNil - возвращает *int, если значение 0 - возвращает nil
+func Int_DefaultNil(Value int) *int {
+	if Value == 0 {
+		return nil
+	}
+	return &Value
+}
+
+// Int8_DefaultNil - возвращает *int8, если значение 0 - возвращает nil
+func Int8_DefaultNil(Value int8) *int8 {
+	if Value == 0 {
+		return nil
+	}
+	return &Value
+}
+
+// Int16_DefaultNil - возвращает *int16, если значение 0 - возвращает nil
+func Int16_DefaultNil(Value int16) *int16 {
+	if Value == 0 {
+		return nil
+	}
+	return &Value
+}
+
+// Int32_DefaultNil - возвращает *int32, если значение 0 - возвращает nil
+func Int32_DefaultNil(Value int32) *int32 {
+	if Value == 0 {
+		return nil
+	}
+	return &Value
+}
+
+// Uint_DefaultNil - возвращает *uint, если значение 0 - возвращает nil
+func Uint_DefaultNil(Value uint) *uint {
+	if Value == 0 {
+		return nil
+	}
+	return &Value
+}
+
+// Uint8_DefaultNil - возвращает *uint8, если значение 0 - возвращает nil
+func Uint8_DefaultNil(Value uint8) *uint8 {
+	if Value == 0 {
+		return nil
+	}
+	return &Value
+}
+
+// Uint16_DefaultNil - возвращает *uint16, если значение 0 - возвращает nil
+func Uint16_DefaultNil(Value uint16) *uint16 {
+	if Value == 0 {
+		return nil
+	}
+	return &Value
+}
+
+// Uint32_DefaultNil - возвращает *uint32, если значение 0 - возвращает nil
+func Uint32_DefaultNil(Value uint32) *uint32 {
+	if Value == 0 {
+		return nil
+	}
+	return &Value
+}
+
+// Uint64_DefaultNil - возвращает *uint64, если значение 0 - возвращает nil
+func Uint64_DefaultNil(Value uint64) *uint64 {
+	if Value == 0 {
+		return nil
+	}
+	return &Value
+}
+
+// Float32_DefaultNil - возвращает *float32, если значение 0 - возвращает nil
+func Float32_DefaultNil(Value float32) *float32 {
+	if Value == 0 {
+		return nil
+	}
+	return &Value
+}
+
+// Float64_DefaultNil - возвращает *float64, если значение 0 - возвращает nil
+func Float64_DefaultNil(Value float64) *float64 {
+	if Value == 0 {
+		return nil
+	}
+	return &Value
+}
+
+// Bool_DefaultNil - возвращает *bool, если значение false - возвращает nil
+func Bool_DefaultNil(Value bool) *bool {
+	if !Value {
+		return nil
+	}
+	return &Value
+}
+
+// Time_DefaultNil - возвращает *time.Time, если значение IsZero() - возвращает nil
+func Time_DefaultNil(Value time.Time) *time.Time {
+	if Value.IsZero() {
+		return nil
+	}
+	return &Value
+}

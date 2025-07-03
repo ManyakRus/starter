@@ -1601,3 +1601,226 @@ func TestGetStructValue(t *testing.T) {
 		t.Errorf("Expected 'test', but got %s", Otvet)
 	}
 }
+
+func TestString_DefaultNil(t *testing.T) {
+	Otvet := String_DefaultNil("")
+	if Otvet != nil {
+		t.Errorf("Expected nil, but got %s", *Otvet)
+	}
+
+	Otvet = String_DefaultNil("test")
+	if Otvet == nil {
+		t.Errorf("Expected not nil, but got nil")
+	}
+}
+
+func TestInt_DefaultNil(t *testing.T) {
+	Otvet := Int_DefaultNil(0)
+	if Otvet != nil {
+		t.Errorf("Expected nil, but got %d", *Otvet)
+	}
+
+	Otvet = Int_DefaultNil(42)
+	if Otvet == nil {
+		t.Errorf("Expected not nil, but got nil")
+	}
+	if *Otvet != 42 {
+		t.Errorf("Expected 42, but got %d", *Otvet)
+	}
+}
+
+func TestInt8_DefaultNil(t *testing.T) {
+	Otvet := Int8_DefaultNil(0)
+	if Otvet != nil {
+		t.Errorf("Expected nil, but got %d", *Otvet)
+	}
+
+	Otvet = Int8_DefaultNil(42)
+	if Otvet == nil {
+		t.Errorf("Expected not nil, but got nil")
+	}
+	if *Otvet != 42 {
+		t.Errorf("Expected 42, but got %d", *Otvet)
+	}
+}
+
+func TestInt16_DefaultNil(t *testing.T) {
+	Otvet := Int16_DefaultNil(0)
+	if Otvet != nil {
+		t.Errorf("Expected nil, but got %d", *Otvet)
+	}
+
+	Otvet = Int16_DefaultNil(42)
+	if Otvet == nil {
+		t.Errorf("Expected not nil, but got nil")
+	}
+	if *Otvet != 42 {
+		t.Errorf("Expected 42, but got %d", *Otvet)
+	}
+}
+
+func TestInt32_DefaultNil(t *testing.T) {
+	Otvet := Int32_DefaultNil(0)
+	if Otvet != nil {
+		t.Errorf("Expected nil, but got %d", *Otvet)
+	}
+
+	Otvet = Int32_DefaultNil(42)
+	if Otvet == nil {
+		t.Errorf("Expected not nil, but got nil")
+	}
+	if *Otvet != 42 {
+		t.Errorf("Expected 42, but got %d", *Otvet)
+	}
+}
+
+func TestInt64_DefaultNil(t *testing.T) {
+	Otvet := Int64_DefaultNil(0)
+	if Otvet != nil {
+		t.Errorf("Expected nil, but got %d", *Otvet)
+	}
+
+	Otvet = Int64_DefaultNil(42)
+	if Otvet == nil {
+		t.Errorf("Expected not nil, but got nil")
+	}
+	if *Otvet != 42 {
+		t.Errorf("Expected 42, but got %d", *Otvet)
+	}
+}
+
+func TestUint_DefaultNil(t *testing.T) {
+	Otvet := Uint_DefaultNil(0)
+	if Otvet != nil {
+		t.Errorf("Expected nil, but got %d", *Otvet)
+	}
+
+	Otvet = Uint_DefaultNil(42)
+	if Otvet == nil {
+		t.Errorf("Expected not nil, but got nil")
+	}
+	if *Otvet != 42 {
+		t.Errorf("Expected 42, but got %d", *Otvet)
+	}
+}
+
+func TestUint8_DefaultNil(t *testing.T) {
+	Otvet := Uint8_DefaultNil(0)
+	if Otvet != nil {
+		t.Errorf("Expected nil, but got %d", *Otvet)
+	}
+
+	Otvet = Uint8_DefaultNil(42)
+	if Otvet == nil {
+		t.Errorf("Expected not nil, but got nil")
+	}
+	if *Otvet != 42 {
+		t.Errorf("Expected 42, but got %d", *Otvet)
+	}
+}
+
+func TestUint16_DefaultNil(t *testing.T) {
+	Otvet := Uint16_DefaultNil(0)
+	if Otvet != nil {
+		t.Errorf("Expected nil, but got %d", *Otvet)
+	}
+
+	Otvet = Uint16_DefaultNil(42)
+	if Otvet == nil {
+		t.Errorf("Expected not nil, but got nil")
+	}
+	if *Otvet != 42 {
+		t.Errorf("Expected 42, but got %d", *Otvet)
+	}
+}
+
+func TestUint32_DefaultNil(t *testing.T) {
+	Otvet := Uint32_DefaultNil(0)
+	if Otvet != nil {
+		t.Errorf("Expected nil, but got %d", *Otvet)
+	}
+
+	Otvet = Uint32_DefaultNil(42)
+	if Otvet == nil {
+		t.Errorf("Expected not nil, but got nil")
+	}
+	if *Otvet != 42 {
+		t.Errorf("Expected 42, but got %d", *Otvet)
+	}
+}
+
+func TestUint64_DefaultNil(t *testing.T) {
+	Otvet := Uint64_DefaultNil(0)
+	if Otvet != nil {
+		t.Errorf("Expected nil, but got %d", *Otvet)
+	}
+
+	Otvet = Uint64_DefaultNil(42)
+	if Otvet == nil {
+		t.Errorf("Expected not nil, but got nil")
+	}
+	if *Otvet != 42 {
+		t.Errorf("Expected 42, but got %d", *Otvet)
+	}
+}
+
+func TestFloat32_DefaultNil(t *testing.T) {
+	Otvet := Float32_DefaultNil(0)
+	if Otvet != nil {
+		t.Errorf("Expected nil, but got %f", *Otvet)
+	}
+
+	Otvet = Float32_DefaultNil(42.5)
+	if Otvet == nil {
+		t.Errorf("Expected not nil, but got nil")
+	}
+	if *Otvet != 42.5 {
+		t.Errorf("Expected 42.5, but got %f", *Otvet)
+	}
+}
+
+func TestFloat64_DefaultNil(t *testing.T) {
+	Otvet := Float64_DefaultNil(0)
+	if Otvet != nil {
+		t.Errorf("Expected nil, but got %f", *Otvet)
+	}
+
+	Otvet = Float64_DefaultNil(42.5)
+	if Otvet == nil {
+		t.Errorf("Expected not nil, but got nil")
+	}
+	if *Otvet != 42.5 {
+		t.Errorf("Expected 42.5, but got %f", *Otvet)
+	}
+}
+
+func TestBool_DefaultNil(t *testing.T) {
+	Otvet := Bool_DefaultNil(false)
+	if Otvet != nil {
+		t.Errorf("Expected nil, but got %t", *Otvet)
+	}
+
+	Otvet = Bool_DefaultNil(true)
+	if Otvet == nil {
+		t.Errorf("Expected not nil, but got nil")
+	}
+	if *Otvet != true {
+		t.Errorf("Expected true, but got %t", *Otvet)
+	}
+}
+
+func TestTime_DefaultNil(t *testing.T) {
+	Otvet := Time_DefaultNil(time.Time{})
+	if Otvet != nil {
+		t.Errorf("Expected nil, but got %v", *Otvet)
+	}
+
+	now := time.Now()
+	Otvet = Time_DefaultNil(now)
+	if Otvet == nil {
+		t.Errorf("Expected not nil, but got nil")
+	}
+	if !Otvet.Equal(now) {
+		t.Errorf("Expected %v, but got %v", now, *Otvet)
+	}
+}
