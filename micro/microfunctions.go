@@ -2065,7 +2065,7 @@ func FindPos(Text string, MassFind ...string) int {
 
 	for _, s1 := range MassFind {
 		pos1 := strings.Index(Text, s1)
-		if pos1 < PosMin {
+		if pos1 < PosMin && pos1 > 0 {
 			PosMin = pos1
 		}
 	}
