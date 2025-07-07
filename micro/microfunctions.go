@@ -2034,3 +2034,25 @@ func Time_DefaultNil(Value time.Time) *time.Time {
 	}
 	return &Value
 }
+
+// IsWindows - возвращает true если операционная система = windows
+func IsWindows() bool {
+	Otvet := false
+
+	if runtime.GOOS == "windows" {
+		Otvet = true
+	}
+
+	return Otvet
+}
+
+// Path_Linux_to_Windows - заменяет / на \, для правильных путей файлов
+func Path_Linux_to_Windows(s string) string {
+	Otvet := s
+
+	if IsWindows() == true {
+		Otvet = strings.ReplaceAll(Otvet, `/`, `\`)
+	}
+
+	return Otvet
+}

@@ -1824,3 +1824,14 @@ func TestTime_DefaultNil(t *testing.T) {
 		t.Errorf("Expected %v, but got %v", now, *Otvet)
 	}
 }
+
+func TestIsWindows(t *testing.T) {
+	Otvet := IsWindows()
+	t.Log("IsWindows(): ", Otvet)
+}
+
+func TestPath_Linux_to_Windows(t *testing.T) {
+	s := "test/1"
+	Otvet := Path_Linux_to_Windows(s)
+	t.Log("Path_Linux_to_Windows(): ", Otvet)
+}
