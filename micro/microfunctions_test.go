@@ -1843,3 +1843,12 @@ func TestFindPos(t *testing.T) {
 		t.Error("TestFindPos() error")
 	}
 }
+
+func TestReadFile_Linux_Windows(t *testing.T) {
+	dir := ProgramDir()
+	MassBytes, err := ReadFile_Linux_Windows(dir + ".env_empty")
+	if err != nil {
+		t.Error("ReadFile_Linux_Windows() error: ", err)
+	}
+	fmt.Print(MassBytes)
+}

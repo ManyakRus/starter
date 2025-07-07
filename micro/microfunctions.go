@@ -2076,3 +2076,14 @@ func FindPos(Text string, MassFind ...string) int {
 
 	return Otvet
 }
+
+// ReadFile_Linux_Windows - читаем файл и удаляет "\r"
+func ReadFile_Linux_Windows(Filename string) ([]byte, error) {
+	MassBytes, err := os.ReadFile(Filename)
+
+	if err == nil {
+		MassBytes = bytes.ReplaceAll(MassBytes, []byte("\r"), []byte(""))
+	}
+
+	return MassBytes, err
+}
