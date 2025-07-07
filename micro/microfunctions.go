@@ -2056,3 +2056,23 @@ func Path_Linux_to_Windows(s string) string {
 
 	return Otvet
 }
+
+// FindPos - находит наименьший индекс вхождения подстроки
+func FindPos(Text string, MassFind ...string) int {
+	Otvet := -1
+
+	PosMin := math.MaxInt
+
+	for _, s1 := range MassFind {
+		pos1 := strings.Index(Text, s1)
+		if pos1 < PosMin {
+			PosMin = pos1
+		}
+	}
+
+	if PosMin != math.MaxInt {
+		Otvet = PosMin
+	}
+
+	return Otvet
+}

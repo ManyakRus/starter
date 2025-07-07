@@ -1835,3 +1835,11 @@ func TestPath_Linux_to_Windows(t *testing.T) {
 	Otvet := Path_Linux_to_Windows(s)
 	t.Log("Path_Linux_to_Windows(): ", Otvet)
 }
+
+func TestFindPos(t *testing.T) {
+	s := "0132"
+	pos1 := FindPos(s, "2", "3")
+	if pos1 != 2 {
+		t.Error("TestFindPos() error")
+	}
+}
