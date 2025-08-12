@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ManyakRus/starter/log"
+	"github.com/dromara/carbon/v2"
 	"time"
 
 	"gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/object_model/entities/connections"
