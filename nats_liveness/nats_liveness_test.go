@@ -2,7 +2,6 @@ package nats_liveness
 
 import (
 	"github.com/ManyakRus/starter/config_main"
-	"github.com/ManyakRus/starter/constants"
 	"github.com/ManyakRus/starter/micro"
 	"testing"
 )
@@ -12,7 +11,7 @@ var SERVICE_NAME_TEST = "starter_test"
 func TestConnect(t *testing.T) {
 	config_main.LoadEnv()
 	FillSettings(SERVICE_NAME_TEST)
-	Connect(constants.SERVICE_NAME + "_test")
+	Connect(constants_starter.SERVICE_NAME + "_test")
 	CloseConnection()
 
 }
@@ -20,7 +19,7 @@ func TestConnect(t *testing.T) {
 func TestSendMessage(t *testing.T) {
 	config_main.LoadEnv()
 	FillSettings(SERVICE_NAME_TEST)
-	Connect(constants.SERVICE_NAME + "_test")
+	Connect(constants_starter.SERVICE_NAME + "_test")
 	SendMessage()
 
 }

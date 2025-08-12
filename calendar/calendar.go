@@ -2,7 +2,6 @@ package calendar
 
 import (
 	"fmt"
-	"github.com/ManyakRus/starter/constants"
 	"github.com/dromara/carbon/v2"
 	"time"
 )
@@ -85,7 +84,7 @@ func (d *HoursMinutesSeconds) UnmarshalString(str string) error {
 	}
 
 	// parse string
-	t, err := time.Parse(constants.LayoutTime, str)
+	t, err := time.Parse(constants_starter.LayoutTime, str)
 	if err != nil {
 		err = fmt.Errorf("invalid time string: %s, error: %w", str, err)
 		return err

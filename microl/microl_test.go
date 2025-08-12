@@ -1,7 +1,6 @@
 package microl
 
 import (
-	"github.com/ManyakRus/starter/constants"
 	"os"
 	"testing"
 	"time"
@@ -80,7 +79,7 @@ func TestSet_FieldFromEnv_Time(t *testing.T) {
 	}
 
 	sTime := "02.01.2000 00:00:00"
-	Time1, err := time.Parse(constants.LayoutDateTimeRus, sTime)
+	Time1, err := time.Parse(constants_starter.LayoutDateTimeRus, sTime)
 	if err != nil {
 		t.Error("TestSet_FieldFromEnv_Time() error")
 	}
@@ -103,7 +102,7 @@ func TestSet_FieldFromEnv_Date(t *testing.T) {
 	}
 
 	sTime := "02.01.2000"
-	Time1, err := time.Parse(constants.LayoutDateRus, sTime)
+	Time1, err := time.Parse(constants_starter.LayoutDateRus, sTime)
 	if err != nil {
 		t.Error("TestSet_FieldFromEnv_Date() error")
 	}

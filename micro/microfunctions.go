@@ -8,7 +8,7 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
-	"github.com/ManyakRus/starter/constants"
+	"github.com/ManyakRus/starter/constants_starter"
 	"github.com/dromara/carbon/v2"
 	"github.com/google/uuid"
 	"golang.org/x/exp/constraints"
@@ -36,7 +36,7 @@ import (
 
 func init() {
 	//время всегда московское (из константы)
-	carbon.SetLocation(constants.Loc)
+	carbon.SetLocation(constants_starter.Loc)
 }
 
 // IsTestApp - возвращает true если это тестовая среда выполнения приложения
@@ -1682,7 +1682,7 @@ func IsTrueString(s string) bool {
 
 // DateTimeFromString_rus - возвращает дату из строки, из формата "02.01.2006 15:04:05"
 func DateTimeFromString_rus(s string) (time.Time, error) {
-	t, err := time.ParseInLocation(constants.LayoutDateTimeRus, s, constants.Loc)
+	t, err := time.ParseInLocation(constants_starter.LayoutDateTimeRus, s, constants_starter.Loc)
 	return t, err
 }
 
@@ -1695,7 +1695,7 @@ func DateFromString_rus(s string) (time.Time, error) {
 	}
 
 	//
-	t, err := time.ParseInLocation(constants.LayoutDateRus, s, constants.Loc)
+	t, err := time.ParseInLocation(constants_starter.LayoutDateRus, s, constants_starter.Loc)
 	return t, err
 }
 

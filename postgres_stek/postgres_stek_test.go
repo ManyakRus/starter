@@ -2,7 +2,6 @@ package postgres_stek
 
 import (
 	"errors"
-	"github.com/ManyakRus/starter/constants"
 	"gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/db/tables/table_connections"
 	"gitlab.aescorp.ru/dsp_dev/claim/sync_service/pkg/object_model/entities/connections"
 	"testing"
@@ -18,7 +17,7 @@ import (
 )
 
 // CONNECTION - объект Соединение, настроенный
-var CONNECTION = connections.Connection{Table_Connection: table_connections.Table_Connection{ID: constants.CONNECTION_ID, BranchID: constants.BRANCH_ID, IsLegal: true, Server: "10.1.9.153", Port: "5432", DbName: "kol_atom_ul_uni", DbScheme: "stack", Login: "", Password: ""}}
+var CONNECTION = connections.Connection{Table_Connection: table_connections.Table_Connection{ID: constants_starter.CONNECTION_ID, BranchID: constants_starter.BRANCH_ID, IsLegal: true, Server: "10.1.9.153", Port: "5432", DbName: "kol_atom_ul_uni", DbScheme: "stack", Login: "", Password: ""}}
 
 func TestConnect_err(t *testing.T) {
 	//Connect_Panic()

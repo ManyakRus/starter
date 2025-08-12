@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/ManyakRus/starter/constants"
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -1503,8 +1502,8 @@ func TestDateFromToToday_rus(t *testing.T) {
 }
 
 func TestStringDatePeriod_rus(t *testing.T) {
-	Date1 := time.Date(2025, 04, 01, 0, 0, 0, 0, constants.Loc)
-	Date2 := time.Date(2025, 04, 23, 0, 0, 0, 0, constants.Loc)
+	Date1 := time.Date(2025, 04, 01, 0, 0, 0, 0, constants_starter.Loc)
+	Date2 := time.Date(2025, 04, 23, 0, 0, 0, 0, constants_starter.Loc)
 	Otvet := StringDatePeriod_rus(Date1, Date2)
 	if Otvet == "" {
 		t.Errorf("error: Expected not empty string, but got %s", Otvet)
@@ -1512,8 +1511,8 @@ func TestStringDatePeriod_rus(t *testing.T) {
 }
 
 func TestStringDateSPo_rus(t *testing.T) {
-	Date1 := time.Date(2025, 04, 01, 0, 0, 0, 0, constants.Loc)
-	Date2 := time.Date(2025, 04, 23, 0, 0, 0, 0, constants.Loc)
+	Date1 := time.Date(2025, 04, 01, 0, 0, 0, 0, constants_starter.Loc)
+	Date2 := time.Date(2025, 04, 23, 0, 0, 0, 0, constants_starter.Loc)
 	Otvet := StringDateSPo_rus(Date1, Date2)
 	if Otvet == "" {
 		t.Errorf("error: Expected not empty string, but got %s", Otvet)

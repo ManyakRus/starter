@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/ManyakRus/starter/constants"
 	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/port_checker"
 	"github.com/ManyakRus/starter/postgres_pgtype"
@@ -149,7 +148,7 @@ func GetConnectionString(ApplicationName string) string {
 	dsn += "user=" + Settings.DB_USER + " "
 	dsn += "password=" + Settings.DB_PASSWORD + " "
 	dsn += "dbname=" + Settings.DB_NAME + " "
-	dsn += "port=" + Settings.DB_PORT + " sslmode=disable TimeZone=" + constants.TIME_ZONE + " "
+	dsn += "port=" + Settings.DB_PORT + " sslmode=disable TimeZone=" + constants_starter.TIME_ZONE + " "
 	dsn += "application_name=" + ApplicationName + " "
 	dsn += "search_path=" + Settings.DB_SCHEMA + " "
 

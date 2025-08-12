@@ -1,5 +1,5 @@
 // модуль для хранения постоянных переменных, констант
-package constants
+package constants_starter
 
 import (
 	"time"

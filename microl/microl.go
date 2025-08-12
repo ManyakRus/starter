@@ -4,7 +4,6 @@ package microl
 
 import (
 	"fmt"
-	"github.com/ManyakRus/starter/constants"
 	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/micro"
 	"os"
@@ -127,7 +126,7 @@ func Set_FieldFromEnv_Int32(StructReference any, FieldName string, IsRequired bo
 func Set_FieldFromEnv_Time(StructReference any, FieldName string, IsRequired bool) {
 	sValue := Getenv(FieldName, IsRequired)
 
-	Value, err := time.Parse(constants.LayoutDateTimeRus, sValue)
+	Value, err := time.Parse(constants_starter.LayoutDateTimeRus, sValue)
 	if err != nil {
 		err = fmt.Errorf("time.Parse() FieldName: %s error: %w", FieldName, err)
 		log.Error(err)
@@ -151,7 +150,7 @@ func Set_FieldFromEnv_Time(StructReference any, FieldName string, IsRequired boo
 func Set_FieldFromEnv_Date(StructReference any, FieldName string, IsRequired bool) {
 	sValue := Getenv(FieldName, IsRequired)
 
-	Value, err := time.Parse(constants.LayoutDateRus, sValue)
+	Value, err := time.Parse(constants_starter.LayoutDateRus, sValue)
 	if err != nil {
 		err = fmt.Errorf("time.Parse() FieldName: %s error: %w", FieldName, err)
 		log.Error(err)
