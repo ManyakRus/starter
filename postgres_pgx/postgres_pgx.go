@@ -24,6 +24,7 @@ import (
 	//_ "github.com/lib/pq"
 	//log "github.com/sirupsen/logrus"
 
+	"github.com/ManyakRus/starter/constants_starter"
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/micro"
 	"github.com/ManyakRus/starter/stopapp"
