@@ -35,3 +35,23 @@ func TestReplaceSchemaName(t *testing.T) {
 		t.Error("postgres_func_test.TestReplaceSchemaName() error")
 	}
 }
+
+func TestNullTime_DefaultNull(t *testing.T) {
+
+	//дата
+	Date1 := time.Date(2023, 1, 1, 0, 0, 0, 0, time.Local)
+	Otvet1 := NullTime_DefaultNull(Date1)
+	if Otvet1.Time != Date1 || Otvet1.Valid == false {
+		t.Error("postgres_func_test.TestNullTime_DefaultNull() error")
+	}
+
+	//дата alias
+	type DateAlias = time.Time
+	Date2 := time.Date(2023, 1, 1, 0, 0, 0, 0, time.Local)
+	DateAlias2 := DateAlias(Date2)
+	Otvet2 := NullTime_DefaultNull(DateAlias2)
+	if Otvet2.Time != Date1 || Otvet2.Valid == false {
+		t.Error("postgres_func_test.TestNullTime_DefaultNull() error")
+	}
+
+}

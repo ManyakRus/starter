@@ -37,9 +37,9 @@ func ReplaceSchemaName(TextSQL, SchemaNameFrom, SchemaNameTo string) string {
 }
 
 // NullString_DefaultNull - преобразует строку в sql.NullString, если она пустая то Valid = false
-func NullString_DefaultNull(s string) sql.NullString {
+func NullString_DefaultNull[T ~string](s T) sql.NullString {
 	Otvet := sql.NullString{}
-	Otvet.String = s
+	Otvet.String = string(s)
 	Otvet.Valid = true
 
 	if s == "" {
@@ -49,9 +49,9 @@ func NullString_DefaultNull(s string) sql.NullString {
 }
 
 // NullInt64_DefaultNull - преобразует значение в sql.NullInt64, если пусто то Valid = false
-func NullInt64_DefaultNull(Value int64) sql.NullInt64 {
+func NullInt64_DefaultNull[T ~int64](Value T) sql.NullInt64 {
 	Otvet := sql.NullInt64{}
-	Otvet.Int64 = Value
+	Otvet.Int64 = int64(Value)
 	Otvet.Valid = true
 
 	if Value == 0 {
@@ -62,9 +62,9 @@ func NullInt64_DefaultNull(Value int64) sql.NullInt64 {
 }
 
 // NullInt32_DefaultNull - преобразует значение в sql.NullInt32, если пусто то Valid = false
-func NullInt32_DefaultNull(Value int32) sql.NullInt32 {
+func NullInt32_DefaultNull[T ~int32](Value T) sql.NullInt32 {
 	Otvet := sql.NullInt32{}
-	Otvet.Int32 = Value
+	Otvet.Int32 = int32(Value)
 	Otvet.Valid = true
 
 	if Value == 0 {
@@ -75,9 +75,9 @@ func NullInt32_DefaultNull(Value int32) sql.NullInt32 {
 }
 
 // NullInt16_DefaultNull - преобразует значение в sql.NullInt16, если пусто то Valid = false
-func NullInt16_DefaultNull(Value int16) sql.NullInt16 {
+func NullInt16_DefaultNull[T ~int16](Value T) sql.NullInt16 {
 	Otvet := sql.NullInt16{}
-	Otvet.Int16 = Value
+	Otvet.Int16 = int16(Value)
 	Otvet.Valid = true
 
 	if Value == 0 {
@@ -88,22 +88,36 @@ func NullInt16_DefaultNull(Value int16) sql.NullInt16 {
 }
 
 // NullTime_DefaultNull - преобразует значение в sql.NullTime, если пусто то Valid = false
-func NullTime_DefaultNull(Value time.Time) sql.NullTime {
+func NullTime_DefaultNull[T time.Time | int64](Value T) sql.NullTime {
 	Otvet := sql.NullTime{}
-	Otvet.Time = Value
-	Otvet.Valid = true
 
-	if Value.IsZero() == true {
-		Otvet.Valid = false
+	switch any(Value).(type) {
+	case time.Time:
+		v := any(Value).(time.Time)
+		Otvet.Time = v
+		Otvet.Valid = true
+
+		if v.IsZero() == true {
+			Otvet.Valid = false
+		}
+	case int64:
+		v := any(Value).(int64)
+		Time1 := time.Unix(v, 0)
+		Otvet.Time = Time1
+		Otvet.Valid = true
+
+		if Time1.IsZero() == true {
+			Otvet.Valid = false
+		}
 	}
 
 	return Otvet
 }
 
 // NullByte_DefaultNull - преобразует значение в sql.NullByte, если пусто то Valid = false
-func NullByte_DefaultNull(Value byte) sql.NullByte {
+func NullByte_DefaultNull[T ~byte](Value T) sql.NullByte {
 	Otvet := sql.NullByte{}
-	Otvet.Byte = Value
+	Otvet.Byte = byte(Value)
 	Otvet.Valid = true
 
 	if Value == 0 {
@@ -114,9 +128,9 @@ func NullByte_DefaultNull(Value byte) sql.NullByte {
 }
 
 // NullFloat64_DefaultNull - преобразует значение в sql.NullFloat64, если пусто то Valid = false
-func NullFloat64_DefaultNull(Value float64) sql.NullFloat64 {
+func NullFloat64_DefaultNull[T ~float64](Value T) sql.NullFloat64 {
 	Otvet := sql.NullFloat64{}
-	Otvet.Float64 = Value
+	Otvet.Float64 = float64(Value)
 	Otvet.Valid = true
 
 	if Value == 0 {
@@ -127,7 +141,7 @@ func NullFloat64_DefaultNull(Value float64) sql.NullFloat64 {
 }
 
 // NullFloat32_DefaultNull - преобразует значение в sql.NullFloat64, если пусто то Valid = false
-func NullFloat32_DefaultNull(Value float32) sql.NullFloat64 {
+func NullFloat32_DefaultNull[T ~float32](Value T) sql.NullFloat64 {
 	Otvet := sql.NullFloat64{}
 	Otvet.Float64 = float64(Value)
 	Otvet.Valid = true
@@ -140,9 +154,9 @@ func NullFloat32_DefaultNull(Value float32) sql.NullFloat64 {
 }
 
 // NullBool_DefaultNull - преобразует значение в sql.NullBool, если пусто то Valid = false
-func NullBool_DefaultNull(Value bool) sql.NullBool {
+func NullBool_DefaultNull[T ~bool](Value T) sql.NullBool {
 	Otvet := sql.NullBool{}
-	Otvet.Bool = Value
+	Otvet.Bool = bool(Value)
 	Otvet.Valid = true
 
 	if Value == false {
