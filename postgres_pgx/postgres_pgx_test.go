@@ -187,3 +187,51 @@ SELECT * FROM temp_TestRawMultipleSQL2
 	}
 
 }
+
+func TestReplaceSchema(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		schema   string
+		expected string
+	}{
+		{
+			name:     "No schema",
+			input:    "SELECT * FROM public.users",
+			schema:   "",
+			expected: "SELECT * FROM public.users",
+		},
+		{
+			name:     "Schema with tabs and newlines",
+			input:    "\tSELECT * FROM public.users\n",
+			schema:   "myschema",
+			expected: "\tSELECT * FROM myschema.users\n",
+		},
+		{
+			name:     "Schema with spaces",
+			input:    "SELECT * FROM public.users ",
+			schema:   "myschema",
+			expected: "SELECT * FROM myschema.users ",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			Settings.DB_SCHEMA = tt.schema
+			got := ReplaceSchema(tt.input)
+			if got != tt.expected {
+				t.Errorf("ReplaceSchema() = %v, expected %v", got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestReplaceSchemaName(t *testing.T) {
+	TextSQL := "SELECT * FROM public.users"
+	Settings.DB_SCHEMA = "myschema"
+	ExpectedSQL := "SELECT * FROM myschema.users"
+	ActualSQL := ReplaceSchemaName(TextSQL, "public")
+	if ActualSQL != ExpectedSQL {
+		t.Errorf("Expected %v, but got %v", ExpectedSQL, ActualSQL)
+	}
+}

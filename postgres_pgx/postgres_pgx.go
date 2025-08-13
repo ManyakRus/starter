@@ -61,6 +61,25 @@ const TextConnBusy = "conn busy"
 // timeOutSeconds - время ожидания для Ping()
 const timeOutSeconds = 60
 
+// IConnectionTransaction - интерфейс для работы с базой данных
+// объединяет в себе функции pgx.Conn, pgxpool.Pool и pgx.Tx
+// чтобы передавать в функцию любой их них
+type IConnectionTransaction interface {
+	// Transaction management
+	Begin(ctx context.Context) (pgx.Tx, error)
+
+	// Query execution
+	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+
+	// Batch operations
+	SendBatch(ctx context.Context, b *pgx.Batch) pgx.BatchResults
+
+	// Bulk copy operations
+	CopyFrom(ctx context.Context, tableName pgx.Identifier, columnNames []string, rowSrc pgx.CopyFromSource) (int64, error)
+}
+
 // Connect_err - подключается к базе данных
 func Connect() {
 
@@ -542,21 +561,26 @@ func Ping_err(ctxMain context.Context) error {
 	return err
 }
 
-// IConnectionTransaction - интерфейс для работы с базой данных
-// объединяет в себе функции pgx.Conn, pgxpool.Pool и pgx.Tx
-// чтобы передавать в функцию любой их них
-type IConnectionTransaction interface {
-	// Transaction management
-	Begin(ctx context.Context) (pgx.Tx, error)
+// ReplaceSchema - заменяет "public." на Settings.DB_SCHEMA
+func ReplaceSchema(TextSQL string) string {
+	Otvet := TextSQL
 
-	// Query execution
-	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
-	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
-	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+	if Settings.DB_SCHEMA == "" {
+		return Otvet
+	}
 
-	// Batch operations
-	SendBatch(ctx context.Context, b *pgx.Batch) pgx.BatchResults
+	Otvet = strings.ReplaceAll(Otvet, "\tpublic.", "\t"+Settings.DB_SCHEMA+".")
+	Otvet = strings.ReplaceAll(Otvet, "\npublic.", "\n"+Settings.DB_SCHEMA+".")
+	Otvet = strings.ReplaceAll(Otvet, " public.", " "+Settings.DB_SCHEMA+".")
 
-	// Bulk copy operations
-	CopyFrom(ctx context.Context, tableName pgx.Identifier, columnNames []string, rowSrc pgx.CopyFromSource) (int64, error)
+	return Otvet
+}
+
+// ReplaceSchemaName - заменяет имя схемы в тексте SQL
+func ReplaceSchemaName(TextSQL, SchemaNameFrom string) string {
+	Otvet := TextSQL
+
+	Otvet = strings.ReplaceAll(Otvet, SchemaNameFrom+".", Settings.DB_SCHEMA+".")
+
+	return Otvet
 }
