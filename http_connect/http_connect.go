@@ -1,20 +1,28 @@
 package http_connect
 
+import (
+	"crypto/tls"
+	"github.com/ManyakRus/starter/log"
+	"io"
+	"net"
+	"net/http"
+	"time"
+)
+
+// Client - клиент для http
+var Client *http.Client
+
 // Authentication - ненужная
 // функция для аутентификации
-func Authentication() error {
+func Authentication(URL, login, password string) error {
 	var err error
-
-	URL := config.Settings.LOKI_URL + config.Settings.LOKI_API_PATH //+ "/login"
-
-	//client := http.Client{Timeout: 60 * time.Second}
 
 	req, err := http.NewRequest(http.MethodGet, URL, http.NoBody)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	req.SetBasicAuth(config.Settings.LOKI_LOGIN, config.Settings.LOKI_PASSWORD)
+	req.SetBasicAuth(login, password)
 
 	res, err := Client.Do(req)
 	if err != nil {
