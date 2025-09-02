@@ -2101,3 +2101,17 @@ func IsTimeBefore(TimeForCheck, TimeFrom time.Time) bool {
 	fromTime := TimeFrom.Hour()*3600 + TimeFrom.Minute()*60 + TimeFrom.Second()
 	return checkTime < fromTime
 }
+
+// IsTimeNowAfter проверяет, что время сейчас > TimeFrom (только время, без даты)
+func IsTimeNowAfter(TimeFrom time.Time) bool {
+	TimeForCheck := time.Now()
+	Otvet := IsTimeAfter(TimeForCheck, TimeFrom)
+	return Otvet
+}
+
+// IsTimeNowBefore проверяет, что время сейчас < TimeFrom (только время, без даты)
+func IsTimeNowBefore(TimeFrom time.Time) bool {
+	TimeForCheck := time.Now()
+	Otvet := IsTimeBefore(TimeForCheck, TimeFrom)
+	return Otvet
+}
