@@ -2087,3 +2087,17 @@ func ReadFile_Linux_Windows(Filename string) ([]byte, error) {
 
 	return MassBytes, err
 }
+
+// IsTimeAfter проверяет, что TimeForCheck > TimeFrom (только время, без даты)
+func IsTimeAfter(TimeForCheck, TimeFrom time.Time) bool {
+	checkTime := TimeForCheck.Hour()*3600 + TimeForCheck.Minute()*60 + TimeForCheck.Second()
+	fromTime := TimeFrom.Hour()*3600 + TimeFrom.Minute()*60 + TimeFrom.Second()
+	return checkTime > fromTime
+}
+
+// IsTimeBefore проверяет, что TimeForCheck < TimeFrom (только время, без даты)
+func IsTimeBefore(TimeForCheck, TimeFrom time.Time) bool {
+	checkTime := TimeForCheck.Hour()*3600 + TimeForCheck.Minute()*60 + TimeForCheck.Second()
+	fromTime := TimeFrom.Hour()*3600 + TimeFrom.Minute()*60 + TimeFrom.Second()
+	return checkTime < fromTime
+}

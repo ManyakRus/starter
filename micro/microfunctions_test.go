@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/ManyakRus/starter/constants_starter"
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -1850,4 +1851,181 @@ func TestReadFile_Linux_Windows(t *testing.T) {
 		t.Error("ReadFile_Linux_Windows() error: ", err)
 	}
 	fmt.Print(MassBytes)
+}
+
+func TestIsTimeAfter(t *testing.T) {
+	// Фиксированная дата для создания времени (дата игнорируется)
+	baseDate := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name     string
+		check    time.Time
+		from     time.Time
+		expected bool
+	}{
+		{
+			name:     "same time",
+			check:    baseDate.Add(10 * time.Hour).Add(30 * time.Minute),
+			from:     baseDate.Add(10 * time.Hour).Add(30 * time.Minute),
+			expected: false,
+		},
+		{
+			name:     "check later by hours",
+			check:    baseDate.Add(15 * time.Hour),
+			from:     baseDate.Add(10 * time.Hour),
+			expected: true,
+		},
+		{
+			name:     "check earlier by hours",
+			check:    baseDate.Add(8 * time.Hour),
+			from:     baseDate.Add(12 * time.Hour),
+			expected: false,
+		},
+		{
+			name:     "check later by minutes",
+			check:    baseDate.Add(10 * time.Hour).Add(45 * time.Minute),
+			from:     baseDate.Add(10 * time.Hour).Add(30 * time.Minute),
+			expected: true,
+		},
+		{
+			name:     "check earlier by minutes",
+			check:    baseDate.Add(10 * time.Hour).Add(15 * time.Minute),
+			from:     baseDate.Add(10 * time.Hour).Add(30 * time.Minute),
+			expected: false,
+		},
+		{
+			name:     "check later by seconds",
+			check:    baseDate.Add(10 * time.Hour).Add(30 * time.Minute).Add(45 * time.Second),
+			from:     baseDate.Add(10 * time.Hour).Add(30 * time.Minute).Add(30 * time.Second),
+			expected: true,
+		},
+		{
+			name:     "check earlier by seconds",
+			check:    baseDate.Add(10 * time.Hour).Add(30 * time.Minute).Add(15 * time.Second),
+			from:     baseDate.Add(10 * time.Hour).Add(30 * time.Minute).Add(30 * time.Second),
+			expected: false,
+		},
+		{
+			name:     "different dates, same time",
+			check:    time.Date(2023, 12, 31, 14, 30, 0, 0, time.UTC),
+			from:     time.Date(2023, 1, 1, 14, 30, 0, 0, time.UTC),
+			expected: false,
+		},
+		{
+			name:     "different dates, check later time",
+			check:    time.Date(2023, 1, 1, 18, 0, 0, 0, time.UTC),
+			from:     time.Date(2023, 12, 31, 9, 0, 0, 0, time.UTC),
+			expected: true,
+		},
+		{
+			name:     "midnight boundary - check just after midnight",
+			check:    baseDate.Add(1 * time.Minute),
+			from:     baseDate.Add(23 * time.Hour).Add(59 * time.Minute),
+			expected: false, // 00:01 > 23:59
+		},
+		{
+			name:     "midnight boundary - check just before midnight",
+			check:    baseDate.Add(23 * time.Hour).Add(58 * time.Minute),
+			from:     baseDate.Add(1 * time.Minute),
+			expected: true, // 23:58 > 00:01
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := IsTimeAfter(tt.check, tt.from)
+			if result != tt.expected {
+				t.Errorf("IsTimeAfter(%v, %v) = %v, expected %v",
+					tt.check.Format("15:04:05"), tt.from.Format("15:04:05"), result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestIsTimeBefore(t *testing.T) {
+	baseDate := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name     string
+		check    time.Time
+		from     time.Time
+		expected bool
+	}{
+		{
+			name:     "same time",
+			check:    baseDate.Add(10 * time.Hour).Add(30 * time.Minute),
+			from:     baseDate.Add(10 * time.Hour).Add(30 * time.Minute),
+			expected: false,
+		},
+		{
+			name:     "check earlier by hours",
+			check:    baseDate.Add(8 * time.Hour),
+			from:     baseDate.Add(12 * time.Hour),
+			expected: true,
+		},
+		{
+			name:     "check later by hours",
+			check:    baseDate.Add(15 * time.Hour),
+			from:     baseDate.Add(10 * time.Hour),
+			expected: false,
+		},
+		{
+			name:     "check earlier by minutes",
+			check:    baseDate.Add(10 * time.Hour).Add(15 * time.Minute),
+			from:     baseDate.Add(10 * time.Hour).Add(30 * time.Minute),
+			expected: true,
+		},
+		{
+			name:     "check later by minutes",
+			check:    baseDate.Add(10 * time.Hour).Add(45 * time.Minute),
+			from:     baseDate.Add(10 * time.Hour).Add(30 * time.Minute),
+			expected: false,
+		},
+		{
+			name:     "check earlier by seconds",
+			check:    baseDate.Add(10 * time.Hour).Add(30 * time.Minute).Add(15 * time.Second),
+			from:     baseDate.Add(10 * time.Hour).Add(30 * time.Minute).Add(30 * time.Second),
+			expected: true,
+		},
+		{
+			name:     "check later by seconds",
+			check:    baseDate.Add(10 * time.Hour).Add(30 * time.Minute).Add(45 * time.Second),
+			from:     baseDate.Add(10 * time.Hour).Add(30 * time.Minute).Add(30 * time.Second),
+			expected: false,
+		},
+		{
+			name:     "different dates, same time",
+			check:    time.Date(2023, 12, 31, 14, 30, 0, 0, time.UTC),
+			from:     time.Date(2023, 1, 1, 14, 30, 0, 0, time.UTC),
+			expected: false,
+		},
+		{
+			name:     "different dates, check earlier time",
+			check:    time.Date(2023, 12, 31, 9, 0, 0, 0, time.UTC),
+			from:     time.Date(2023, 1, 1, 18, 0, 0, 0, time.UTC),
+			expected: true,
+		},
+		{
+			name:     "midnight boundary - check just before midnight",
+			check:    baseDate.Add(23 * time.Hour).Add(58 * time.Minute),
+			from:     baseDate.Add(1 * time.Minute),
+			expected: false, // 23:58 < 00:01
+		},
+		{
+			name:     "midnight boundary - check just after midnight",
+			check:    baseDate.Add(1 * time.Minute),
+			from:     baseDate.Add(23 * time.Hour).Add(59 * time.Minute),
+			expected: true, // 00:01 < 23:59
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := IsTimeBefore(tt.check, tt.from)
+			if result != tt.expected {
+				t.Errorf("IsTimeBefore(%v, %v) = %v, expected %v",
+					tt.check.Format("15:04:05"), tt.from.Format("15:04:05"), result, tt.expected)
+			}
+		})
+	}
 }
