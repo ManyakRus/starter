@@ -2029,3 +2029,117 @@ func TestIsTimeBefore(t *testing.T) {
 		})
 	}
 }
+
+func TestStringFromFloat64_DimensionFrom2To5(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    float64
+		expected string
+	}{
+		// Тест с целым числом
+		{
+			name:     "целое число",
+			input:    42.0,
+			expected: "42.00",
+		},
+
+		// Тесты с минимальным количеством знаков (2)
+		{
+			name:     "ровно 2 знака",
+			input:    3.14,
+			expected: "3.14",
+		},
+		{
+			name:     "2 знака с нулями",
+			input:    7.00,
+			expected: "7.00",
+		},
+
+		// Тесты с промежуточным количеством знаков
+		{
+			name:     "3 знака",
+			input:    2.718,
+			expected: "2.718",
+		},
+		{
+			name:     "4 знака",
+			input:    1.2345,
+			expected: "1.2345",
+		},
+
+		// Тесты с максимальным количеством знаков (5)
+		{
+			name:     "ровно 5 знаков",
+			input:    0.12345,
+			expected: "0.12345",
+		},
+		{
+			name:     "5 знаков с нулем в конце",
+			input:    9.87650,
+			expected: "9.8765",
+		},
+
+		// Тесты с обрезанием нулей
+		{
+			name:     "обрезание лишних нулей после 2 знаков",
+			input:    5.100000,
+			expected: "5.10",
+		},
+		{
+			name:     "обрезание лишних нулей после 3 знаков",
+			input:    6.123000,
+			expected: "6.123",
+		},
+		{
+			name:     "обрезание до 5 знаков при наличии ненулевых",
+			input:    1.23456789,
+			expected: "1.23457",
+		},
+
+		// Тесты с отрицательными числами
+		{
+			name:     "отрицательное число с 2 знаками",
+			input:    -15.75,
+			expected: "-15.75",
+		},
+		{
+			name:     "отрицательное число с обрезанием",
+			input:    -9.999999,
+			expected: "-10.00", // Особый случай округления
+		},
+
+		// Граничные случаи
+		{
+			name:     "ноль",
+			input:    0.0,
+			expected: "0.00",
+		},
+		{
+			name:     "очень маленькое число",
+			input:    0.0000123456789,
+			expected: "0.00001",
+		},
+		{
+			name:     "большое число с дробной частью",
+			input:    123456.789,
+			expected: "123456.789",
+		},
+
+		// Тест с числами, где округление может создавать интересные случаи
+		{
+			name:     "число с округлением до 5 знаков",
+			input:    0.999999,
+			expected: "1.00", // Округление до 1.00000
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := StringFromFloat64_DimensionFrom2To5(tt.input)
+			if result != tt.expected {
+				t.Errorf("StringFromFloat64_DimensionFrom2To5(%v) = %v, ожидалось %v",
+					tt.input, result, tt.expected)
+			}
+		})
+	}
+}

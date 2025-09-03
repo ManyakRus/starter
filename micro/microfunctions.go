@@ -1047,6 +1047,51 @@ func StringFromFloat32_Dimension(f float32, Dimension int) string {
 	return Otvet
 }
 
+// StringFromFloat64_DimensionFrom2To5 - форматирования float64 в строку
+// чтоб там было после запятой:
+// 1) не менее 2 знака
+// 2) не более 5 знаков если они не 0
+func StringFromFloat64_DimensionFrom2To5(f float64) string {
+	// Форматируем с 5 знаками после запятой
+	str := fmt.Sprintf("%.5f", f)
+
+	// Разделяем целую и дробную части
+	parts := strings.Split(str, ".")
+	if len(parts) != 2 {
+		return str
+	}
+
+	integerPart := parts[0]
+	fractionalPart := parts[1]
+
+	// Убираем лишние нули в конце, но оставляем минимум 2 знака
+	// Находим позицию последнего ненулевого символа
+	lastNonZero := -1
+	for i := len(fractionalPart) - 1; i >= 0; i-- {
+		if fractionalPart[i] != '0' {
+			lastNonZero = i
+			break
+		}
+	}
+
+	// Определяем сколько знаков оставить
+	digitsToKeep := 2 // минимум 2 знака
+	if lastNonZero >= 0 {
+		digitsToKeep = max(digitsToKeep, lastNonZero+1)
+	}
+
+	// Ограничиваем максимум 5 знаками
+	digitsToKeep = min(digitsToKeep, 5)
+
+	// Формируем результат
+	result := integerPart
+	if digitsToKeep > 0 {
+		result += "." + fractionalPart[:digitsToKeep]
+	}
+
+	return result
+}
+
 // ShowTimePassed - показывает время прошедшее с момента старта
 // запускать:
 // defer micro.ShowTimePassed(time.Now())
