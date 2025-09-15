@@ -5,6 +5,7 @@ package micro
 import (
 	"bytes"
 	"context"
+	"encoding/csv"
 	"encoding/gob"
 	"errors"
 	"fmt"
@@ -2159,4 +2160,39 @@ func IsTimeNowBefore(TimeFrom time.Time) bool {
 	TimeForCheck := time.Now()
 	Otvet := IsTimeBefore(TimeForCheck, TimeFrom)
 	return Otvet
+}
+
+// MassFromCSV - разбивает строку в формате .csv на массив строк
+func MassFromCSV(s string) []string {
+	// Создаем CSV reader
+	reader := csv.NewReader(strings.NewReader(s))
+
+	// Настраиваем параметры парсинга
+	reader.Comma = ','             // разделитель - запятая
+	reader.TrimLeadingSpace = true // обрезать пробелы в начале значений
+	reader.LazyQuotes = true       // разрешить нестандартное использование кавычек
+
+	// Читаем все записи
+	records, err := reader.ReadAll()
+	if err != nil {
+		// В случае ошибки пытаемся прочитать хотя бы одну запись
+		if singleRecord, err := reader.Read(); err == nil {
+			return singleRecord
+		}
+		// Если совсем не получается, возвращаем пустой массив
+		return []string{}
+	}
+
+	// Преобразуем двумерный массив в одномерный
+	if len(records) == 0 {
+		return []string{}
+	}
+
+	// Обычно в CSV одна строка, но на всякий случай объединяем все
+	var result []string
+	for _, row := range records {
+		result = append(result, row...)
+	}
+
+	return result
 }

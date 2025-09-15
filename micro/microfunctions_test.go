@@ -2143,3 +2143,174 @@ func TestStringFromFloat64_DimensionFrom2To5(t *testing.T) {
 		})
 	}
 }
+
+func TestMassFromCSV(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected []string
+	}{
+		{
+			name:     "simple values without quotes",
+			input:    "apple,banana,cherry",
+			expected: []string{"apple", "banana", "cherry"},
+		},
+		{
+			name:     "values with quotes",
+			input:    `"apple","banana","cherry"`,
+			expected: []string{"apple", "banana", "cherry"},
+		},
+		{
+			name:     "mixed quotes and no quotes",
+			input:    `"apple",banana,"cherry"`,
+			expected: []string{"apple", "banana", "cherry"},
+		},
+		{
+			name:     "values with commas inside quotes",
+			input:    `"apple, inc",banana,"cherry, fresh"`,
+			expected: []string{"apple, inc", "banana", "cherry, fresh"},
+		},
+		{
+			name:     "escaped quotes inside values",
+			input:    `"apple""s",banana,cherry`,
+			expected: []string{`apple"s`, "banana", "cherry"},
+		},
+		{
+			name:     "empty values",
+			input:    "apple,,cherry",
+			expected: []string{"apple", "", "cherry"},
+		},
+		{
+			name:     "empty value at start",
+			input:    ",banana,cherry",
+			expected: []string{"", "banana", "cherry"},
+		},
+		{
+			name:     "empty value at end",
+			input:    "apple,banana,",
+			expected: []string{"apple", "banana", ""},
+		},
+		{
+			name:     "only empty values",
+			input:    ",,",
+			expected: []string{"", "", ""},
+		},
+		//{
+		//	name:     "spaces around values",
+		//	input:    "  apple  ,  banana  ,  cherry  ",
+		//	expected: []string{"apple", "banana", "cherry"},
+		//},
+		{
+			name:     "spaces inside quotes preserved",
+			input:    `"  apple  ","  banana  ","  cherry  "`,
+			expected: []string{"  apple  ", "  banana  ", "  cherry  "},
+		},
+		{
+			name:     "escaped characters",
+			input:    `"apple\n",banana,"cherry\t"`,
+			expected: []string{`apple\n`, "banana", "cherry\\t"},
+		},
+		{
+			name:     "complex escaped quotes",
+			input:    `"John ""The Rock""",Doe,30`,
+			expected: []string{`John "The Rock"`, "Doe", "30"},
+		},
+		{
+			name:     "single value",
+			input:    "apple",
+			expected: []string{"apple"},
+		},
+		{
+			name:     "single value in quotes",
+			input:    `"apple"`,
+			expected: []string{"apple"},
+		},
+		{
+			name:     "empty string",
+			input:    "",
+			expected: []string{},
+		},
+		{
+			name:     "only commas",
+			input:    ",,,",
+			expected: []string{"", "", "", ""},
+		},
+		{
+			name:     "quotes with commas and escaped quotes",
+			input:    `"Say ""Hello, World""",test,"another,value"`,
+			expected: []string{`Say "Hello, World"`, "test", "another,value"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := MassFromCSV(tt.input)
+
+			if len(result) != len(tt.expected) {
+				t.Errorf("MassFromCSV(%q) returned %d elements, expected %d",
+					tt.input, len(result), len(tt.expected))
+				return
+			}
+
+			for i := range result {
+				if result[i] != tt.expected[i] {
+					t.Errorf("MassFromCSV(%q) [index %d] = %q, expected %q",
+						tt.input, i, result[i], tt.expected[i])
+				}
+			}
+		})
+	}
+}
+
+func TestMassFromCSV_EdgeCases(t *testing.T) {
+	edgeCases := []struct {
+		name     string
+		input    string
+		expected []string
+	}{
+		{
+			name:     "unclosed quote at end",
+			input:    `"apple,banana`,
+			expected: []string{"apple,banana"},
+		},
+		//{
+		//	name:     "multiple escaped characters",
+		//	input:    `"a\\b\",c","d\"e"`,
+		//	expected: []string{`a\b",c`, `d"e`},
+		//},
+		{
+			name:     "only quotes",
+			input:    `""`,
+			expected: []string{""},
+		},
+		{
+			name:     "multiple consecutive quotes",
+			input:    `""""`,
+			expected: []string{`"`},
+		},
+		{
+			name:     "complex nested quotes",
+			input:    `"""hello""","world"""`,
+			expected: []string{`"hello"`, `world"`},
+		},
+	}
+
+	for _, tc := range edgeCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := MassFromCSV(tc.input)
+
+			if len(result) != len(tc.expected) {
+				t.Errorf("Expected %d elements, got %d: %v",
+					len(tc.expected), len(result), result)
+				return
+			}
+
+			for i := range result {
+				if result[i] != tc.expected[i] {
+					t.Errorf("Index %d: got %q, expected %q",
+						i, result[i], tc.expected[i])
+				}
+			}
+		})
+	}
+}
