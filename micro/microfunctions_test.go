@@ -2314,3 +2314,256 @@ func TestMassFromCSV_EdgeCases(t *testing.T) {
 		})
 	}
 }
+
+func TestMassFromCSV2(t *testing.T) {
+	Mass := MassFromCSV(`"643","215505","СМОЛЕНСКАЯ ОБЛАСТЬ","САФОНОВСКИЙ Р-Н","Г САФОНОВО","","ТЕР ИНДУСТРИАЛЬНЫЙ ПАРК "САФОНОВО"","ЗД. 4/1","",""`)
+	t.Logf("%v", Mass)
+	if len(Mass) != 10 {
+		t.Error("Expected 10 elements, got", len(Mass))
+	}
+}
+
+func TestCSVFromMass(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []string
+		expected string
+	}{
+		{
+			name:     "empty slice",
+			input:    []string{},
+			expected: "",
+		},
+		{
+			name:     "single element",
+			input:    []string{"hello"},
+			expected: `"hello"`,
+		},
+		{
+			name:     "multiple elements without special chars",
+			input:    []string{"hello", "world", "test"},
+			expected: `"hello","world","test"`,
+		},
+		{
+			name:     "with commas",
+			input:    []string{"hello, world", "test,ing"},
+			expected: `"hello, world","test,ing"`,
+		},
+		{
+			name:     "with quotes",
+			input:    []string{"hello \"world\"", "test\"ing"},
+			expected: `"hello ""world""","test""ing"`,
+		},
+		{
+			name:     "with commas and quotes",
+			input:    []string{"hello, \"world\"", "\"test\",ing"},
+			expected: `"hello, ""world""","""test"",ing"`,
+		},
+		{
+			name:     "empty strings",
+			input:    []string{"", "hello", ""},
+			expected: `"","hello",""`,
+		},
+		{
+			name:     "whitespace only",
+			input:    []string{"   ", "hello", "\t"},
+			expected: `"   ","hello","` + "\t" + `"`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := CSVFromMass(tt.input)
+			if result != tt.expected {
+				t.Errorf("StringsToCSV(%v) = %q, want %q", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestCSVFromMass_EdgeCases(t *testing.T) {
+	t.Run("nil slice", func(t *testing.T) {
+		result := CSVFromMass(nil)
+		if result != "" {
+			t.Errorf("StringsToCSV(nil) = %q, want %q", result, "")
+		}
+	})
+
+	t.Run("very long string", func(t *testing.T) {
+		longString := strings.Repeat("a,", 1000) + "b"
+		input := []string{longString}
+
+		result := CSVFromMass(input)
+		// Должно быть экранировано из-за запятых
+		if !strings.HasPrefix(result, "\"") || !strings.HasSuffix(result, "\"") {
+			t.Errorf("Long string with commas should be quoted, got: %q", result)
+		}
+	})
+
+	t.Run("mixed content", func(t *testing.T) {
+		input := []string{
+			"normal",
+			`"with,comma"`,
+			"with\"quote",
+			`"with,both\""`,
+			"",
+			"end",
+		}
+
+		result := CSVFromMass(input)
+		lines := strings.Split(result, `","`)
+
+		if len(lines) != 6 {
+			t.Errorf("Expected 6 lines, got %d", len(lines))
+		}
+
+		// Проверяем что строки с запятыми и кавычками экранированы
+		if !strings.Contains(lines[1], "\"") {
+			t.Error("Line with comma should be quoted")
+		}
+		if !strings.Contains(lines[2], "\"\"") {
+			t.Error("Line with quote should have escaped quotes")
+		}
+	})
+}
+
+func TestCSVFromStrings(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []string // передаем как слайс, но функция принимает variadic
+		expected string
+	}{
+		{
+			name:     "no arguments",
+			input:    []string{},
+			expected: "",
+		},
+		{
+			name:     "single argument",
+			input:    []string{"hello"},
+			expected: `"hello"`,
+		},
+		{
+			name:     "multiple arguments",
+			input:    []string{"hello", "world", "test"},
+			expected: `"hello","world","test"`,
+		},
+		{
+			name:     "with commas",
+			input:    []string{"hello, world", "test,ing"},
+			expected: `"hello, world","test,ing"`,
+		},
+		{
+			name:     "with quotes",
+			input:    []string{"hello \"world\"", "test\"ing"},
+			expected: `"hello ""world""","test""ing"`,
+		},
+		{
+			name:     "with commas and quotes",
+			input:    []string{"hello, \"world\"", "\"test\",ing"},
+			expected: `"hello, ""world""","""test"",ing"`,
+		},
+		{
+			name:     "empty strings",
+			input:    []string{"", "hello", ""},
+			expected: `"","hello",""`,
+		},
+		{
+			name:     "whitespace only",
+			input:    []string{"   ", "hello", "\t"},
+			expected: `"   ","hello","` + "\t" + `"`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var result string
+			if len(tt.input) == 0 {
+				result = CSVFromStrings()
+			} else {
+				result = CSVFromStrings(tt.input...)
+			}
+
+			if result != tt.expected {
+				t.Errorf("CSVFromStrings(%v) = %q, want %q", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestCSVFromStrings_VariadicUsage(t *testing.T) {
+	t.Run("direct call with multiple args", func(t *testing.T) {
+		result := CSVFromStrings("a", "b,c", "d\"e")
+		expected := `"a","b,c","d""e"`
+		if result != expected {
+			t.Errorf("got %q, want %q", result, expected)
+		}
+	})
+
+	t.Run("direct call with single arg", func(t *testing.T) {
+		result := CSVFromStrings("hello, world")
+		expected := `"hello, world"`
+		if result != expected {
+			t.Errorf("got %q, want %q", result, expected)
+		}
+	})
+
+	t.Run("direct call empty", func(t *testing.T) {
+		result := CSVFromStrings()
+		if result != "" {
+			t.Errorf("got %q, want empty string", result)
+		}
+	})
+
+	t.Run("mixed content direct call", func(t *testing.T) {
+		result := CSVFromStrings(
+			"normal",
+			`"with,comma"`,
+			"with\"quote",
+			"with,both\"",
+			"",
+			"end",
+		)
+
+		lines := strings.Split(result, `","`)
+		if len(lines) != 6 {
+			t.Errorf("expected 6 lines, got %d", len(lines))
+		}
+
+		// Проверяем экранирование
+		if !strings.HasPrefix(lines[1], "\"") || !strings.HasSuffix(lines[1], "\"") {
+			t.Error("line with comma should be quoted")
+		}
+		if !strings.Contains(lines[2], "\"\"") {
+			t.Error("line with quote should have escaped quotes")
+		}
+	})
+}
+
+func TestCSVFromStrings_EdgeCases(t *testing.T) {
+	t.Run("very long string", func(t *testing.T) {
+		longString := strings.Repeat("a,", 1000) + "b"
+		result := CSVFromStrings(longString)
+
+		// Должно быть экранировано из-за запятых
+		if !strings.HasPrefix(result, "\"") || !strings.HasSuffix(result, "\"") {
+			t.Errorf("long string with commas should be quoted, got: %q", result)
+		}
+	})
+
+	t.Run("only special characters", func(t *testing.T) {
+		result := CSVFromStrings(",", "\"", ",\"")
+		expected := `",","""",","""`
+		if result != expected {
+			t.Errorf("got %q, want %q", result, expected)
+		}
+	})
+
+	t.Run("newlines in input", func(t *testing.T) {
+		result := CSVFromStrings("line1\nline2", "normal")
+		// CSV writer должен экранировать переносы строк
+		if !strings.Contains(result, "\"") {
+			t.Error("string with newline should be quoted")
+		}
+	})
+}

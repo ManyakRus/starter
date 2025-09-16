@@ -2196,3 +2196,32 @@ func MassFromCSV(s string) []string {
 
 	return result
 }
+
+// CSVFromMass конвертирует слайс строк в CSV строку
+func CSVFromMass(input []string) string {
+	Otvet := CSVFromStrings(input...)
+	return Otvet
+}
+
+// CSVFromStrings конвертирует бесконечное количество строк в CSV формат
+// все строки экранирует ""
+func CSVFromStrings(texts ...string) string {
+	if len(texts) == 0 {
+		return ""
+	}
+
+	var sb strings.Builder
+
+	for i, line := range texts {
+		if i > 0 {
+			sb.WriteString(",")
+		}
+		// Экранируем кавычки и обрамляем в кавычки
+		escaped := strings.ReplaceAll(line, `"`, `""`)
+		sb.WriteString(`"`)
+		sb.WriteString(escaped)
+		sb.WriteString(`"`)
+	}
+
+	return sb.String()
+}
