@@ -1147,6 +1147,7 @@ func StringIdentifierFromUUID() string {
 }
 
 // IndexSubstringMin - возвращает индекс первого вхождения в строке
+// или -1
 func IndexSubstringMin(s string, MassSubstr ...string) int {
 	Otvet := -1
 
@@ -2212,15 +2213,20 @@ func CSVFromStrings(texts ...string) string {
 
 	var sb strings.Builder
 
-	for i, line := range texts {
+	for i, texts1 := range texts {
 		if i > 0 {
 			sb.WriteString(",")
 		}
 		// Экранируем кавычки и обрамляем в кавычки
-		escaped := strings.ReplaceAll(line, `"`, `""`)
-		sb.WriteString(`"`)
+		escaped := strings.ReplaceAll(texts1, `"`, `""`)
+		pos := IndexSubstringMin(escaped, ",", `"`, "\n", "\r")
+		if escaped != "" && pos != -1 {
+			sb.WriteString(`"`)
+		}
 		sb.WriteString(escaped)
-		sb.WriteString(`"`)
+		if escaped != "" && pos != -1 {
+			sb.WriteString(`"`)
+		}
 	}
 
 	return sb.String()
