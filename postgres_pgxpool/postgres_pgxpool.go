@@ -96,6 +96,14 @@ func Connect_NoNull(ApplicationName string) {
 	LogInfo_Connected(err)
 }
 
+// Connect_NoNull_err - подключается к базе данных, с указанием имени приложения
+func Connect_NoNull_err(ApplicationName string) error {
+	Settings.NoNUll = true
+
+	err := Connect_WithApplicationName_err(ApplicationName)
+	return err
+}
+
 // Connect_WithApplicationName - подключается к базе данных, с указанием имени приложения
 func Connect_WithApplicationName(ApplicationName string) {
 	err := Connect_WithApplicationName_err(ApplicationName)
@@ -462,21 +470,31 @@ func GetConnection() *pgxpool.Pool {
 	if PgxPool == nil {
 		err := Connect_err()
 		if err != nil {
-			log.Error("POSTGRES pgxpool Connect() to database host: ", Settings.DB_HOST, ", error: ", err)
+			log.Error("POSTGRES pgxpool Connect_err() to database host: ", Settings.DB_HOST, ", error: ", err)
 		} else {
 			log.Info("POSTGRES pgxpool Connected. host: ", Settings.DB_HOST, ", base name: ", Settings.DB_NAME, ", schema: ", Settings.DB_SCHEMA)
 		}
 	}
 
-	//ctxMain := contextmain.GetContext()
-	//ctx, cancelFunc := context.WithTimeout(ctxMain, timeOutSeconds*time.Second)
-	//defer cancelFunc()
+	return PgxPool
+}
 
-	//connection, err := PgxPool.Acquire(ctx)
-	//if err != nil {
-	//	err = fmt.Errorf("Ошибка при получении соединения из пула базы данных, error: %w", err)
-	//	return connection
-	//}
+// GetConnection_NoNull - возвращает соединение к нужной базе данных
+func GetConnection_NoNull(ApplicationName string) *pgxpool.Pool {
+	//мьютекс чтоб не подключаться одновременно
+	//mutex_Connect.RLock()
+	//defer mutex_Connect.RUnlock()
+
+	//
+	if PgxPool == nil {
+		err := Connect_NoNull_err(ApplicationName)
+		if err != nil {
+			log.Error("POSTGRES pgxpool Connect_NoNull_err() to database host: ", Settings.DB_HOST, ", error: ", err)
+		} else {
+			log.Info("POSTGRES pgxpool Connected. host: ", Settings.DB_HOST, ", base name: ", Settings.DB_NAME, ", schema: ", Settings.DB_SCHEMA)
+		}
+	}
+
 	return PgxPool
 }
 
