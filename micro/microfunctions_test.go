@@ -2560,3 +2560,165 @@ func TestCSVFromStrings_EdgeCases(t *testing.T) {
 		}
 	})
 }
+
+func TestFirstSymbol(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "ASCII string",
+			input:    "Hello",
+			expected: "H",
+		},
+		{
+			name:     "Unicode string",
+			input:    "Привет",
+			expected: "П",
+		},
+		{
+			name:     "Emoji string",
+			input:    "😊👍",
+			expected: "😊",
+		},
+		{
+			name:     "Single character ASCII",
+			input:    "A",
+			expected: "A",
+		},
+		{
+			name:     "Single character Unicode",
+			input:    "Я",
+			expected: "Я",
+		},
+		{
+			name:     "Single emoji",
+			input:    "😊",
+			expected: "😊",
+		},
+		{
+			name:     "Empty string",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "String with spaces",
+			input:    " Hello",
+			expected: " ",
+		},
+		{
+			name:     "Chinese characters",
+			input:    "你好世界",
+			expected: "你",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := FirstSymbol(tt.input)
+			if result != tt.expected {
+				t.Errorf("FirstSymbol(%q) = %q, expected %q", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestLastSymbol(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "ASCII string",
+			input:    "Hello",
+			expected: "o",
+		},
+		{
+			name:     "Unicode string",
+			input:    "Привет",
+			expected: "т",
+		},
+		{
+			name:     "Emoji string",
+			input:    "😊👍",
+			expected: "👍",
+		},
+		{
+			name:     "Single character ASCII",
+			input:    "A",
+			expected: "A",
+		},
+		{
+			name:     "Single character Unicode",
+			input:    "Я",
+			expected: "Я",
+		},
+		{
+			name:     "Single emoji",
+			input:    "😊",
+			expected: "😊",
+		},
+		{
+			name:     "Empty string",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "String with spaces",
+			input:    "Hello ",
+			expected: " ",
+		},
+		{
+			name:     "Chinese characters",
+			input:    "你好世界",
+			expected: "界",
+		},
+		{
+			name:     "Mixed content",
+			input:    "Hello 世界 😊",
+			expected: "😊",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := LastSymbol(tt.input)
+			if result != tt.expected {
+				t.Errorf("LastSymbol(%q) = %q, expected %q", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+// Дополнительный тест для проверки обеих функций вместе
+func TestBothSymbols(t *testing.T) {
+	testCases := []struct {
+		input         string
+		expectedFirst string
+		expectedLast  string
+	}{
+		{"Hello", "H", "o"},
+		{"Привет", "П", "т"},
+		{"😊👍", "😊", "👍"},
+		{"", "", ""},
+		{"A", "A", "A"},
+		{"AB", "A", "B"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.input, func(t *testing.T) {
+			first := FirstSymbol(tc.input)
+			last := LastSymbol(tc.input)
+
+			if first != tc.expectedFirst {
+				t.Errorf("FirstSymbol(%q) = %q, expected %q", tc.input, first, tc.expectedFirst)
+			}
+
+			if last != tc.expectedLast {
+				t.Errorf("LastSymbol(%q) = %q, expected %q", tc.input, last, tc.expectedLast)
+			}
+		})
+	}
+}

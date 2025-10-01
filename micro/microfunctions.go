@@ -2231,3 +2231,26 @@ func CSVFromStrings(texts ...string) string {
 
 	return sb.String()
 }
+
+// FirstSymbol - возвращает первый символ строки, или пустую строку
+func FirstSymbol(s string) string {
+	runes := []rune(s)
+	if len(runes) == 0 {
+		return ""
+	}
+	return string(runes[0])
+}
+
+// LastSymbol - возвращает последний символ строки, или пустую строку
+func LastSymbol(s string) string {
+	// Преобразуем строку в срез рун для корректной работы с Unicode
+	runes := []rune(s)
+
+	// Проверяем, что строка не пустая
+	if len(runes) == 0 {
+		return ""
+	}
+
+	// Возвращаем последнюю руну как строку
+	return string(runes[len(runes)-1])
+}
