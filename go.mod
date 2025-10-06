@@ -13,7 +13,7 @@ require (
 	github.com/emersion/go-message v0.18.1
 	github.com/go-faster/errors v0.7.1
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
-	github.com/gofiber/fiber/v2 v2.52.6
+	github.com/gofiber/fiber/v2 v2.52.9
 	github.com/google/uuid v1.6.0
 	github.com/gotd/contrib v0.21.0
 	github.com/gotd/td v0.115.0

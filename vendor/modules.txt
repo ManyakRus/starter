@@ -188,7 +188,7 @@ github.com/goccy/go-json/internal/encoder/vm_color_indent
 github.com/goccy/go-json/internal/encoder/vm_indent
 github.com/goccy/go-json/internal/errors
 github.com/goccy/go-json/internal/runtime
-# github.com/gofiber/fiber/v2 v2.52.6
+# github.com/gofiber/fiber/v2 v2.52.9
 ## explicit; go 1.20
 github.com/gofiber/fiber/v2
 github.com/gofiber/fiber/v2/internal/schema
@@ -312,7 +312,6 @@ github.com/jackc/pgx/v5/pgconn/ctxwatch
 github.com/jackc/pgx/v5/pgconn/internal/bgreader
 github.com/jackc/pgx/v5/pgproto3
 github.com/jackc/pgx/v5/pgtype
-github.com/jackc/pgx/v5/pgtype/zeronull
 github.com/jackc/pgx/v5/pgxpool
 github.com/jackc/pgx/v5/stdlib
 # github.com/jackc/puddle/v2 v2.2.2

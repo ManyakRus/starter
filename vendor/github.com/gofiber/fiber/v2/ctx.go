@@ -394,7 +394,7 @@ func (c *Ctx) BodyParser(out interface{}) error {
 	if strings.HasSuffix(ctype, "json") {
 		return c.app.config.JSONDecoder(c.Body(), out)
 	}
-	if strings.HasPrefix(ctype, MIMEApplicationForm) {
+	if ctype == MIMEApplicationForm {
 		data := make(map[string][]string)
 		var err error
 
@@ -415,7 +415,7 @@ func (c *Ctx) BodyParser(out interface{}) error {
 
 		return c.parseToStruct(bodyTag, out, data)
 	}
-	if strings.HasPrefix(ctype, MIMEMultipartForm) {
+	if ctype == MIMEMultipartForm {
 		multipartForm, err := c.fasthttp.MultipartForm()
 		if err != nil {
 			return err
@@ -431,7 +431,7 @@ func (c *Ctx) BodyParser(out interface{}) error {
 
 		return c.parseToStruct(bodyTag, out, data)
 	}
-	if strings.HasPrefix(ctype, MIMETextXML) || strings.HasPrefix(ctype, MIMEApplicationXML) {
+	if ctype == MIMETextXML || ctype == MIMEApplicationXML {
 		if err := xml.Unmarshal(c.Body(), out); err != nil {
 			return fmt.Errorf("failed to unmarshal: %w", err)
 		}
@@ -877,10 +877,12 @@ func (c *Ctx) Is(extension string) bool {
 		return false
 	}
 
-	return strings.HasPrefix(
-		utils.TrimLeft(c.app.getString(c.fasthttp.Request.Header.ContentType()), ' '),
-		extensionHeader,
-	)
+	ct := c.app.getString(c.fasthttp.Request.Header.ContentType())
+	if i := strings.IndexByte(ct, ';'); i != -1 {
+		ct = ct[:i]
+	}
+	ct = utils.Trim(ct, ' ')
+	return utils.EqualFold(ct, extensionHeader)
 }
 
 // JSON converts any interface or string to JSON.
@@ -948,11 +950,11 @@ func (c *Ctx) Links(link ...string) {
 	bb := bytebufferpool.Get()
 	for i := range link {
 		if i%2 == 0 {
-			_ = bb.WriteByte('<')          //nolint:errcheck // This will never fail
-			_, _ = bb.WriteString(link[i]) //nolint:errcheck // This will never fail
-			_ = bb.WriteByte('>')          //nolint:errcheck // This will never fail
+			_ = bb.WriteByte('<')
+			_, _ = bb.WriteString(link[i])
+			_ = bb.WriteByte('>')
 		} else {
-			_, _ = bb.WriteString(`; rel="` + link[i] + `",`) //nolint:errcheck // This will never fail
+			_, _ = bb.WriteString(`; rel="` + link[i] + `",`)
 		}
 	}
 	c.setCanonical(HeaderLink, utils.TrimRight(c.app.getString(bb.Bytes()), ','))
@@ -1326,43 +1328,44 @@ func (*Ctx) parseToStruct(aliasTag string, out interface{}, data map[string][]st
 }
 
 func equalFieldType(out interface{}, kind reflect.Kind, key, tag string) bool {
-	// Get type of interface
 	outTyp := reflect.TypeOf(out).Elem()
-	key = utils.ToLower(key)
-	// Must be a struct to match a field
 	if outTyp.Kind() != reflect.Struct {
 		return false
 	}
-	// Copy interface to an value to be used
-	outVal := reflect.ValueOf(out).Elem()
-	// Loop over each field
+	key = utils.ToLower(key)
+	return checkEqualFieldType(outTyp, kind, key, tag)
+}
+
+func checkEqualFieldType(outTyp reflect.Type, kind reflect.Kind, key, tag string) bool {
 	for i := 0; i < outTyp.NumField(); i++ {
-		// Get field value data
-		structField := outVal.Field(i)
-		// Can this field be changed?
-		if !structField.CanSet() {
-			continue
-		}
-		// Get field key data
 		typeField := outTyp.Field(i)
-		// Get type of field key
-		structFieldKind := structField.Kind()
-		// Does the field type equals input?
-		if structFieldKind != kind {
+
+		if typeField.Anonymous && typeField.Type.Kind() == reflect.Struct {
+			if checkEqualFieldType(typeField.Type, kind, key, tag) {
+				return true
+			}
+		}
+
+		if typeField.PkgPath != "" { // unexported field
 			continue
 		}
-		// Get tag from field if exist
+
+		if typeField.Type.Kind() != kind {
+			continue
+		}
+
 		inputFieldName := typeField.Tag.Get(tag)
 		if inputFieldName == "" {
 			inputFieldName = typeField.Name
-		} else {
-			inputFieldName = strings.Split(inputFieldName, ",")[0]
+		} else if idx := strings.IndexByte(inputFieldName, ','); idx > -1 {
+			inputFieldName = inputFieldName[:idx]
 		}
-		// Compare field/tag with provided key
+
 		if utils.ToLower(inputFieldName) == key {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -1510,10 +1513,10 @@ func (c *Ctx) RedirectToRoute(routeName string, params Map, status ...int) error
 
 		i := 1
 		for k, v := range queries {
-			_, _ = queryText.WriteString(k + "=" + v) //nolint:errcheck // This will never fail
+			_, _ = queryText.WriteString(k + "=" + v)
 
 			if i != len(queries) {
-				_, _ = queryText.WriteString("&") //nolint:errcheck // This will never fail
+				_, _ = queryText.WriteString("&")
 			}
 			i++
 		}
@@ -1834,14 +1837,40 @@ func (c *Ctx) Status(status int) *Ctx {
 //
 // The returned value may be useful for logging.
 func (c *Ctx) String() string {
-	return fmt.Sprintf(
-		"#%016X - %s <-> %s - %s %s",
-		c.fasthttp.ID(),
-		c.fasthttp.LocalAddr(),
-		c.fasthttp.RemoteAddr(),
-		c.fasthttp.Request.Header.Method(),
-		c.fasthttp.URI().FullURI(),
-	)
+	// Get buffer from pool
+	buf := bytebufferpool.Get()
+
+	// Start with the ID, converting it to a hex string without fmt.Sprintf
+	buf.WriteByte('#')
+
+	// Convert ID to hexadecimal
+	id := strconv.FormatUint(c.fasthttp.ID(), 16)
+	// Pad with leading zeros to ensure 16 characters
+	for i := 0; i < (16 - len(id)); i++ {
+		buf.WriteByte('0')
+	}
+	buf.WriteString(id)
+	buf.WriteString(" - ")
+
+	// Add local and remote addresses directly
+	buf.WriteString(c.fasthttp.LocalAddr().String())
+	buf.WriteString(" <-> ")
+	buf.WriteString(c.fasthttp.RemoteAddr().String())
+	buf.WriteString(" - ")
+
+	// Add method and URI
+	buf.Write(c.fasthttp.Request.Header.Method())
+	buf.WriteByte(' ')
+	buf.Write(c.fasthttp.URI().FullURI())
+
+	// Allocate string
+	str := buf.String()
+
+	// Reset buffer
+	buf.Reset()
+	bytebufferpool.Put(buf)
+
+	return str
 }
 
 // Type sets the Content-Type HTTP header to the MIME type specified by the file extension.
