@@ -2254,3 +2254,21 @@ func LastSymbol(s string) string {
 	// Возвращаем последнюю руну как строку
 	return string(runes[len(runes)-1])
 }
+
+// TextDaFromBool - возвращает текст Да/Нет
+func TextDaFromBool(b bool) string {
+	if b == true {
+		return "Да"
+	} else {
+		return "Нет"
+	}
+}
+
+// TextYesFromBool - возвращает текст Yes/No
+func TextYesFromBool(b bool) string {
+	if b == true {
+		return "Yes"
+	} else {
+		return "No"
+	}
+}

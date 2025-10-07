@@ -2722,3 +2722,25 @@ func TestBothSymbols(t *testing.T) {
 		})
 	}
 }
+
+func TestTextDaFromBool(t *testing.T) {
+	Otvet := TextDaFromBool(true)
+	if Otvet != "Да" {
+		t.Errorf("Expected Да, but got %v", Otvet)
+	}
+	Otvet = TextDaFromBool(false)
+	if Otvet != "Нет" {
+		t.Errorf("Expected Нет, but got %v", Otvet)
+	}
+}
+
+func TestTextYesFromBool(t *testing.T) {
+	Otvet := TextYesFromBool(true)
+	if Otvet != "Yes" {
+		t.Errorf("Expected Yes, but got %v", Otvet)
+	}
+	Otvet = TextYesFromBool(false)
+	if Otvet != "No" {
+		t.Errorf("Expected No, but got %v", Otvet)
+	}
+}
