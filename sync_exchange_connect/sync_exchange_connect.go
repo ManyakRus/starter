@@ -109,7 +109,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, ServiceName, Ser
 func CloseConnection() {
 	err := sync_exchange.DeInitSyncExchange()
 	if err != nil {
-		log.Error("CloseConnection() error: ", err)
+		log.Warn("CloseConnection() warning: ", err)
 	} else {
 		log.Info("NATS stopped")
 	}
