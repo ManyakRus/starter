@@ -2272,3 +2272,15 @@ func TextYesFromBool(b bool) string {
 		return "No"
 	}
 }
+
+// IsToday - возвращает true если дата = сегодня
+func IsToday(Date1 time.Time) bool {
+	Otvet := false
+
+	DateToday := time.Now()
+	if Date1.Year() == DateToday.Year() && Date1.Month() == DateToday.Month() && Date1.Day() == DateToday.Day() {
+		Otvet = true
+	}
+
+	return Otvet
+}

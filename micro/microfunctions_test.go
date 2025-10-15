@@ -2744,3 +2744,10 @@ func TestTextYesFromBool(t *testing.T) {
 		t.Errorf("Expected No, but got %v", Otvet)
 	}
 }
+
+func TestIsToday(t *testing.T) {
+	Otvet := IsToday(time.Now())
+	if Otvet != true {
+		t.Errorf("Expected true, but got %v", Otvet)
+	}
+}
