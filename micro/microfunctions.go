@@ -12,7 +12,7 @@ import (
 	"github.com/ManyakRus/starter/constants_starter"
 	"github.com/dromara/carbon/v2"
 	"github.com/google/uuid"
-	//"golang.org/x/exp/constraints"
+	"golang.org/x/exp/constraints"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"hash/fnv"
 	"math"
@@ -1439,21 +1439,21 @@ func MassFrom_MapString[V any](Map map[string]V) []V {
 }
 
 // SortMass - сортирует слайс
-func SortMass[T Ordered](s []T) {
+func SortMass[T constraints.Ordered](s []T) {
 	sort.Slice(s, func(i, j int) bool {
 		return s[i] < s[j]
 	})
 }
 
 // SortMass_DESC - сортирует слайс, в обратном порядке
-func SortMass_DESC[T Ordered](s []T) {
+func SortMass_DESC[T constraints.Ordered](s []T) {
 	sort.Slice(s, func(i, j int) bool {
 		return s[i] > s[j]
 	})
 }
 
 // MassFrom_Map - сортирует map по названию колонок и возвращает слайс
-func MassFrom_Map[C Ordered, V any](Map map[C]V) []V {
+func MassFrom_Map[C constraints.Ordered, V any](Map map[C]V) []V {
 	Otvet := make([]V, 0)
 
 	//сортировка по названию колонок
@@ -1476,7 +1476,7 @@ func MassFrom_Map[C Ordered, V any](Map map[C]V) []V {
 }
 
 // MassFrom_Map_DESC - сортирует map по названию колонок и возвращает слайс, с обратной сортировкой
-func MassFrom_Map_DESC[C Ordered, V any](Map map[C]V) []V {
+func MassFrom_Map_DESC[C constraints.Ordered, V any](Map map[C]V) []V {
 	Otvet := make([]V, 0)
 
 	//сортировка по названию колонок
@@ -1618,7 +1618,7 @@ func Float64FromString(s string) (float64, error) {
 }
 
 // Abs - возвращает абсолютное значение
-func Abs[T Integer](x T) T {
+func Abs[T constraints.Integer](x T) T {
 	if x < 0 {
 		return -x
 	}
