@@ -31,7 +31,7 @@ var (
 	_ = tdjson.Encoder{}
 )
 
-// PaymentsSaveStarGiftRequest represents TL type `payments.saveStarGift#87acf08e`.
+// PaymentsSaveStarGiftRequest represents TL type `payments.saveStarGift#2a2a697c`.
 // Display or remove a received gift »¹ from our profile.
 //
 // Links:
@@ -46,18 +46,12 @@ type PaymentsSaveStarGiftRequest struct {
 	Flags bin.Fields
 	// If set, hides the gift from our profile.
 	Unsave bool
-	// ID of the user that sent us the gift.
-	UserID InputUserClass
-	// The ID of the messageService¹ with the messageActionStarGift².
-	//
-	// Links:
-	//  1) https://core.telegram.org/constructor/messageService
-	//  2) https://core.telegram.org/constructor/messageActionStarGift
-	MsgID int
+	// Stargift field of PaymentsSaveStarGiftRequest.
+	Stargift InputSavedStarGiftClass
 }
 
 // PaymentsSaveStarGiftRequestTypeID is TL type id of PaymentsSaveStarGiftRequest.
-const PaymentsSaveStarGiftRequestTypeID = 0x87acf08e
+const PaymentsSaveStarGiftRequestTypeID = 0x2a2a697c
 
 // Ensuring interfaces in compile-time for PaymentsSaveStarGiftRequest.
 var (
@@ -77,10 +71,7 @@ func (s *PaymentsSaveStarGiftRequest) Zero() bool {
 	if !(s.Unsave == false) {
 		return false
 	}
-	if !(s.UserID == nil) {
-		return false
-	}
-	if !(s.MsgID == 0) {
+	if !(s.Stargift == nil) {
 		return false
 	}
 
@@ -99,12 +90,10 @@ func (s *PaymentsSaveStarGiftRequest) String() string {
 // FillFrom fills PaymentsSaveStarGiftRequest from given interface.
 func (s *PaymentsSaveStarGiftRequest) FillFrom(from interface {
 	GetUnsave() (value bool)
-	GetUserID() (value InputUserClass)
-	GetMsgID() (value int)
+	GetStargift() (value InputSavedStarGiftClass)
 }) {
 	s.Unsave = from.GetUnsave()
-	s.UserID = from.GetUserID()
-	s.MsgID = from.GetMsgID()
+	s.Stargift = from.GetStargift()
 }
 
 // TypeID returns type id in TL schema.
@@ -136,12 +125,8 @@ func (s *PaymentsSaveStarGiftRequest) TypeInfo() tdp.Type {
 			Null:       !s.Flags.Has(0),
 		},
 		{
-			Name:       "UserID",
-			SchemaName: "user_id",
-		},
-		{
-			Name:       "MsgID",
-			SchemaName: "msg_id",
+			Name:       "Stargift",
+			SchemaName: "stargift",
 		},
 	}
 	return typ
@@ -157,7 +142,7 @@ func (s *PaymentsSaveStarGiftRequest) SetFlags() {
 // Encode implements bin.Encoder.
 func (s *PaymentsSaveStarGiftRequest) Encode(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't encode payments.saveStarGift#87acf08e as nil")
+		return fmt.Errorf("can't encode payments.saveStarGift#2a2a697c as nil")
 	}
 	b.PutID(PaymentsSaveStarGiftRequestTypeID)
 	return s.EncodeBare(b)
@@ -166,29 +151,28 @@ func (s *PaymentsSaveStarGiftRequest) Encode(b *bin.Buffer) error {
 // EncodeBare implements bin.BareEncoder.
 func (s *PaymentsSaveStarGiftRequest) EncodeBare(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't encode payments.saveStarGift#87acf08e as nil")
+		return fmt.Errorf("can't encode payments.saveStarGift#2a2a697c as nil")
 	}
 	s.SetFlags()
 	if err := s.Flags.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode payments.saveStarGift#87acf08e: field flags: %w", err)
+		return fmt.Errorf("unable to encode payments.saveStarGift#2a2a697c: field flags: %w", err)
 	}
-	if s.UserID == nil {
-		return fmt.Errorf("unable to encode payments.saveStarGift#87acf08e: field user_id is nil")
+	if s.Stargift == nil {
+		return fmt.Errorf("unable to encode payments.saveStarGift#2a2a697c: field stargift is nil")
 	}
-	if err := s.UserID.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode payments.saveStarGift#87acf08e: field user_id: %w", err)
+	if err := s.Stargift.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode payments.saveStarGift#2a2a697c: field stargift: %w", err)
 	}
-	b.PutInt(s.MsgID)
 	return nil
 }
 
 // Decode implements bin.Decoder.
 func (s *PaymentsSaveStarGiftRequest) Decode(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't decode payments.saveStarGift#87acf08e to nil")
+		return fmt.Errorf("can't decode payments.saveStarGift#2a2a697c to nil")
 	}
 	if err := b.ConsumeID(PaymentsSaveStarGiftRequestTypeID); err != nil {
-		return fmt.Errorf("unable to decode payments.saveStarGift#87acf08e: %w", err)
+		return fmt.Errorf("unable to decode payments.saveStarGift#2a2a697c: %w", err)
 	}
 	return s.DecodeBare(b)
 }
@@ -196,27 +180,20 @@ func (s *PaymentsSaveStarGiftRequest) Decode(b *bin.Buffer) error {
 // DecodeBare implements bin.BareDecoder.
 func (s *PaymentsSaveStarGiftRequest) DecodeBare(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't decode payments.saveStarGift#87acf08e to nil")
+		return fmt.Errorf("can't decode payments.saveStarGift#2a2a697c to nil")
 	}
 	{
 		if err := s.Flags.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode payments.saveStarGift#87acf08e: field flags: %w", err)
+			return fmt.Errorf("unable to decode payments.saveStarGift#2a2a697c: field flags: %w", err)
 		}
 	}
 	s.Unsave = s.Flags.Has(0)
 	{
-		value, err := DecodeInputUser(b)
+		value, err := DecodeInputSavedStarGift(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode payments.saveStarGift#87acf08e: field user_id: %w", err)
+			return fmt.Errorf("unable to decode payments.saveStarGift#2a2a697c: field stargift: %w", err)
 		}
-		s.UserID = value
-	}
-	{
-		value, err := b.Int()
-		if err != nil {
-			return fmt.Errorf("unable to decode payments.saveStarGift#87acf08e: field msg_id: %w", err)
-		}
-		s.MsgID = value
+		s.Stargift = value
 	}
 	return nil
 }
@@ -240,30 +217,26 @@ func (s *PaymentsSaveStarGiftRequest) GetUnsave() (value bool) {
 	return s.Flags.Has(0)
 }
 
-// GetUserID returns value of UserID field.
-func (s *PaymentsSaveStarGiftRequest) GetUserID() (value InputUserClass) {
+// GetStargift returns value of Stargift field.
+func (s *PaymentsSaveStarGiftRequest) GetStargift() (value InputSavedStarGiftClass) {
 	if s == nil {
 		return
 	}
-	return s.UserID
+	return s.Stargift
 }
 
-// GetMsgID returns value of MsgID field.
-func (s *PaymentsSaveStarGiftRequest) GetMsgID() (value int) {
-	if s == nil {
-		return
-	}
-	return s.MsgID
-}
-
-// PaymentsSaveStarGift invokes method payments.saveStarGift#87acf08e returning error if any.
+// PaymentsSaveStarGift invokes method payments.saveStarGift#2a2a697c returning error if any.
 // Display or remove a received gift »¹ from our profile.
 //
 // Links:
 //  1. https://core.telegram.org/api/gifts
 //
+// Possible errors:
+//
+//	400 MESSAGE_ID_INVALID: The provided message id is invalid.
+//	400 USER_ID_INVALID: The provided user ID is invalid.
+//
 // See https://core.telegram.org/method/payments.saveStarGift for reference.
-// Can be used by bots.
 func (c *Client) PaymentsSaveStarGift(ctx context.Context, request *PaymentsSaveStarGiftRequest) (bool, error) {
 	var result BoolBox
 

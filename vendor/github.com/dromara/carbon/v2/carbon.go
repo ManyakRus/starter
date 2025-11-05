@@ -1,8 +1,8 @@
 // @Package carbon
 // @Description a simple, semantic and developer-friendly time package for golang
-// @Page github.com/dromara/carbon
+// @Source github.com/dromara/carbon
+// @Document carbon.go-pkg.com
 // @Developer gouguoyin
-// @Blog www.gouguoyin.com
 // @Email 245629560@qq.com
 
 // Package carbon is a simple, semantic and developer-friendly time package for golang.
@@ -12,47 +12,66 @@ import (
 	"time"
 )
 
+type StdTime = time.Time
+type Weekday = time.Weekday
+type Location = time.Location
+type Duration = time.Duration
+
 // Carbon defines a Carbon struct.
-// 定义 Carbon 结构体
 type Carbon struct {
-	time         time.Time
-	layout       string
-	weekStartsAt time.Weekday
-	loc          *time.Location
-	lang         *Language
-	Error        error
+	time          StdTime
+	weekStartsAt  Weekday
+	weekendDays   []Weekday
+	loc           *Location
+	lang          *Language
+	currentLayout string
+	isEmpty       bool
+	Error         error
 }
 
 // NewCarbon returns a new Carbon instance.
-// 返回 Carbon 实例
-func NewCarbon(time ...time.Time) *Carbon {
-	c := &Carbon{lang: NewLanguage()}
-	c.loc, c.Error = getLocationByTimezone(DefaultTimezone)
-	if weekday, ok := weekdays[DefaultWeekStartsAt]; ok {
-		c.weekStartsAt = weekday
+func NewCarbon(stdTime ...StdTime) *Carbon {
+	c := new(Carbon)
+	c.lang = NewLanguage().SetLocale(DefaultLocale)
+	c.weekStartsAt = DefaultWeekStartsAt
+	c.weekendDays = DefaultWeekendDays
+	c.currentLayout = DefaultLayout
+	if len(stdTime) > 0 {
+		c.time = stdTime[0]
+		c.loc = c.time.Location()
+		return c
 	}
-	if len(time) > 0 {
-		c.time = time[0]
-		c.loc = time[0].Location()
-	}
-	c.layout = DefaultLayout
+	c.loc, c.Error = parseTimezone(DefaultTimezone)
 	return c
 }
 
-// Copy returns a new copy of the current Carbon instance
-// 复制 Carbon 实例
+// Copy returns a copy of the Carbon instance.
 func (c *Carbon) Copy() *Carbon {
-	newCarbon := NewCarbon()
+	if c.IsNil() {
+		return nil
+	}
 
-	newCarbon.time = time.Date(c.Year(), time.Month(c.Month()), c.Day(), c.Hour(), c.Minute(), c.Second(), c.Nanosecond(), c.loc)
-	newCarbon.layout = c.layout
-	newCarbon.weekStartsAt = c.weekStartsAt
-	newCarbon.loc = c.loc
-	newCarbon.Error = c.Error
+	// Create a deep copy of weekendDays slice to avoid shared reference
+	weekendDays := make([]Weekday, len(c.weekendDays))
+	copy(weekendDays, c.weekendDays)
 
-	newCarbon.lang.dir = c.lang.dir
-	newCarbon.lang.locale = c.lang.locale
-	newCarbon.lang.Error = c.lang.Error
+	return &Carbon{
+		time:          c.time,
+		weekStartsAt:  c.weekStartsAt,
+		weekendDays:   weekendDays,
+		loc:           c.loc,
+		lang:          c.lang,
+		currentLayout: c.currentLayout,
+		isEmpty:       c.isEmpty,
+		Error:         c.Error,
+	}
+}
 
-	return newCarbon
+// Sleep sleeps for the specified duration like time.Sleep.
+func Sleep(d time.Duration) {
+	if IsTestNow() && d > 0 {
+		frozenNow.testNow = frozenNow.testNow.AddDuration(d.String())
+		return
+	}
+	time.Sleep(d)
 }

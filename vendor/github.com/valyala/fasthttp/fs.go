@@ -133,6 +133,7 @@ var (
 		GenerateIndexPages: true,
 		Compress:           true,
 		CompressBrotli:     true,
+		CompressZstd:       true,
 		AcceptByteRange:    true,
 	}
 	rootFSHandler RequestHandler
@@ -156,6 +157,7 @@ func ServeFS(ctx *RequestCtx, filesystem fs.FS, path string) {
 		GenerateIndexPages: true,
 		Compress:           true,
 		CompressBrotli:     true,
+		CompressZstd:       true,
 		AcceptByteRange:    true,
 	}
 	handler := f.NewRequestHandler()
@@ -321,12 +323,19 @@ type FS struct {
 	// absolute paths on any filesystem.
 	AllowEmptyRoot bool
 
-	// Uses brotli encoding and fallbacks to gzip in responses if set to true, uses gzip if set to false.
+	// Uses brotli encoding and fallbacks to zstd or gzip in responses if set to true, uses zstd or gzip if set to false.
 	//
 	// This value has sense only if Compress is set.
 	//
 	// Brotli encoding is disabled by default.
 	CompressBrotli bool
+
+	// Uses zstd encoding and fallbacks to gzip in responses if set to true, uses gzip if set to false.
+	//
+	// This value has sense only if Compress is set.
+	//
+	// zstd encoding is disabled by default.
+	CompressZstd bool
 
 	// Index pages for directories without files matching IndexNames
 	// are automatically generated if set.
@@ -487,6 +496,7 @@ func (fs *FS) initRequestHandler() {
 		generateIndexPages:     fs.GenerateIndexPages,
 		compress:               fs.Compress,
 		compressBrotli:         fs.CompressBrotli,
+		compressZstd:           fs.CompressZstd,
 		compressRoot:           compressRoot,
 		pathNotFound:           fs.PathNotFound,
 		acceptByteRange:        fs.AcceptByteRange,
@@ -518,6 +528,7 @@ type fsHandler struct {
 	generateIndexPages bool
 	compress           bool
 	compressBrotli     bool
+	compressZstd       bool
 	acceptByteRange    bool
 }
 
@@ -542,16 +553,12 @@ type fsFile struct {
 
 func (ff *fsFile) NewReader() (io.Reader, error) {
 	if ff.isBig() {
-		r, err := ff.bigFileReader()
-		if err != nil {
-			ff.decReadersCount()
-		}
-		return r, err
+		return ff.bigFileReader()
 	}
-	return ff.smallFileReader()
+	return ff.smallFileReader(), nil
 }
 
-func (ff *fsFile) smallFileReader() (io.Reader, error) {
+func (ff *fsFile) smallFileReader() io.Reader {
 	v := ff.h.smallFileReaderPool.Get()
 	if v == nil {
 		v = &fsSmallFileReader{}
@@ -560,9 +567,9 @@ func (ff *fsFile) smallFileReader() (io.Reader, error) {
 	r.ff = ff
 	r.endPos = ff.contentLength
 	if r.startPos > 0 {
-		return nil, errors.New("bug: fsSmallFileReader with non-nil startPos found in the pool")
+		panic("bug: fsSmallFileReader with non-nil startPos found in the pool")
 	}
-	return r, nil
+	return r
 }
 
 // Files bigger than this size are sent with sendfile.
@@ -620,12 +627,12 @@ func (ff *fsFile) Release() {
 }
 
 func (ff *fsFile) decReadersCount() {
-	ff.h.cacheManager.WithLock(func() {
-		ff.readersCount--
-		if ff.readersCount < 0 {
-			ff.readersCount = 0
-		}
-	})
+	ff.h.cacheManager.Lock()
+	ff.readersCount--
+	if ff.readersCount < 0 {
+		panic("bug: fsFile.readersCount < 0")
+	}
+	ff.h.cacheManager.Unlock()
 }
 
 // bigFileReader attempts to trigger sendfile
@@ -785,9 +792,10 @@ func (r *fsSmallFileReader) WriteTo(w io.Writer) (int64, error) {
 }
 
 type cacheManager interface {
-	WithLock(work func())
-	GetFileFromCache(cacheKind CacheKind, path string) (*fsFile, bool)
-	SetFileToCache(cacheKind CacheKind, path string, ff *fsFile) *fsFile
+	Lock()
+	Unlock()
+	GetFileFromCache(cacheKind CacheKind, path []byte) (*fsFile, bool)
+	SetFileToCache(cacheKind CacheKind, path []byte, ff *fsFile) *fsFile
 }
 
 var (
@@ -831,19 +839,22 @@ type noopCacheManager struct {
 	cacheLock sync.Mutex
 }
 
-func (n *noopCacheManager) WithLock(work func()) {
+func (n *noopCacheManager) Lock() {
 	n.cacheLock.Lock()
+}
 
-	work()
-
+func (n *noopCacheManager) Unlock() {
 	n.cacheLock.Unlock()
 }
 
-func (*noopCacheManager) GetFileFromCache(cacheKind CacheKind, path string) (*fsFile, bool) {
+func (*noopCacheManager) GetFileFromCache(cacheKind CacheKind, path []byte) (*fsFile, bool) {
 	return nil, false
 }
 
-func (*noopCacheManager) SetFileToCache(cacheKind CacheKind, path string, ff *fsFile) *fsFile {
+func (n *noopCacheManager) SetFileToCache(cacheKind CacheKind, path []byte, ff *fsFile) *fsFile {
+	n.cacheLock.Lock()
+	ff.readersCount++
+	n.cacheLock.Unlock()
 	return ff
 }
 
@@ -856,11 +867,11 @@ type inMemoryCacheManager struct {
 	cacheLock     sync.Mutex
 }
 
-func (cm *inMemoryCacheManager) WithLock(work func()) {
+func (cm *inMemoryCacheManager) Lock() {
 	cm.cacheLock.Lock()
+}
 
-	work()
-
+func (cm *inMemoryCacheManager) Unlock() {
 	cm.cacheLock.Unlock()
 }
 
@@ -878,11 +889,11 @@ func (cm *inMemoryCacheManager) getFsCache(cacheKind CacheKind) map[string]*fsFi
 	return fileCache
 }
 
-func (cm *inMemoryCacheManager) GetFileFromCache(cacheKind CacheKind, path string) (*fsFile, bool) {
+func (cm *inMemoryCacheManager) GetFileFromCache(cacheKind CacheKind, path []byte) (*fsFile, bool) {
 	fileCache := cm.getFsCache(cacheKind)
 
 	cm.cacheLock.Lock()
-	ff, ok := fileCache[path]
+	ff, ok := fileCache[string(path)]
 	if ok {
 		ff.readersCount++
 	}
@@ -891,13 +902,13 @@ func (cm *inMemoryCacheManager) GetFileFromCache(cacheKind CacheKind, path strin
 	return ff, ok
 }
 
-func (cm *inMemoryCacheManager) SetFileToCache(cacheKind CacheKind, path string, ff *fsFile) *fsFile {
+func (cm *inMemoryCacheManager) SetFileToCache(cacheKind CacheKind, path []byte, ff *fsFile) *fsFile {
 	fileCache := cm.getFsCache(cacheKind)
 
 	cm.cacheLock.Lock()
-	ff1, ok := fileCache[path]
+	ff1, ok := fileCache[string(path)]
 	if !ok {
-		fileCache[path] = ff
+		fileCache[string(path)] = ff
 		ff.readersCount++
 	} else {
 		ff1.readersCount++
@@ -994,14 +1005,31 @@ func cleanCacheNolock(
 	return pendingFiles, filesToRelease
 }
 
-func (h *fsHandler) pathToFilePath(path string) string {
+func (h *fsHandler) pathToFilePath(path []byte, hasTrailingSlash bool) string {
 	if _, ok := h.filesystem.(*osFS); !ok {
 		if len(path) < 1 {
-			return path
+			return ""
+		} else if len(path) == 1 && path[0] == '/' {
+			return ""
 		}
-		return path[1:]
+		if hasTrailingSlash {
+			return string(path[1 : len(path)-1])
+		}
+		return string(path[1:])
 	}
-	return filepath.FromSlash(h.root + path)
+
+	// Use byte buffer pool to avoid string concatenation allocations
+	b := bytebufferpool.Get()
+	defer bytebufferpool.Put(b)
+
+	b.B = append(b.B, h.root...)
+	if hasTrailingSlash {
+		b.B = append(b.B, path[:len(path)-1]...)
+	} else {
+		b.B = append(b.B, path...)
+	}
+
+	return filepath.FromSlash(string(b.B))
 }
 
 func (h *fsHandler) filePathToCompressed(filePath string) string {
@@ -1049,26 +1077,20 @@ func (h *fsHandler) handleRequest(ctx *RequestCtx) {
 			mustCompress = true
 			fileCacheKind = brotliCacheKind
 			fileEncoding = "br"
+		case h.compressZstd && ctx.Request.Header.HasAcceptEncodingBytes(strZstd):
+			mustCompress = true
+			fileCacheKind = zstdCacheKind
+			fileEncoding = "zstd"
 		case ctx.Request.Header.HasAcceptEncodingBytes(strGzip):
 			mustCompress = true
 			fileCacheKind = gzipCacheKind
 			fileEncoding = "gzip"
-		case ctx.Request.Header.HasAcceptEncodingBytes(strZstd):
-			mustCompress = true
-			fileCacheKind = zstdCacheKind
-			fileEncoding = "zstd"
 		}
 	}
 
-	originalPathStr := string(path)
-	pathStr := originalPathStr
-	if hasTrailingSlash {
-		pathStr = originalPathStr[:len(originalPathStr)-1]
-	}
-
-	ff, ok := h.cacheManager.GetFileFromCache(fileCacheKind, originalPathStr)
+	ff, ok := h.cacheManager.GetFileFromCache(fileCacheKind, path)
 	if !ok {
-		filePath := h.pathToFilePath(pathStr)
+		filePath := h.pathToFilePath(path, hasTrailingSlash)
 
 		var err error
 		ff, err = h.openFSFile(filePath, mustCompress, fileEncoding)
@@ -1101,7 +1123,7 @@ func (h *fsHandler) handleRequest(ctx *RequestCtx) {
 			return
 		}
 
-		ff = h.cacheManager.SetFileToCache(fileCacheKind, originalPathStr, ff)
+		ff = h.cacheManager.SetFileToCache(fileCacheKind, path, ff)
 	}
 
 	if !ctx.IfModifiedSince(ff.lastModified) {
@@ -1112,6 +1134,7 @@ func (h *fsHandler) handleRequest(ctx *RequestCtx) {
 
 	r, err := ff.NewReader()
 	if err != nil {
+		ff.decReadersCount()
 		ctx.Logger().Printf("cannot obtain file reader for path=%q: %v", path, err)
 		ctx.Error("Internal Server Error", StatusInternalServerError)
 		return
@@ -1122,10 +1145,13 @@ func (h *fsHandler) handleRequest(ctx *RequestCtx) {
 		switch fileEncoding {
 		case "br":
 			hdr.SetContentEncodingBytes(strBr)
+			hdr.addVaryBytes(strAcceptEncoding)
 		case "gzip":
 			hdr.SetContentEncodingBytes(strGzip)
+			hdr.addVaryBytes(strAcceptEncoding)
 		case "zstd":
 			hdr.SetContentEncodingBytes(strZstd)
+			hdr.addVaryBytes(strAcceptEncoding)
 		}
 	}
 

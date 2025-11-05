@@ -1,41 +1,42 @@
 package carbon
 
-import "sync"
+import (
+	"sync"
+	"sync/atomic"
+)
 
-type TestNow struct {
-	isFrozen  bool
-	frozenNow *Carbon
-	rw        *sync.RWMutex
+// FrozenNow defines a FrozenNow struct.
+type FrozenNow struct {
+	isFrozen int32
+	testNow  *Carbon
+	rw       sync.RWMutex
 }
 
-var testNow = &TestNow{
-	rw: new(sync.RWMutex),
+var frozenNow = &FrozenNow{}
+
+// SetTestNow sets a test Carbon instance for now.
+func SetTestNow(c *Carbon) {
+	if c == nil {
+		return
+	}
+
+	frozenNow.rw.Lock()
+	defer frozenNow.rw.Unlock()
+
+	frozenNow.testNow = c
+	atomic.StoreInt32(&frozenNow.isFrozen, 1)
 }
 
-// SetTestNow sets a test Carbon instance (real or mock) to be returned when a "now" instance is created.
-// 设置当前测试时间
-func SetTestNow(carbon *Carbon) {
-	testNow.rw.Lock()
-	defer testNow.rw.Unlock()
+// ClearTestNow clears the test Carbon instance for now.
+func ClearTestNow() {
+	frozenNow.rw.Lock()
+	defer frozenNow.rw.Unlock()
 
-	testNow.isFrozen = true
-	testNow.frozenNow = carbon
+	frozenNow.testNow = nil
+	atomic.StoreInt32(&frozenNow.isFrozen, 0)
 }
 
-// CleanTestNow clears a test Carbon instance (real or mock) to be returned when a "now" instance is created.
-// 清除当前测试时间
-func CleanTestNow() {
-	testNow.rw.Lock()
-	defer testNow.rw.Unlock()
-
-	testNow.isFrozen = false
-}
-
-// IsTestNow report whether is testing time.
-// 是否是测试时间
+// IsTestNow reports whether is testing time.
 func IsTestNow() bool {
-	testNow.rw.Lock()
-	defer testNow.rw.Unlock()
-
-	return testNow.isFrozen
+	return atomic.LoadInt32(&frozenNow.isFrozen) == 1
 }

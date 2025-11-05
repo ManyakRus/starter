@@ -31,7 +31,7 @@ var (
 	_ = tdjson.Encoder{}
 )
 
-// StarsRevenueStatus represents TL type `starsRevenueStatus#79342946`.
+// StarsRevenueStatus represents TL type `starsRevenueStatus#febe5491`.
 // Describes Telegram Star revenue balances »¹.
 //
 // Links:
@@ -47,14 +47,14 @@ type StarsRevenueStatus struct {
 	// If set, the user may withdraw¹ up to available_balance stars.
 	//
 	// Links:
-	//  1) https://core.telegram.org/api/stars#withdrawing-revenue
+	//  1) https://core.telegram.org/api/stars#withdrawing-stars
 	WithdrawalEnabled bool
 	// Amount of not-yet-withdrawn Telegram Stars.
-	CurrentBalance int64
+	CurrentBalance StarsAmountClass
 	// Amount of withdrawable Telegram Stars.
-	AvailableBalance int64
+	AvailableBalance StarsAmountClass
 	// Total amount of earned Telegram Stars.
-	OverallRevenue int64
+	OverallRevenue StarsAmountClass
 	// Unixtime indicating when will withdrawal be available to the user. If not set,
 	// withdrawal can be started now.
 	//
@@ -63,7 +63,7 @@ type StarsRevenueStatus struct {
 }
 
 // StarsRevenueStatusTypeID is TL type id of StarsRevenueStatus.
-const StarsRevenueStatusTypeID = 0x79342946
+const StarsRevenueStatusTypeID = 0xfebe5491
 
 // Ensuring interfaces in compile-time for StarsRevenueStatus.
 var (
@@ -83,13 +83,13 @@ func (s *StarsRevenueStatus) Zero() bool {
 	if !(s.WithdrawalEnabled == false) {
 		return false
 	}
-	if !(s.CurrentBalance == 0) {
+	if !(s.CurrentBalance == nil) {
 		return false
 	}
-	if !(s.AvailableBalance == 0) {
+	if !(s.AvailableBalance == nil) {
 		return false
 	}
-	if !(s.OverallRevenue == 0) {
+	if !(s.OverallRevenue == nil) {
 		return false
 	}
 	if !(s.NextWithdrawalAt == 0) {
@@ -111,9 +111,9 @@ func (s *StarsRevenueStatus) String() string {
 // FillFrom fills StarsRevenueStatus from given interface.
 func (s *StarsRevenueStatus) FillFrom(from interface {
 	GetWithdrawalEnabled() (value bool)
-	GetCurrentBalance() (value int64)
-	GetAvailableBalance() (value int64)
-	GetOverallRevenue() (value int64)
+	GetCurrentBalance() (value StarsAmountClass)
+	GetAvailableBalance() (value StarsAmountClass)
+	GetOverallRevenue() (value StarsAmountClass)
 	GetNextWithdrawalAt() (value int, ok bool)
 }) {
 	s.WithdrawalEnabled = from.GetWithdrawalEnabled()
@@ -188,7 +188,7 @@ func (s *StarsRevenueStatus) SetFlags() {
 // Encode implements bin.Encoder.
 func (s *StarsRevenueStatus) Encode(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't encode starsRevenueStatus#79342946 as nil")
+		return fmt.Errorf("can't encode starsRevenueStatus#febe5491 as nil")
 	}
 	b.PutID(StarsRevenueStatusTypeID)
 	return s.EncodeBare(b)
@@ -197,15 +197,30 @@ func (s *StarsRevenueStatus) Encode(b *bin.Buffer) error {
 // EncodeBare implements bin.BareEncoder.
 func (s *StarsRevenueStatus) EncodeBare(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't encode starsRevenueStatus#79342946 as nil")
+		return fmt.Errorf("can't encode starsRevenueStatus#febe5491 as nil")
 	}
 	s.SetFlags()
 	if err := s.Flags.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode starsRevenueStatus#79342946: field flags: %w", err)
+		return fmt.Errorf("unable to encode starsRevenueStatus#febe5491: field flags: %w", err)
 	}
-	b.PutLong(s.CurrentBalance)
-	b.PutLong(s.AvailableBalance)
-	b.PutLong(s.OverallRevenue)
+	if s.CurrentBalance == nil {
+		return fmt.Errorf("unable to encode starsRevenueStatus#febe5491: field current_balance is nil")
+	}
+	if err := s.CurrentBalance.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode starsRevenueStatus#febe5491: field current_balance: %w", err)
+	}
+	if s.AvailableBalance == nil {
+		return fmt.Errorf("unable to encode starsRevenueStatus#febe5491: field available_balance is nil")
+	}
+	if err := s.AvailableBalance.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode starsRevenueStatus#febe5491: field available_balance: %w", err)
+	}
+	if s.OverallRevenue == nil {
+		return fmt.Errorf("unable to encode starsRevenueStatus#febe5491: field overall_revenue is nil")
+	}
+	if err := s.OverallRevenue.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode starsRevenueStatus#febe5491: field overall_revenue: %w", err)
+	}
 	if s.Flags.Has(1) {
 		b.PutInt(s.NextWithdrawalAt)
 	}
@@ -215,10 +230,10 @@ func (s *StarsRevenueStatus) EncodeBare(b *bin.Buffer) error {
 // Decode implements bin.Decoder.
 func (s *StarsRevenueStatus) Decode(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't decode starsRevenueStatus#79342946 to nil")
+		return fmt.Errorf("can't decode starsRevenueStatus#febe5491 to nil")
 	}
 	if err := b.ConsumeID(StarsRevenueStatusTypeID); err != nil {
-		return fmt.Errorf("unable to decode starsRevenueStatus#79342946: %w", err)
+		return fmt.Errorf("unable to decode starsRevenueStatus#febe5491: %w", err)
 	}
 	return s.DecodeBare(b)
 }
@@ -226,39 +241,39 @@ func (s *StarsRevenueStatus) Decode(b *bin.Buffer) error {
 // DecodeBare implements bin.BareDecoder.
 func (s *StarsRevenueStatus) DecodeBare(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't decode starsRevenueStatus#79342946 to nil")
+		return fmt.Errorf("can't decode starsRevenueStatus#febe5491 to nil")
 	}
 	{
 		if err := s.Flags.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode starsRevenueStatus#79342946: field flags: %w", err)
+			return fmt.Errorf("unable to decode starsRevenueStatus#febe5491: field flags: %w", err)
 		}
 	}
 	s.WithdrawalEnabled = s.Flags.Has(0)
 	{
-		value, err := b.Long()
+		value, err := DecodeStarsAmount(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode starsRevenueStatus#79342946: field current_balance: %w", err)
+			return fmt.Errorf("unable to decode starsRevenueStatus#febe5491: field current_balance: %w", err)
 		}
 		s.CurrentBalance = value
 	}
 	{
-		value, err := b.Long()
+		value, err := DecodeStarsAmount(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode starsRevenueStatus#79342946: field available_balance: %w", err)
+			return fmt.Errorf("unable to decode starsRevenueStatus#febe5491: field available_balance: %w", err)
 		}
 		s.AvailableBalance = value
 	}
 	{
-		value, err := b.Long()
+		value, err := DecodeStarsAmount(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode starsRevenueStatus#79342946: field overall_revenue: %w", err)
+			return fmt.Errorf("unable to decode starsRevenueStatus#febe5491: field overall_revenue: %w", err)
 		}
 		s.OverallRevenue = value
 	}
 	if s.Flags.Has(1) {
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode starsRevenueStatus#79342946: field next_withdrawal_at: %w", err)
+			return fmt.Errorf("unable to decode starsRevenueStatus#febe5491: field next_withdrawal_at: %w", err)
 		}
 		s.NextWithdrawalAt = value
 	}
@@ -285,7 +300,7 @@ func (s *StarsRevenueStatus) GetWithdrawalEnabled() (value bool) {
 }
 
 // GetCurrentBalance returns value of CurrentBalance field.
-func (s *StarsRevenueStatus) GetCurrentBalance() (value int64) {
+func (s *StarsRevenueStatus) GetCurrentBalance() (value StarsAmountClass) {
 	if s == nil {
 		return
 	}
@@ -293,7 +308,7 @@ func (s *StarsRevenueStatus) GetCurrentBalance() (value int64) {
 }
 
 // GetAvailableBalance returns value of AvailableBalance field.
-func (s *StarsRevenueStatus) GetAvailableBalance() (value int64) {
+func (s *StarsRevenueStatus) GetAvailableBalance() (value StarsAmountClass) {
 	if s == nil {
 		return
 	}
@@ -301,7 +316,7 @@ func (s *StarsRevenueStatus) GetAvailableBalance() (value int64) {
 }
 
 // GetOverallRevenue returns value of OverallRevenue field.
-func (s *StarsRevenueStatus) GetOverallRevenue() (value int64) {
+func (s *StarsRevenueStatus) GetOverallRevenue() (value StarsAmountClass) {
 	if s == nil {
 		return
 	}

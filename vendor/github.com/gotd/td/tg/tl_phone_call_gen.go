@@ -1266,6 +1266,8 @@ type PhoneCall struct {
 	P2PAllowed bool
 	// Whether this is a video call
 	Video bool
+	// ConferenceSupported field of PhoneCall.
+	ConferenceSupported bool
 	// Call ID
 	ID int64
 	// Access hash
@@ -1327,6 +1329,9 @@ func (p *PhoneCall) Zero() bool {
 	if !(p.Video == false) {
 		return false
 	}
+	if !(p.ConferenceSupported == false) {
+		return false
+	}
 	if !(p.ID == 0) {
 		return false
 	}
@@ -1377,6 +1382,7 @@ func (p *PhoneCall) String() string {
 func (p *PhoneCall) FillFrom(from interface {
 	GetP2PAllowed() (value bool)
 	GetVideo() (value bool)
+	GetConferenceSupported() (value bool)
 	GetID() (value int64)
 	GetAccessHash() (value int64)
 	GetDate() (value int)
@@ -1391,6 +1397,7 @@ func (p *PhoneCall) FillFrom(from interface {
 }) {
 	p.P2PAllowed = from.GetP2PAllowed()
 	p.Video = from.GetVideo()
+	p.ConferenceSupported = from.GetConferenceSupported()
 	p.ID = from.GetID()
 	p.AccessHash = from.GetAccessHash()
 	p.Date = from.GetDate()
@@ -1439,6 +1446,11 @@ func (p *PhoneCall) TypeInfo() tdp.Type {
 			Name:       "Video",
 			SchemaName: "video",
 			Null:       !p.Flags.Has(6),
+		},
+		{
+			Name:       "ConferenceSupported",
+			SchemaName: "conference_supported",
+			Null:       !p.Flags.Has(8),
 		},
 		{
 			Name:       "ID",
@@ -1496,6 +1508,9 @@ func (p *PhoneCall) SetFlags() {
 	}
 	if !(p.Video == false) {
 		p.Flags.Set(6)
+	}
+	if !(p.ConferenceSupported == false) {
+		p.Flags.Set(8)
 	}
 	if !(p.CustomParameters.Zero()) {
 		p.Flags.Set(7)
@@ -1571,6 +1586,7 @@ func (p *PhoneCall) DecodeBare(b *bin.Buffer) error {
 	}
 	p.P2PAllowed = p.Flags.Has(5)
 	p.Video = p.Flags.Has(6)
+	p.ConferenceSupported = p.Flags.Has(8)
 	{
 		value, err := b.Long()
 		if err != nil {
@@ -1693,6 +1709,25 @@ func (p *PhoneCall) GetVideo() (value bool) {
 		return
 	}
 	return p.Flags.Has(6)
+}
+
+// SetConferenceSupported sets value of ConferenceSupported conditional field.
+func (p *PhoneCall) SetConferenceSupported(value bool) {
+	if value {
+		p.Flags.Set(8)
+		p.ConferenceSupported = true
+	} else {
+		p.Flags.Unset(8)
+		p.ConferenceSupported = false
+	}
+}
+
+// GetConferenceSupported returns value of ConferenceSupported conditional field.
+func (p *PhoneCall) GetConferenceSupported() (value bool) {
+	if p == nil {
+		return
+	}
+	return p.Flags.Has(8)
 }
 
 // GetID returns value of ID field.
@@ -2172,6 +2207,14 @@ const PhoneCallClassName = "PhoneCall"
 // PhoneCallClass represents PhoneCall generic type.
 //
 // See https://core.telegram.org/type/PhoneCall for reference.
+//
+// Constructors:
+//   - [PhoneCallEmpty]
+//   - [PhoneCallWaiting]
+//   - [PhoneCallRequested]
+//   - [PhoneCallAccepted]
+//   - [PhoneCall]
+//   - [PhoneCallDiscarded]
 //
 // Example:
 //

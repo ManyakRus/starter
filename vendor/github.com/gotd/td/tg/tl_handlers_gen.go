@@ -1176,26 +1176,6 @@ func (u UpdateDispatcher) OnMessageExtendedMedia(handler MessageExtendedMediaHan
 	}
 }
 
-// ChannelPinnedTopicHandler is a ChannelPinnedTopic event handler.
-type ChannelPinnedTopicHandler func(ctx context.Context, e Entities, update *UpdateChannelPinnedTopic) error
-
-// OnChannelPinnedTopic sets ChannelPinnedTopic handler.
-func (u UpdateDispatcher) OnChannelPinnedTopic(handler ChannelPinnedTopicHandler) {
-	u.handlers[UpdateChannelPinnedTopicTypeID] = func(ctx context.Context, e Entities, update UpdateClass) error {
-		return handler(ctx, e, update.(*UpdateChannelPinnedTopic))
-	}
-}
-
-// ChannelPinnedTopicsHandler is a ChannelPinnedTopics event handler.
-type ChannelPinnedTopicsHandler func(ctx context.Context, e Entities, update *UpdateChannelPinnedTopics) error
-
-// OnChannelPinnedTopics sets ChannelPinnedTopics handler.
-func (u UpdateDispatcher) OnChannelPinnedTopics(handler ChannelPinnedTopicsHandler) {
-	u.handlers[UpdateChannelPinnedTopicsTypeID] = func(ctx context.Context, e Entities, update UpdateClass) error {
-		return handler(ctx, e, update.(*UpdateChannelPinnedTopics))
-	}
-}
-
 // UserHandler is a User event handler.
 type UserHandler func(ctx context.Context, e Entities, update *UpdateUser) error
 
@@ -1456,16 +1436,6 @@ func (u UpdateDispatcher) OnNewStoryReaction(handler NewStoryReactionHandler) {
 	}
 }
 
-// BroadcastRevenueTransactionsHandler is a BroadcastRevenueTransactions event handler.
-type BroadcastRevenueTransactionsHandler func(ctx context.Context, e Entities, update *UpdateBroadcastRevenueTransactions) error
-
-// OnBroadcastRevenueTransactions sets BroadcastRevenueTransactions handler.
-func (u UpdateDispatcher) OnBroadcastRevenueTransactions(handler BroadcastRevenueTransactionsHandler) {
-	u.handlers[UpdateBroadcastRevenueTransactionsTypeID] = func(ctx context.Context, e Entities, update UpdateClass) error {
-		return handler(ctx, e, update.(*UpdateBroadcastRevenueTransactions))
-	}
-}
-
 // StarsBalanceHandler is a StarsBalance event handler.
 type StarsBalanceHandler func(ctx context.Context, e Entities, update *UpdateStarsBalance) error
 
@@ -1516,12 +1486,92 @@ func (u UpdateDispatcher) OnPaidReactionPrivacy(handler PaidReactionPrivacyHandl
 	}
 }
 
-// BotSubscriptionExpireHandler is a BotSubscriptionExpire event handler.
-type BotSubscriptionExpireHandler func(ctx context.Context, e Entities, update *UpdateBotSubscriptionExpire) error
+// SentPhoneCodeHandler is a SentPhoneCode event handler.
+type SentPhoneCodeHandler func(ctx context.Context, e Entities, update *UpdateSentPhoneCode) error
 
-// OnBotSubscriptionExpire sets BotSubscriptionExpire handler.
-func (u UpdateDispatcher) OnBotSubscriptionExpire(handler BotSubscriptionExpireHandler) {
-	u.handlers[UpdateBotSubscriptionExpireTypeID] = func(ctx context.Context, e Entities, update UpdateClass) error {
-		return handler(ctx, e, update.(*UpdateBotSubscriptionExpire))
+// OnSentPhoneCode sets SentPhoneCode handler.
+func (u UpdateDispatcher) OnSentPhoneCode(handler SentPhoneCodeHandler) {
+	u.handlers[UpdateSentPhoneCodeTypeID] = func(ctx context.Context, e Entities, update UpdateClass) error {
+		return handler(ctx, e, update.(*UpdateSentPhoneCode))
+	}
+}
+
+// GroupCallChainBlocksHandler is a GroupCallChainBlocks event handler.
+type GroupCallChainBlocksHandler func(ctx context.Context, e Entities, update *UpdateGroupCallChainBlocks) error
+
+// OnGroupCallChainBlocks sets GroupCallChainBlocks handler.
+func (u UpdateDispatcher) OnGroupCallChainBlocks(handler GroupCallChainBlocksHandler) {
+	u.handlers[UpdateGroupCallChainBlocksTypeID] = func(ctx context.Context, e Entities, update UpdateClass) error {
+		return handler(ctx, e, update.(*UpdateGroupCallChainBlocks))
+	}
+}
+
+// ReadMonoForumInboxHandler is a ReadMonoForumInbox event handler.
+type ReadMonoForumInboxHandler func(ctx context.Context, e Entities, update *UpdateReadMonoForumInbox) error
+
+// OnReadMonoForumInbox sets ReadMonoForumInbox handler.
+func (u UpdateDispatcher) OnReadMonoForumInbox(handler ReadMonoForumInboxHandler) {
+	u.handlers[UpdateReadMonoForumInboxTypeID] = func(ctx context.Context, e Entities, update UpdateClass) error {
+		return handler(ctx, e, update.(*UpdateReadMonoForumInbox))
+	}
+}
+
+// ReadMonoForumOutboxHandler is a ReadMonoForumOutbox event handler.
+type ReadMonoForumOutboxHandler func(ctx context.Context, e Entities, update *UpdateReadMonoForumOutbox) error
+
+// OnReadMonoForumOutbox sets ReadMonoForumOutbox handler.
+func (u UpdateDispatcher) OnReadMonoForumOutbox(handler ReadMonoForumOutboxHandler) {
+	u.handlers[UpdateReadMonoForumOutboxTypeID] = func(ctx context.Context, e Entities, update UpdateClass) error {
+		return handler(ctx, e, update.(*UpdateReadMonoForumOutbox))
+	}
+}
+
+// MonoForumNoPaidExceptionHandler is a MonoForumNoPaidException event handler.
+type MonoForumNoPaidExceptionHandler func(ctx context.Context, e Entities, update *UpdateMonoForumNoPaidException) error
+
+// OnMonoForumNoPaidException sets MonoForumNoPaidException handler.
+func (u UpdateDispatcher) OnMonoForumNoPaidException(handler MonoForumNoPaidExceptionHandler) {
+	u.handlers[UpdateMonoForumNoPaidExceptionTypeID] = func(ctx context.Context, e Entities, update UpdateClass) error {
+		return handler(ctx, e, update.(*UpdateMonoForumNoPaidException))
+	}
+}
+
+// GroupCallMessageHandler is a GroupCallMessage event handler.
+type GroupCallMessageHandler func(ctx context.Context, e Entities, update *UpdateGroupCallMessage) error
+
+// OnGroupCallMessage sets GroupCallMessage handler.
+func (u UpdateDispatcher) OnGroupCallMessage(handler GroupCallMessageHandler) {
+	u.handlers[UpdateGroupCallMessageTypeID] = func(ctx context.Context, e Entities, update UpdateClass) error {
+		return handler(ctx, e, update.(*UpdateGroupCallMessage))
+	}
+}
+
+// GroupCallEncryptedMessageHandler is a GroupCallEncryptedMessage event handler.
+type GroupCallEncryptedMessageHandler func(ctx context.Context, e Entities, update *UpdateGroupCallEncryptedMessage) error
+
+// OnGroupCallEncryptedMessage sets GroupCallEncryptedMessage handler.
+func (u UpdateDispatcher) OnGroupCallEncryptedMessage(handler GroupCallEncryptedMessageHandler) {
+	u.handlers[UpdateGroupCallEncryptedMessageTypeID] = func(ctx context.Context, e Entities, update UpdateClass) error {
+		return handler(ctx, e, update.(*UpdateGroupCallEncryptedMessage))
+	}
+}
+
+// PinnedForumTopicHandler is a PinnedForumTopic event handler.
+type PinnedForumTopicHandler func(ctx context.Context, e Entities, update *UpdatePinnedForumTopic) error
+
+// OnPinnedForumTopic sets PinnedForumTopic handler.
+func (u UpdateDispatcher) OnPinnedForumTopic(handler PinnedForumTopicHandler) {
+	u.handlers[UpdatePinnedForumTopicTypeID] = func(ctx context.Context, e Entities, update UpdateClass) error {
+		return handler(ctx, e, update.(*UpdatePinnedForumTopic))
+	}
+}
+
+// PinnedForumTopicsHandler is a PinnedForumTopics event handler.
+type PinnedForumTopicsHandler func(ctx context.Context, e Entities, update *UpdatePinnedForumTopics) error
+
+// OnPinnedForumTopics sets PinnedForumTopics handler.
+func (u UpdateDispatcher) OnPinnedForumTopics(handler PinnedForumTopicsHandler) {
+	u.handlers[UpdatePinnedForumTopicsTypeID] = func(ctx context.Context, e Entities, update UpdateClass) error {
+		return handler(ctx, e, update.(*UpdatePinnedForumTopics))
 	}
 }

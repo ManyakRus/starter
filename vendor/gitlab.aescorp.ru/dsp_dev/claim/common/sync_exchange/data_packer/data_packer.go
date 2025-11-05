@@ -4,7 +4,6 @@ package data_packer
 import (
 	"fmt"
 	"github.com/klauspost/compress/zstd"
-	//"sync"
 )
 
 // DataPacker -- архиватор данных движка хранилища

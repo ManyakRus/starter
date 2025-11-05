@@ -1,0 +1,37 @@
+{{- /*gotype: github.com/ogen-go/ogen/gen/ir.Type*/ -}}
+{{- define "schema/schema" }}
+
+{{- if $.Doc -}}
+// {{ $.Doc }}
+{{- end }}
+{{- template "godoc" $.GoDoc }}
+{{- if $.Schema }}
+	{{- with $ptr := $.Schema.Ref.Ptr }}
+	// Ref: {{ $ptr }}
+	{{- end }}
+{{- end }}
+
+{{- if $.IsStruct }}
+	{{- template "schema/struct" $ }}
+{{- else if $.IsMap }}
+	{{- template "schema/map" $ }}
+{{- else if $.IsStream }}
+	{{- template "schema/stream" $ }}
+{{- else if $.IsAlias }}
+	{{- template "schema/alias" $ }}
+{{- else if $.IsEnum }}
+	{{- template "schema/enum" $ }}
+{{- else if $.IsSum }}
+	{{- template "schema/sum" $ }}
+{{- else if $.IsGeneric }}
+	{{- template "schema/generic" $ }}
+{{- else }}
+	{{ errorf "unexpected kind %s of %s" $.Kind $.Name }}
+{{- end }}
+
+{{/* Define methods */}}
+{{- range $method := $.Methods }}
+func (*{{ $.Go }}) {{ $method }}() {}
+{{- end }}
+
+{{ end }}

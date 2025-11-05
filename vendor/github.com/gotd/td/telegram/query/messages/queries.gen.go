@@ -82,9 +82,21 @@ func (b *ChannelsSearchPostsQueryBuilder) OffsetID(offsetID int) *ChannelsSearch
 	return b
 }
 
+// AllowPaidStars sets AllowPaidStars field of ChannelsSearchPosts query.
+func (b *ChannelsSearchPostsQueryBuilder) AllowPaidStars(paramAllowPaidStars int64) *ChannelsSearchPostsQueryBuilder {
+	b.req.AllowPaidStars = paramAllowPaidStars
+	return b
+}
+
 // Hashtag sets Hashtag field of ChannelsSearchPosts query.
 func (b *ChannelsSearchPostsQueryBuilder) Hashtag(paramHashtag string) *ChannelsSearchPostsQueryBuilder {
 	b.req.Hashtag = paramHashtag
+	return b
+}
+
+// SetQuery sets Query field of ChannelsSearchPosts query.
+func (b *ChannelsSearchPostsQueryBuilder) SetQuery(paramQuery string) *ChannelsSearchPostsQueryBuilder {
+	b.req.Query = paramQuery
 	return b
 }
 
@@ -94,7 +106,9 @@ func (b *ChannelsSearchPostsQueryBuilder) Query(ctx context.Context, req Request
 		Limit: req.Limit,
 	}
 
+	r.AllowPaidStars = b.req.AllowPaidStars
 	r.Hashtag = b.req.Hashtag
+	r.Query = b.req.Query
 	r.OffsetID = req.OffsetID
 	r.OffsetPeer = req.OffsetPeer
 	r.OffsetRate = req.OffsetRate
@@ -472,7 +486,8 @@ func (q *QueryBuilder) GetSavedHistory(paramPeer tg.InputPeerClass) *GetSavedHis
 		raw:       q.raw,
 		batchSize: 1,
 		req: tg.MessagesGetSavedHistoryRequest{
-			Peer: &tg.InputPeerEmpty{},
+			ParentPeer: &tg.InputPeerEmpty{},
+			Peer:       &tg.InputPeerEmpty{},
 		},
 	}
 
@@ -500,6 +515,12 @@ func (b *GetSavedHistoryQueryBuilder) OffsetID(offsetID int) *GetSavedHistoryQue
 	return b
 }
 
+// ParentPeer sets ParentPeer field of GetSavedHistory query.
+func (b *GetSavedHistoryQueryBuilder) ParentPeer(paramParentPeer tg.InputPeerClass) *GetSavedHistoryQueryBuilder {
+	b.req.ParentPeer = paramParentPeer
+	return b
+}
+
 // Peer sets Peer field of GetSavedHistory query.
 func (b *GetSavedHistoryQueryBuilder) Peer(paramPeer tg.InputPeerClass) *GetSavedHistoryQueryBuilder {
 	b.req.Peer = paramPeer
@@ -512,6 +533,7 @@ func (b *GetSavedHistoryQueryBuilder) Query(ctx context.Context, req Request) (t
 		Limit: req.Limit,
 	}
 
+	r.ParentPeer = b.req.ParentPeer
 	r.Peer = b.req.Peer
 	r.AddOffset = req.AddOffset
 	r.OffsetDate = req.OffsetDate
@@ -685,7 +707,8 @@ func (q *QueryBuilder) GetUnreadReactions(paramPeer tg.InputPeerClass) *GetUnrea
 		raw:       q.raw,
 		batchSize: 1,
 		req: tg.MessagesGetUnreadReactionsRequest{
-			Peer: &tg.InputPeerEmpty{},
+			Peer:        &tg.InputPeerEmpty{},
+			SavedPeerID: &tg.InputPeerEmpty{},
 		},
 	}
 
@@ -713,6 +736,12 @@ func (b *GetUnreadReactionsQueryBuilder) Peer(paramPeer tg.InputPeerClass) *GetU
 	return b
 }
 
+// SavedPeerID sets SavedPeerID field of GetUnreadReactions query.
+func (b *GetUnreadReactionsQueryBuilder) SavedPeerID(paramSavedPeerID tg.InputPeerClass) *GetUnreadReactionsQueryBuilder {
+	b.req.SavedPeerID = paramSavedPeerID
+	return b
+}
+
 // TopMsgID sets TopMsgID field of GetUnreadReactions query.
 func (b *GetUnreadReactionsQueryBuilder) TopMsgID(paramTopMsgID int) *GetUnreadReactionsQueryBuilder {
 	b.req.TopMsgID = paramTopMsgID
@@ -726,6 +755,7 @@ func (b *GetUnreadReactionsQueryBuilder) Query(ctx context.Context, req Request)
 	}
 
 	r.Peer = b.req.Peer
+	r.SavedPeerID = b.req.SavedPeerID
 	r.TopMsgID = b.req.TopMsgID
 	r.AddOffset = req.AddOffset
 	r.OffsetID = req.OffsetID
@@ -1087,6 +1117,12 @@ func (b *SearchGlobalQueryBuilder) FolderID(paramFolderID int) *SearchGlobalQuer
 	return b
 }
 
+// GroupsOnly sets GroupsOnly field of SearchGlobal query.
+func (b *SearchGlobalQueryBuilder) GroupsOnly(paramGroupsOnly bool) *SearchGlobalQueryBuilder {
+	b.req.GroupsOnly = paramGroupsOnly
+	return b
+}
+
 // MaxDate sets MaxDate field of SearchGlobal query.
 func (b *SearchGlobalQueryBuilder) MaxDate(paramMaxDate int) *SearchGlobalQueryBuilder {
 	b.req.MaxDate = paramMaxDate
@@ -1102,6 +1138,12 @@ func (b *SearchGlobalQueryBuilder) MinDate(paramMinDate int) *SearchGlobalQueryB
 // Q sets Q field of SearchGlobal query.
 func (b *SearchGlobalQueryBuilder) Q(paramQ string) *SearchGlobalQueryBuilder {
 	b.req.Q = paramQ
+	return b
+}
+
+// UsersOnly sets UsersOnly field of SearchGlobal query.
+func (b *SearchGlobalQueryBuilder) UsersOnly(paramUsersOnly bool) *SearchGlobalQueryBuilder {
+	b.req.UsersOnly = paramUsersOnly
 	return b
 }
 
@@ -1212,9 +1254,11 @@ func (b *SearchGlobalQueryBuilder) Query(ctx context.Context, req Request) (tg.M
 	r.BroadcastsOnly = b.req.BroadcastsOnly
 	r.Filter = b.req.Filter
 	r.FolderID = b.req.FolderID
+	r.GroupsOnly = b.req.GroupsOnly
 	r.MaxDate = b.req.MaxDate
 	r.MinDate = b.req.MinDate
 	r.Q = b.req.Q
+	r.UsersOnly = b.req.UsersOnly
 	r.OffsetID = req.OffsetID
 	r.OffsetPeer = req.OffsetPeer
 	r.OffsetRate = req.OffsetRate

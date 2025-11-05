@@ -1325,32 +1325,6 @@ func (s UpdateClassArray) AsUpdateMessageExtendedMedia() (to UpdateMessageExtend
 	return to
 }
 
-// AsUpdateChannelPinnedTopic returns copy with only UpdateChannelPinnedTopic constructors.
-func (s UpdateClassArray) AsUpdateChannelPinnedTopic() (to UpdateChannelPinnedTopicArray) {
-	for _, elem := range s {
-		value, ok := elem.(*UpdateChannelPinnedTopic)
-		if !ok {
-			continue
-		}
-		to = append(to, *value)
-	}
-
-	return to
-}
-
-// AsUpdateChannelPinnedTopics returns copy with only UpdateChannelPinnedTopics constructors.
-func (s UpdateClassArray) AsUpdateChannelPinnedTopics() (to UpdateChannelPinnedTopicsArray) {
-	for _, elem := range s {
-		value, ok := elem.(*UpdateChannelPinnedTopics)
-		if !ok {
-			continue
-		}
-		to = append(to, *value)
-	}
-
-	return to
-}
-
 // AsUpdateUser returns copy with only UpdateUser constructors.
 func (s UpdateClassArray) AsUpdateUser() (to UpdateUserArray) {
 	for _, elem := range s {
@@ -1663,19 +1637,6 @@ func (s UpdateClassArray) AsUpdateNewStoryReaction() (to UpdateNewStoryReactionA
 	return to
 }
 
-// AsUpdateBroadcastRevenueTransactions returns copy with only UpdateBroadcastRevenueTransactions constructors.
-func (s UpdateClassArray) AsUpdateBroadcastRevenueTransactions() (to UpdateBroadcastRevenueTransactionsArray) {
-	for _, elem := range s {
-		value, ok := elem.(*UpdateBroadcastRevenueTransactions)
-		if !ok {
-			continue
-		}
-		to = append(to, *value)
-	}
-
-	return to
-}
-
 // AsUpdateStarsBalance returns copy with only UpdateStarsBalance constructors.
 func (s UpdateClassArray) AsUpdateStarsBalance() (to UpdateStarsBalanceArray) {
 	for _, elem := range s {
@@ -1741,10 +1702,114 @@ func (s UpdateClassArray) AsUpdatePaidReactionPrivacy() (to UpdatePaidReactionPr
 	return to
 }
 
-// AsUpdateBotSubscriptionExpire returns copy with only UpdateBotSubscriptionExpire constructors.
-func (s UpdateClassArray) AsUpdateBotSubscriptionExpire() (to UpdateBotSubscriptionExpireArray) {
+// AsUpdateSentPhoneCode returns copy with only UpdateSentPhoneCode constructors.
+func (s UpdateClassArray) AsUpdateSentPhoneCode() (to UpdateSentPhoneCodeArray) {
 	for _, elem := range s {
-		value, ok := elem.(*UpdateBotSubscriptionExpire)
+		value, ok := elem.(*UpdateSentPhoneCode)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsUpdateGroupCallChainBlocks returns copy with only UpdateGroupCallChainBlocks constructors.
+func (s UpdateClassArray) AsUpdateGroupCallChainBlocks() (to UpdateGroupCallChainBlocksArray) {
+	for _, elem := range s {
+		value, ok := elem.(*UpdateGroupCallChainBlocks)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsUpdateReadMonoForumInbox returns copy with only UpdateReadMonoForumInbox constructors.
+func (s UpdateClassArray) AsUpdateReadMonoForumInbox() (to UpdateReadMonoForumInboxArray) {
+	for _, elem := range s {
+		value, ok := elem.(*UpdateReadMonoForumInbox)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsUpdateReadMonoForumOutbox returns copy with only UpdateReadMonoForumOutbox constructors.
+func (s UpdateClassArray) AsUpdateReadMonoForumOutbox() (to UpdateReadMonoForumOutboxArray) {
+	for _, elem := range s {
+		value, ok := elem.(*UpdateReadMonoForumOutbox)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsUpdateMonoForumNoPaidException returns copy with only UpdateMonoForumNoPaidException constructors.
+func (s UpdateClassArray) AsUpdateMonoForumNoPaidException() (to UpdateMonoForumNoPaidExceptionArray) {
+	for _, elem := range s {
+		value, ok := elem.(*UpdateMonoForumNoPaidException)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsUpdateGroupCallMessage returns copy with only UpdateGroupCallMessage constructors.
+func (s UpdateClassArray) AsUpdateGroupCallMessage() (to UpdateGroupCallMessageArray) {
+	for _, elem := range s {
+		value, ok := elem.(*UpdateGroupCallMessage)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsUpdateGroupCallEncryptedMessage returns copy with only UpdateGroupCallEncryptedMessage constructors.
+func (s UpdateClassArray) AsUpdateGroupCallEncryptedMessage() (to UpdateGroupCallEncryptedMessageArray) {
+	for _, elem := range s {
+		value, ok := elem.(*UpdateGroupCallEncryptedMessage)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsUpdatePinnedForumTopic returns copy with only UpdatePinnedForumTopic constructors.
+func (s UpdateClassArray) AsUpdatePinnedForumTopic() (to UpdatePinnedForumTopicArray) {
+	for _, elem := range s {
+		value, ok := elem.(*UpdatePinnedForumTopic)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsUpdatePinnedForumTopics returns copy with only UpdatePinnedForumTopics constructors.
+func (s UpdateClassArray) AsUpdatePinnedForumTopics() (to UpdatePinnedForumTopicsArray) {
+	for _, elem := range s {
+		value, ok := elem.(*UpdatePinnedForumTopics)
 		if !ok {
 			continue
 		}
@@ -9590,170 +9655,6 @@ func (s *UpdateMessageExtendedMediaArray) Pop() (v UpdateMessageExtendedMedia, o
 	return v, true
 }
 
-// UpdateChannelPinnedTopicArray is adapter for slice of UpdateChannelPinnedTopic.
-type UpdateChannelPinnedTopicArray []UpdateChannelPinnedTopic
-
-// Sort sorts slice of UpdateChannelPinnedTopic.
-func (s UpdateChannelPinnedTopicArray) Sort(less func(a, b UpdateChannelPinnedTopic) bool) UpdateChannelPinnedTopicArray {
-	sort.Slice(s, func(i, j int) bool {
-		return less(s[i], s[j])
-	})
-	return s
-}
-
-// SortStable sorts slice of UpdateChannelPinnedTopic.
-func (s UpdateChannelPinnedTopicArray) SortStable(less func(a, b UpdateChannelPinnedTopic) bool) UpdateChannelPinnedTopicArray {
-	sort.SliceStable(s, func(i, j int) bool {
-		return less(s[i], s[j])
-	})
-	return s
-}
-
-// Retain filters in-place slice of UpdateChannelPinnedTopic.
-func (s UpdateChannelPinnedTopicArray) Retain(keep func(x UpdateChannelPinnedTopic) bool) UpdateChannelPinnedTopicArray {
-	n := 0
-	for _, x := range s {
-		if keep(x) {
-			s[n] = x
-			n++
-		}
-	}
-	s = s[:n]
-
-	return s
-}
-
-// First returns first element of slice (if exists).
-func (s UpdateChannelPinnedTopicArray) First() (v UpdateChannelPinnedTopic, ok bool) {
-	if len(s) < 1 {
-		return
-	}
-	return s[0], true
-}
-
-// Last returns last element of slice (if exists).
-func (s UpdateChannelPinnedTopicArray) Last() (v UpdateChannelPinnedTopic, ok bool) {
-	if len(s) < 1 {
-		return
-	}
-	return s[len(s)-1], true
-}
-
-// PopFirst returns first element of slice (if exists) and deletes it.
-func (s *UpdateChannelPinnedTopicArray) PopFirst() (v UpdateChannelPinnedTopic, ok bool) {
-	if s == nil || len(*s) < 1 {
-		return
-	}
-
-	a := *s
-	v = a[0]
-
-	// Delete by index from SliceTricks.
-	copy(a[0:], a[1:])
-	var zero UpdateChannelPinnedTopic
-	a[len(a)-1] = zero
-	a = a[:len(a)-1]
-	*s = a
-
-	return v, true
-}
-
-// Pop returns last element of slice (if exists) and deletes it.
-func (s *UpdateChannelPinnedTopicArray) Pop() (v UpdateChannelPinnedTopic, ok bool) {
-	if s == nil || len(*s) < 1 {
-		return
-	}
-
-	a := *s
-	v = a[len(a)-1]
-	a = a[:len(a)-1]
-	*s = a
-
-	return v, true
-}
-
-// UpdateChannelPinnedTopicsArray is adapter for slice of UpdateChannelPinnedTopics.
-type UpdateChannelPinnedTopicsArray []UpdateChannelPinnedTopics
-
-// Sort sorts slice of UpdateChannelPinnedTopics.
-func (s UpdateChannelPinnedTopicsArray) Sort(less func(a, b UpdateChannelPinnedTopics) bool) UpdateChannelPinnedTopicsArray {
-	sort.Slice(s, func(i, j int) bool {
-		return less(s[i], s[j])
-	})
-	return s
-}
-
-// SortStable sorts slice of UpdateChannelPinnedTopics.
-func (s UpdateChannelPinnedTopicsArray) SortStable(less func(a, b UpdateChannelPinnedTopics) bool) UpdateChannelPinnedTopicsArray {
-	sort.SliceStable(s, func(i, j int) bool {
-		return less(s[i], s[j])
-	})
-	return s
-}
-
-// Retain filters in-place slice of UpdateChannelPinnedTopics.
-func (s UpdateChannelPinnedTopicsArray) Retain(keep func(x UpdateChannelPinnedTopics) bool) UpdateChannelPinnedTopicsArray {
-	n := 0
-	for _, x := range s {
-		if keep(x) {
-			s[n] = x
-			n++
-		}
-	}
-	s = s[:n]
-
-	return s
-}
-
-// First returns first element of slice (if exists).
-func (s UpdateChannelPinnedTopicsArray) First() (v UpdateChannelPinnedTopics, ok bool) {
-	if len(s) < 1 {
-		return
-	}
-	return s[0], true
-}
-
-// Last returns last element of slice (if exists).
-func (s UpdateChannelPinnedTopicsArray) Last() (v UpdateChannelPinnedTopics, ok bool) {
-	if len(s) < 1 {
-		return
-	}
-	return s[len(s)-1], true
-}
-
-// PopFirst returns first element of slice (if exists) and deletes it.
-func (s *UpdateChannelPinnedTopicsArray) PopFirst() (v UpdateChannelPinnedTopics, ok bool) {
-	if s == nil || len(*s) < 1 {
-		return
-	}
-
-	a := *s
-	v = a[0]
-
-	// Delete by index from SliceTricks.
-	copy(a[0:], a[1:])
-	var zero UpdateChannelPinnedTopics
-	a[len(a)-1] = zero
-	a = a[:len(a)-1]
-	*s = a
-
-	return v, true
-}
-
-// Pop returns last element of slice (if exists) and deletes it.
-func (s *UpdateChannelPinnedTopicsArray) Pop() (v UpdateChannelPinnedTopics, ok bool) {
-	if s == nil || len(*s) < 1 {
-		return
-	}
-
-	a := *s
-	v = a[len(a)-1]
-	a = a[:len(a)-1]
-	*s = a
-
-	return v, true
-}
-
 // UpdateUserArray is adapter for slice of UpdateUser.
 type UpdateUserArray []UpdateUser
 
@@ -11778,88 +11679,6 @@ func (s *UpdateNewStoryReactionArray) Pop() (v UpdateNewStoryReaction, ok bool) 
 	return v, true
 }
 
-// UpdateBroadcastRevenueTransactionsArray is adapter for slice of UpdateBroadcastRevenueTransactions.
-type UpdateBroadcastRevenueTransactionsArray []UpdateBroadcastRevenueTransactions
-
-// Sort sorts slice of UpdateBroadcastRevenueTransactions.
-func (s UpdateBroadcastRevenueTransactionsArray) Sort(less func(a, b UpdateBroadcastRevenueTransactions) bool) UpdateBroadcastRevenueTransactionsArray {
-	sort.Slice(s, func(i, j int) bool {
-		return less(s[i], s[j])
-	})
-	return s
-}
-
-// SortStable sorts slice of UpdateBroadcastRevenueTransactions.
-func (s UpdateBroadcastRevenueTransactionsArray) SortStable(less func(a, b UpdateBroadcastRevenueTransactions) bool) UpdateBroadcastRevenueTransactionsArray {
-	sort.SliceStable(s, func(i, j int) bool {
-		return less(s[i], s[j])
-	})
-	return s
-}
-
-// Retain filters in-place slice of UpdateBroadcastRevenueTransactions.
-func (s UpdateBroadcastRevenueTransactionsArray) Retain(keep func(x UpdateBroadcastRevenueTransactions) bool) UpdateBroadcastRevenueTransactionsArray {
-	n := 0
-	for _, x := range s {
-		if keep(x) {
-			s[n] = x
-			n++
-		}
-	}
-	s = s[:n]
-
-	return s
-}
-
-// First returns first element of slice (if exists).
-func (s UpdateBroadcastRevenueTransactionsArray) First() (v UpdateBroadcastRevenueTransactions, ok bool) {
-	if len(s) < 1 {
-		return
-	}
-	return s[0], true
-}
-
-// Last returns last element of slice (if exists).
-func (s UpdateBroadcastRevenueTransactionsArray) Last() (v UpdateBroadcastRevenueTransactions, ok bool) {
-	if len(s) < 1 {
-		return
-	}
-	return s[len(s)-1], true
-}
-
-// PopFirst returns first element of slice (if exists) and deletes it.
-func (s *UpdateBroadcastRevenueTransactionsArray) PopFirst() (v UpdateBroadcastRevenueTransactions, ok bool) {
-	if s == nil || len(*s) < 1 {
-		return
-	}
-
-	a := *s
-	v = a[0]
-
-	// Delete by index from SliceTricks.
-	copy(a[0:], a[1:])
-	var zero UpdateBroadcastRevenueTransactions
-	a[len(a)-1] = zero
-	a = a[:len(a)-1]
-	*s = a
-
-	return v, true
-}
-
-// Pop returns last element of slice (if exists) and deletes it.
-func (s *UpdateBroadcastRevenueTransactionsArray) Pop() (v UpdateBroadcastRevenueTransactions, ok bool) {
-	if s == nil || len(*s) < 1 {
-		return
-	}
-
-	a := *s
-	v = a[len(a)-1]
-	a = a[:len(a)-1]
-	*s = a
-
-	return v, true
-}
-
 // UpdateStarsBalanceArray is adapter for slice of UpdateStarsBalance.
 type UpdateStarsBalanceArray []UpdateStarsBalance
 
@@ -12270,27 +12089,27 @@ func (s *UpdatePaidReactionPrivacyArray) Pop() (v UpdatePaidReactionPrivacy, ok 
 	return v, true
 }
 
-// UpdateBotSubscriptionExpireArray is adapter for slice of UpdateBotSubscriptionExpire.
-type UpdateBotSubscriptionExpireArray []UpdateBotSubscriptionExpire
+// UpdateSentPhoneCodeArray is adapter for slice of UpdateSentPhoneCode.
+type UpdateSentPhoneCodeArray []UpdateSentPhoneCode
 
-// Sort sorts slice of UpdateBotSubscriptionExpire.
-func (s UpdateBotSubscriptionExpireArray) Sort(less func(a, b UpdateBotSubscriptionExpire) bool) UpdateBotSubscriptionExpireArray {
+// Sort sorts slice of UpdateSentPhoneCode.
+func (s UpdateSentPhoneCodeArray) Sort(less func(a, b UpdateSentPhoneCode) bool) UpdateSentPhoneCodeArray {
 	sort.Slice(s, func(i, j int) bool {
 		return less(s[i], s[j])
 	})
 	return s
 }
 
-// SortStable sorts slice of UpdateBotSubscriptionExpire.
-func (s UpdateBotSubscriptionExpireArray) SortStable(less func(a, b UpdateBotSubscriptionExpire) bool) UpdateBotSubscriptionExpireArray {
+// SortStable sorts slice of UpdateSentPhoneCode.
+func (s UpdateSentPhoneCodeArray) SortStable(less func(a, b UpdateSentPhoneCode) bool) UpdateSentPhoneCodeArray {
 	sort.SliceStable(s, func(i, j int) bool {
 		return less(s[i], s[j])
 	})
 	return s
 }
 
-// Retain filters in-place slice of UpdateBotSubscriptionExpire.
-func (s UpdateBotSubscriptionExpireArray) Retain(keep func(x UpdateBotSubscriptionExpire) bool) UpdateBotSubscriptionExpireArray {
+// Retain filters in-place slice of UpdateSentPhoneCode.
+func (s UpdateSentPhoneCodeArray) Retain(keep func(x UpdateSentPhoneCode) bool) UpdateSentPhoneCodeArray {
 	n := 0
 	for _, x := range s {
 		if keep(x) {
@@ -12304,7 +12123,7 @@ func (s UpdateBotSubscriptionExpireArray) Retain(keep func(x UpdateBotSubscripti
 }
 
 // First returns first element of slice (if exists).
-func (s UpdateBotSubscriptionExpireArray) First() (v UpdateBotSubscriptionExpire, ok bool) {
+func (s UpdateSentPhoneCodeArray) First() (v UpdateSentPhoneCode, ok bool) {
 	if len(s) < 1 {
 		return
 	}
@@ -12312,7 +12131,7 @@ func (s UpdateBotSubscriptionExpireArray) First() (v UpdateBotSubscriptionExpire
 }
 
 // Last returns last element of slice (if exists).
-func (s UpdateBotSubscriptionExpireArray) Last() (v UpdateBotSubscriptionExpire, ok bool) {
+func (s UpdateSentPhoneCodeArray) Last() (v UpdateSentPhoneCode, ok bool) {
 	if len(s) < 1 {
 		return
 	}
@@ -12320,7 +12139,7 @@ func (s UpdateBotSubscriptionExpireArray) Last() (v UpdateBotSubscriptionExpire,
 }
 
 // PopFirst returns first element of slice (if exists) and deletes it.
-func (s *UpdateBotSubscriptionExpireArray) PopFirst() (v UpdateBotSubscriptionExpire, ok bool) {
+func (s *UpdateSentPhoneCodeArray) PopFirst() (v UpdateSentPhoneCode, ok bool) {
 	if s == nil || len(*s) < 1 {
 		return
 	}
@@ -12330,7 +12149,7 @@ func (s *UpdateBotSubscriptionExpireArray) PopFirst() (v UpdateBotSubscriptionEx
 
 	// Delete by index from SliceTricks.
 	copy(a[0:], a[1:])
-	var zero UpdateBotSubscriptionExpire
+	var zero UpdateSentPhoneCode
 	a[len(a)-1] = zero
 	a = a[:len(a)-1]
 	*s = a
@@ -12339,7 +12158,663 @@ func (s *UpdateBotSubscriptionExpireArray) PopFirst() (v UpdateBotSubscriptionEx
 }
 
 // Pop returns last element of slice (if exists) and deletes it.
-func (s *UpdateBotSubscriptionExpireArray) Pop() (v UpdateBotSubscriptionExpire, ok bool) {
+func (s *UpdateSentPhoneCodeArray) Pop() (v UpdateSentPhoneCode, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// UpdateGroupCallChainBlocksArray is adapter for slice of UpdateGroupCallChainBlocks.
+type UpdateGroupCallChainBlocksArray []UpdateGroupCallChainBlocks
+
+// Sort sorts slice of UpdateGroupCallChainBlocks.
+func (s UpdateGroupCallChainBlocksArray) Sort(less func(a, b UpdateGroupCallChainBlocks) bool) UpdateGroupCallChainBlocksArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of UpdateGroupCallChainBlocks.
+func (s UpdateGroupCallChainBlocksArray) SortStable(less func(a, b UpdateGroupCallChainBlocks) bool) UpdateGroupCallChainBlocksArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of UpdateGroupCallChainBlocks.
+func (s UpdateGroupCallChainBlocksArray) Retain(keep func(x UpdateGroupCallChainBlocks) bool) UpdateGroupCallChainBlocksArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s UpdateGroupCallChainBlocksArray) First() (v UpdateGroupCallChainBlocks, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s UpdateGroupCallChainBlocksArray) Last() (v UpdateGroupCallChainBlocks, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *UpdateGroupCallChainBlocksArray) PopFirst() (v UpdateGroupCallChainBlocks, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero UpdateGroupCallChainBlocks
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *UpdateGroupCallChainBlocksArray) Pop() (v UpdateGroupCallChainBlocks, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// UpdateReadMonoForumInboxArray is adapter for slice of UpdateReadMonoForumInbox.
+type UpdateReadMonoForumInboxArray []UpdateReadMonoForumInbox
+
+// Sort sorts slice of UpdateReadMonoForumInbox.
+func (s UpdateReadMonoForumInboxArray) Sort(less func(a, b UpdateReadMonoForumInbox) bool) UpdateReadMonoForumInboxArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of UpdateReadMonoForumInbox.
+func (s UpdateReadMonoForumInboxArray) SortStable(less func(a, b UpdateReadMonoForumInbox) bool) UpdateReadMonoForumInboxArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of UpdateReadMonoForumInbox.
+func (s UpdateReadMonoForumInboxArray) Retain(keep func(x UpdateReadMonoForumInbox) bool) UpdateReadMonoForumInboxArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s UpdateReadMonoForumInboxArray) First() (v UpdateReadMonoForumInbox, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s UpdateReadMonoForumInboxArray) Last() (v UpdateReadMonoForumInbox, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *UpdateReadMonoForumInboxArray) PopFirst() (v UpdateReadMonoForumInbox, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero UpdateReadMonoForumInbox
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *UpdateReadMonoForumInboxArray) Pop() (v UpdateReadMonoForumInbox, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// UpdateReadMonoForumOutboxArray is adapter for slice of UpdateReadMonoForumOutbox.
+type UpdateReadMonoForumOutboxArray []UpdateReadMonoForumOutbox
+
+// Sort sorts slice of UpdateReadMonoForumOutbox.
+func (s UpdateReadMonoForumOutboxArray) Sort(less func(a, b UpdateReadMonoForumOutbox) bool) UpdateReadMonoForumOutboxArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of UpdateReadMonoForumOutbox.
+func (s UpdateReadMonoForumOutboxArray) SortStable(less func(a, b UpdateReadMonoForumOutbox) bool) UpdateReadMonoForumOutboxArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of UpdateReadMonoForumOutbox.
+func (s UpdateReadMonoForumOutboxArray) Retain(keep func(x UpdateReadMonoForumOutbox) bool) UpdateReadMonoForumOutboxArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s UpdateReadMonoForumOutboxArray) First() (v UpdateReadMonoForumOutbox, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s UpdateReadMonoForumOutboxArray) Last() (v UpdateReadMonoForumOutbox, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *UpdateReadMonoForumOutboxArray) PopFirst() (v UpdateReadMonoForumOutbox, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero UpdateReadMonoForumOutbox
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *UpdateReadMonoForumOutboxArray) Pop() (v UpdateReadMonoForumOutbox, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// UpdateMonoForumNoPaidExceptionArray is adapter for slice of UpdateMonoForumNoPaidException.
+type UpdateMonoForumNoPaidExceptionArray []UpdateMonoForumNoPaidException
+
+// Sort sorts slice of UpdateMonoForumNoPaidException.
+func (s UpdateMonoForumNoPaidExceptionArray) Sort(less func(a, b UpdateMonoForumNoPaidException) bool) UpdateMonoForumNoPaidExceptionArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of UpdateMonoForumNoPaidException.
+func (s UpdateMonoForumNoPaidExceptionArray) SortStable(less func(a, b UpdateMonoForumNoPaidException) bool) UpdateMonoForumNoPaidExceptionArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of UpdateMonoForumNoPaidException.
+func (s UpdateMonoForumNoPaidExceptionArray) Retain(keep func(x UpdateMonoForumNoPaidException) bool) UpdateMonoForumNoPaidExceptionArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s UpdateMonoForumNoPaidExceptionArray) First() (v UpdateMonoForumNoPaidException, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s UpdateMonoForumNoPaidExceptionArray) Last() (v UpdateMonoForumNoPaidException, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *UpdateMonoForumNoPaidExceptionArray) PopFirst() (v UpdateMonoForumNoPaidException, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero UpdateMonoForumNoPaidException
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *UpdateMonoForumNoPaidExceptionArray) Pop() (v UpdateMonoForumNoPaidException, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// UpdateGroupCallMessageArray is adapter for slice of UpdateGroupCallMessage.
+type UpdateGroupCallMessageArray []UpdateGroupCallMessage
+
+// Sort sorts slice of UpdateGroupCallMessage.
+func (s UpdateGroupCallMessageArray) Sort(less func(a, b UpdateGroupCallMessage) bool) UpdateGroupCallMessageArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of UpdateGroupCallMessage.
+func (s UpdateGroupCallMessageArray) SortStable(less func(a, b UpdateGroupCallMessage) bool) UpdateGroupCallMessageArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of UpdateGroupCallMessage.
+func (s UpdateGroupCallMessageArray) Retain(keep func(x UpdateGroupCallMessage) bool) UpdateGroupCallMessageArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s UpdateGroupCallMessageArray) First() (v UpdateGroupCallMessage, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s UpdateGroupCallMessageArray) Last() (v UpdateGroupCallMessage, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *UpdateGroupCallMessageArray) PopFirst() (v UpdateGroupCallMessage, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero UpdateGroupCallMessage
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *UpdateGroupCallMessageArray) Pop() (v UpdateGroupCallMessage, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// UpdateGroupCallEncryptedMessageArray is adapter for slice of UpdateGroupCallEncryptedMessage.
+type UpdateGroupCallEncryptedMessageArray []UpdateGroupCallEncryptedMessage
+
+// Sort sorts slice of UpdateGroupCallEncryptedMessage.
+func (s UpdateGroupCallEncryptedMessageArray) Sort(less func(a, b UpdateGroupCallEncryptedMessage) bool) UpdateGroupCallEncryptedMessageArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of UpdateGroupCallEncryptedMessage.
+func (s UpdateGroupCallEncryptedMessageArray) SortStable(less func(a, b UpdateGroupCallEncryptedMessage) bool) UpdateGroupCallEncryptedMessageArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of UpdateGroupCallEncryptedMessage.
+func (s UpdateGroupCallEncryptedMessageArray) Retain(keep func(x UpdateGroupCallEncryptedMessage) bool) UpdateGroupCallEncryptedMessageArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s UpdateGroupCallEncryptedMessageArray) First() (v UpdateGroupCallEncryptedMessage, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s UpdateGroupCallEncryptedMessageArray) Last() (v UpdateGroupCallEncryptedMessage, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *UpdateGroupCallEncryptedMessageArray) PopFirst() (v UpdateGroupCallEncryptedMessage, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero UpdateGroupCallEncryptedMessage
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *UpdateGroupCallEncryptedMessageArray) Pop() (v UpdateGroupCallEncryptedMessage, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// UpdatePinnedForumTopicArray is adapter for slice of UpdatePinnedForumTopic.
+type UpdatePinnedForumTopicArray []UpdatePinnedForumTopic
+
+// Sort sorts slice of UpdatePinnedForumTopic.
+func (s UpdatePinnedForumTopicArray) Sort(less func(a, b UpdatePinnedForumTopic) bool) UpdatePinnedForumTopicArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of UpdatePinnedForumTopic.
+func (s UpdatePinnedForumTopicArray) SortStable(less func(a, b UpdatePinnedForumTopic) bool) UpdatePinnedForumTopicArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of UpdatePinnedForumTopic.
+func (s UpdatePinnedForumTopicArray) Retain(keep func(x UpdatePinnedForumTopic) bool) UpdatePinnedForumTopicArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s UpdatePinnedForumTopicArray) First() (v UpdatePinnedForumTopic, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s UpdatePinnedForumTopicArray) Last() (v UpdatePinnedForumTopic, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *UpdatePinnedForumTopicArray) PopFirst() (v UpdatePinnedForumTopic, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero UpdatePinnedForumTopic
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *UpdatePinnedForumTopicArray) Pop() (v UpdatePinnedForumTopic, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// UpdatePinnedForumTopicsArray is adapter for slice of UpdatePinnedForumTopics.
+type UpdatePinnedForumTopicsArray []UpdatePinnedForumTopics
+
+// Sort sorts slice of UpdatePinnedForumTopics.
+func (s UpdatePinnedForumTopicsArray) Sort(less func(a, b UpdatePinnedForumTopics) bool) UpdatePinnedForumTopicsArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of UpdatePinnedForumTopics.
+func (s UpdatePinnedForumTopicsArray) SortStable(less func(a, b UpdatePinnedForumTopics) bool) UpdatePinnedForumTopicsArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of UpdatePinnedForumTopics.
+func (s UpdatePinnedForumTopicsArray) Retain(keep func(x UpdatePinnedForumTopics) bool) UpdatePinnedForumTopicsArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s UpdatePinnedForumTopicsArray) First() (v UpdatePinnedForumTopics, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s UpdatePinnedForumTopicsArray) Last() (v UpdatePinnedForumTopics, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *UpdatePinnedForumTopicsArray) PopFirst() (v UpdatePinnedForumTopics, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero UpdatePinnedForumTopics
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *UpdatePinnedForumTopicsArray) Pop() (v UpdatePinnedForumTopics, ok bool) {
 	if s == nil || len(*s) < 1 {
 		return
 	}

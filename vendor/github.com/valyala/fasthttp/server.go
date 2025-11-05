@@ -219,7 +219,7 @@ type Server struct {
 
 	concurrencyCh chan struct{}
 
-	idleConns map[net.Conn]time.Time
+	idleConns map[net.Conn]*atomic.Int64
 	done      chan struct{}
 
 	// Server name for sending in response headers.
@@ -315,11 +315,11 @@ type Server struct {
 
 	mu sync.Mutex
 
-	concurrency uint32
-	open        int32
-	stop        int32
+	concurrency atomic.Uint32
+	open        atomic.Int32
+	stop        atomic.Int32
 
-	rejectedRequestsCount uint32
+	rejectedRequestsCount atomic.Uint32
 
 	// Whether to disable keep-alive connections.
 	//
@@ -611,8 +611,6 @@ type RequestCtx struct {
 	formValueFunc FormValueFunc
 	fbr           firstByteReader
 
-	userValues userData
-
 	// Incoming request.
 	//
 	// Copying Request by value is forbidden. Use pointer to Request instead.
@@ -621,6 +619,72 @@ type RequestCtx struct {
 	connID           uint64
 	connRequestNum   uint64
 	hijackNoResponse bool
+}
+
+// EarlyHints allows the server to hint to the browser what resources a page would need
+// so the browser can preload them while waiting for the server's full response. Only Link
+// headers already written to the response will be transmitted as Early Hints.
+//
+// This is a HTTP/2+ feature but all browsers will either understand it or safely ignore it.
+//
+// NOTE: Older HTTP/1.1 non-browser clients may face compatibility issues.
+//
+// See: https://developer.chrome.com/docs/web-platform/early-hints and
+// https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Link#syntax
+//
+// Example:
+//
+//	func(ctx *fasthttp.RequestCtx) {
+//	   ctx.Response.Header.Add("Link", "<https://fonts.google.com>; rel=preconnect")
+//	   ctx.EarlyHints()
+//	   time.Sleep(5*time.Second) // some time-consuming task
+//	   ctx.SetStatusCode(fasthttp.StatusOK)
+//	   ctx.SetBody([]byte("<html><head></head><body><h1>Hello from Fasthttp</h1></body></html>"))
+//	}
+func (ctx *RequestCtx) EarlyHints() error {
+	links := ctx.Response.Header.PeekAll(b2s(strLink))
+	if len(links) > 0 {
+		c := acquireWriter(ctx)
+		defer releaseWriter(ctx.s, c)
+		_, err := c.Write(strEarlyHints)
+		if err != nil {
+			return err
+		}
+		for _, l := range links {
+			if len(l) == 0 {
+				continue
+			}
+			_, err = c.Write(strLink)
+			if err != nil {
+				return err
+			}
+			_, err = c.Write(strColon)
+			if err != nil {
+				return err
+			}
+			_, err = c.Write(strSpace)
+			if err != nil {
+				return err
+			}
+			_, err = c.Write(l)
+			if err != nil {
+				return err
+			}
+			_, err = c.Write(strCRLF)
+			if err != nil {
+				return err
+			}
+		}
+		_, err = c.Write(strCRLF)
+		if err != nil {
+			return err
+		}
+		err = c.Flush()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // HijackHandler must process the hijacked connection c.
@@ -677,42 +741,42 @@ func (ctx *RequestCtx) Hijacked() bool {
 }
 
 // SetUserValue stores the given value (arbitrary object)
-// under the given key in ctx.
+// under the given key in Request.
 //
-// The value stored in ctx may be obtained by UserValue*.
+// The value stored in Request may be obtained by UserValue*.
 //
 // This functionality may be useful for passing arbitrary values between
 // functions involved in request processing.
 //
-// All the values are removed from ctx after returning from the top
+// All the values are removed from Request after returning from the top
 // RequestHandler. Additionally, Close method is called on each value
-// implementing io.Closer before removing the value from ctx.
+// implementing io.Closer before removing the value from Request.
 func (ctx *RequestCtx) SetUserValue(key, value any) {
-	ctx.userValues.Set(key, value)
+	ctx.Request.SetUserValue(key, value)
 }
 
 // SetUserValueBytes stores the given value (arbitrary object)
-// under the given key in ctx.
+// under the given key in Request.
 //
-// The value stored in ctx may be obtained by UserValue*.
+// The value stored in Request may be obtained by UserValue*.
 //
 // This functionality may be useful for passing arbitrary values between
 // functions involved in request processing.
 //
-// All the values stored in ctx are deleted after returning from RequestHandler.
+// All the values stored in Request are deleted after returning from RequestHandler.
 func (ctx *RequestCtx) SetUserValueBytes(key []byte, value any) {
-	ctx.userValues.SetBytes(key, value)
+	ctx.Request.SetUserValueBytes(key, value)
 }
 
 // UserValue returns the value stored via SetUserValue* under the given key.
 func (ctx *RequestCtx) UserValue(key any) any {
-	return ctx.userValues.Get(key)
+	return ctx.Request.UserValue(key)
 }
 
 // UserValueBytes returns the value stored via SetUserValue*
 // under the given key.
 func (ctx *RequestCtx) UserValueBytes(key []byte) any {
-	return ctx.userValues.GetBytes(key)
+	return ctx.Request.UserValueBytes(key)
 }
 
 // VisitUserValues calls visitor for each existing userValue with a key that is a string or []byte.
@@ -720,12 +784,7 @@ func (ctx *RequestCtx) UserValueBytes(key []byte) any {
 // visitor must not retain references to key and value after returning.
 // Make key and/or value copies if you need storing them after returning.
 func (ctx *RequestCtx) VisitUserValues(visitor func([]byte, any)) {
-	for i, n := 0, len(ctx.userValues); i < n; i++ {
-		kv := &ctx.userValues[i]
-		if _, ok := kv.key.(string); ok {
-			visitor(s2b(kv.key.(string)), kv.value)
-		}
-	}
+	ctx.Request.VisitUserValues(visitor)
 }
 
 // VisitUserValuesAll calls visitor for each existing userValue.
@@ -733,25 +792,22 @@ func (ctx *RequestCtx) VisitUserValues(visitor func([]byte, any)) {
 // visitor must not retain references to key and value after returning.
 // Make key and/or value copies if you need storing them after returning.
 func (ctx *RequestCtx) VisitUserValuesAll(visitor func(any, any)) {
-	for i, n := 0, len(ctx.userValues); i < n; i++ {
-		kv := &ctx.userValues[i]
-		visitor(kv.key, kv.value)
-	}
+	ctx.Request.VisitUserValuesAll(visitor)
 }
 
-// ResetUserValues allows to reset user values from Request Context.
+// ResetUserValues allows to reset user values from Request.
 func (ctx *RequestCtx) ResetUserValues() {
-	ctx.userValues.Reset()
+	ctx.Request.ResetUserValues()
 }
 
-// RemoveUserValue removes the given key and the value under it in ctx.
+// RemoveUserValue removes the given key and the value under it in Request.
 func (ctx *RequestCtx) RemoveUserValue(key any) {
-	ctx.userValues.Remove(key)
+	ctx.Request.RemoveUserValue(key)
 }
 
-// RemoveUserValueBytes removes the given key and the value under it in ctx.
+// RemoveUserValueBytes removes the given key and the value under it in Request.
 func (ctx *RequestCtx) RemoveUserValueBytes(key []byte) {
-	ctx.userValues.RemoveBytes(key)
+	ctx.Request.RemoveUserValueBytes(key)
 }
 
 type connTLSer interface {
@@ -807,7 +863,6 @@ func (ctx *RequestCtx) Conn() net.Conn {
 }
 
 func (ctx *RequestCtx) reset() {
-	ctx.userValues.Reset()
 	ctx.Request.Reset()
 	ctx.Response.Reset()
 	ctx.fbr.reset()
@@ -1068,14 +1123,14 @@ func SaveMultipartFile(fh *multipart.FileHeader, path string) (err error) {
 	)
 	f, err = fh.Open()
 	if err != nil {
-		return
+		return err
 	}
 
 	var ok bool
 	if ff, ok = f.(*os.File); ok {
 		// Windows can't rename files that are opened.
 		if err = f.Close(); err != nil {
-			return
+			return err
 		}
 
 		// If renaming fails we try the normal copying method.
@@ -1086,7 +1141,7 @@ func SaveMultipartFile(fh *multipart.FileHeader, path string) (err error) {
 
 		// Reopen f for the code below.
 		if f, err = fh.Open(); err != nil {
-			return
+			return err
 		}
 	}
 
@@ -1098,7 +1153,7 @@ func SaveMultipartFile(fh *multipart.FileHeader, path string) (err error) {
 	}()
 
 	if ff, err = os.Create(path); err != nil {
-		return
+		return err
 	}
 	defer func() {
 		e := ff.Close()
@@ -1107,7 +1162,7 @@ func SaveMultipartFile(fh *multipart.FileHeader, path string) (err error) {
 		}
 	}()
 	_, err = copyZeroAlloc(ff, f)
-	return
+	return err
 }
 
 // FormValue returns form value associated with the given key.
@@ -1157,7 +1212,7 @@ var (
 	// NetHttpFormValueFunc gives consistent behavior with net/http.
 	// POST and PUT body parameters take precedence over URL query string values.
 	//
-	//nolint:stylecheck // backwards compatibility
+	//nolint:staticcheck // backwards compatibility
 	NetHttpFormValueFunc = func(ctx *RequestCtx, key string) []byte {
 		v := ctx.PostArgs().Peek(key)
 		if len(v) > 0 {
@@ -1594,26 +1649,26 @@ func (s *Server) NextProto(key string, nph ServeHandler) {
 	s.nextProtos[key] = nph
 }
 
-func (s *Server) getNextProto(c net.Conn) (proto string, err error) {
+func (s *Server) getNextProto(c net.Conn) (string, error) {
 	if tlsConn, ok := c.(connTLSer); ok {
 		if s.ReadTimeout > 0 {
-			if err = c.SetReadDeadline(time.Now().Add(s.ReadTimeout)); err != nil {
-				return
+			if err := c.SetReadDeadline(time.Now().Add(s.ReadTimeout)); err != nil {
+				return "", err
 			}
 		}
 
 		if s.WriteTimeout > 0 {
-			if err = c.SetWriteDeadline(time.Now().Add(s.WriteTimeout)); err != nil {
-				return
+			if err := c.SetWriteDeadline(time.Now().Add(s.WriteTimeout)); err != nil {
+				return "", err
 			}
 		}
 
-		err = tlsConn.Handshake()
+		err := tlsConn.Handshake()
 		if err == nil {
-			proto = tlsConn.ConnectionState().NegotiatedProtocol
+			return tlsConn.ConnectionState().NegotiatedProtocol, nil
 		}
 	}
-	return
+	return "", nil
 }
 
 // ListenAndServe serves HTTP requests from the given TCP4 addr.
@@ -1704,10 +1759,6 @@ func (s *Server) ServeTLS(ln net.Listener, certFile, keyFile string) error {
 		}
 	}
 
-	// BuildNameToCertificate has been deprecated since 1.14.
-	// But since we also support older versions we'll keep this here.
-	s.TLSConfig.BuildNameToCertificate() //nolint:staticcheck
-
 	s.mu.Unlock()
 
 	return s.Serve(
@@ -1731,10 +1782,6 @@ func (s *Server) ServeTLSEmbed(ln net.Listener, certData, keyData []byte) error 
 			return err
 		}
 	}
-
-	// BuildNameToCertificate has been deprecated since 1.14.
-	// But since we also support older versions we'll keep this here.
-	s.TLSConfig.BuildNameToCertificate() //nolint:staticcheck
 
 	s.mu.Unlock()
 
@@ -1824,8 +1871,8 @@ func (s *Server) Serve(ln net.Listener) error {
 	// This way we can't get into any weird state where just after accepting
 	// a connection Shutdown is called which reads open as 0 because it isn't
 	// incremented yet.
-	atomic.AddInt32(&s.open, 1)
-	defer atomic.AddInt32(&s.open, -1)
+	s.open.Add(1)
+	defer s.open.Add(-1)
 
 	for {
 		c, err := acceptConn(s, ln, &lastPerIPErrorTime)
@@ -1837,10 +1884,10 @@ func (s *Server) Serve(ln net.Listener) error {
 			return err
 		}
 		s.setState(c, StateNew)
-		atomic.AddInt32(&s.open, 1)
+		s.open.Add(1)
 		if !wp.Serve(c) {
-			atomic.AddInt32(&s.open, -1)
-			atomic.AddUint32(&s.rejectedRequestsCount, 1)
+			s.open.Add(-1)
+			s.rejectedRequestsCount.Add(1)
 			s.writeFastError(c, StatusServiceUnavailable,
 				"The connection cannot be served because Server.Concurrency limit exceeded")
 			c.Close()
@@ -1893,8 +1940,8 @@ func (s *Server) ShutdownWithContext(ctx context.Context) (err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	atomic.StoreInt32(&s.stop, 1)
-	defer atomic.StoreInt32(&s.stop, 0)
+	s.stop.Store(1)
+	defer s.stop.Store(0)
 
 	if s.ln == nil {
 		return nil
@@ -1915,7 +1962,7 @@ func (s *Server) ShutdownWithContext(ctx context.Context) (err error) {
 	for {
 		s.closeIdleConns()
 
-		if open := atomic.LoadInt32(&s.open); open == 0 {
+		if open := s.open.Load(); open == 0 {
 			// There may be a pending request to call ctx.Done(). Therefore, we only set it to nil when open == 0.
 			s.done = nil
 			return lnerr
@@ -1930,6 +1977,12 @@ func (s *Server) ShutdownWithContext(ctx context.Context) (err error) {
 			continue
 		}
 	}
+}
+
+type connKeepAliveer interface {
+	SetKeepAlive(keepalive bool) error
+	SetKeepAlivePeriod(d time.Duration) error
+	io.Closer
 }
 
 func acceptConn(s *Server, ln net.Listener, lastPerIPErrorTime *time.Time) (net.Conn, error) {
@@ -1948,7 +2001,7 @@ func acceptConn(s *Server, ln net.Listener, lastPerIPErrorTime *time.Time) (net.
 			return nil, io.EOF
 		}
 
-		if tc, ok := c.(*net.TCPConn); ok && s.TCPKeepalive {
+		if tc, ok := c.(connKeepAliveer); ok && s.TCPKeepalive {
 			if err := tc.SetKeepAlive(s.TCPKeepalive); err != nil {
 				_ = tc.Close()
 				return nil, err
@@ -2029,19 +2082,19 @@ func (s *Server) ServeConn(c net.Conn) error {
 		c = pic
 	}
 
-	n := int(atomic.AddUint32(&s.concurrency, 1)) // #nosec G115
+	n := int(s.concurrency.Add(1)) // #nosec G115
 	if n > s.getConcurrency() {
-		atomic.AddUint32(&s.concurrency, ^uint32(0))
+		s.concurrency.Add(^uint32(0))
 		s.writeFastError(c, StatusServiceUnavailable, "The connection cannot be served because Server.Concurrency limit exceeded")
 		c.Close()
 		return ErrConcurrencyLimit
 	}
 
-	atomic.AddInt32(&s.open, 1)
+	s.open.Add(1)
 
 	err := s.serveConn(c)
 
-	atomic.AddUint32(&s.concurrency, ^uint32(0))
+	s.concurrency.Add(^uint32(0))
 
 	if err != errHijacked {
 		errc := c.Close()
@@ -2063,29 +2116,29 @@ var errHijacked = errors.New("connection has been hijacked")
 //
 // This function is intended be used by monitoring systems.
 func (s *Server) GetCurrentConcurrency() uint32 {
-	return atomic.LoadUint32(&s.concurrency)
+	return s.concurrency.Load()
 }
 
 // GetOpenConnectionsCount returns a number of opened connections.
 //
 // This function is intended be used by monitoring systems.
 func (s *Server) GetOpenConnectionsCount() int32 {
-	if atomic.LoadInt32(&s.stop) == 0 {
+	if s.stop.Load() == 0 {
 		// Decrement by one to avoid reporting the extra open value that gets
 		// counted while the server is listening.
-		return atomic.LoadInt32(&s.open) - 1
+		return s.open.Load() - 1
 	}
 	// This is not perfect, because s.stop could have changed to zero
 	// before we load the value of s.open. However, in the common case
 	// this avoids underreporting open connections by 1 during server shutdown.
-	return atomic.LoadInt32(&s.open)
+	return s.open.Load()
 }
 
 // GetRejectedConnectionsCount returns a number of rejected connections.
 //
 // This function is intended be used by monitoring systems.
 func (s *Server) GetRejectedConnectionsCount() uint32 {
-	return atomic.LoadUint32(&s.rejectedRequestsCount)
+	return s.rejectedRequestsCount.Load()
 }
 
 func (s *Server) getConcurrency() int {
@@ -2116,29 +2169,49 @@ func (s *Server) idleTimeout() time.Duration {
 }
 
 func (s *Server) serveConnCleanup() {
-	atomic.AddInt32(&s.open, -1)
-	atomic.AddUint32(&s.concurrency, ^uint32(0))
+	s.open.Add(-1)
+	s.concurrency.Add(^uint32(0))
 }
 
-func (s *Server) serveConn(c net.Conn) (err error) {
+func (s *Server) serveConn(c net.Conn) error {
 	defer s.serveConnCleanup()
-	atomic.AddUint32(&s.concurrency, 1)
+	s.concurrency.Add(1)
 
-	var proto string
-	if proto, err = s.getNextProto(c); err != nil {
-		return
+	proto, err := s.getNextProto(c)
+	if err != nil {
+		return err
 	}
 	if handler, ok := s.nextProtos[proto]; ok {
 		// Remove read or write deadlines that might have previously been set.
 		// The next handler is responsible for setting its own deadlines.
 		if s.ReadTimeout > 0 || s.WriteTimeout > 0 {
-			if err = c.SetDeadline(zeroTime); err != nil {
-				return
+			if err := c.SetDeadline(zeroTime); err != nil {
+				return err
 			}
 		}
 
 		return handler(c)
 	}
+
+	s.idleConnsMu.Lock()
+	if s.idleConns == nil {
+		s.idleConns = make(map[net.Conn]*atomic.Int64)
+	}
+	idleConnTime, ok := s.idleConns[c]
+	if !ok {
+		v := idleConnTimePool.Get()
+		if v == nil {
+			v = &atomic.Int64{}
+		}
+		idleConnTime = v.(*atomic.Int64)
+		s.idleConns[c] = idleConnTime
+	}
+
+	// Count the connection as Idle after 5 seconds.
+	// Same as net/http.Server:
+	// https://github.com/golang/go/blob/85d7bab91d9a3ed1f76842e4328973ea75efef54/src/net/http/server.go#L2834-L2836
+	idleConnTime.Store(time.Now().Add(time.Second * 5).Unix())
+	s.idleConnsMu.Unlock()
 
 	serverName := s.getServerName()
 	connRequestNum := uint64(0)
@@ -2215,6 +2288,8 @@ func (s *Server) serveConn(c net.Conn) (err error) {
 		if err == nil {
 			s.setState(c, StateActive)
 
+			idleConnTime.Store(0)
+
 			if s.ReadTimeout > 0 {
 				if err = c.SetReadDeadline(time.Now().Add(s.ReadTimeout)); err != nil {
 					break
@@ -2274,11 +2349,21 @@ func (s *Server) serveConn(c net.Conn) (err error) {
 						writeTimeout = s.WriteTimeout
 					}
 				}
-				// read body
-				if s.StreamRequestBody {
-					err = ctx.Request.readBodyStream(br, maxRequestBodySize, s.GetOnly, !s.DisablePreParseMultipartForm)
-				} else {
-					err = ctx.Request.readLimitBody(br, maxRequestBodySize, s.GetOnly, !s.DisablePreParseMultipartForm)
+
+				if err == nil {
+					if err = ctx.Request.parseURI(); err != nil {
+						bw = s.writeErrorResponse(bw, ctx, serverName, err)
+						break
+					}
+				}
+
+				if err == nil {
+					// read body
+					if s.StreamRequestBody {
+						err = ctx.Request.readBodyStream(br, maxRequestBodySize, s.GetOnly, !s.DisablePreParseMultipartForm)
+					} else {
+						err = ctx.Request.readLimitBody(br, maxRequestBodySize, s.GetOnly, !s.DisablePreParseMultipartForm)
+					}
 				}
 			}
 			// When StreamRequestBody is set to true, we cannot safely release br.
@@ -2412,7 +2497,7 @@ func (s *Server) serveConn(c net.Conn) (err error) {
 		connectionClose = connectionClose ||
 			(s.MaxRequestsPerConn > 0 && connRequestNum >= uint64(s.MaxRequestsPerConn)) || // #nosec G115
 			ctx.Response.Header.ConnectionClose() ||
-			(s.CloseOnShutdown && atomic.LoadInt32(&s.stop) == 1)
+			(s.CloseOnShutdown && s.stop.Load() == 1)
 		if connectionClose {
 			ctx.Response.Header.SetConnectionClose()
 		} else if !ctx.Request.Header.IsHTTP11() {
@@ -2485,14 +2570,15 @@ func (s *Server) serveConn(c net.Conn) (err error) {
 		}
 
 		s.setState(c, StateIdle)
-		ctx.userValues.Reset()
 		ctx.Request.Reset()
 		ctx.Response.Reset()
 
-		if atomic.LoadInt32(&s.stop) == 1 {
+		if s.stop.Load() == 1 {
 			err = nil
 			break
 		}
+
+		idleConnTime.Store(time.Now().Unix())
 	}
 
 	if br != nil {
@@ -2505,11 +2591,18 @@ func (s *Server) serveConn(c net.Conn) (err error) {
 		s.releaseCtx(ctx)
 	}
 
-	return
+	s.idleConnsMu.Lock()
+	ic, ok := s.idleConns[c]
+	if ok {
+		idleConnTimePool.Put(ic)
+		delete(s.idleConns, c)
+	}
+	s.idleConnsMu.Unlock()
+
+	return err
 }
 
 func (s *Server) setState(nc net.Conn, state ConnState) {
-	s.trackConn(nc, state)
 	if hook := s.ConnState; hook != nil {
 		hook(nc, state)
 	}
@@ -2553,6 +2646,7 @@ func (s *Server) releaseHijackConn(hjc *hijackConn) {
 
 type hijackConn struct {
 	net.Conn
+
 	r io.Reader
 	s *Server
 }
@@ -2734,7 +2828,7 @@ func (ctx *RequestCtx) Init(req *Request, remoteAddr net.Addr, logger Logger) {
 // This method always returns 0, false and is only present to make
 // RequestCtx implement the context interface.
 func (ctx *RequestCtx) Deadline() (deadline time.Time, ok bool) {
-	return
+	return time.Time{}, false
 }
 
 // Done returns a channel that's closed when work done on behalf of this
@@ -2783,6 +2877,7 @@ var fakeServer = &Server{
 
 type fakeAddrer struct {
 	net.Conn
+
 	laddr net.Addr
 	raddr net.Addr
 }
@@ -2886,36 +2981,17 @@ func (s *Server) writeErrorResponse(bw *bufio.Writer, ctx *RequestCtx, serverNam
 	return bw
 }
 
-func (s *Server) trackConn(c net.Conn, state ConnState) {
-	s.idleConnsMu.Lock()
-	switch state {
-	case StateIdle:
-		if s.idleConns == nil {
-			s.idleConns = make(map[net.Conn]time.Time)
-		}
-		s.idleConns[c] = time.Now()
-	case StateNew:
-		if s.idleConns == nil {
-			s.idleConns = make(map[net.Conn]time.Time)
-		}
-		// Count the connection as Idle after 5 seconds.
-		// Same as net/http.Server:
-		// https://github.com/golang/go/blob/85d7bab91d9a3ed1f76842e4328973ea75efef54/src/net/http/server.go#L2834-L2836
-		s.idleConns[c] = time.Now().Add(time.Second * 5)
-
-	default:
-		delete(s.idleConns, c)
-	}
-	s.idleConnsMu.Unlock()
-}
+var idleConnTimePool sync.Pool
 
 func (s *Server) closeIdleConns() {
 	s.idleConnsMu.Lock()
-	now := time.Now()
-	for c, t := range s.idleConns {
-		if now.Sub(t) >= 0 {
+	now := time.Now().Unix()
+	for c, ict := range s.idleConns {
+		t := ict.Load()
+		if t != 0 && now-t >= 0 {
 			_ = c.Close()
 			delete(s.idleConns, c)
+			idleConnTimePool.Put(ict)
 		}
 	}
 	s.idleConnsMu.Unlock()

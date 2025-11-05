@@ -8,12 +8,19 @@ import (
 )
 
 func RunLiveness(nc *nats.Conn, service string, version string) {
-	topic := "sync_exchange.liveness"
+	id, err := nc.GetClientID()
+	if err != nil {
+		id = 0
+	}
 
-	log.Printf("[INFO] sync_exchange, RunLiveness, topic: %q, service: %q, version: %q", topic, service, version)
+	const topic = "sync_exchange.liveness"
 
-	data := fmt.Sprintf("{%q: %q, %q: %q}",
-		"service", service, "version", version)
+	log.Printf("[INFO] sync_exchange, RunLiveness, client id: %v, topic: %q, service: %q, version: %q", id, topic, service, version)
+
+	data := fmt.Sprintf("{%q: %q, %q: %q, %q: %v}",
+		"service", service,
+		"version", version,
+		"client_id", id)
 
 	for {
 		err := nc.Publish(topic, []byte(data))

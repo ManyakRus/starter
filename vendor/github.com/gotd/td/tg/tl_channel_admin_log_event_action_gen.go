@@ -3262,7 +3262,7 @@ func (c *ChannelAdminLogEventActionToggleSlowMode) GetNewValue() (value int) {
 // See https://core.telegram.org/constructor/channelAdminLogEventActionStartGroupCall for reference.
 type ChannelAdminLogEventActionStartGroupCall struct {
 	// Group call
-	Call InputGroupCall
+	Call InputGroupCallClass
 }
 
 // ChannelAdminLogEventActionStartGroupCallTypeID is TL type id of ChannelAdminLogEventActionStartGroupCall.
@@ -3287,7 +3287,7 @@ func (c *ChannelAdminLogEventActionStartGroupCall) Zero() bool {
 	if c == nil {
 		return true
 	}
-	if !(c.Call.Zero()) {
+	if !(c.Call == nil) {
 		return false
 	}
 
@@ -3305,7 +3305,7 @@ func (c *ChannelAdminLogEventActionStartGroupCall) String() string {
 
 // FillFrom fills ChannelAdminLogEventActionStartGroupCall from given interface.
 func (c *ChannelAdminLogEventActionStartGroupCall) FillFrom(from interface {
-	GetCall() (value InputGroupCall)
+	GetCall() (value InputGroupCallClass)
 }) {
 	c.Call = from.GetCall()
 }
@@ -3355,6 +3355,9 @@ func (c *ChannelAdminLogEventActionStartGroupCall) EncodeBare(b *bin.Buffer) err
 	if c == nil {
 		return fmt.Errorf("can't encode channelAdminLogEventActionStartGroupCall#23209745 as nil")
 	}
+	if c.Call == nil {
+		return fmt.Errorf("unable to encode channelAdminLogEventActionStartGroupCall#23209745: field call is nil")
+	}
 	if err := c.Call.Encode(b); err != nil {
 		return fmt.Errorf("unable to encode channelAdminLogEventActionStartGroupCall#23209745: field call: %w", err)
 	}
@@ -3378,15 +3381,17 @@ func (c *ChannelAdminLogEventActionStartGroupCall) DecodeBare(b *bin.Buffer) err
 		return fmt.Errorf("can't decode channelAdminLogEventActionStartGroupCall#23209745 to nil")
 	}
 	{
-		if err := c.Call.Decode(b); err != nil {
+		value, err := DecodeInputGroupCall(b)
+		if err != nil {
 			return fmt.Errorf("unable to decode channelAdminLogEventActionStartGroupCall#23209745: field call: %w", err)
 		}
+		c.Call = value
 	}
 	return nil
 }
 
 // GetCall returns value of Call field.
-func (c *ChannelAdminLogEventActionStartGroupCall) GetCall() (value InputGroupCall) {
+func (c *ChannelAdminLogEventActionStartGroupCall) GetCall() (value InputGroupCallClass) {
 	if c == nil {
 		return
 	}
@@ -3399,7 +3404,7 @@ func (c *ChannelAdminLogEventActionStartGroupCall) GetCall() (value InputGroupCa
 // See https://core.telegram.org/constructor/channelAdminLogEventActionDiscardGroupCall for reference.
 type ChannelAdminLogEventActionDiscardGroupCall struct {
 	// The group call that was terminated
-	Call InputGroupCall
+	Call InputGroupCallClass
 }
 
 // ChannelAdminLogEventActionDiscardGroupCallTypeID is TL type id of ChannelAdminLogEventActionDiscardGroupCall.
@@ -3424,7 +3429,7 @@ func (c *ChannelAdminLogEventActionDiscardGroupCall) Zero() bool {
 	if c == nil {
 		return true
 	}
-	if !(c.Call.Zero()) {
+	if !(c.Call == nil) {
 		return false
 	}
 
@@ -3442,7 +3447,7 @@ func (c *ChannelAdminLogEventActionDiscardGroupCall) String() string {
 
 // FillFrom fills ChannelAdminLogEventActionDiscardGroupCall from given interface.
 func (c *ChannelAdminLogEventActionDiscardGroupCall) FillFrom(from interface {
-	GetCall() (value InputGroupCall)
+	GetCall() (value InputGroupCallClass)
 }) {
 	c.Call = from.GetCall()
 }
@@ -3492,6 +3497,9 @@ func (c *ChannelAdminLogEventActionDiscardGroupCall) EncodeBare(b *bin.Buffer) e
 	if c == nil {
 		return fmt.Errorf("can't encode channelAdminLogEventActionDiscardGroupCall#db9f9140 as nil")
 	}
+	if c.Call == nil {
+		return fmt.Errorf("unable to encode channelAdminLogEventActionDiscardGroupCall#db9f9140: field call is nil")
+	}
 	if err := c.Call.Encode(b); err != nil {
 		return fmt.Errorf("unable to encode channelAdminLogEventActionDiscardGroupCall#db9f9140: field call: %w", err)
 	}
@@ -3515,15 +3523,17 @@ func (c *ChannelAdminLogEventActionDiscardGroupCall) DecodeBare(b *bin.Buffer) e
 		return fmt.Errorf("can't decode channelAdminLogEventActionDiscardGroupCall#db9f9140 to nil")
 	}
 	{
-		if err := c.Call.Decode(b); err != nil {
+		value, err := DecodeInputGroupCall(b)
+		if err != nil {
 			return fmt.Errorf("unable to decode channelAdminLogEventActionDiscardGroupCall#db9f9140: field call: %w", err)
 		}
+		c.Call = value
 	}
 	return nil
 }
 
 // GetCall returns value of Call field.
-func (c *ChannelAdminLogEventActionDiscardGroupCall) GetCall() (value InputGroupCall) {
+func (c *ChannelAdminLogEventActionDiscardGroupCall) GetCall() (value InputGroupCallClass) {
 	if c == nil {
 		return
 	}
@@ -6716,9 +6726,9 @@ func (c *ChannelAdminLogEventActionToggleAntiSpam) GetNewValue() (value bool) {
 // See https://core.telegram.org/constructor/channelAdminLogEventActionChangePeerColor for reference.
 type ChannelAdminLogEventActionChangePeerColor struct {
 	// Previous accent palette
-	PrevValue PeerColor
+	PrevValue PeerColorClass
 	// New accent palette
-	NewValue PeerColor
+	NewValue PeerColorClass
 }
 
 // ChannelAdminLogEventActionChangePeerColorTypeID is TL type id of ChannelAdminLogEventActionChangePeerColor.
@@ -6743,10 +6753,10 @@ func (c *ChannelAdminLogEventActionChangePeerColor) Zero() bool {
 	if c == nil {
 		return true
 	}
-	if !(c.PrevValue.Zero()) {
+	if !(c.PrevValue == nil) {
 		return false
 	}
-	if !(c.NewValue.Zero()) {
+	if !(c.NewValue == nil) {
 		return false
 	}
 
@@ -6764,8 +6774,8 @@ func (c *ChannelAdminLogEventActionChangePeerColor) String() string {
 
 // FillFrom fills ChannelAdminLogEventActionChangePeerColor from given interface.
 func (c *ChannelAdminLogEventActionChangePeerColor) FillFrom(from interface {
-	GetPrevValue() (value PeerColor)
-	GetNewValue() (value PeerColor)
+	GetPrevValue() (value PeerColorClass)
+	GetNewValue() (value PeerColorClass)
 }) {
 	c.PrevValue = from.GetPrevValue()
 	c.NewValue = from.GetNewValue()
@@ -6820,8 +6830,14 @@ func (c *ChannelAdminLogEventActionChangePeerColor) EncodeBare(b *bin.Buffer) er
 	if c == nil {
 		return fmt.Errorf("can't encode channelAdminLogEventActionChangePeerColor#5796e780 as nil")
 	}
+	if c.PrevValue == nil {
+		return fmt.Errorf("unable to encode channelAdminLogEventActionChangePeerColor#5796e780: field prev_value is nil")
+	}
 	if err := c.PrevValue.Encode(b); err != nil {
 		return fmt.Errorf("unable to encode channelAdminLogEventActionChangePeerColor#5796e780: field prev_value: %w", err)
+	}
+	if c.NewValue == nil {
+		return fmt.Errorf("unable to encode channelAdminLogEventActionChangePeerColor#5796e780: field new_value is nil")
 	}
 	if err := c.NewValue.Encode(b); err != nil {
 		return fmt.Errorf("unable to encode channelAdminLogEventActionChangePeerColor#5796e780: field new_value: %w", err)
@@ -6846,20 +6862,24 @@ func (c *ChannelAdminLogEventActionChangePeerColor) DecodeBare(b *bin.Buffer) er
 		return fmt.Errorf("can't decode channelAdminLogEventActionChangePeerColor#5796e780 to nil")
 	}
 	{
-		if err := c.PrevValue.Decode(b); err != nil {
+		value, err := DecodePeerColor(b)
+		if err != nil {
 			return fmt.Errorf("unable to decode channelAdminLogEventActionChangePeerColor#5796e780: field prev_value: %w", err)
 		}
+		c.PrevValue = value
 	}
 	{
-		if err := c.NewValue.Decode(b); err != nil {
+		value, err := DecodePeerColor(b)
+		if err != nil {
 			return fmt.Errorf("unable to decode channelAdminLogEventActionChangePeerColor#5796e780: field new_value: %w", err)
 		}
+		c.NewValue = value
 	}
 	return nil
 }
 
 // GetPrevValue returns value of PrevValue field.
-func (c *ChannelAdminLogEventActionChangePeerColor) GetPrevValue() (value PeerColor) {
+func (c *ChannelAdminLogEventActionChangePeerColor) GetPrevValue() (value PeerColorClass) {
 	if c == nil {
 		return
 	}
@@ -6867,7 +6887,7 @@ func (c *ChannelAdminLogEventActionChangePeerColor) GetPrevValue() (value PeerCo
 }
 
 // GetNewValue returns value of NewValue field.
-func (c *ChannelAdminLogEventActionChangePeerColor) GetNewValue() (value PeerColor) {
+func (c *ChannelAdminLogEventActionChangePeerColor) GetNewValue() (value PeerColorClass) {
 	if c == nil {
 		return
 	}
@@ -6883,9 +6903,9 @@ func (c *ChannelAdminLogEventActionChangePeerColor) GetNewValue() (value PeerCol
 // See https://core.telegram.org/constructor/channelAdminLogEventActionChangeProfilePeerColor for reference.
 type ChannelAdminLogEventActionChangeProfilePeerColor struct {
 	// Previous accent palette
-	PrevValue PeerColor
+	PrevValue PeerColorClass
 	// New accent palette
-	NewValue PeerColor
+	NewValue PeerColorClass
 }
 
 // ChannelAdminLogEventActionChangeProfilePeerColorTypeID is TL type id of ChannelAdminLogEventActionChangeProfilePeerColor.
@@ -6910,10 +6930,10 @@ func (c *ChannelAdminLogEventActionChangeProfilePeerColor) Zero() bool {
 	if c == nil {
 		return true
 	}
-	if !(c.PrevValue.Zero()) {
+	if !(c.PrevValue == nil) {
 		return false
 	}
-	if !(c.NewValue.Zero()) {
+	if !(c.NewValue == nil) {
 		return false
 	}
 
@@ -6931,8 +6951,8 @@ func (c *ChannelAdminLogEventActionChangeProfilePeerColor) String() string {
 
 // FillFrom fills ChannelAdminLogEventActionChangeProfilePeerColor from given interface.
 func (c *ChannelAdminLogEventActionChangeProfilePeerColor) FillFrom(from interface {
-	GetPrevValue() (value PeerColor)
-	GetNewValue() (value PeerColor)
+	GetPrevValue() (value PeerColorClass)
+	GetNewValue() (value PeerColorClass)
 }) {
 	c.PrevValue = from.GetPrevValue()
 	c.NewValue = from.GetNewValue()
@@ -6987,8 +7007,14 @@ func (c *ChannelAdminLogEventActionChangeProfilePeerColor) EncodeBare(b *bin.Buf
 	if c == nil {
 		return fmt.Errorf("can't encode channelAdminLogEventActionChangeProfilePeerColor#5e477b25 as nil")
 	}
+	if c.PrevValue == nil {
+		return fmt.Errorf("unable to encode channelAdminLogEventActionChangeProfilePeerColor#5e477b25: field prev_value is nil")
+	}
 	if err := c.PrevValue.Encode(b); err != nil {
 		return fmt.Errorf("unable to encode channelAdminLogEventActionChangeProfilePeerColor#5e477b25: field prev_value: %w", err)
+	}
+	if c.NewValue == nil {
+		return fmt.Errorf("unable to encode channelAdminLogEventActionChangeProfilePeerColor#5e477b25: field new_value is nil")
 	}
 	if err := c.NewValue.Encode(b); err != nil {
 		return fmt.Errorf("unable to encode channelAdminLogEventActionChangeProfilePeerColor#5e477b25: field new_value: %w", err)
@@ -7013,20 +7039,24 @@ func (c *ChannelAdminLogEventActionChangeProfilePeerColor) DecodeBare(b *bin.Buf
 		return fmt.Errorf("can't decode channelAdminLogEventActionChangeProfilePeerColor#5e477b25 to nil")
 	}
 	{
-		if err := c.PrevValue.Decode(b); err != nil {
+		value, err := DecodePeerColor(b)
+		if err != nil {
 			return fmt.Errorf("unable to decode channelAdminLogEventActionChangeProfilePeerColor#5e477b25: field prev_value: %w", err)
 		}
+		c.PrevValue = value
 	}
 	{
-		if err := c.NewValue.Decode(b); err != nil {
+		value, err := DecodePeerColor(b)
+		if err != nil {
 			return fmt.Errorf("unable to decode channelAdminLogEventActionChangeProfilePeerColor#5e477b25: field new_value: %w", err)
 		}
+		c.NewValue = value
 	}
 	return nil
 }
 
 // GetPrevValue returns value of PrevValue field.
-func (c *ChannelAdminLogEventActionChangeProfilePeerColor) GetPrevValue() (value PeerColor) {
+func (c *ChannelAdminLogEventActionChangeProfilePeerColor) GetPrevValue() (value PeerColorClass) {
 	if c == nil {
 		return
 	}
@@ -7034,7 +7064,7 @@ func (c *ChannelAdminLogEventActionChangeProfilePeerColor) GetPrevValue() (value
 }
 
 // GetNewValue returns value of NewValue field.
-func (c *ChannelAdminLogEventActionChangeProfilePeerColor) GetNewValue() (value PeerColor) {
+func (c *ChannelAdminLogEventActionChangeProfilePeerColor) GetNewValue() (value PeerColorClass) {
 	if c == nil {
 		return
 	}
@@ -7717,9 +7747,9 @@ func (c *ChannelAdminLogEventActionToggleSignatureProfiles) GetNewValue() (value
 //
 // See https://core.telegram.org/constructor/channelAdminLogEventActionParticipantSubExtend for reference.
 type ChannelAdminLogEventActionParticipantSubExtend struct {
-	// PrevParticipant field of ChannelAdminLogEventActionParticipantSubExtend.
+	// Same as new_participant.
 	PrevParticipant ChannelParticipantClass
-	// NewParticipant field of ChannelAdminLogEventActionParticipantSubExtend.
+	// The subscriber that extended the subscription.
 	NewParticipant ChannelParticipantClass
 }
 
@@ -7886,12 +7916,201 @@ func (c *ChannelAdminLogEventActionParticipantSubExtend) GetNewParticipant() (va
 	return c.NewParticipant
 }
 
+// ChannelAdminLogEventActionToggleAutotranslation represents TL type `channelAdminLogEventActionToggleAutotranslation#c517f77e`.
+//
+// See https://core.telegram.org/constructor/channelAdminLogEventActionToggleAutotranslation for reference.
+type ChannelAdminLogEventActionToggleAutotranslation struct {
+	// NewValue field of ChannelAdminLogEventActionToggleAutotranslation.
+	NewValue bool
+}
+
+// ChannelAdminLogEventActionToggleAutotranslationTypeID is TL type id of ChannelAdminLogEventActionToggleAutotranslation.
+const ChannelAdminLogEventActionToggleAutotranslationTypeID = 0xc517f77e
+
+// construct implements constructor of ChannelAdminLogEventActionClass.
+func (c ChannelAdminLogEventActionToggleAutotranslation) construct() ChannelAdminLogEventActionClass {
+	return &c
+}
+
+// Ensuring interfaces in compile-time for ChannelAdminLogEventActionToggleAutotranslation.
+var (
+	_ bin.Encoder     = &ChannelAdminLogEventActionToggleAutotranslation{}
+	_ bin.Decoder     = &ChannelAdminLogEventActionToggleAutotranslation{}
+	_ bin.BareEncoder = &ChannelAdminLogEventActionToggleAutotranslation{}
+	_ bin.BareDecoder = &ChannelAdminLogEventActionToggleAutotranslation{}
+
+	_ ChannelAdminLogEventActionClass = &ChannelAdminLogEventActionToggleAutotranslation{}
+)
+
+func (c *ChannelAdminLogEventActionToggleAutotranslation) Zero() bool {
+	if c == nil {
+		return true
+	}
+	if !(c.NewValue == false) {
+		return false
+	}
+
+	return true
+}
+
+// String implements fmt.Stringer.
+func (c *ChannelAdminLogEventActionToggleAutotranslation) String() string {
+	if c == nil {
+		return "ChannelAdminLogEventActionToggleAutotranslation(nil)"
+	}
+	type Alias ChannelAdminLogEventActionToggleAutotranslation
+	return fmt.Sprintf("ChannelAdminLogEventActionToggleAutotranslation%+v", Alias(*c))
+}
+
+// FillFrom fills ChannelAdminLogEventActionToggleAutotranslation from given interface.
+func (c *ChannelAdminLogEventActionToggleAutotranslation) FillFrom(from interface {
+	GetNewValue() (value bool)
+}) {
+	c.NewValue = from.GetNewValue()
+}
+
+// TypeID returns type id in TL schema.
+//
+// See https://core.telegram.org/mtproto/TL-tl#remarks.
+func (*ChannelAdminLogEventActionToggleAutotranslation) TypeID() uint32 {
+	return ChannelAdminLogEventActionToggleAutotranslationTypeID
+}
+
+// TypeName returns name of type in TL schema.
+func (*ChannelAdminLogEventActionToggleAutotranslation) TypeName() string {
+	return "channelAdminLogEventActionToggleAutotranslation"
+}
+
+// TypeInfo returns info about TL type.
+func (c *ChannelAdminLogEventActionToggleAutotranslation) TypeInfo() tdp.Type {
+	typ := tdp.Type{
+		Name: "channelAdminLogEventActionToggleAutotranslation",
+		ID:   ChannelAdminLogEventActionToggleAutotranslationTypeID,
+	}
+	if c == nil {
+		typ.Null = true
+		return typ
+	}
+	typ.Fields = []tdp.Field{
+		{
+			Name:       "NewValue",
+			SchemaName: "new_value",
+		},
+	}
+	return typ
+}
+
+// Encode implements bin.Encoder.
+func (c *ChannelAdminLogEventActionToggleAutotranslation) Encode(b *bin.Buffer) error {
+	if c == nil {
+		return fmt.Errorf("can't encode channelAdminLogEventActionToggleAutotranslation#c517f77e as nil")
+	}
+	b.PutID(ChannelAdminLogEventActionToggleAutotranslationTypeID)
+	return c.EncodeBare(b)
+}
+
+// EncodeBare implements bin.BareEncoder.
+func (c *ChannelAdminLogEventActionToggleAutotranslation) EncodeBare(b *bin.Buffer) error {
+	if c == nil {
+		return fmt.Errorf("can't encode channelAdminLogEventActionToggleAutotranslation#c517f77e as nil")
+	}
+	b.PutBool(c.NewValue)
+	return nil
+}
+
+// Decode implements bin.Decoder.
+func (c *ChannelAdminLogEventActionToggleAutotranslation) Decode(b *bin.Buffer) error {
+	if c == nil {
+		return fmt.Errorf("can't decode channelAdminLogEventActionToggleAutotranslation#c517f77e to nil")
+	}
+	if err := b.ConsumeID(ChannelAdminLogEventActionToggleAutotranslationTypeID); err != nil {
+		return fmt.Errorf("unable to decode channelAdminLogEventActionToggleAutotranslation#c517f77e: %w", err)
+	}
+	return c.DecodeBare(b)
+}
+
+// DecodeBare implements bin.BareDecoder.
+func (c *ChannelAdminLogEventActionToggleAutotranslation) DecodeBare(b *bin.Buffer) error {
+	if c == nil {
+		return fmt.Errorf("can't decode channelAdminLogEventActionToggleAutotranslation#c517f77e to nil")
+	}
+	{
+		value, err := b.Bool()
+		if err != nil {
+			return fmt.Errorf("unable to decode channelAdminLogEventActionToggleAutotranslation#c517f77e: field new_value: %w", err)
+		}
+		c.NewValue = value
+	}
+	return nil
+}
+
+// GetNewValue returns value of NewValue field.
+func (c *ChannelAdminLogEventActionToggleAutotranslation) GetNewValue() (value bool) {
+	if c == nil {
+		return
+	}
+	return c.NewValue
+}
+
 // ChannelAdminLogEventActionClassName is schema name of ChannelAdminLogEventActionClass.
 const ChannelAdminLogEventActionClassName = "ChannelAdminLogEventAction"
 
 // ChannelAdminLogEventActionClass represents ChannelAdminLogEventAction generic type.
 //
 // See https://core.telegram.org/type/ChannelAdminLogEventAction for reference.
+//
+// Constructors:
+//   - [ChannelAdminLogEventActionChangeTitle]
+//   - [ChannelAdminLogEventActionChangeAbout]
+//   - [ChannelAdminLogEventActionChangeUsername]
+//   - [ChannelAdminLogEventActionChangePhoto]
+//   - [ChannelAdminLogEventActionToggleInvites]
+//   - [ChannelAdminLogEventActionToggleSignatures]
+//   - [ChannelAdminLogEventActionUpdatePinned]
+//   - [ChannelAdminLogEventActionEditMessage]
+//   - [ChannelAdminLogEventActionDeleteMessage]
+//   - [ChannelAdminLogEventActionParticipantJoin]
+//   - [ChannelAdminLogEventActionParticipantLeave]
+//   - [ChannelAdminLogEventActionParticipantInvite]
+//   - [ChannelAdminLogEventActionParticipantToggleBan]
+//   - [ChannelAdminLogEventActionParticipantToggleAdmin]
+//   - [ChannelAdminLogEventActionChangeStickerSet]
+//   - [ChannelAdminLogEventActionTogglePreHistoryHidden]
+//   - [ChannelAdminLogEventActionDefaultBannedRights]
+//   - [ChannelAdminLogEventActionStopPoll]
+//   - [ChannelAdminLogEventActionChangeLinkedChat]
+//   - [ChannelAdminLogEventActionChangeLocation]
+//   - [ChannelAdminLogEventActionToggleSlowMode]
+//   - [ChannelAdminLogEventActionStartGroupCall]
+//   - [ChannelAdminLogEventActionDiscardGroupCall]
+//   - [ChannelAdminLogEventActionParticipantMute]
+//   - [ChannelAdminLogEventActionParticipantUnmute]
+//   - [ChannelAdminLogEventActionToggleGroupCallSetting]
+//   - [ChannelAdminLogEventActionParticipantJoinByInvite]
+//   - [ChannelAdminLogEventActionExportedInviteDelete]
+//   - [ChannelAdminLogEventActionExportedInviteRevoke]
+//   - [ChannelAdminLogEventActionExportedInviteEdit]
+//   - [ChannelAdminLogEventActionParticipantVolume]
+//   - [ChannelAdminLogEventActionChangeHistoryTTL]
+//   - [ChannelAdminLogEventActionParticipantJoinByRequest]
+//   - [ChannelAdminLogEventActionToggleNoForwards]
+//   - [ChannelAdminLogEventActionSendMessage]
+//   - [ChannelAdminLogEventActionChangeAvailableReactions]
+//   - [ChannelAdminLogEventActionChangeUsernames]
+//   - [ChannelAdminLogEventActionToggleForum]
+//   - [ChannelAdminLogEventActionCreateTopic]
+//   - [ChannelAdminLogEventActionEditTopic]
+//   - [ChannelAdminLogEventActionDeleteTopic]
+//   - [ChannelAdminLogEventActionPinTopic]
+//   - [ChannelAdminLogEventActionToggleAntiSpam]
+//   - [ChannelAdminLogEventActionChangePeerColor]
+//   - [ChannelAdminLogEventActionChangeProfilePeerColor]
+//   - [ChannelAdminLogEventActionChangeWallpaper]
+//   - [ChannelAdminLogEventActionChangeEmojiStatus]
+//   - [ChannelAdminLogEventActionChangeEmojiStickerSet]
+//   - [ChannelAdminLogEventActionToggleSignatureProfiles]
+//   - [ChannelAdminLogEventActionParticipantSubExtend]
+//   - [ChannelAdminLogEventActionToggleAutotranslation]
 //
 // Example:
 //
@@ -7950,6 +8169,7 @@ const ChannelAdminLogEventActionClassName = "ChannelAdminLogEventAction"
 //	case *tg.ChannelAdminLogEventActionChangeEmojiStickerSet: // channelAdminLogEventActionChangeEmojiStickerSet#46d840ab
 //	case *tg.ChannelAdminLogEventActionToggleSignatureProfiles: // channelAdminLogEventActionToggleSignatureProfiles#60a79c79
 //	case *tg.ChannelAdminLogEventActionParticipantSubExtend: // channelAdminLogEventActionParticipantSubExtend#64642db3
+//	case *tg.ChannelAdminLogEventActionToggleAutotranslation: // channelAdminLogEventActionToggleAutotranslation#c517f77e
 //	default: panic(v)
 //	}
 type ChannelAdminLogEventActionClass interface {
@@ -8324,6 +8544,13 @@ func DecodeChannelAdminLogEventAction(buf *bin.Buffer) (ChannelAdminLogEventActi
 	case ChannelAdminLogEventActionParticipantSubExtendTypeID:
 		// Decoding channelAdminLogEventActionParticipantSubExtend#64642db3.
 		v := ChannelAdminLogEventActionParticipantSubExtend{}
+		if err := v.Decode(buf); err != nil {
+			return nil, fmt.Errorf("unable to decode ChannelAdminLogEventActionClass: %w", err)
+		}
+		return &v, nil
+	case ChannelAdminLogEventActionToggleAutotranslationTypeID:
+		// Decoding channelAdminLogEventActionToggleAutotranslation#c517f77e.
+		v := ChannelAdminLogEventActionToggleAutotranslation{}
 		if err := v.Decode(buf); err != nil {
 			return nil, fmt.Errorf("unable to decode ChannelAdminLogEventActionClass: %w", err)
 		}

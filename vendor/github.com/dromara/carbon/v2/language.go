@@ -12,28 +12,17 @@ import (
 //go:embed lang
 var fs embed.FS
 
-var (
-	// empty locale error
-	// 空区域错误
-	emptyLocaleError = func() error {
-		return fmt.Errorf("locale cannot be empty")
-	}
+// localeCache caches parsed locale resources to avoid repeated file loading and JSON parsing
+var localeCache sync.Map
 
-	// invalid locale error
-	// 无效的区域错误
-	invalidLocaleError = func(locale string) error {
-		return fmt.Errorf("invalid locale file %q, please make sure the json file exists and is valid", locale)
-	}
-
-	// invalid resources error
-	// 无效的资源错误
-	invalidResourcesError = func() error {
-		return fmt.Errorf("invalid resources, please make sure the resources exists and is valid")
-	}
-)
+// cachedResources holds the cached resources for each language.
+type cachedResources struct {
+	once      sync.Once
+	resources map[string]string
+	err       error
+}
 
 // Language defines a Language struct.
-// 定义 Language 结构体
 type Language struct {
 	dir       string
 	locale    string
@@ -43,94 +32,149 @@ type Language struct {
 }
 
 // NewLanguage returns a new Language instance.
-// 初始化 Language 结构体
 func NewLanguage() *Language {
 	return &Language{
-		dir:       "lang/",
+		dir:       "lang",
 		locale:    DefaultLocale,
 		resources: make(map[string]string),
 		rw:        new(sync.RWMutex),
 	}
 }
 
+// Copy returns a new copy of the current Language instance
+func (lang *Language) Copy() *Language {
+	if lang == nil {
+		return nil
+	}
+	newLang := &Language{
+		dir:    lang.dir,
+		locale: lang.locale,
+		Error:  lang.Error,
+		rw:     new(sync.RWMutex),
+	}
+	if lang.resources == nil {
+		return newLang
+	}
+
+	lang.rw.RLock()
+	resources := lang.resources
+	lang.rw.RUnlock()
+
+	newLang.resources = make(map[string]string, len(resources))
+	for k, v := range resources {
+		newLang.resources[k] = v
+	}
+	return newLang
+}
+
 // SetLocale sets language locale.
-// 设置区域
 func (lang *Language) SetLocale(locale string) *Language {
 	if lang == nil || lang.Error != nil {
 		return lang
 	}
-
 	if locale == "" {
-		lang.Error = emptyLocaleError()
+		lang.Error = ErrEmptyLocale()
 		return lang
+	}
+
+	// Early return if locale hasn't changed and resources are already loaded
+	lang.rw.RLock()
+	if lang.locale == locale && lang.resources != nil && len(lang.resources) > 0 {
+		lang.rw.RUnlock()
+		return lang
+	}
+	lang.rw.RUnlock()
+
+	fileName := fmt.Sprintf("%s/%s.json", lang.dir, locale)
+	load, _ := localeCache.LoadOrStore(fileName, new(cachedResources))
+	entry := load.(*cachedResources)
+
+	entry.once.Do(func() {
+		bs, err := fs.ReadFile(fileName)
+		if err != nil {
+			entry.err = fmt.Errorf("%w: %w", ErrNotExistLocale(fileName), err)
+			return
+		}
+
+		var resources map[string]string
+		_ = json.Unmarshal(bs, &resources)
+		entry.resources = resources
+	})
+
+	if entry.err != nil {
+		lang.Error = entry.err
+		return lang
+	}
+
+	// Create a copy of the cached resources to avoid modifying the cache
+	// Pre-allocate with exact capacity for better memory efficiency
+	newResources := make(map[string]string, len(entry.resources))
+	for k, v := range entry.resources {
+		newResources[k] = v
 	}
 
 	lang.rw.Lock()
-	defer lang.rw.Unlock()
-
 	lang.locale = locale
-	fileName := lang.dir + locale + ".json"
-	bytes, err := fs.ReadFile(fileName)
-	if err != nil {
-		lang.Error = invalidLocaleError(fileName)
-		return lang
-	}
-	_ = json.Unmarshal(bytes, &lang.resources)
+	lang.resources = newResources
+	lang.rw.Unlock()
+
 	return lang
 }
 
 // SetResources sets language resources.
-// 设置资源
 func (lang *Language) SetResources(resources map[string]string) *Language {
 	if lang == nil || lang.Error != nil {
 		return lang
 	}
-
-	if resources == nil {
-		lang.Error = invalidResourcesError()
+	if len(resources) == 0 {
+		lang.Error = ErrEmptyResources()
 		return lang
 	}
 
 	lang.rw.Lock()
 	defer lang.rw.Unlock()
 
-	if len(lang.resources) == 0 {
-		lang.resources = resources
-		return lang
-	}
 	for k, v := range resources {
-		if _, ok := lang.resources[k]; ok {
-			lang.resources[k] = v
-		}
+		lang.resources[k] = v
 	}
 	return lang
 }
 
 // returns a translated string.
-// 翻译转换
 func (lang *Language) translate(unit string, value int64) string {
 	if lang == nil || lang.resources == nil {
 		return ""
 	}
 
-	lang.rw.Lock()
-	defer lang.rw.Unlock()
+	lang.rw.RLock()
+	resources := lang.resources
+	lang.rw.RUnlock()
 
-	if len(lang.resources) == 0 {
-		lang.rw.Unlock()
+	// If resources is empty, set default locale and retry
+	if len(resources) == 0 {
 		lang.SetLocale(DefaultLocale)
-		lang.rw.Lock()
+		lang.rw.RLock()
+		resources = lang.resources
+		lang.rw.RUnlock()
 	}
-	slice := strings.Split(lang.resources[unit], "|")
+	if resources == nil || len(resources) == 0 {
+		return ""
+	}
+	resource, exists := resources[unit]
+	if !exists {
+		return ""
+	}
+	slice := strings.Split(resource, "|")
 	number := getAbsValue(value)
+	str := strconv.FormatInt(value, 10)
 	if len(slice) == 1 {
-		return strings.Replace(slice[0], "%d", strconv.FormatInt(value, 10), 1)
+		return strings.Replace(slice[0], "%d", str, 1)
 	}
 	if int64(len(slice)) <= number {
-		return strings.Replace(slice[len(slice)-1], "%d", strconv.FormatInt(value, 10), 1)
+		return strings.Replace(slice[len(slice)-1], "%d", str, 1)
 	}
 	if !strings.Contains(slice[number-1], "%d") && value < 0 {
 		return "-" + slice[number-1]
 	}
-	return strings.Replace(slice[number-1], "%d", strconv.FormatInt(value, 10), 1)
+	return strings.Replace(slice[number-1], "%d", str, 1)
 }

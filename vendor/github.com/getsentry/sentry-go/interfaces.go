@@ -3,31 +3,28 @@ package sentry
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
-	"reflect"
-	"slices"
 	"strings"
 	"time"
+
+	"github.com/getsentry/sentry-go/attribute"
+	"github.com/getsentry/sentry-go/internal/protocol"
+	"github.com/getsentry/sentry-go/internal/ratelimit"
 )
 
-// eventType is the type of an error event.
 const eventType = "event"
-
-// transactionType is the type of a transaction event.
 const transactionType = "transaction"
-
-// profileType is the type of a profile event.
-// currently, profiles are always sent as part of a transaction event.
-const profileType = "profile"
-
-// checkInType is the type of a check in event.
 const checkInType = "check_in"
 
-// metricType is the type of a metric event.
-const metricType = "statsd"
+var logEvent = struct {
+	Type        string
+	ContentType string
+}{
+	"log",
+	"application/vnd.sentry.items.log+json",
+}
 
 // Level marks the severity of the event.
 type Level string
@@ -41,19 +38,9 @@ const (
 	LevelFatal   Level = "fatal"
 )
 
-// SdkInfo contains all metadata about about the SDK being used.
-type SdkInfo struct {
-	Name         string       `json:"name,omitempty"`
-	Version      string       `json:"version,omitempty"`
-	Integrations []string     `json:"integrations,omitempty"`
-	Packages     []SdkPackage `json:"packages,omitempty"`
-}
-
-// SdkPackage describes a package that was installed.
-type SdkPackage struct {
-	Name    string `json:"name,omitempty"`
-	Version string `json:"version,omitempty"`
-}
+// SdkInfo contains all metadata about the SDK.
+type SdkInfo = protocol.SdkInfo
+type SdkPackage = protocol.SdkPackage
 
 // TODO: This type could be more useful, as map of interface{} is too generic
 // and requires a lot of type assertions in beforeBreadcrumb calls
@@ -103,6 +90,57 @@ func (b *Breadcrumb) MarshalJSON() ([]byte, error) {
 	return json.Marshal((*breadcrumb)(b))
 }
 
+// Logger provides a chaining API for structured logging to Sentry.
+type Logger interface {
+	// Write implements the io.Writer interface. Currently, the [sentry.Hub] is
+	// context aware, in order to get the correct trace correlation. Using this
+	// might result in incorrect span association on logs. If you need to use
+	// Write it is recommended to create a NewLogger so that the associated context
+	// is passed correctly.
+	Write(p []byte) (n int, err error)
+
+	// SetAttributes allows attaching parameters to the logger using the attribute API.
+	// These attributes will be included in all subsequent log entries.
+	SetAttributes(...attribute.Builder)
+
+	// Trace defines the [sentry.LogLevel] for the log entry.
+	Trace() LogEntry
+	// Debug defines the [sentry.LogLevel] for the log entry.
+	Debug() LogEntry
+	// Info defines the [sentry.LogLevel] for the log entry.
+	Info() LogEntry
+	// Warn defines the [sentry.LogLevel] for the log entry.
+	Warn() LogEntry
+	// Error defines the [sentry.LogLevel] for the log entry.
+	Error() LogEntry
+	// Fatal defines the [sentry.LogLevel] for the log entry.
+	Fatal() LogEntry
+	// Panic defines the [sentry.LogLevel] for the log entry.
+	Panic() LogEntry
+	// GetCtx returns the [context.Context] set on the logger.
+	GetCtx() context.Context
+}
+
+// LogEntry defines the interface for a log entry that supports chaining attributes.
+type LogEntry interface {
+	// WithCtx creates a new LogEntry with the specified context without overwriting the previous one.
+	WithCtx(ctx context.Context) LogEntry
+	// String adds a string attribute to the LogEntry.
+	String(key, value string) LogEntry
+	// Int adds an int attribute to the LogEntry.
+	Int(key string, value int) LogEntry
+	// Int64 adds an int64 attribute to the LogEntry.
+	Int64(key string, value int64) LogEntry
+	// Float64 adds a float64 attribute to the LogEntry.
+	Float64(key string, value float64) LogEntry
+	// Bool adds a bool attribute to the LogEntry.
+	Bool(key string, value bool) LogEntry
+	// Emit emits the LogEntry with the provided arguments.
+	Emit(args ...interface{})
+	// Emitf emits the LogEntry using a format string and arguments.
+	Emitf(format string, args ...interface{})
+}
+
 // Attachment allows associating files with your events to aid in investigation.
 // An event may contain one or more attachments.
 type Attachment struct {
@@ -119,7 +157,6 @@ type User struct {
 	IPAddress string            `json:"ip_address,omitempty"`
 	Username  string            `json:"username,omitempty"`
 	Name      string            `json:"name,omitempty"`
-	Segment   string            `json:"segment,omitempty"`
 	Data      map[string]string `json:"data,omitempty"`
 }
 
@@ -144,10 +181,6 @@ func (u User) IsEmpty() bool {
 		return false
 	}
 
-	if u.Segment != "" {
-		return false
-	}
-
 	if len(u.Data) > 0 {
 		return false
 	}
@@ -167,11 +200,36 @@ type Request struct {
 }
 
 var sensitiveHeaders = map[string]struct{}{
+	"_csrf":               {},
+	"_csrf_token":         {},
+	"_session":            {},
+	"_xsrf":               {},
+	"Api-Key":             {},
+	"Apikey":              {},
+	"Auth":                {},
 	"Authorization":       {},
-	"Proxy-Authorization": {},
 	"Cookie":              {},
+	"Credentials":         {},
+	"Csrf":                {},
+	"Csrf-Token":          {},
+	"Csrftoken":           {},
+	"Ip-Address":          {},
+	"Passwd":              {},
+	"Password":            {},
+	"Private-Key":         {},
+	"Privatekey":          {},
+	"Proxy-Authorization": {},
+	"Remote-Addr":         {},
+	"Secret":              {},
+	"Session":             {},
+	"Sessionid":           {},
+	"Token":               {},
+	"User-Session":        {},
+	"X-Api-Key":           {},
+	"X-Csrftoken":         {},
 	"X-Forwarded-For":     {},
 	"X-Real-Ip":           {},
+	"XSRF-TOKEN":          {},
 }
 
 // NewRequest returns a new Sentry Request from the given http.Request.
@@ -179,11 +237,11 @@ var sensitiveHeaders = map[string]struct{}{
 // NewRequest avoids operations that depend on network access. In particular, it
 // does not read r.Body.
 func NewRequest(r *http.Request) *Request {
-	protocol := schemeHTTP
+	prot := protocol.SchemeHTTP
 	if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {
-		protocol = schemeHTTPS
+		prot = protocol.SchemeHTTPS
 	}
-	url := fmt.Sprintf("%s://%s%s", protocol, r.Host, r.URL.Path)
+	url := fmt.Sprintf("%s://%s%s", prot, r.Host, r.URL.Path)
 
 	var cookies string
 	var env map[string]string
@@ -196,6 +254,7 @@ func NewRequest(r *http.Request) *Request {
 		// attach more than one Cookie header field.
 		cookies = r.Header.Get("Cookie")
 
+		headers = make(map[string]string, len(r.Header))
 		for k, v := range r.Header {
 			headers[k] = strings.Join(v, ",")
 		}
@@ -225,7 +284,7 @@ func NewRequest(r *http.Request) *Request {
 
 // Mechanism is the mechanism by which an exception was generated and handled.
 type Mechanism struct {
-	Type             string         `json:"type,omitempty"`
+	Type             string         `json:"type"`
 	Description      string         `json:"description,omitempty"`
 	HelpLink         string         `json:"help_link,omitempty"`
 	Source           string         `json:"source,omitempty"`
@@ -255,8 +314,7 @@ type Exception struct {
 // SDKMetaData is a struct to stash data which is needed at some point in the SDK's event processing pipeline
 // but which shouldn't get send to Sentry.
 type SDKMetaData struct {
-	dsc                DynamicSamplingContext
-	transactionProfile *profileInfo
+	dsc DynamicSamplingContext
 }
 
 // Contains information about how the name of the transaction was determined.
@@ -324,7 +382,6 @@ type Event struct {
 	Exception   []Exception            `json:"exception,omitempty"`
 	DebugMeta   *DebugMeta             `json:"debug_meta,omitempty"`
 	Attachments []*Attachment          `json:"-"`
-	Metrics     []Metric               `json:"-"`
 
 	// The fields below are only relevant for transactions.
 
@@ -337,6 +394,9 @@ type Event struct {
 
 	CheckIn       *CheckIn       `json:"check_in,omitempty"`
 	MonitorConfig *MonitorConfig `json:"monitor_config,omitempty"`
+
+	// The fields below are only relevant for logs
+	Logs []Log `json:"items,omitempty"`
 
 	// The fields below are not part of the final JSON payload.
 
@@ -353,64 +413,84 @@ func (e *Event) SetException(exception error, maxErrorDepth int) {
 		return
 	}
 
-	err := exception
-
-	for i := 0; err != nil && (i < maxErrorDepth || maxErrorDepth == -1); i++ {
-		// Add the current error to the exception slice with its details
-		e.Exception = append(e.Exception, Exception{
-			Value:      err.Error(),
-			Type:       reflect.TypeOf(err).String(),
-			Stacktrace: ExtractStacktrace(err),
-		})
-
-		// Attempt to unwrap the error using the standard library's Unwrap method.
-		// If errors.Unwrap returns nil, it means either there is no error to unwrap,
-		// or the error does not implement the Unwrap method.
-		unwrappedErr := errors.Unwrap(err)
-
-		if unwrappedErr != nil {
-			// The error was successfully unwrapped using the standard library's Unwrap method.
-			err = unwrappedErr
-			continue
-		}
-
-		cause, ok := err.(interface{ Cause() error })
-		if !ok {
-			// We cannot unwrap the error further.
-			break
-		}
-
-		// The error implements the Cause method, indicating it may have been wrapped
-		// using the github.com/pkg/errors package.
-		err = cause.Cause()
-	}
-
-	// Add a trace of the current stack to the most recent error in a chain if
-	// it doesn't have a stack trace yet.
-	// We only add to the most recent error to avoid duplication and because the
-	// current stack is most likely unrelated to errors deeper in the chain.
-	if e.Exception[0].Stacktrace == nil {
-		e.Exception[0].Stacktrace = NewStacktrace()
-	}
-
-	if len(e.Exception) <= 1 {
+	exceptions := convertErrorToExceptions(exception, maxErrorDepth)
+	if len(exceptions) == 0 {
 		return
 	}
 
-	// event.Exception should be sorted such that the most recent error is last.
-	slices.Reverse(e.Exception)
+	e.Exception = exceptions
+}
 
-	for i := range e.Exception {
-		e.Exception[i].Mechanism = &Mechanism{
-			IsExceptionGroup: true,
-			ExceptionID:      i,
-			Type:             "generic",
+// ToEnvelope converts the Event to a Sentry envelope.
+// This includes the event data and any attachments as separate envelope items.
+func (e *Event) ToEnvelope(dsn *protocol.Dsn) (*protocol.Envelope, error) {
+	return e.ToEnvelopeWithTime(dsn, time.Now())
+}
+
+// ToEnvelopeWithTime converts the Event to a Sentry envelope with a specific sentAt time.
+// This is primarily useful for testing with predictable timestamps.
+func (e *Event) ToEnvelopeWithTime(dsn *protocol.Dsn, sentAt time.Time) (*protocol.Envelope, error) {
+	// Create envelope header with trace context
+	trace := make(map[string]string)
+	if dsc := e.sdkMetaData.dsc; dsc.HasEntries() {
+		for k, v := range dsc.Entries {
+			trace[k] = v
 		}
-		if i == 0 {
-			continue
-		}
-		e.Exception[i].Mechanism.ParentID = Pointer(i - 1)
 	}
+
+	header := &protocol.EnvelopeHeader{
+		EventID: string(e.EventID),
+		SentAt:  sentAt,
+		Trace:   trace,
+	}
+
+	if dsn != nil {
+		header.Dsn = dsn.String()
+	}
+
+	header.Sdk = &e.Sdk
+
+	envelope := protocol.NewEnvelope(header)
+
+	eventBody, err := json.Marshal(e)
+	if err != nil {
+		// Try fallback: remove problematic fields and retry
+		e.Breadcrumbs = nil
+		e.Contexts = nil
+		e.Extra = map[string]interface{}{
+			"info": fmt.Sprintf("Could not encode original event as JSON. "+
+				"Succeeded by removing Breadcrumbs, Contexts and Extra. "+
+				"Please verify the data you attach to the scope. "+
+				"Error: %s", err),
+		}
+
+		eventBody, err = json.Marshal(e)
+		if err != nil {
+			return nil, fmt.Errorf("event could not be marshaled even with fallback: %w", err)
+		}
+
+		DebugLogger.Printf("Event marshaling succeeded with fallback after removing problematic fields")
+	}
+
+	var mainItem *protocol.EnvelopeItem
+	switch e.Type {
+	case transactionType:
+		mainItem = protocol.NewEnvelopeItem(protocol.EnvelopeItemTypeTransaction, eventBody)
+	case checkInType:
+		mainItem = protocol.NewEnvelopeItem(protocol.EnvelopeItemTypeCheckIn, eventBody)
+	case logEvent.Type:
+		mainItem = protocol.NewLogItem(len(e.Logs), eventBody)
+	default:
+		mainItem = protocol.NewEnvelopeItem(protocol.EnvelopeItemTypeEvent, eventBody)
+	}
+
+	envelope.AddItem(mainItem)
+	for _, attachment := range e.Attachments {
+		attachmentItem := protocol.NewAttachmentItem(attachment.Filename, attachment.ContentType, attachment.Payload)
+		envelope.AddItem(attachmentItem)
+	}
+
+	return envelope, nil
 }
 
 // TODO: Event.Contexts map[string]interface{} => map[string]EventContext,
@@ -521,14 +601,31 @@ func (e *Event) checkInMarshalJSON() ([]byte, error) {
 
 	if e.MonitorConfig != nil {
 		checkIn.MonitorConfig = &MonitorConfig{
-			Schedule:      e.MonitorConfig.Schedule,
-			CheckInMargin: e.MonitorConfig.CheckInMargin,
-			MaxRuntime:    e.MonitorConfig.MaxRuntime,
-			Timezone:      e.MonitorConfig.Timezone,
+			Schedule:              e.MonitorConfig.Schedule,
+			CheckInMargin:         e.MonitorConfig.CheckInMargin,
+			MaxRuntime:            e.MonitorConfig.MaxRuntime,
+			Timezone:              e.MonitorConfig.Timezone,
+			FailureIssueThreshold: e.MonitorConfig.FailureIssueThreshold,
+			RecoveryThreshold:     e.MonitorConfig.RecoveryThreshold,
 		}
 	}
 
 	return json.Marshal(checkIn)
+}
+
+func (e *Event) toCategory() ratelimit.Category {
+	switch e.Type {
+	case "":
+		return ratelimit.CategoryError
+	case transactionType:
+		return ratelimit.CategoryTransaction
+	case logEvent.Type:
+		return ratelimit.CategoryLog
+	case checkInType:
+		return ratelimit.CategoryMonitor
+	default:
+		return ratelimit.CategoryUnknown
+	}
 }
 
 // NewEvent creates a new Event.
@@ -559,4 +656,28 @@ type EventHint struct {
 	Context            context.Context
 	Request            *http.Request
 	Response           *http.Response
+}
+
+type Log struct {
+	Timestamp  time.Time            `json:"timestamp,omitempty"`
+	TraceID    TraceID              `json:"trace_id,omitempty"`
+	Level      LogLevel             `json:"level"`
+	Severity   int                  `json:"severity_number,omitempty"`
+	Body       string               `json:"body,omitempty"`
+	Attributes map[string]Attribute `json:"attributes,omitempty"`
+}
+
+type AttrType string
+
+const (
+	AttributeInvalid AttrType = ""
+	AttributeBool    AttrType = "boolean"
+	AttributeInt     AttrType = "integer"
+	AttributeFloat   AttrType = "double"
+	AttributeString  AttrType = "string"
+)
+
+type Attribute struct {
+	Value any      `json:"value"`
+	Type  AttrType `json:"type"`
 }

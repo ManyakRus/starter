@@ -439,12 +439,155 @@ func (p *PhoneCallDiscardReasonBusy) DecodeBare(b *bin.Buffer) error {
 	return nil
 }
 
+// PhoneCallDiscardReasonMigrateConferenceCall represents TL type `phoneCallDiscardReasonMigrateConferenceCall#9fbbf1f7`.
+//
+// See https://core.telegram.org/constructor/phoneCallDiscardReasonMigrateConferenceCall for reference.
+type PhoneCallDiscardReasonMigrateConferenceCall struct {
+	// Slug field of PhoneCallDiscardReasonMigrateConferenceCall.
+	Slug string
+}
+
+// PhoneCallDiscardReasonMigrateConferenceCallTypeID is TL type id of PhoneCallDiscardReasonMigrateConferenceCall.
+const PhoneCallDiscardReasonMigrateConferenceCallTypeID = 0x9fbbf1f7
+
+// construct implements constructor of PhoneCallDiscardReasonClass.
+func (p PhoneCallDiscardReasonMigrateConferenceCall) construct() PhoneCallDiscardReasonClass {
+	return &p
+}
+
+// Ensuring interfaces in compile-time for PhoneCallDiscardReasonMigrateConferenceCall.
+var (
+	_ bin.Encoder     = &PhoneCallDiscardReasonMigrateConferenceCall{}
+	_ bin.Decoder     = &PhoneCallDiscardReasonMigrateConferenceCall{}
+	_ bin.BareEncoder = &PhoneCallDiscardReasonMigrateConferenceCall{}
+	_ bin.BareDecoder = &PhoneCallDiscardReasonMigrateConferenceCall{}
+
+	_ PhoneCallDiscardReasonClass = &PhoneCallDiscardReasonMigrateConferenceCall{}
+)
+
+func (p *PhoneCallDiscardReasonMigrateConferenceCall) Zero() bool {
+	if p == nil {
+		return true
+	}
+	if !(p.Slug == "") {
+		return false
+	}
+
+	return true
+}
+
+// String implements fmt.Stringer.
+func (p *PhoneCallDiscardReasonMigrateConferenceCall) String() string {
+	if p == nil {
+		return "PhoneCallDiscardReasonMigrateConferenceCall(nil)"
+	}
+	type Alias PhoneCallDiscardReasonMigrateConferenceCall
+	return fmt.Sprintf("PhoneCallDiscardReasonMigrateConferenceCall%+v", Alias(*p))
+}
+
+// FillFrom fills PhoneCallDiscardReasonMigrateConferenceCall from given interface.
+func (p *PhoneCallDiscardReasonMigrateConferenceCall) FillFrom(from interface {
+	GetSlug() (value string)
+}) {
+	p.Slug = from.GetSlug()
+}
+
+// TypeID returns type id in TL schema.
+//
+// See https://core.telegram.org/mtproto/TL-tl#remarks.
+func (*PhoneCallDiscardReasonMigrateConferenceCall) TypeID() uint32 {
+	return PhoneCallDiscardReasonMigrateConferenceCallTypeID
+}
+
+// TypeName returns name of type in TL schema.
+func (*PhoneCallDiscardReasonMigrateConferenceCall) TypeName() string {
+	return "phoneCallDiscardReasonMigrateConferenceCall"
+}
+
+// TypeInfo returns info about TL type.
+func (p *PhoneCallDiscardReasonMigrateConferenceCall) TypeInfo() tdp.Type {
+	typ := tdp.Type{
+		Name: "phoneCallDiscardReasonMigrateConferenceCall",
+		ID:   PhoneCallDiscardReasonMigrateConferenceCallTypeID,
+	}
+	if p == nil {
+		typ.Null = true
+		return typ
+	}
+	typ.Fields = []tdp.Field{
+		{
+			Name:       "Slug",
+			SchemaName: "slug",
+		},
+	}
+	return typ
+}
+
+// Encode implements bin.Encoder.
+func (p *PhoneCallDiscardReasonMigrateConferenceCall) Encode(b *bin.Buffer) error {
+	if p == nil {
+		return fmt.Errorf("can't encode phoneCallDiscardReasonMigrateConferenceCall#9fbbf1f7 as nil")
+	}
+	b.PutID(PhoneCallDiscardReasonMigrateConferenceCallTypeID)
+	return p.EncodeBare(b)
+}
+
+// EncodeBare implements bin.BareEncoder.
+func (p *PhoneCallDiscardReasonMigrateConferenceCall) EncodeBare(b *bin.Buffer) error {
+	if p == nil {
+		return fmt.Errorf("can't encode phoneCallDiscardReasonMigrateConferenceCall#9fbbf1f7 as nil")
+	}
+	b.PutString(p.Slug)
+	return nil
+}
+
+// Decode implements bin.Decoder.
+func (p *PhoneCallDiscardReasonMigrateConferenceCall) Decode(b *bin.Buffer) error {
+	if p == nil {
+		return fmt.Errorf("can't decode phoneCallDiscardReasonMigrateConferenceCall#9fbbf1f7 to nil")
+	}
+	if err := b.ConsumeID(PhoneCallDiscardReasonMigrateConferenceCallTypeID); err != nil {
+		return fmt.Errorf("unable to decode phoneCallDiscardReasonMigrateConferenceCall#9fbbf1f7: %w", err)
+	}
+	return p.DecodeBare(b)
+}
+
+// DecodeBare implements bin.BareDecoder.
+func (p *PhoneCallDiscardReasonMigrateConferenceCall) DecodeBare(b *bin.Buffer) error {
+	if p == nil {
+		return fmt.Errorf("can't decode phoneCallDiscardReasonMigrateConferenceCall#9fbbf1f7 to nil")
+	}
+	{
+		value, err := b.String()
+		if err != nil {
+			return fmt.Errorf("unable to decode phoneCallDiscardReasonMigrateConferenceCall#9fbbf1f7: field slug: %w", err)
+		}
+		p.Slug = value
+	}
+	return nil
+}
+
+// GetSlug returns value of Slug field.
+func (p *PhoneCallDiscardReasonMigrateConferenceCall) GetSlug() (value string) {
+	if p == nil {
+		return
+	}
+	return p.Slug
+}
+
 // PhoneCallDiscardReasonClassName is schema name of PhoneCallDiscardReasonClass.
 const PhoneCallDiscardReasonClassName = "PhoneCallDiscardReason"
 
 // PhoneCallDiscardReasonClass represents PhoneCallDiscardReason generic type.
 //
 // See https://core.telegram.org/type/PhoneCallDiscardReason for reference.
+//
+// Constructors:
+//   - [PhoneCallDiscardReasonMissed]
+//   - [PhoneCallDiscardReasonDisconnect]
+//   - [PhoneCallDiscardReasonHangup]
+//   - [PhoneCallDiscardReasonBusy]
+//   - [PhoneCallDiscardReasonMigrateConferenceCall]
 //
 // Example:
 //
@@ -457,6 +600,7 @@ const PhoneCallDiscardReasonClassName = "PhoneCallDiscardReason"
 //	case *tg.PhoneCallDiscardReasonDisconnect: // phoneCallDiscardReasonDisconnect#e095c1a0
 //	case *tg.PhoneCallDiscardReasonHangup: // phoneCallDiscardReasonHangup#57adc690
 //	case *tg.PhoneCallDiscardReasonBusy: // phoneCallDiscardReasonBusy#faf7e8c9
+//	case *tg.PhoneCallDiscardReasonMigrateConferenceCall: // phoneCallDiscardReasonMigrateConferenceCall#9fbbf1f7
 //	default: panic(v)
 //	}
 type PhoneCallDiscardReasonClass interface {
@@ -509,6 +653,13 @@ func DecodePhoneCallDiscardReason(buf *bin.Buffer) (PhoneCallDiscardReasonClass,
 	case PhoneCallDiscardReasonBusyTypeID:
 		// Decoding phoneCallDiscardReasonBusy#faf7e8c9.
 		v := PhoneCallDiscardReasonBusy{}
+		if err := v.Decode(buf); err != nil {
+			return nil, fmt.Errorf("unable to decode PhoneCallDiscardReasonClass: %w", err)
+		}
+		return &v, nil
+	case PhoneCallDiscardReasonMigrateConferenceCallTypeID:
+		// Decoding phoneCallDiscardReasonMigrateConferenceCall#9fbbf1f7.
+		v := PhoneCallDiscardReasonMigrateConferenceCall{}
 		if err := v.Decode(buf); err != nil {
 			return nil, fmt.Errorf("unable to decode PhoneCallDiscardReasonClass: %w", err)
 		}

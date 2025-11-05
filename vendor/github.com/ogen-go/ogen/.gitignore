@@ -1,0 +1,10 @@
+.idea
+_bin/*
+./examples
+
+*-fuzz.zip
+
+*.out
+*.dump
+cmd/ogen/ogen
+cmd/jschemagen/jschemagen

@@ -47,11 +47,7 @@ func (p *pebbleIterator) Next(ctx context.Context) bool {
 		return false
 	}
 
-	for {
-		if bytes.HasPrefix(p.iter.Key(), storage.PeerKeyPrefix) {
-			break
-		}
-
+	for !bytes.HasPrefix(p.iter.Key(), storage.PeerKeyPrefix) {
 		if !p.iter.Next() {
 			return false
 		}

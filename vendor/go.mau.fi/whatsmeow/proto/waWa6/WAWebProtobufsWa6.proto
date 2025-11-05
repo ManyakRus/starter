@@ -8,11 +8,17 @@ message ClientPayload {
 		STANDARD = 1;
 	}
 
+	enum AccountType {
+		DEFAULT = 0;
+		GUEST = 1;
+	}
+
 	enum Product {
 		WHATSAPP = 0;
 		MESSENGER = 1;
 		INTEROP = 2;
 		INTEROP_MSGR = 3;
+		WHATSAPP_LID = 4;
 	}
 
 	enum ConnectType {
@@ -56,6 +62,7 @@ message ClientPayload {
 			HARDCODED = 2;
 			OVERRIDE = 3;
 			FALLBACK = 4;
+			MNS = 5;
 		}
 
 		optional DNSResolutionMethod dnsMethod = 15;
@@ -69,6 +76,7 @@ message ClientPayload {
 			WIN_STORE = 2;
 			DARWIN = 3;
 			WIN32 = 4;
+			WIN_HYBRID = 5;
 		}
 
 		message WebdPayload {
@@ -144,6 +152,7 @@ message ClientPayload {
 			IPAD = 33;
 			TEST = 34;
 			SMART_GLASSES = 35;
+			BLUE_VR = 36;
 		}
 
 		message AppVersion {
@@ -217,24 +226,34 @@ message ClientPayload {
 	optional int32 memClass = 37;
 	optional InteropData interopData = 38;
 	optional TrafficAnonymization trafficAnonymization = 40;
+	optional bool lidDbMigrated = 41;
+	optional AccountType accountType = 42;
+	optional sfixed32 connectionSequenceInfo = 43;
+	optional bool paaLink = 44;
+	optional int32 preacksCount = 45;
+	optional int32 processingQueueSize = 46;
 }
 
 message HandshakeMessage {
 	message ClientFinish {
 		optional bytes static = 1;
 		optional bytes payload = 2;
+		optional bytes extendedCiphertext = 3;
 	}
 
 	message ServerHello {
 		optional bytes ephemeral = 1;
 		optional bytes static = 2;
 		optional bytes payload = 3;
+		optional bytes extendedStatic = 4;
 	}
 
 	message ClientHello {
 		optional bytes ephemeral = 1;
 		optional bytes static = 2;
 		optional bytes payload = 3;
+		optional bool useExtended = 4;
+		optional bytes extendedCiphertext = 5;
 	}
 
 	optional ClientHello clientHello = 2;

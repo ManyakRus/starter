@@ -470,12 +470,286 @@ func (s *AuthSentCodeSuccess) GetAuthorization() (value AuthAuthorizationClass) 
 	return s.Authorization
 }
 
+// AuthSentCodePaymentRequired represents TL type `auth.sentCodePaymentRequired#e0955a3c`.
+//
+// See https://core.telegram.org/constructor/auth.sentCodePaymentRequired for reference.
+type AuthSentCodePaymentRequired struct {
+	// StoreProduct field of AuthSentCodePaymentRequired.
+	StoreProduct string
+	// PhoneCodeHash field of AuthSentCodePaymentRequired.
+	PhoneCodeHash string
+	// SupportEmailAddress field of AuthSentCodePaymentRequired.
+	SupportEmailAddress string
+	// SupportEmailSubject field of AuthSentCodePaymentRequired.
+	SupportEmailSubject string
+	// Currency field of AuthSentCodePaymentRequired.
+	Currency string
+	// Amount field of AuthSentCodePaymentRequired.
+	Amount int64
+}
+
+// AuthSentCodePaymentRequiredTypeID is TL type id of AuthSentCodePaymentRequired.
+const AuthSentCodePaymentRequiredTypeID = 0xe0955a3c
+
+// construct implements constructor of AuthSentCodeClass.
+func (s AuthSentCodePaymentRequired) construct() AuthSentCodeClass { return &s }
+
+// Ensuring interfaces in compile-time for AuthSentCodePaymentRequired.
+var (
+	_ bin.Encoder     = &AuthSentCodePaymentRequired{}
+	_ bin.Decoder     = &AuthSentCodePaymentRequired{}
+	_ bin.BareEncoder = &AuthSentCodePaymentRequired{}
+	_ bin.BareDecoder = &AuthSentCodePaymentRequired{}
+
+	_ AuthSentCodeClass = &AuthSentCodePaymentRequired{}
+)
+
+func (s *AuthSentCodePaymentRequired) Zero() bool {
+	if s == nil {
+		return true
+	}
+	if !(s.StoreProduct == "") {
+		return false
+	}
+	if !(s.PhoneCodeHash == "") {
+		return false
+	}
+	if !(s.SupportEmailAddress == "") {
+		return false
+	}
+	if !(s.SupportEmailSubject == "") {
+		return false
+	}
+	if !(s.Currency == "") {
+		return false
+	}
+	if !(s.Amount == 0) {
+		return false
+	}
+
+	return true
+}
+
+// String implements fmt.Stringer.
+func (s *AuthSentCodePaymentRequired) String() string {
+	if s == nil {
+		return "AuthSentCodePaymentRequired(nil)"
+	}
+	type Alias AuthSentCodePaymentRequired
+	return fmt.Sprintf("AuthSentCodePaymentRequired%+v", Alias(*s))
+}
+
+// FillFrom fills AuthSentCodePaymentRequired from given interface.
+func (s *AuthSentCodePaymentRequired) FillFrom(from interface {
+	GetStoreProduct() (value string)
+	GetPhoneCodeHash() (value string)
+	GetSupportEmailAddress() (value string)
+	GetSupportEmailSubject() (value string)
+	GetCurrency() (value string)
+	GetAmount() (value int64)
+}) {
+	s.StoreProduct = from.GetStoreProduct()
+	s.PhoneCodeHash = from.GetPhoneCodeHash()
+	s.SupportEmailAddress = from.GetSupportEmailAddress()
+	s.SupportEmailSubject = from.GetSupportEmailSubject()
+	s.Currency = from.GetCurrency()
+	s.Amount = from.GetAmount()
+}
+
+// TypeID returns type id in TL schema.
+//
+// See https://core.telegram.org/mtproto/TL-tl#remarks.
+func (*AuthSentCodePaymentRequired) TypeID() uint32 {
+	return AuthSentCodePaymentRequiredTypeID
+}
+
+// TypeName returns name of type in TL schema.
+func (*AuthSentCodePaymentRequired) TypeName() string {
+	return "auth.sentCodePaymentRequired"
+}
+
+// TypeInfo returns info about TL type.
+func (s *AuthSentCodePaymentRequired) TypeInfo() tdp.Type {
+	typ := tdp.Type{
+		Name: "auth.sentCodePaymentRequired",
+		ID:   AuthSentCodePaymentRequiredTypeID,
+	}
+	if s == nil {
+		typ.Null = true
+		return typ
+	}
+	typ.Fields = []tdp.Field{
+		{
+			Name:       "StoreProduct",
+			SchemaName: "store_product",
+		},
+		{
+			Name:       "PhoneCodeHash",
+			SchemaName: "phone_code_hash",
+		},
+		{
+			Name:       "SupportEmailAddress",
+			SchemaName: "support_email_address",
+		},
+		{
+			Name:       "SupportEmailSubject",
+			SchemaName: "support_email_subject",
+		},
+		{
+			Name:       "Currency",
+			SchemaName: "currency",
+		},
+		{
+			Name:       "Amount",
+			SchemaName: "amount",
+		},
+	}
+	return typ
+}
+
+// Encode implements bin.Encoder.
+func (s *AuthSentCodePaymentRequired) Encode(b *bin.Buffer) error {
+	if s == nil {
+		return fmt.Errorf("can't encode auth.sentCodePaymentRequired#e0955a3c as nil")
+	}
+	b.PutID(AuthSentCodePaymentRequiredTypeID)
+	return s.EncodeBare(b)
+}
+
+// EncodeBare implements bin.BareEncoder.
+func (s *AuthSentCodePaymentRequired) EncodeBare(b *bin.Buffer) error {
+	if s == nil {
+		return fmt.Errorf("can't encode auth.sentCodePaymentRequired#e0955a3c as nil")
+	}
+	b.PutString(s.StoreProduct)
+	b.PutString(s.PhoneCodeHash)
+	b.PutString(s.SupportEmailAddress)
+	b.PutString(s.SupportEmailSubject)
+	b.PutString(s.Currency)
+	b.PutLong(s.Amount)
+	return nil
+}
+
+// Decode implements bin.Decoder.
+func (s *AuthSentCodePaymentRequired) Decode(b *bin.Buffer) error {
+	if s == nil {
+		return fmt.Errorf("can't decode auth.sentCodePaymentRequired#e0955a3c to nil")
+	}
+	if err := b.ConsumeID(AuthSentCodePaymentRequiredTypeID); err != nil {
+		return fmt.Errorf("unable to decode auth.sentCodePaymentRequired#e0955a3c: %w", err)
+	}
+	return s.DecodeBare(b)
+}
+
+// DecodeBare implements bin.BareDecoder.
+func (s *AuthSentCodePaymentRequired) DecodeBare(b *bin.Buffer) error {
+	if s == nil {
+		return fmt.Errorf("can't decode auth.sentCodePaymentRequired#e0955a3c to nil")
+	}
+	{
+		value, err := b.String()
+		if err != nil {
+			return fmt.Errorf("unable to decode auth.sentCodePaymentRequired#e0955a3c: field store_product: %w", err)
+		}
+		s.StoreProduct = value
+	}
+	{
+		value, err := b.String()
+		if err != nil {
+			return fmt.Errorf("unable to decode auth.sentCodePaymentRequired#e0955a3c: field phone_code_hash: %w", err)
+		}
+		s.PhoneCodeHash = value
+	}
+	{
+		value, err := b.String()
+		if err != nil {
+			return fmt.Errorf("unable to decode auth.sentCodePaymentRequired#e0955a3c: field support_email_address: %w", err)
+		}
+		s.SupportEmailAddress = value
+	}
+	{
+		value, err := b.String()
+		if err != nil {
+			return fmt.Errorf("unable to decode auth.sentCodePaymentRequired#e0955a3c: field support_email_subject: %w", err)
+		}
+		s.SupportEmailSubject = value
+	}
+	{
+		value, err := b.String()
+		if err != nil {
+			return fmt.Errorf("unable to decode auth.sentCodePaymentRequired#e0955a3c: field currency: %w", err)
+		}
+		s.Currency = value
+	}
+	{
+		value, err := b.Long()
+		if err != nil {
+			return fmt.Errorf("unable to decode auth.sentCodePaymentRequired#e0955a3c: field amount: %w", err)
+		}
+		s.Amount = value
+	}
+	return nil
+}
+
+// GetStoreProduct returns value of StoreProduct field.
+func (s *AuthSentCodePaymentRequired) GetStoreProduct() (value string) {
+	if s == nil {
+		return
+	}
+	return s.StoreProduct
+}
+
+// GetPhoneCodeHash returns value of PhoneCodeHash field.
+func (s *AuthSentCodePaymentRequired) GetPhoneCodeHash() (value string) {
+	if s == nil {
+		return
+	}
+	return s.PhoneCodeHash
+}
+
+// GetSupportEmailAddress returns value of SupportEmailAddress field.
+func (s *AuthSentCodePaymentRequired) GetSupportEmailAddress() (value string) {
+	if s == nil {
+		return
+	}
+	return s.SupportEmailAddress
+}
+
+// GetSupportEmailSubject returns value of SupportEmailSubject field.
+func (s *AuthSentCodePaymentRequired) GetSupportEmailSubject() (value string) {
+	if s == nil {
+		return
+	}
+	return s.SupportEmailSubject
+}
+
+// GetCurrency returns value of Currency field.
+func (s *AuthSentCodePaymentRequired) GetCurrency() (value string) {
+	if s == nil {
+		return
+	}
+	return s.Currency
+}
+
+// GetAmount returns value of Amount field.
+func (s *AuthSentCodePaymentRequired) GetAmount() (value int64) {
+	if s == nil {
+		return
+	}
+	return s.Amount
+}
+
 // AuthSentCodeClassName is schema name of AuthSentCodeClass.
 const AuthSentCodeClassName = "auth.SentCode"
 
 // AuthSentCodeClass represents auth.SentCode generic type.
 //
 // See https://core.telegram.org/type/auth.SentCode for reference.
+//
+// Constructors:
+//   - [AuthSentCode]
+//   - [AuthSentCodeSuccess]
+//   - [AuthSentCodePaymentRequired]
 //
 // Example:
 //
@@ -486,6 +760,7 @@ const AuthSentCodeClassName = "auth.SentCode"
 //	switch v := g.(type) {
 //	case *tg.AuthSentCode: // auth.sentCode#5e002502
 //	case *tg.AuthSentCodeSuccess: // auth.sentCodeSuccess#2390fe44
+//	case *tg.AuthSentCodePaymentRequired: // auth.sentCodePaymentRequired#e0955a3c
 //	default: panic(v)
 //	}
 type AuthSentCodeClass interface {
@@ -524,6 +799,13 @@ func DecodeAuthSentCode(buf *bin.Buffer) (AuthSentCodeClass, error) {
 	case AuthSentCodeSuccessTypeID:
 		// Decoding auth.sentCodeSuccess#2390fe44.
 		v := AuthSentCodeSuccess{}
+		if err := v.Decode(buf); err != nil {
+			return nil, fmt.Errorf("unable to decode AuthSentCodeClass: %w", err)
+		}
+		return &v, nil
+	case AuthSentCodePaymentRequiredTypeID:
+		// Decoding auth.sentCodePaymentRequired#e0955a3c.
+		v := AuthSentCodePaymentRequired{}
 		if err := v.Decode(buf); err != nil {
 			return nil, fmt.Errorf("unable to decode AuthSentCodeClass: %w", err)
 		}

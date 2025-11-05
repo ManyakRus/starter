@@ -142,6 +142,10 @@ func (c *pipeConn) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
+func (c *pipeConn) WriteString(s string) (int, error) {
+	return c.Write(s2b(s))
+}
+
 func (c *pipeConn) Read(p []byte) (int, error) {
 	mayBlock := true
 	nn := 0
@@ -225,7 +229,7 @@ func (e *timeoutError) Error() string {
 	return "timeout"
 }
 
-// Only implement the Timeout() function of the net.Error interface.
+// Timeout implements the Timeout method of the net.Error interface.
 // This allows for checks like:
 //
 //	if x, ok := err.(interface{ Timeout() bool }); ok && x.Timeout() {

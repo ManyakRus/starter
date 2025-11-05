@@ -56,6 +56,47 @@ message CallLogRecord {
 	optional CallType callType = 15;
 }
 
+message AvatarUpdatedAction {
+	enum AvatarEventType {
+		UPDATED = 0;
+		CREATED = 1;
+		DELETED = 2;
+	}
+
+	optional AvatarEventType eventType = 1;
+	repeated StickerAction recentAvatarStickers = 2;
+}
+
+message MaibaAIFeaturesControlAction {
+	enum MaibaAIFeatureStatus {
+		ENABLED = 0;
+		ENABLED_HAS_LEARNING = 1;
+		DISABLED = 2;
+	}
+
+	optional MaibaAIFeatureStatus aiFeatureStatus = 1;
+}
+
+message PaymentTosAction {
+	enum PaymentNotice {
+		BR_PAY_PRIVACY_POLICY = 0;
+	}
+
+	required PaymentNotice paymentNotice = 1;
+	required bool accepted = 2;
+}
+
+message NotificationActivitySettingAction {
+	enum NotificationActivitySetting {
+		DEFAULT_ALL_MESSAGES = 0;
+		ALL_MESSAGES = 1;
+		HIGHLIGHTS = 2;
+		DEFAULT_HIGHLIGHTS = 3;
+	}
+
+	optional NotificationActivitySetting notificationActivitySetting = 1;
+}
+
 message WaffleAccountLinkStateAction {
 	enum AccountLinkState {
 		ACTIVE = 0;
@@ -74,6 +115,14 @@ message MerchantPaymentPartnerAction {
 	required string country = 2;
 	optional string gatewayName = 3;
 	optional string credentialID = 4;
+}
+
+message GalaxyFlowAction {
+	enum GalaxyFlowActionType {
+		LAUNCH = 1;
+	}
+
+	required GalaxyFlowActionType type = 1;
 }
 
 message NoteEditAction {
@@ -131,6 +180,8 @@ message LabelEditAction {
 		FAVORITES = 3;
 		PREDEFINED = 4;
 		CUSTOM = 5;
+		COMMUNITY = 6;
+		SERVER_ASSIGNED = 7;
 	}
 
 	optional string name = 1;
@@ -140,6 +191,7 @@ message LabelEditAction {
 	optional int32 orderIndex = 5;
 	optional bool isActive = 6;
 	optional ListType type = 7;
+	optional bool isImmutable = 8;
 }
 
 message PatchDebugData {
@@ -151,6 +203,11 @@ message PatchDebugData {
 		WEB = 4;
 		UWP = 5;
 		DARWIN = 6;
+		IPAD = 7;
+		WEAROS = 8;
+		WASG = 9;
+		WEARM = 10;
+		CAPI = 11;
 	}
 
 	optional bytes currentLthash = 1;
@@ -225,6 +282,49 @@ message SyncActionValue {
 	optional MerchantPaymentPartnerAction merchantPaymentPartnerAction = 57;
 	optional WaffleAccountLinkStateAction waffleAccountLinkStateAction = 58;
 	optional UsernameChatStartModeAction usernameChatStartMode = 59;
+	optional NotificationActivitySettingAction notificationActivitySettingAction = 60;
+	optional LidContactAction lidContactAction = 61;
+	optional CtwaPerCustomerDataSharingAction ctwaPerCustomerDataSharingAction = 62;
+	optional PaymentTosAction paymentTosAction = 63;
+	optional PrivacySettingChannelsPersonalisedRecommendationAction privacySettingChannelsPersonalisedRecommendationAction = 64;
+	optional BusinessBroadcastAssociationAction businessBroadcastAssociationAction = 65;
+	optional DetectedOutcomesStatusAction detectedOutcomesStatusAction = 66;
+	optional MaibaAIFeaturesControlAction maibaAiFeaturesControlAction = 68;
+	optional BusinessBroadcastListAction businessBroadcastListAction = 69;
+	optional MusicUserIdAction musicUserIDAction = 70;
+	optional StatusPostOptInNotificationPreferencesAction statusPostOptInNotificationPreferencesAction = 71;
+	optional AvatarUpdatedAction avatarUpdatedAction = 72;
+	optional GalaxyFlowAction galaxyFlowAction = 73;
+}
+
+message StatusPostOptInNotificationPreferencesAction {
+	optional bool enabled = 1;
+}
+
+message BroadcastListParticipant {
+	required string lidJID = 1;
+	optional string pnJID = 2;
+}
+
+message BusinessBroadcastListAction {
+	optional bool deleted = 1;
+	repeated BroadcastListParticipant participants = 2;
+	optional string listName = 3;
+}
+
+message BusinessBroadcastAssociationAction {
+	optional bool deleted = 1;
+}
+
+message CtwaPerCustomerDataSharingAction {
+	optional bool isCtwaPerCustomerDataSharingEnabled = 1;
+}
+
+message LidContactAction {
+	optional string fullName = 1;
+	optional string firstName = 2;
+	optional string username = 3;
+	optional bool saveOnPrimaryAddressbook = 4;
 }
 
 message FavoritesAction {
@@ -233,6 +333,10 @@ message FavoritesAction {
 	}
 
 	repeated Favorite favorites = 1;
+}
+
+message PrivacySettingChannelsPersonalisedRecommendationAction {
+	optional bool isUserOptedOut = 1;
 }
 
 message PrivacySettingDisableLinkPreviewsAction {
@@ -280,11 +384,19 @@ message BotWelcomeRequestAction {
 	optional bool isSent = 1;
 }
 
+message MusicUserIdAction {
+	optional string musicUserID = 1;
+}
+
 message CallLogAction {
 	optional CallLogRecord callLogRecord = 1;
 }
 
 message PrivacySettingRelayAllCalls {
+	optional bool isEnabled = 1;
+}
+
+message DetectedOutcomesStatusAction {
 	optional bool isEnabled = 1;
 }
 
@@ -320,6 +432,8 @@ message StickerAction {
 	optional bool isFavorite = 9;
 	optional uint32 deviceIDHint = 10;
 	optional bool isLottie = 11;
+	optional string imageHash = 12;
+	optional bool isAvatarSticker = 13;
 }
 
 message RemoveRecentStickerAction {
@@ -447,6 +561,8 @@ message ContactAction {
 	optional string firstName = 2;
 	optional string lidJID = 3;
 	optional bool saveOnPrimaryAddressbook = 4;
+	optional string pnJID = 5;
+	optional string username = 6;
 }
 
 message StarAction {

@@ -1,6 +1,7 @@
 package sync_exchange
 
 import (
+	"errors"
 	"fmt"
 	"github.com/nats-io/nats.go"
 	"log"
@@ -31,9 +32,8 @@ func GetUseConfirmerEnv() bool {
 	val, ok := os.LookupEnv("SYNC_EXCHANGE_USE_CONFIRMER")
 	if !ok {
 		return false
-	} else {
-		return strings.EqualFold("true", val)
 	}
+	return strings.EqualFold("true", val)
 }
 
 func fullTopic(topic string) string {
@@ -343,7 +343,7 @@ func SendRequest(receiver string, pack sync_types.SyncPackage, timeout int) (res
 	if err != nil {
 		log.Printf("[ERROR] SendRequest, SyncPackageFromJSON, error: %s\n", err.Error())
 		result.Body.Error.Code = 3
-		if err == nats.ErrTimeout {
+		if errors.Is(err, nats.ErrTimeout) {
 			result.Body.Error.Code = 4
 		}
 		return result, err

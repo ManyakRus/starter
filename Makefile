@@ -17,7 +17,7 @@ mod:
 	clear
 	./make_version.sh
 	go get -u ./...
-	go mod tidy -compat=1.22.1
+	go mod tidy -compat=1.24
 	go mod vendor
 	go fmt ./...
 build:

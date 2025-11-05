@@ -42,11 +42,7 @@ Next:
 		return false
 	}
 
-	for {
-		if bytes.HasPrefix(k, storage.PeerKeyPrefix) {
-			break
-		}
-
+	for !bytes.HasPrefix(k, storage.PeerKeyPrefix) {
 		k, v = p.iter.Next()
 		if v == nil {
 			return false

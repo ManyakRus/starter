@@ -1,72 +1,96 @@
 package carbon
 
 import (
+	"github.com/dromara/carbon/v2/calendar/hebrew"
 	"github.com/dromara/carbon/v2/calendar/julian"
 	"github.com/dromara/carbon/v2/calendar/lunar"
 	"github.com/dromara/carbon/v2/calendar/persian"
 )
 
 // Lunar converts Carbon instance to Lunar instance.
-// 将 Carbon 实例转化为 Lunar 实例
 func (c *Carbon) Lunar() *lunar.Lunar {
-	l := new(lunar.Lunar)
 	if c.IsNil() {
 		return nil
 	}
-	if c.HasError() {
-		l.Error = c.Error
-		return l
+	if c.IsZero() || c.IsEmpty() {
+		return &lunar.Lunar{}
 	}
-	return lunar.FromGregorian(c.StdTime()).ToLunar()
+	if c.HasError() {
+		return &lunar.Lunar{Error: c.Error}
+	}
+	return lunar.FromStdTime(c.StdTime())
 }
 
-// CreateFromLunar creates a Carbon instance from Lunar date and time.
-// 从 农历日期 创建 Carbon 实例
-func CreateFromLunar(year, month, day, hour, minute, second int, isLeapMonth bool) *Carbon {
-	l := lunar.FromLunar(year, month, day, hour, minute, second, isLeapMonth)
-	if !l.IsValid() {
-		return nil
+// CreateFromLunar creates a Carbon instance from Lunar date.
+func CreateFromLunar(year, month, day int, isLeapMonth bool) *Carbon {
+	l := lunar.NewLunar(year, month, day, isLeapMonth)
+	if l.Error != nil {
+		return &Carbon{Error: l.Error}
 	}
-	t := lunar.FromLunar(year, month, day, hour, minute, second, isLeapMonth).ToGregorian().Time
-	return CreateFromStdTime(t)
+	return NewCarbon(l.ToGregorian(DefaultTimezone).Time)
 }
 
 // Julian converts Carbon instance to Julian instance.
-// 将 Carbon 实例转化为 Julian 实例
 func (c *Carbon) Julian() *julian.Julian {
-	if c.IsInvalid() {
+	if c.IsNil() {
 		return nil
 	}
-	return julian.FromGregorian(c.StdTime()).ToJulian()
+	if c.IsEmpty() {
+		return &julian.Julian{}
+	}
+	if c.HasError() {
+		return &julian.Julian{}
+	}
+	return julian.FromStdTime(c.StdTime())
 }
 
 // CreateFromJulian creates a Carbon instance from Julian Day or Modified Julian Day.
-// 从 儒略日/简化儒略日 创建 Carbon 实例
 func CreateFromJulian(f float64) *Carbon {
-	g := julian.FromJulian(f).ToGregorian()
-	if !g.IsValid() {
-		return nil
-	}
-	t := julian.FromJulian(f).ToGregorian().Time
-	return CreateFromStdTime(t)
+	return NewCarbon(julian.NewJulian(f).ToGregorian(DefaultTimezone).Time)
 }
 
 // Persian converts Carbon instance to Persian instance.
-// 将 Carbon 实例转化为 Persian 实例
 func (c *Carbon) Persian() *persian.Persian {
-	p := new(persian.Persian)
-	if c.IsInvalid() {
-		return p
-	}
-	return persian.FromGregorian(c.StdTime()).ToPersian()
-}
-
-// CreateFromPersian creates a Carbon instance from Persian date and time.
-// 从 波斯日期 创建 Carbon 实例
-func CreateFromPersian(year, month, day, hour, minute, second int) *Carbon {
-	p := persian.FromPersian(year, month, day, hour, minute, second)
-	if p == nil || p.Error != nil {
+	if c.IsNil() {
 		return nil
 	}
-	return CreateFromStdTime(p.ToGregorian().Time)
+	if c.IsZero() || c.IsEmpty() {
+		return &persian.Persian{}
+	}
+	if c.HasError() {
+		return &persian.Persian{Error: c.Error}
+	}
+	return persian.FromStdTime(c.StdTime())
+}
+
+// CreateFromPersian creates a Carbon instance from Persian date.
+func CreateFromPersian(year, month, day int) *Carbon {
+	p := persian.NewPersian(year, month, day)
+	if p.Error != nil {
+		return &Carbon{Error: p.Error}
+	}
+	return NewCarbon(p.ToGregorian(DefaultTimezone).Time)
+}
+
+// Hebrew converts Carbon instance to Hebrew instance.
+func (c *Carbon) Hebrew() *hebrew.Hebrew {
+	if c.IsNil() {
+		return nil
+	}
+	if c.IsZero() || c.IsEmpty() {
+		return &hebrew.Hebrew{}
+	}
+	if c.HasError() {
+		return &hebrew.Hebrew{Error: c.Error}
+	}
+	return hebrew.FromStdTime(c.StdTime())
+}
+
+// CreateFromHebrew creates a Carbon instance from Hebrew date.
+func CreateFromHebrew(year, month, day int) *Carbon {
+	h := hebrew.NewHebrew(year, month, day)
+	if h.Error != nil {
+		return &Carbon{Error: h.Error}
+	}
+	return NewCarbon(h.ToGregorian(DefaultTimezone).Time)
 }

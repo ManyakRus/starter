@@ -159,7 +159,7 @@ func (w *binaryEncoder) writeStringRaw(value string) {
 }
 
 func (w *binaryEncoder) writeJID(jid types.JID) {
-	if (jid.Server == types.DefaultUserServer && jid.Device > 0) || jid.Server == types.HiddenUserServer || jid.Server == types.HostedServer {
+	if ((jid.Server == types.DefaultUserServer || jid.Server == types.HiddenUserServer) && jid.Device > 0) || jid.Server == types.HostedServer {
 		w.pushByte(token.ADJID)
 		w.pushByte(jid.ActualAgent())
 		w.pushByte(uint8(jid.Device))
@@ -286,7 +286,7 @@ func validateHex(value string) bool {
 		return false
 	}
 	for _, char := range value {
-		if !(char >= '0' && char <= '9') && !(char >= 'A' && char <= 'F') && !(char >= 'a' && char <= 'f') {
+		if !(char >= '0' && char <= '9') && !(char >= 'A' && char <= 'F') {
 			return false
 		}
 	}
@@ -299,8 +299,6 @@ func packHex(value byte) byte {
 		return value - '0'
 	case value >= 'A' && value <= 'F':
 		return 10 + value - 'A'
-	case value >= 'a' && value <= 'f':
-		return 10 + value - 'a'
 	case value == 0:
 		return 15
 	default:

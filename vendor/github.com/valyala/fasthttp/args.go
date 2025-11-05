@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"iter"
 	"sort"
 	"sync"
-
-	"github.com/valyala/bytebufferpool"
 )
 
 const (
@@ -66,12 +65,31 @@ func (a *Args) CopyTo(dst *Args) {
 	dst.args = copyArgs(dst.args, a.args)
 }
 
+// All returns an iterator over key-value pairs from args.
+//
+// The key and value may invalid outside the iteration loop.
+// Make copies if you need to use them after the loop ends.
+func (a *Args) All() iter.Seq2[[]byte, []byte] {
+	return func(yield func([]byte, []byte) bool) {
+		for i := range a.args {
+			if !yield(a.args[i].key, a.args[i].value) {
+				break
+			}
+		}
+	}
+}
+
 // VisitAll calls f for each existing arg.
 //
 // f must not retain references to key and value after returning.
 // Make key and/or value copies if you need storing them after returning.
+//
+// Deprecated: Use All instead.
 func (a *Args) VisitAll(f func(key, value []byte)) {
-	visitArgs(a.args, f)
+	a.All()(func(key, value []byte) bool {
+		f(key, value)
+		return true
+	})
 }
 
 // Len returns the number of query args.
@@ -157,12 +175,12 @@ func (a *Args) WriteTo(w io.Writer) (int64, error) {
 
 // Del deletes argument with the given key from query args.
 func (a *Args) Del(key string) {
-	a.args = delAllArgs(a.args, key)
+	a.args = delAllArgsStable(a.args, key)
 }
 
 // DelBytes deletes argument with the given key from query args.
 func (a *Args) DelBytes(key []byte) {
-	a.args = delAllArgs(a.args, b2s(key))
+	a.args = delAllArgsStable(a.args, b2s(key))
 }
 
 // Add adds 'key=value' argument.
@@ -258,11 +276,11 @@ func (a *Args) PeekBytes(key []byte) []byte {
 // PeekMulti returns all the arg values for the given key.
 func (a *Args) PeekMulti(key string) [][]byte {
 	var values [][]byte
-	a.VisitAll(func(k, v []byte) {
+	for k, v := range a.All() {
 		if string(k) == key {
 			values = append(values, v)
 		}
-	})
+	}
 	return values
 }
 
@@ -295,10 +313,8 @@ func (a *Args) GetUint(key string) (int, error) {
 
 // SetUint sets uint value for the given key.
 func (a *Args) SetUint(key string, value int) {
-	bb := bytebufferpool.Get()
-	bb.B = AppendUint(bb.B[:0], value)
-	a.SetBytesV(key, bb.B)
-	bytebufferpool.Put(bb)
+	a.buf = AppendUint(a.buf[:0], value)
+	a.SetBytesV(key, a.buf)
 }
 
 // SetUintBytes sets uint value for the given key.
@@ -353,20 +369,6 @@ func (a *Args) GetBool(key string) bool {
 	}
 }
 
-func visitArgs(args []argsKV, f func(k, v []byte)) {
-	for i, n := 0, len(args); i < n; i++ {
-		kv := &args[i]
-		f(kv.key, kv.value)
-	}
-}
-
-func visitArgsKey(args []argsKV, f func(k []byte)) {
-	for i, n := 0, len(args); i < n; i++ {
-		kv := &args[i]
-		f(kv.key)
-	}
-}
-
 func copyArgs(dst, src []argsKV) []argsKV {
 	if cap(dst) < len(src) {
 		tmp := make([]argsKV, len(src))
@@ -396,11 +398,7 @@ func copyArgs(dst, src []argsKV) []argsKV {
 	return dst
 }
 
-func delAllArgsBytes(args []argsKV, key []byte) []argsKV {
-	return delAllArgs(args, b2s(key))
-}
-
-func delAllArgs(args []argsKV, key string) []argsKV {
+func delAllArgsStable(args []argsKV, key string) []argsKV {
 	for i, n := 0, len(args); i < n; i++ {
 		kv := &args[i]
 		if key == string(kv.key) {
@@ -413,6 +411,18 @@ func delAllArgs(args []argsKV, key string) []argsKV {
 		}
 	}
 	return args
+}
+
+func delAllArgs(args []argsKV, key string) []argsKV {
+	n := len(args)
+	for i := 0; i < n; i++ {
+		if key == string(args[i].key) {
+			args[i], args[n-1] = args[n-1], args[i]
+			n--
+			i--
+		}
+	}
+	return args[:n]
 }
 
 func setArgBytes(h []argsKV, key, value []byte, noValue bool) []argsKV {
@@ -631,14 +641,6 @@ func peekAllArgBytesToDst(dst [][]byte, h []argsKV, k []byte) [][]byte {
 		if bytes.Equal(kv.key, k) {
 			dst = append(dst, kv.value)
 		}
-	}
-	return dst
-}
-
-func peekArgsKeys(dst [][]byte, h []argsKV) [][]byte {
-	for i, n := 0, len(h); i < n; i++ {
-		kv := &h[i]
-		dst = append(dst, kv.key)
 	}
 	return dst
 }
