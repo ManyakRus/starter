@@ -1,3 +1,4 @@
+// копия "golang.org/x/exp/constraints"
 // модуль с вспомогательными небольшими функциями
 
 package micro
@@ -10,9 +11,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ManyakRus/starter/constants_starter"
+	"github.com/ManyakRus/starter/constraints"
 	"github.com/dromara/carbon/v2"
 	"github.com/google/uuid"
-	"golang.org/x/exp/constraints"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"hash/fnv"
 	"math"
@@ -805,7 +806,7 @@ func SaveTempFile_err(bytes []byte) (string, error) {
 // Hash - возвращает число хэш из строки
 func Hash(s string) uint32 {
 	h := fnv.New32a()
-	h.Write([]byte(s))
+	_, _ = h.Write([]byte(s))
 	return h.Sum32()
 }
 
