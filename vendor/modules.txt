@@ -152,7 +152,7 @@ github.com/denisenkom/go-mssqldb/msdsn
 ## explicit; go 1.13
 github.com/dlclark/regexp2
 github.com/dlclark/regexp2/syntax
-# github.com/dromara/carbon/v2 v2.6.14
+# github.com/dromara/carbon/v2 v2.6.15
 ## explicit; go 1.18
 github.com/dromara/carbon/v2
 github.com/dromara/carbon/v2/calendar
@@ -184,8 +184,8 @@ github.com/emersion/go-sasl
 # github.com/fatih/color v1.18.0
 ## explicit; go 1.17
 github.com/fatih/color
-# github.com/getsentry/sentry-go v0.36.2
-## explicit; go 1.23
+# github.com/getsentry/sentry-go v0.37.0
+## explicit; go 1.23.0
 github.com/getsentry/sentry-go
 github.com/getsentry/sentry-go/attribute
 github.com/getsentry/sentry-go/internal/debug
@@ -269,7 +269,7 @@ github.com/gotd/ige
 # github.com/gotd/neo v0.1.5
 ## explicit; go 1.12
 github.com/gotd/neo
-# github.com/gotd/td v0.132.0
+# github.com/gotd/td v0.133.0
 ## explicit; go 1.24.0
 github.com/gotd/td/ascii
 github.com/gotd/td/bin
@@ -411,7 +411,7 @@ github.com/mattn/go-sqlite3
 # github.com/mdp/qrterminal/v3 v3.2.1
 ## explicit; go 1.20
 github.com/mdp/qrterminal/v3
-# github.com/microsoft/go-mssqldb v1.9.3
+# github.com/microsoft/go-mssqldb v1.9.4
 ## explicit; go 1.23.0
 github.com/microsoft/go-mssqldb
 github.com/microsoft/go-mssqldb/aecmk
@@ -618,20 +618,6 @@ github.com/stretchr/testify/assert
 github.com/stretchr/testify/assert/yaml
 github.com/stretchr/testify/require
 github.com/stretchr/testify/suite
-# github.com/syndtr/goleveldb v1.0.0
-## explicit
-github.com/syndtr/goleveldb/leveldb
-github.com/syndtr/goleveldb/leveldb/cache
-github.com/syndtr/goleveldb/leveldb/comparer
-github.com/syndtr/goleveldb/leveldb/errors
-github.com/syndtr/goleveldb/leveldb/filter
-github.com/syndtr/goleveldb/leveldb/iterator
-github.com/syndtr/goleveldb/leveldb/journal
-github.com/syndtr/goleveldb/leveldb/memdb
-github.com/syndtr/goleveldb/leveldb/opt
-github.com/syndtr/goleveldb/leveldb/storage
-github.com/syndtr/goleveldb/leveldb/table
-github.com/syndtr/goleveldb/leveldb/util
 # github.com/tinkoff/invest-api-go-sdk v1.4.6
 ## explicit; go 1.20
 github.com/tinkoff/invest-api-go-sdk/investgo
@@ -659,14 +645,6 @@ github.com/vektah/gqlparser/v2/ast
 # github.com/xhit/go-simple-mail/v2 v2.16.0
 ## explicit; go 1.13
 github.com/xhit/go-simple-mail/v2
-# gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange v1.0.36
-## explicit; go 1.22
-gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange
-gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/data_packer
-gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/liveness
-gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/sync_confirm
-gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/sync_global
-gitlab.aescorp.ru/dsp_dev/claim/common/sync_exchange/sync_types
 # go.etcd.io/bbolt v1.4.3
 ## explicit; go 1.23
 go.etcd.io/bbolt
@@ -701,12 +679,13 @@ go.mau.fi/libsignal/util/errorhelper
 go.mau.fi/libsignal/util/keyhelper
 go.mau.fi/libsignal/util/medium
 go.mau.fi/libsignal/util/optional
-# go.mau.fi/util v0.9.2
+# go.mau.fi/util v0.9.3
 ## explicit; go 1.24.0
 go.mau.fi/util/dbutil
 go.mau.fi/util/exbytes
 go.mau.fi/util/exerrors
 go.mau.fi/util/exhttp
+go.mau.fi/util/exmaps
 go.mau.fi/util/exslices
 go.mau.fi/util/exstrings
 go.mau.fi/util/exsync
@@ -716,7 +695,7 @@ go.mau.fi/util/jsontime
 go.mau.fi/util/ptr
 go.mau.fi/util/random
 go.mau.fi/util/retryafter
-# go.mau.fi/whatsmeow v0.0.0-20251028165006-ad7a618ba42f
+# go.mau.fi/whatsmeow v0.0.0-20251116104239-3aca43070cd4
 ## explicit; go 1.24.0
 go.mau.fi/whatsmeow
 go.mau.fi/whatsmeow/appstate
@@ -812,7 +791,7 @@ go.uber.org/zap/zapcore
 # go.yaml.in/yaml/v2 v2.4.3
 ## explicit; go 1.15
 go.yaml.in/yaml/v2
-# golang.org/x/crypto v0.43.0
+# golang.org/x/crypto v0.44.0
 ## explicit; go 1.24.0
 golang.org/x/crypto/argon2
 golang.org/x/crypto/blake2b
@@ -826,17 +805,17 @@ golang.org/x/crypto/nacl/secretbox
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/salsa20/salsa
 golang.org/x/crypto/ssh/terminal
-# golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546
+# golang.org/x/exp v0.0.0-20251113190631-e25ba8c21ef6
 ## explicit; go 1.24.0
 golang.org/x/exp/constraints
 golang.org/x/exp/maps
 golang.org/x/exp/rand
-# golang.org/x/mod v0.29.0
+# golang.org/x/mod v0.30.0
 ## explicit; go 1.24.0
 golang.org/x/mod/internal/lazyregexp
 golang.org/x/mod/module
 golang.org/x/mod/semver
-# golang.org/x/net v0.46.0
+# golang.org/x/net v0.47.0
 ## explicit; go 1.24.0
 golang.org/x/net/context
 golang.org/x/net/http/httpguts
@@ -849,7 +828,7 @@ golang.org/x/net/internal/timeseries
 golang.org/x/net/proxy
 golang.org/x/net/publicsuffix
 golang.org/x/net/trace
-# golang.org/x/oauth2 v0.32.0
+# golang.org/x/oauth2 v0.33.0
 ## explicit; go 1.24.0
 golang.org/x/oauth2
 golang.org/x/oauth2/authhandler
@@ -862,12 +841,12 @@ golang.org/x/oauth2/google/internal/stsexchange
 golang.org/x/oauth2/internal
 golang.org/x/oauth2/jws
 golang.org/x/oauth2/jwt
-# golang.org/x/sync v0.17.0
+# golang.org/x/sync v0.18.0
 ## explicit; go 1.24.0
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
 golang.org/x/sync/singleflight
-# golang.org/x/sys v0.37.0
+# golang.org/x/sys v0.38.0
 ## explicit; go 1.24.0
 golang.org/x/sys/cpu
 golang.org/x/sys/execabs
@@ -875,10 +854,10 @@ golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 golang.org/x/sys/windows/registry
-# golang.org/x/term v0.36.0
+# golang.org/x/term v0.37.0
 ## explicit; go 1.24.0
 golang.org/x/term
-# golang.org/x/text v0.30.0
+# golang.org/x/text v0.31.0
 ## explicit; go 1.24.0
 golang.org/x/text/cases
 golang.org/x/text/encoding
@@ -899,7 +878,7 @@ golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/unicode/rangetable
 golang.org/x/text/width
-# golang.org/x/tools v0.38.0
+# golang.org/x/tools v0.39.0
 ## explicit; go 1.24.0
 golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/ast/edge
@@ -925,7 +904,7 @@ golang.org/x/tools/internal/stdlib
 golang.org/x/tools/internal/typeparams
 golang.org/x/tools/internal/typesinternal
 golang.org/x/tools/internal/versions
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20251103181224-f26f9409b101
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20251111163417-95abcf5c77ba
 ## explicit; go 1.24.0
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.76.0
@@ -1039,7 +1018,7 @@ gopkg.in/yaml.v3
 # gorm.io/driver/postgres v1.6.0
 ## explicit; go 1.20
 gorm.io/driver/postgres
-# gorm.io/driver/sqlserver v1.6.1
+# gorm.io/driver/sqlserver v1.6.3
 ## explicit; go 1.14
 gorm.io/driver/sqlserver
 # gorm.io/gorm v1.31.1
