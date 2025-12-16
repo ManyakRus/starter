@@ -69,6 +69,12 @@ type StarsTransaction struct {
 	StargiftPrepaidUpgrade bool
 	// StargiftDropOriginalDetails field of StarsTransaction.
 	StargiftDropOriginalDetails bool
+	// PhonegroupMessage field of StarsTransaction.
+	PhonegroupMessage bool
+	// StargiftAuctionBid field of StarsTransaction.
+	StargiftAuctionBid bool
+	// Offer field of StarsTransaction.
+	Offer bool
 	// Transaction ID.
 	ID string
 	// Amount field of StarsTransaction.
@@ -257,6 +263,15 @@ func (s *StarsTransaction) Zero() bool {
 	if !(s.StargiftDropOriginalDetails == false) {
 		return false
 	}
+	if !(s.PhonegroupMessage == false) {
+		return false
+	}
+	if !(s.StargiftAuctionBid == false) {
+		return false
+	}
+	if !(s.Offer == false) {
+		return false
+	}
 	if !(s.ID == "") {
 		return false
 	}
@@ -352,6 +367,9 @@ func (s *StarsTransaction) FillFrom(from interface {
 	GetPostsSearch() (value bool)
 	GetStargiftPrepaidUpgrade() (value bool)
 	GetStargiftDropOriginalDetails() (value bool)
+	GetPhonegroupMessage() (value bool)
+	GetStargiftAuctionBid() (value bool)
+	GetOffer() (value bool)
 	GetID() (value string)
 	GetAmount() (value StarsAmountClass)
 	GetDate() (value int)
@@ -387,6 +405,9 @@ func (s *StarsTransaction) FillFrom(from interface {
 	s.PostsSearch = from.GetPostsSearch()
 	s.StargiftPrepaidUpgrade = from.GetStargiftPrepaidUpgrade()
 	s.StargiftDropOriginalDetails = from.GetStargiftDropOriginalDetails()
+	s.PhonegroupMessage = from.GetPhonegroupMessage()
+	s.StargiftAuctionBid = from.GetStargiftAuctionBid()
+	s.Offer = from.GetOffer()
 	s.ID = from.GetID()
 	s.Amount = from.GetAmount()
 	s.Date = from.GetDate()
@@ -548,6 +569,21 @@ func (s *StarsTransaction) TypeInfo() tdp.Type {
 			Null:       !s.Flags.Has(26),
 		},
 		{
+			Name:       "PhonegroupMessage",
+			SchemaName: "phonegroup_message",
+			Null:       !s.Flags.Has(27),
+		},
+		{
+			Name:       "StargiftAuctionBid",
+			SchemaName: "stargift_auction_bid",
+			Null:       !s.Flags.Has(28),
+		},
+		{
+			Name:       "Offer",
+			SchemaName: "offer",
+			Null:       !s.Flags.Has(29),
+		},
+		{
 			Name:       "ID",
 			SchemaName: "id",
 		},
@@ -696,6 +732,15 @@ func (s *StarsTransaction) SetFlags() {
 	}
 	if !(s.StargiftDropOriginalDetails == false) {
 		s.Flags.Set(26)
+	}
+	if !(s.PhonegroupMessage == false) {
+		s.Flags.Set(27)
+	}
+	if !(s.StargiftAuctionBid == false) {
+		s.Flags.Set(28)
+	}
+	if !(s.Offer == false) {
+		s.Flags.Set(29)
 	}
 	if !(s.Title == "") {
 		s.Flags.Set(0)
@@ -908,6 +953,9 @@ func (s *StarsTransaction) DecodeBare(b *bin.Buffer) error {
 	s.PostsSearch = s.Flags.Has(24)
 	s.StargiftPrepaidUpgrade = s.Flags.Has(25)
 	s.StargiftDropOriginalDetails = s.Flags.Has(26)
+	s.PhonegroupMessage = s.Flags.Has(27)
+	s.StargiftAuctionBid = s.Flags.Has(28)
+	s.Offer = s.Flags.Has(29)
 	{
 		value, err := b.String()
 		if err != nil {
@@ -1289,6 +1337,63 @@ func (s *StarsTransaction) GetStargiftDropOriginalDetails() (value bool) {
 		return
 	}
 	return s.Flags.Has(26)
+}
+
+// SetPhonegroupMessage sets value of PhonegroupMessage conditional field.
+func (s *StarsTransaction) SetPhonegroupMessage(value bool) {
+	if value {
+		s.Flags.Set(27)
+		s.PhonegroupMessage = true
+	} else {
+		s.Flags.Unset(27)
+		s.PhonegroupMessage = false
+	}
+}
+
+// GetPhonegroupMessage returns value of PhonegroupMessage conditional field.
+func (s *StarsTransaction) GetPhonegroupMessage() (value bool) {
+	if s == nil {
+		return
+	}
+	return s.Flags.Has(27)
+}
+
+// SetStargiftAuctionBid sets value of StargiftAuctionBid conditional field.
+func (s *StarsTransaction) SetStargiftAuctionBid(value bool) {
+	if value {
+		s.Flags.Set(28)
+		s.StargiftAuctionBid = true
+	} else {
+		s.Flags.Unset(28)
+		s.StargiftAuctionBid = false
+	}
+}
+
+// GetStargiftAuctionBid returns value of StargiftAuctionBid conditional field.
+func (s *StarsTransaction) GetStargiftAuctionBid() (value bool) {
+	if s == nil {
+		return
+	}
+	return s.Flags.Has(28)
+}
+
+// SetOffer sets value of Offer conditional field.
+func (s *StarsTransaction) SetOffer(value bool) {
+	if value {
+		s.Flags.Set(29)
+		s.Offer = true
+	} else {
+		s.Flags.Unset(29)
+		s.Offer = false
+	}
+}
+
+// GetOffer returns value of Offer conditional field.
+func (s *StarsTransaction) GetOffer() (value bool) {
+	if s == nil {
+		return
+	}
+	return s.Flags.Has(29)
 }
 
 // GetID returns value of ID field.

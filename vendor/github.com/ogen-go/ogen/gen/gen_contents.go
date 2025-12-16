@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"mime"
 	"path"
+	"strings"
 
 	"github.com/go-faster/errors"
 	"go.uber.org/zap"
@@ -300,6 +301,22 @@ func (g *Generator) generateContents(
 				encoding = r
 			}
 
+			// Handle wildcard content types using configured default
+			// unless the schema is binary (which is already handled by isStream check below)
+			if strings.ContainsRune(parsedContentType, '*') && g.opt.WildcardContentTypeDefault != "" {
+				// Check if this is a binary stream - if so, keep default behavior
+				if !isStream(media.Schema) {
+					g.log.Info("Mapping wildcard content type",
+						zapPosition(media),
+						zap.String("contentType", contentType),
+						zap.String("mappedTo", string(g.opt.WildcardContentTypeDefault)),
+					)
+					encoding = g.opt.WildcardContentTypeDefault
+					// Use the mapped content type for the result key to avoid wrapping
+					parsedContentType = string(encoding)
+				}
+			}
+
 			if encoding != ir.EncodingJSON && encoding != ir.EncodingProblemJSON && media.XOgenJSONStreaming {
 				g.log.Warn(`Extension "x-ogen-json-streaming" will be ignored for non-JSON encoding`,
 					zapPosition(media),
@@ -309,7 +326,9 @@ func (g *Generator) generateContents(
 
 			switch encoding {
 			case ir.EncodingJSON:
-				t, err := g.generateSchema(ctx, typeName, media.Schema, optional, nil)
+				t, err := g.generateSchema(ctx, typeName, media.Schema, optional, &generateSchemaOverride{
+					request: request,
+				})
 				if err != nil {
 					return errors.Wrap(err, "generate schema")
 				}
@@ -337,7 +356,9 @@ func (g *Generator) generateContents(
 						}
 					}
 				}
-				t, err := g.generateSchema(ctx, typeName, media.Schema, optional, nil)
+				t, err := g.generateSchema(ctx, typeName, media.Schema, optional, &generateSchemaOverride{
+					request: request,
+				})
 				if err != nil {
 					return errors.Wrap(err, "generate schema")
 				}

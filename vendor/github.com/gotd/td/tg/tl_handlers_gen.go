@@ -31,15 +31,16 @@ var (
 	_ = tdjson.Encoder{}
 )
 
-type handler = func(context.Context, Entities, UpdateClass) error
+type Handler = func(context.Context, Entities, UpdateClass) error
 
 type UpdateDispatcher struct {
-	handlers map[uint32]handler
+	handlers map[uint32]Handler
+	fallback Handler
 }
 
 func NewUpdateDispatcher() UpdateDispatcher {
 	return UpdateDispatcher{
-		handlers: map[uint32]handler{},
+		handlers: map[uint32]Handler{},
 	}
 }
 
@@ -100,10 +101,13 @@ func (u UpdateDispatcher) dispatch(ctx context.Context, e Entities, update Updat
 	}
 	typeID := update.TypeID()
 	handler, ok := u.handlers[typeID]
-	if !ok {
-		return nil
+	if ok {
+		return handler(ctx, e, update)
 	}
-	return handler(ctx, e, update)
+	if u.fallback != nil {
+		return u.fallback(ctx, e, update)
+	}
+	return nil
 }
 
 // NewMessageHandler is a NewMessage event handler.
@@ -1574,4 +1578,39 @@ func (u UpdateDispatcher) OnPinnedForumTopics(handler PinnedForumTopicsHandler) 
 	u.handlers[UpdatePinnedForumTopicsTypeID] = func(ctx context.Context, e Entities, update UpdateClass) error {
 		return handler(ctx, e, update.(*UpdatePinnedForumTopics))
 	}
+}
+
+// DeleteGroupCallMessagesHandler is a DeleteGroupCallMessages event handler.
+type DeleteGroupCallMessagesHandler func(ctx context.Context, e Entities, update *UpdateDeleteGroupCallMessages) error
+
+// OnDeleteGroupCallMessages sets DeleteGroupCallMessages handler.
+func (u UpdateDispatcher) OnDeleteGroupCallMessages(handler DeleteGroupCallMessagesHandler) {
+	u.handlers[UpdateDeleteGroupCallMessagesTypeID] = func(ctx context.Context, e Entities, update UpdateClass) error {
+		return handler(ctx, e, update.(*UpdateDeleteGroupCallMessages))
+	}
+}
+
+// StarGiftAuctionStateHandler is a StarGiftAuctionState event handler.
+type StarGiftAuctionStateHandler func(ctx context.Context, e Entities, update *UpdateStarGiftAuctionState) error
+
+// OnStarGiftAuctionState sets StarGiftAuctionState handler.
+func (u UpdateDispatcher) OnStarGiftAuctionState(handler StarGiftAuctionStateHandler) {
+	u.handlers[UpdateStarGiftAuctionStateTypeID] = func(ctx context.Context, e Entities, update UpdateClass) error {
+		return handler(ctx, e, update.(*UpdateStarGiftAuctionState))
+	}
+}
+
+// StarGiftAuctionUserStateHandler is a StarGiftAuctionUserState event handler.
+type StarGiftAuctionUserStateHandler func(ctx context.Context, e Entities, update *UpdateStarGiftAuctionUserState) error
+
+// OnStarGiftAuctionUserState sets StarGiftAuctionUserState handler.
+func (u UpdateDispatcher) OnStarGiftAuctionUserState(handler StarGiftAuctionUserStateHandler) {
+	u.handlers[UpdateStarGiftAuctionUserStateTypeID] = func(ctx context.Context, e Entities, update UpdateClass) error {
+		return handler(ctx, e, update.(*UpdateStarGiftAuctionUserState))
+	}
+}
+
+// OnFallback sets fallback handler.
+func (u *UpdateDispatcher) OnFallback(handler Handler) {
+	u.fallback = handler
 }

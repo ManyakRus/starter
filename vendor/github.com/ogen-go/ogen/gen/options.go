@@ -71,6 +71,21 @@ type ParseOptions struct {
 	// AuthenticationSchemes is the list of allowed HTTP Authorization schemes in a Security Scheme Object.
 	// Default is the list defined in https://www.iana.org/assignments/http-authschemes/http-authschemes.xhtml.
 	AuthenticationSchemes []string `json:"authentication_schemes" yaml:"authentication_schemes"`
+	// AllowCrossTypeConstraints enables interpretation of cross-type schema constraints.
+	// When true (default), constraints like pattern on numbers or maximum on strings
+	// are interpreted and enforced via generated validation code.
+	// Set to false for strict JSON Schema validation that rejects such constraints.
+	// Default: true
+	AllowCrossTypeConstraints *bool `json:"allow_cross_type_constraints,omitempty" yaml:"allow_cross_type_constraints,omitempty"`
+	// DisallowDuplicateMethodPaths controls whether paths that normalize to the same
+	// structure (e.g., /pets/{petId} and /pets/{id}) are allowed when they have
+	// different HTTP methods.
+	//
+	// When false (default), paths with different parameter names but different HTTP methods
+	// are allowed, and operations are disambiguated by path + params + method.
+	//
+	// When true, duplicate paths are always rejected per strict OpenAPI spec interpretation.
+	DisallowDuplicateMethodPaths bool `json:"disallow_duplicate_method_paths" yaml:"disallow_duplicate_method_paths"`
 	// File is the file that is being parsed.
 	//
 	// Used for error messages.
@@ -175,6 +190,14 @@ type GenerateOptions struct {
 	ConvenientErrors ConvenientErrors `json:"convenient_errors" yaml:"convenient_errors"`
 	// ContentTypeAliases contains content type aliases.
 	ContentTypeAliases ContentTypeAliases `json:"content_type_aliases" yaml:"content_type_aliases"`
+	// WildcardContentTypeDefault specifies the default encoding to use for wildcard
+	// content types (*/* or application/*) when the schema is not binary.
+	//
+	// Common values: "application/json", "text/plain"
+	//
+	// If empty, wildcard content types are treated as unsupported and will cause
+	// an error unless explicitly mapped via ContentTypeAliases.
+	WildcardContentTypeDefault ir.Encoding `json:"wildcard_content_type_default" yaml:"wildcard_content_type_default"`
 }
 
 // ConvenientErrors is an option type to control `Convenient Errors` feature.

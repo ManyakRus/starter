@@ -1087,6 +1087,172 @@ func (w *WebPageAttributeStarGiftCollection) MapIcons() (value DocumentClassArra
 	return DocumentClassArray(w.Icons)
 }
 
+// WebPageAttributeStarGiftAuction represents TL type `webPageAttributeStarGiftAuction#1c641c2`.
+//
+// See https://core.telegram.org/constructor/webPageAttributeStarGiftAuction for reference.
+type WebPageAttributeStarGiftAuction struct {
+	// Gift field of WebPageAttributeStarGiftAuction.
+	Gift StarGiftClass
+	// EndDate field of WebPageAttributeStarGiftAuction.
+	EndDate int
+}
+
+// WebPageAttributeStarGiftAuctionTypeID is TL type id of WebPageAttributeStarGiftAuction.
+const WebPageAttributeStarGiftAuctionTypeID = 0x1c641c2
+
+// construct implements constructor of WebPageAttributeClass.
+func (w WebPageAttributeStarGiftAuction) construct() WebPageAttributeClass { return &w }
+
+// Ensuring interfaces in compile-time for WebPageAttributeStarGiftAuction.
+var (
+	_ bin.Encoder     = &WebPageAttributeStarGiftAuction{}
+	_ bin.Decoder     = &WebPageAttributeStarGiftAuction{}
+	_ bin.BareEncoder = &WebPageAttributeStarGiftAuction{}
+	_ bin.BareDecoder = &WebPageAttributeStarGiftAuction{}
+
+	_ WebPageAttributeClass = &WebPageAttributeStarGiftAuction{}
+)
+
+func (w *WebPageAttributeStarGiftAuction) Zero() bool {
+	if w == nil {
+		return true
+	}
+	if !(w.Gift == nil) {
+		return false
+	}
+	if !(w.EndDate == 0) {
+		return false
+	}
+
+	return true
+}
+
+// String implements fmt.Stringer.
+func (w *WebPageAttributeStarGiftAuction) String() string {
+	if w == nil {
+		return "WebPageAttributeStarGiftAuction(nil)"
+	}
+	type Alias WebPageAttributeStarGiftAuction
+	return fmt.Sprintf("WebPageAttributeStarGiftAuction%+v", Alias(*w))
+}
+
+// FillFrom fills WebPageAttributeStarGiftAuction from given interface.
+func (w *WebPageAttributeStarGiftAuction) FillFrom(from interface {
+	GetGift() (value StarGiftClass)
+	GetEndDate() (value int)
+}) {
+	w.Gift = from.GetGift()
+	w.EndDate = from.GetEndDate()
+}
+
+// TypeID returns type id in TL schema.
+//
+// See https://core.telegram.org/mtproto/TL-tl#remarks.
+func (*WebPageAttributeStarGiftAuction) TypeID() uint32 {
+	return WebPageAttributeStarGiftAuctionTypeID
+}
+
+// TypeName returns name of type in TL schema.
+func (*WebPageAttributeStarGiftAuction) TypeName() string {
+	return "webPageAttributeStarGiftAuction"
+}
+
+// TypeInfo returns info about TL type.
+func (w *WebPageAttributeStarGiftAuction) TypeInfo() tdp.Type {
+	typ := tdp.Type{
+		Name: "webPageAttributeStarGiftAuction",
+		ID:   WebPageAttributeStarGiftAuctionTypeID,
+	}
+	if w == nil {
+		typ.Null = true
+		return typ
+	}
+	typ.Fields = []tdp.Field{
+		{
+			Name:       "Gift",
+			SchemaName: "gift",
+		},
+		{
+			Name:       "EndDate",
+			SchemaName: "end_date",
+		},
+	}
+	return typ
+}
+
+// Encode implements bin.Encoder.
+func (w *WebPageAttributeStarGiftAuction) Encode(b *bin.Buffer) error {
+	if w == nil {
+		return fmt.Errorf("can't encode webPageAttributeStarGiftAuction#1c641c2 as nil")
+	}
+	b.PutID(WebPageAttributeStarGiftAuctionTypeID)
+	return w.EncodeBare(b)
+}
+
+// EncodeBare implements bin.BareEncoder.
+func (w *WebPageAttributeStarGiftAuction) EncodeBare(b *bin.Buffer) error {
+	if w == nil {
+		return fmt.Errorf("can't encode webPageAttributeStarGiftAuction#1c641c2 as nil")
+	}
+	if w.Gift == nil {
+		return fmt.Errorf("unable to encode webPageAttributeStarGiftAuction#1c641c2: field gift is nil")
+	}
+	if err := w.Gift.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode webPageAttributeStarGiftAuction#1c641c2: field gift: %w", err)
+	}
+	b.PutInt(w.EndDate)
+	return nil
+}
+
+// Decode implements bin.Decoder.
+func (w *WebPageAttributeStarGiftAuction) Decode(b *bin.Buffer) error {
+	if w == nil {
+		return fmt.Errorf("can't decode webPageAttributeStarGiftAuction#1c641c2 to nil")
+	}
+	if err := b.ConsumeID(WebPageAttributeStarGiftAuctionTypeID); err != nil {
+		return fmt.Errorf("unable to decode webPageAttributeStarGiftAuction#1c641c2: %w", err)
+	}
+	return w.DecodeBare(b)
+}
+
+// DecodeBare implements bin.BareDecoder.
+func (w *WebPageAttributeStarGiftAuction) DecodeBare(b *bin.Buffer) error {
+	if w == nil {
+		return fmt.Errorf("can't decode webPageAttributeStarGiftAuction#1c641c2 to nil")
+	}
+	{
+		value, err := DecodeStarGift(b)
+		if err != nil {
+			return fmt.Errorf("unable to decode webPageAttributeStarGiftAuction#1c641c2: field gift: %w", err)
+		}
+		w.Gift = value
+	}
+	{
+		value, err := b.Int()
+		if err != nil {
+			return fmt.Errorf("unable to decode webPageAttributeStarGiftAuction#1c641c2: field end_date: %w", err)
+		}
+		w.EndDate = value
+	}
+	return nil
+}
+
+// GetGift returns value of Gift field.
+func (w *WebPageAttributeStarGiftAuction) GetGift() (value StarGiftClass) {
+	if w == nil {
+		return
+	}
+	return w.Gift
+}
+
+// GetEndDate returns value of EndDate field.
+func (w *WebPageAttributeStarGiftAuction) GetEndDate() (value int) {
+	if w == nil {
+		return
+	}
+	return w.EndDate
+}
+
 // WebPageAttributeClassName is schema name of WebPageAttributeClass.
 const WebPageAttributeClassName = "WebPageAttribute"
 
@@ -1100,6 +1266,7 @@ const WebPageAttributeClassName = "WebPageAttribute"
 //   - [WebPageAttributeStickerSet]
 //   - [WebPageAttributeUniqueStarGift]
 //   - [WebPageAttributeStarGiftCollection]
+//   - [WebPageAttributeStarGiftAuction]
 //
 // Example:
 //
@@ -1113,6 +1280,7 @@ const WebPageAttributeClassName = "WebPageAttribute"
 //	case *tg.WebPageAttributeStickerSet: // webPageAttributeStickerSet#50cc03d3
 //	case *tg.WebPageAttributeUniqueStarGift: // webPageAttributeUniqueStarGift#cf6f6db8
 //	case *tg.WebPageAttributeStarGiftCollection: // webPageAttributeStarGiftCollection#31cad303
+//	case *tg.WebPageAttributeStarGiftAuction: // webPageAttributeStarGiftAuction#1c641c2
 //	default: panic(v)
 //	}
 type WebPageAttributeClass interface {
@@ -1172,6 +1340,13 @@ func DecodeWebPageAttribute(buf *bin.Buffer) (WebPageAttributeClass, error) {
 	case WebPageAttributeStarGiftCollectionTypeID:
 		// Decoding webPageAttributeStarGiftCollection#31cad303.
 		v := WebPageAttributeStarGiftCollection{}
+		if err := v.Decode(buf); err != nil {
+			return nil, fmt.Errorf("unable to decode WebPageAttributeClass: %w", err)
+		}
+		return &v, nil
+	case WebPageAttributeStarGiftAuctionTypeID:
+		// Decoding webPageAttributeStarGiftAuction#1c641c2.
+		v := WebPageAttributeStarGiftAuction{}
 		if err := v.Decode(buf); err != nil {
 			return nil, fmt.Errorf("unable to decode WebPageAttributeClass: %w", err)
 		}

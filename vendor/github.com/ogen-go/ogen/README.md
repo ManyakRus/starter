@@ -49,10 +49,18 @@ docker run --rm \
     - When nullable, `nil` denotes that value is `nil`
     - When required, `nil` currently the same as `[]`, but is actually invalid
     - If both nullable and required, wrapper will be generated (TODO)
+- Support for untyped parameters (any)
+  - Parameters with no `type` specified in schema are represented as Go `any`
+  - Decoded as strings from URI (path, query, header, cookie)
+  - Client encoding uses `fmt.Sprint` for flexible value conversion
+  - Useful for legacy APIs or dynamic parameter types
 - Generated sum types for oneOf
   - Primitive types (`string`, `number`) are detected by type
   - Discriminator field is used if defined in schema
   - Type is inferred by unique fields if possible
+    - Field name discrimination: variants with different field names
+    - Field type discrimination: variants with same field names but different types (e.g., `{id: string}` vs `{id: integer}`)
+    - Field value discrimination: variants with same field names and types but different enum values
 - Extra Go struct field tags in the generated types
 - OpenTelemetry tracing and metrics
 
@@ -152,6 +160,104 @@ type ID struct {
 func NewStringID(v string) ID
 func NewIntID(v int) ID
 ```
+
+### Discriminator Inference
+
+ogen automatically infers how to discriminate between oneOf variants using several strategies:
+
+**1. Type-based discrimination** (for primitive types)
+
+Variants with different JSON types are discriminated by checking the JSON type at runtime:
+
+```json
+{
+  "oneOf": [
+    {"type": "string"},
+    {"type": "integer"}
+  ]
+}
+```
+
+**2. Explicit discriminator** (when discriminator field is specified)
+
+When a discriminator field is defined in the schema, ogen uses it directly:
+
+```json
+{
+  "oneOf": [...],
+  "discriminator": {
+    "propertyName": "type",
+    "mapping": {"user": "#/components/schemas/User", ...}
+  }
+}
+```
+
+**3. Field-based discrimination** (automatic inference from unique fields)
+
+ogen analyzes the fields in each variant to find discriminating characteristics:
+
+- **Field name discrimination**: Variants have different field names
+
+```json
+{
+  "oneOf": [
+    {"type": "object", "required": ["userId"], "properties": {"userId": {"type": "string"}}},
+    {"type": "object", "required": ["orderId"], "properties": {"orderId": {"type": "string"}}}
+  ]
+}
+```
+
+- **Field type discrimination**: Variants have fields with the same name but different types
+
+```json
+{
+  "oneOf": [
+    {
+      "type": "object",
+      "required": ["id", "value"],
+      "properties": {
+        "id": {"type": "string"},
+        "value": {"type": "string"}
+      }
+    },
+    {
+      "type": "object",
+      "required": ["id", "value"],
+      "properties": {
+        "id": {"type": "integer"},
+        "value": {"type": "number"}
+      }
+    }
+  ]
+}
+```
+
+In this case, ogen checks the JSON type of the `id` field at runtime to determine which variant to decode.
+
+- **Field value discrimination**: Variants have fields with the same name and type but different enum values
+
+```json
+{
+  "oneOf": [
+    {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {"type": "string", "enum": ["active", "pending"]}
+      }
+    },
+    {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {"type": "string", "enum": ["inactive", "deleted"]}
+      }
+    }
+  ]
+}
+```
+
+In this case, ogen checks the actual string value of the `status` field at runtime and matches it against each variant's enum values. The enum values must be disjoint (non-overlapping) for this to work. If enum values overlap, ogen will report an error and suggest using an explicit discriminator.
 
 ## Extension properties
 

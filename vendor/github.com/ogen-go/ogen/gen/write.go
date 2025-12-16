@@ -139,6 +139,8 @@ func (t TemplateConfig) RegexStrings() []string {
 	return t.collectStrings(func(typ *ir.Type) (r []string) {
 		for _, exp := range []ogenregex.Regexp{
 			typ.Validators.String.Regex,
+			typ.Validators.Int.Pattern,
+			typ.Validators.Float.Pattern,
 			typ.MapPattern,
 		} {
 			if exp == nil {
@@ -351,6 +353,17 @@ func (g *Generator) WriteSource(fs FileSystem, pkgName string) error {
 		}
 
 		generate(fileName, t.name)
+	}
+
+	// Generate Equal() and Hash() methods for complex uniqueItems validation
+	if len(g.equalitySpecs) > 0 {
+		grp.Go(func() error {
+			return g.generateEqualityMethodsWithFS(fs, pkgName)
+		})
+		// Generate validateUnique[TypeName]() functions for runtime validation
+		grp.Go(func() error {
+			return g.generateUniqueValidators(fs, pkgName)
+		})
 	}
 
 	return grp.Wait()

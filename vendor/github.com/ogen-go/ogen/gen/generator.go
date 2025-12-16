@@ -36,6 +36,7 @@ type Generator struct {
 	webhookRouter     WebhookRouter
 	router            Router
 	imports           map[string]string
+	equalitySpecs     []*ir.EqualityMethodSpec // Types requiring Equal() methods for uniqueItems validation
 
 	log *zap.Logger
 }
@@ -76,12 +77,20 @@ func NewGenerator(spec *ogen.Spec, opts Options) (*Generator, error) {
 	if opts.Parser.AllowRemote {
 		external = jsonschema.NewExternalResolver(opts.Parser.Remote)
 	}
+	// Default: allow cross-type constraints unless explicitly set to false
+	allowCrossType := true
+	if opts.Parser.AllowCrossTypeConstraints != nil {
+		allowCrossType = *opts.Parser.AllowCrossTypeConstraints
+	}
+
 	api, err := parser.Parse(spec, parser.Settings{
-		External:              external,
-		File:                  opts.Parser.File,
-		RootURL:               opts.Parser.RootURL,
-		InferTypes:            opts.Parser.InferSchemaType,
-		AuthenticationSchemes: opts.Parser.AuthenticationSchemes,
+		External:                     external,
+		File:                         opts.Parser.File,
+		RootURL:                      opts.Parser.RootURL,
+		InferTypes:                   opts.Parser.InferSchemaType,
+		AllowCrossTypeConstraints:    allowCrossType,
+		AuthenticationSchemes:        opts.Parser.AuthenticationSchemes,
+		DisallowDuplicateMethodPaths: opts.Parser.DisallowDuplicateMethodPaths,
 	})
 	if err != nil {
 		return nil, &ErrParseSpec{err: err}
@@ -130,6 +139,10 @@ func (g *Generator) makeIR(api *openapi.API) error {
 	if err := g.makeOps(api.Operations); err != nil {
 		return errors.Wrap(err, "operations")
 	}
+
+	// Collect types that need Equal() and Hash() methods for complex uniqueItems validation
+	g.collectEqualitySpecs()
+
 	return nil
 }
 

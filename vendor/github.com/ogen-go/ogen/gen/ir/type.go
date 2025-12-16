@@ -32,6 +32,23 @@ type SumSpecMap struct {
 	Name string
 }
 
+// UniqueFieldVariant represents a variant that has a specific unique field.
+type UniqueFieldVariant struct {
+	VariantName string // e.g., "SystemEvent"
+	VariantType string // e.g., "SystemEventEvent"
+	FieldType   string // jx.Type constant, e.g., "jx.String"
+	Nullable    bool   // true if field is nullable (accepts both base type and jx.Null)
+
+	// ArrayElementType is the jx.Type of array elements for array element discrimination.
+	// Only set when FieldType is "jx.Array" and element type can distinguish variants.
+	// e.g., "jx.String" for array[string], "jx.Number" for array[integer], "jx.Object" for array[object]
+	ArrayElementType string
+
+	// ArrayElementTypeID is the full type ID for array elements (e.g., "string", "integer", "object").
+	// Used for more detailed discrimination like distinguishing integer vs number.
+	ArrayElementTypeID string
+}
+
 // SumSpec for KindSum.
 type SumSpec struct {
 	Unique []*Field
@@ -47,6 +64,30 @@ type SumSpec struct {
 
 	// TypeDiscriminator denotes to distinguish variants by type.
 	TypeDiscriminator bool
+
+	// UniqueFieldTypes maps field JSON names to their expected jx.Type for type-based discrimination.
+	// Key: field JSON name, Value: jx.Type constant name (e.g., "jx.String", "jx.Number")
+	// Only populated for fields that require runtime type checking.
+	UniqueFieldTypes map[string]string
+
+	// UniqueFields maps field names to variants that have that field as unique.
+	// Used for generating field-based discrimination in oneOf/anyOf.
+	// Key: field JSON name, Value: list of variants with that unique field
+	UniqueFields map[string][]UniqueFieldVariant
+
+	// ValueDiscriminators maps field names to value-based discriminators.
+	// Used when variants have the same field name and JSON type but different enum values.
+	// Key: field JSON name, Value: ValueDiscriminator with enum value mappings
+	ValueDiscriminators map[string]ValueDiscriminator
+}
+
+// ValueDiscriminator represents a field that discriminates variants by enum value.
+type ValueDiscriminator struct {
+	// FieldName is the JSON field name used for discrimination
+	FieldName string
+	// ValueToVariant maps enum values to variant type constants
+	// Key: enum value (e.g., "active"), Value: variant type constant (e.g., "ActiveStatusResponse")
+	ValueToVariant map[string]string
 }
 
 type ResolvedSumSpecMap struct {
@@ -256,6 +297,9 @@ func (t *Type) Go() string {
 	case KindPrimitive:
 		return t.Primitive.String()
 	case KindAny:
+		if t.HasFeature("uri") {
+			return "any"
+		}
 		return "jx.Raw"
 	case KindArray:
 		return "[]" + t.Item.Go()

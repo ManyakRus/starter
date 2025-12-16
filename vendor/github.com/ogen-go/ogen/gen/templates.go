@@ -206,8 +206,12 @@ func templateFunctions() template.FuncMap {
 		"mod": func(a, b int) int {
 			return a % b
 		},
-		"isObjectParam":     isObjectParam,
-		"paramObjectFields": paramObjectFields,
+		"isObjectParam":                    isObjectParam,
+		"paramObjectFields":                paramObjectFields,
+		"uniqueResponseTypes":              uniqueResponseTypes,
+		"dedupeVariantsByType":             dedupeVariantsByType,
+		"needsArrayElementDiscrimination":  needsArrayElementDiscrimination,
+		"dedupeVariantsByArrayElementType": dedupeVariantsByArrayElementType,
 	}
 }
 
@@ -269,4 +273,97 @@ func paramObjectFields(typ *ir.Type) string {
 	}
 
 	return "[]uri.QueryParameterObjectField{" + strings.Join(fields, ",") + "}"
+}
+
+// uniqueResponseTypes deduplicates response types by Type.Name to avoid duplicate case statements
+// in type switches. When multiple responses share the same type (e.g., multiple patterns using the
+// same schema), we only need one case statement.
+func uniqueResponseTypes(responses []ir.ResponseInfo) []ir.ResponseInfo {
+	seen := make(map[string]bool)
+	var unique []ir.ResponseInfo
+
+	for _, resp := range responses {
+		if resp.RawResponse {
+			// Raw responses are handled separately in the template
+			continue
+		}
+		typeName := resp.Type.Name
+		if !seen[typeName] {
+			seen[typeName] = true
+			unique = append(unique, resp)
+		}
+	}
+
+	return unique
+}
+
+// dedupeVariantsByType deduplicates variants by their FieldType to avoid duplicate type checks.
+// When multiple variants have the same field type (or no type discrimination), keep only unique entries.
+func dedupeVariantsByType(variants []ir.UniqueFieldVariant) []ir.UniqueFieldVariant {
+	if len(variants) == 0 {
+		return variants
+	}
+
+	seen := make(map[string]bool)
+	result := make([]ir.UniqueFieldVariant, 0, len(variants))
+
+	for _, v := range variants {
+		// If FieldType is empty (no type discrimination), include all variants
+		if v.FieldType == "" || !seen[v.FieldType] {
+			if v.FieldType != "" {
+				seen[v.FieldType] = true
+			}
+			result = append(result, v)
+		}
+	}
+
+	return result
+}
+
+// needsArrayElementDiscrimination checks if all variants have the same jx.Array FieldType
+// but different ArrayElementTypes, requiring element-level discrimination.
+func needsArrayElementDiscrimination(variants []ir.UniqueFieldVariant) bool {
+	if len(variants) < 2 {
+		return false
+	}
+
+	// All variants must be arrays
+	for _, v := range variants {
+		if v.FieldType != jxTypeArray {
+			return false
+		}
+	}
+
+	// Count unique element types
+	uniqueElemTypes := make(map[string]bool)
+	for _, v := range variants {
+		if v.ArrayElementType != "" {
+			uniqueElemTypes[v.ArrayElementType] = true
+		}
+	}
+
+	return len(uniqueElemTypes) > 1
+}
+
+// dedupeVariantsByArrayElementType deduplicates array variants by their ArrayElementType.
+// Used when all variants are arrays that need element-level discrimination.
+func dedupeVariantsByArrayElementType(variants []ir.UniqueFieldVariant) []ir.UniqueFieldVariant {
+	if len(variants) == 0 {
+		return variants
+	}
+
+	seen := make(map[string]bool)
+	result := make([]ir.UniqueFieldVariant, 0, len(variants))
+
+	for _, v := range variants {
+		// If ArrayElementType is empty, include the variant
+		if v.ArrayElementType == "" || !seen[v.ArrayElementType] {
+			if v.ArrayElementType != "" {
+				seen[v.ArrayElementType] = true
+			}
+			result = append(result, v)
+		}
+	}
+
+	return result
 }

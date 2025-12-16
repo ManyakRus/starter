@@ -126,17 +126,124 @@ func (s *{{ $.Name }}) Decode(d *jx.Decoder) error {
 				}
 				return nil
 			{{- else }}
-			{{- range $s := $.SumOf }}
-			{{- range $f := $s.SumSpec.Unique }}
-			case {{ quote $f.Tag.JSON }}:
-				match := {{ $s.Name }}{{ $.Name }}
+			{{- range $fieldName, $variants := $.SumSpec.UniqueFields }}
+			case {{ quote $fieldName }}:
+				{{- if eq (len $variants) 1 }}
+					{{- $v := index $variants 0 }}
+					{{- if $v.FieldType }}
+						{{- if $v.Nullable }}
+				// Type-based discrimination: check if field has expected JSON type (nullable)
+				typ := d.Next()
+				if typ != {{ $v.FieldType }} && typ != jx.Null {
+					// Field exists but has wrong type, not a match for this variant
+					return d.Skip()
+				}
+						{{- else }}
+				// Type-based discrimination: check if field has expected JSON type
+				if typ := d.Next(); typ != {{ $v.FieldType }} {
+					// Field exists but has wrong type, not a match for this variant
+					return d.Skip()
+				}
+						{{- end }}
+					{{- end }}
+				match := {{ $v.VariantType }}
 				if found && s.Type != match {
 					s.Type = ""
 					return errors.Errorf("multiple oneOf matches: (%v, %v)", s.Type, match)
 				}
 				found = true
 				s.Type = match
+				{{- else if needsArrayElementDiscrimination $variants }}
+				// Array element discrimination: peek into array to check first element type
+				if typ := d.Next(); typ != jx.Array {
+					return d.Skip()
+				}
+				// Capture array to peek at first element without consuming
+				if err := d.Capture(func(d *jx.Decoder) error {
+					// Check if array is empty
+					iter, err := d.ArrIter()
+					if err != nil {
+						return err
+					}
+					if !iter.Next() {
+						// Empty array - use first variant as default
+						{{- $firstVariant := index (dedupeVariantsByArrayElementType $variants) 0 }}
+						if !found {
+							found = true
+							s.Type = {{ $firstVariant.VariantType }}
+						}
+						return nil
+					}
+					elemType := d.Next()
+					switch elemType {
+					{{- range $v := dedupeVariantsByArrayElementType $variants }}
+					{{- if $v.ArrayElementType }}
+					case {{ $v.ArrayElementType }}:
+						match := {{ $v.VariantType }}
+						if found && s.Type != match {
+							s.Type = ""
+							return errors.Errorf("multiple oneOf matches: (%v, %v)", s.Type, match)
+						}
+						found = true
+						s.Type = match
+					{{- end }}
+					{{- end }}
+					}
+					return nil
+				}); err != nil {
+					return err
+				}
+				{{- else }}
+				// Multiple variants have this field - use type checking to discriminate
+				typ := d.Next()
+				switch typ {
+					{{- range $v := dedupeVariantsByType $variants }}
+					{{- if $v.FieldType }}
+						{{- if $v.Nullable }}
+				case {{ $v.FieldType }}, jx.Null:
+						{{- else }}
+				case {{ $v.FieldType }}:
+						{{- end }}
+					match := {{ $v.VariantType }}
+					if found && s.Type != match {
+						s.Type = ""
+						return errors.Errorf("multiple oneOf matches: (%v, %v)", s.Type, match)
+					}
+					found = true
+					s.Type = match
+					{{- end }}
+					{{- end }}
+				default:
+					// Unknown type for this field
+					return d.Skip()
+				}
+				{{- end }}
 			{{- end }}
+			{{- range $fieldName, $discriminator := $.SumSpec.ValueDiscriminators }}
+			case {{ quote $fieldName }}:
+				// Value-based discrimination: check enum value
+				if typ := d.Next(); typ != jx.String {
+					return d.Skip()
+				}
+				value, err := d.StrBytes()
+				if err != nil {
+					return err
+				}
+				switch string(value) {
+					{{- range $enumValue, $variantType := $discriminator.ValueToVariant }}
+				case {{ quote $enumValue }}:
+					match := {{ $variantType }}
+					if found && s.Type != match {
+						s.Type = ""
+						return errors.Errorf("multiple oneOf matches: (%v, %v)", s.Type, match)
+					}
+					found = true
+					s.Type = match
+					{{- end }}
+				default:
+					// Unknown enum value, ignore and continue
+				}
+				return nil
 			{{- end }}
 			{{- end }}
 			}
