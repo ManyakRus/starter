@@ -26,12 +26,6 @@ import (
 // SignalInterrupt - канал для ожидания сигнала остановки приложения
 var SignalInterrupt chan os.Signal
 
-// wgMain - группа ожидания завершения всех частей программы
-var wgMain *sync.WaitGroup
-
-// lockWGMain - гарантирует получение WGMain с учётом многопоточности
-var lockWGMain = &sync.Mutex{}
-
 // onceWGMain - гарантирует создание WGMain один раз
 var onceWGMain sync.Once
 
@@ -40,29 +34,6 @@ var TotalMessagesSendingNow int32
 
 // SecondsWaitTotalMessagesSendingNow - количество секунд ожидания для отправки последнего сообщения
 const SecondsWaitTotalMessagesSendingNow = 10
-
-// SetWaitGroup_Main - присваивает внешний WaitGroup
-func SetWaitGroup_Main(wg *sync.WaitGroup) {
-	wgMain = wg
-}
-
-// GetWaitGroup_Main - возвращает группу ожидания завершения всех частей программы
-func GetWaitGroup_Main() *sync.WaitGroup {
-	lockWGMain.Lock()
-	defer lockWGMain.Unlock()
-	//
-	//if wgMain == nil {
-	//	wgMain = &sync.WaitGroup{}
-	//}
-
-	if wgMain == nil {
-		//onceWGMain.Do(func() {
-		wgMain = &sync.WaitGroup{}
-		//})
-	}
-
-	return wgMain
-}
 
 // StartWaitStop - запускает ожидание сигнала завершения приложения
 func StartWaitStop() {
@@ -135,9 +106,17 @@ func WaitTotalMessagesSendingNow(filename string) {
 
 // Wait_GracefulShutdown - ожидает завершения всех горутин программы, а потом ожидает закрытие всех подключений
 func Wait_GracefulShutdown() {
-	//ожидает завершения всех горутин программы
+	//ожидаем завершения всех горутин программы
 	GetWaitGroup_Main().Wait()
 
-	//ожидает закрытие всех подключений
+	//ожидаем закрытие всех подключений
+	MassWait := make([]IWait, 0)
+	MapWaitGroups.OrderedRange(func(key string, value IWait) {
+		MassWait = append(MassWait, value)
+	})
 
+	//запускаем Wait() в обратном порядке
+	for i := len(MassWait) - 1; i >= 0; i-- {
+		MassWait[i].Wait()
+	}
 }

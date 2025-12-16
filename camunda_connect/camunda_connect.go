@@ -308,10 +308,10 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, HandleJob func(c
 	//
 	//JobWorker = Client.NewJobWorker().JobType(CAMUNDA_JOBTYPE).Handler(HandleJob).Open()
 	//
-	//stopapp.GetWaitGroup_Main().Add(1)
+	//stopapp.GetWaitGroup_Connect().Add(1)
 	//go WaitStop()
 	//
-	//stopapp.GetWaitGroup_Main().Add(1)
+	//stopapp.GetWaitGroup_Connect().Add(1)
 	//go ping_go(HandleJob, CAMUNDA_JOBTYPE)
 
 	return err
