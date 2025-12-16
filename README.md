@@ -39,7 +39,7 @@ func main() {
 
 	//ваш код
 
-	stopapp.GetWaitGroup_Main().Wait()
+	stopapp.Wait_GracefulShutdown()
 }
 ```
 
@@ -63,7 +63,7 @@ func main() {
 
 	liveness.Start()
 
-	stopapp.GetWaitGroup_Main().Wait()
+	stopapp.Wait_GracefulShutdown()
 
 	log.Info("App stopped")
 }

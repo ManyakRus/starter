@@ -132,3 +132,12 @@ func WaitTotalMessagesSendingNow(filename string) {
 		micro.Sleep(1000)
 	}
 }
+
+// Wait_GracefulShutdown - ожидает завершения всех горутин программы, а потом ожидает закрытие всех подключений
+func Wait_GracefulShutdown() {
+	//ожидает завершения всех горутин программы
+	GetWaitGroup_Main().Wait()
+
+	//ожидает закрытие всех подключений
+
+}
