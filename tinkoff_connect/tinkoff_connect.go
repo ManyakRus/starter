@@ -190,7 +190,7 @@ func Start_ctx(ctx *context.Context, wg *sync.WaitGroup) error {
 	//		contextmain.SetContext(ctx)
 	//	}
 	//contextmain.Ctx = ctx
-	stopapp.SetWaitGroup_Main(wg)
+	//stopapp.SetWaitGroup_Main(wg)
 
 	err = Connect_err()
 	if err != nil {
