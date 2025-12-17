@@ -293,7 +293,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, HandleJob func(c
 	}
 
 	//запомним к себе WaitGroup
-	stopapp.SetWaitGroup_Main(WaitGroup)
+	//stopapp.SetWaitGroup_Main(WaitGroup)
 	if WaitGroup == nil {
 		stopapp.StartWaitStop()
 	}

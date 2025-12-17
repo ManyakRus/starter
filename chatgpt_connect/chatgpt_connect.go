@@ -172,7 +172,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	}
 
 	//запомним к себе WaitGroup
-	stopapp.SetWaitGroup_Main(WaitGroup)
+	//stopapp.SetWaitGroup_Main(WaitGroup)
 	if WaitGroup == nil {
 		stopapp.StartWaitStop()
 	}

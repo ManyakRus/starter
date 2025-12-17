@@ -100,7 +100,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, ServiceName stri
 	}
 
 	//запомним к себе WaitGroup
-	stopapp.SetWaitGroup_Main(WaitGroup)
+	//stopapp.SetWaitGroup_Main(WaitGroup)
 	if WaitGroup == nil {
 		stopapp.StartWaitStop()
 	}
