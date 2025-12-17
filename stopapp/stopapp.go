@@ -159,7 +159,7 @@ func Wait_GracefulShutdown() {
 	for i := len(MassWait) - 1; i >= 0; i-- {
 		key := MassWait[i].Key
 		value := MassWait[i].Value
-		log.Debugf("Ожидаем закрытия соединения: %s", key)
+		log.Debugf("Waiting to close the connection: %s", key)
 		CancelCtxFunc1 := value.CancelCtxFunc
 		if CancelCtxFunc1 != nil {
 			CancelCtxFunc1()
