@@ -9,7 +9,7 @@ import (
 var ctx_Connect, cancelCtxFunc = context.WithCancel(context.Background())
 
 // waitGroup_Connect - группа ожидания завершения всех частей программы
-var waitGroup_Connect *sync.WaitGroup
+var waitGroup_Connect = new(sync.WaitGroup)
 
 // lockWaitGroup_Connect - гарантирует получение WGMain с учётом многопоточности
 var lockWaitGroup_Connect = &sync.RWMutex{}
