@@ -637,7 +637,7 @@ func Connect_err(func_OnNewMessage func(ctx context.Context, entities tg.Entitie
 
 	//
 	ctxMain := context.Background()
-	//ctxMain := ctx_Connect
+	//ctxMain := *ctx_Connect
 	ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second) //60
 	defer cancel()
 
@@ -760,7 +760,7 @@ func WaitStop() {
 	defer waitGroup_Connect.Done()
 
 	select {
-	case <-ctx_Connect.Done():
+	case <-(*ctx_Connect).Done():
 		log.Warn("Context app is canceled. telegram_client")
 	}
 
@@ -841,7 +841,7 @@ func AsFloodWait(err error) (d int, ok bool) {
 func StartTelegram(func_OnNewMessage func(ctx context.Context, entities tg.Entities, u *tg.UpdateNewMessage, Peer1 storage.Peer) error) {
 	var err error
 
-	ctx := &ctx_Connect
+	ctx := ctx_Connect
 	WaitGroup := waitGroup_Connect
 	err = Start_ctx(ctx, WaitGroup, func_OnNewMessage)
 	LogInfo_Connected(err)
@@ -865,7 +865,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, func_OnNewMessag
 	//	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
-		ctx = &ctx_Connect
+		ctx = ctx_Connect
 	}
 
 	//запомним к себе WaitGroup
@@ -939,7 +939,7 @@ func FillMessageTelegramFromMessage(m *tg.Message) MessageTelegram {
 	}
 
 	//
-	//ctxMain := ctx_Connect
+	//ctxMain := *ctx_Connect
 	//ctx, cancel_func := context.WithTimeout(ctxMain, 60*time.Second) //60
 	//defer cancel_func()
 	IsGroup := false
@@ -1018,7 +1018,7 @@ func FillMessageTelegramFromMessage(m *tg.Message) MessageTelegram {
 
 // GetContactsAll - обновляет список контактов
 func GetContactsAll() {
-	ctxMain := ctx_Connect
+	ctxMain := *ctx_Connect
 	ctx, cancel_func := context.WithTimeout(ctxMain, time.Second*60)
 	defer cancel_func()
 	IContacts, err := Client.API().ContactsGetContacts(ctx, 0)

@@ -130,12 +130,12 @@ func Connect_WithApplicationName_err(ApplicationName string) error {
 	}
 
 	//
-	if ctx_Connect.Err() != nil {
-		return ctx_Connect.Err()
+	if (*ctx_Connect).Err() != nil {
+		return (*ctx_Connect).Err()
 	}
 
 	//
-	ctxMain := ctx_Connect
+	ctxMain := *ctx_Connect
 	ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second)
 	defer cancel()
 
@@ -185,7 +185,7 @@ func IsClosed() bool {
 		return true
 	}
 
-	ctx := ctx_Connect
+	ctx := *ctx_Connect
 	err := GetConnection().Ping(ctx)
 	if err != nil {
 		otvet = true
@@ -264,7 +264,7 @@ func CloseConnection_err() error {
 		return nil
 	}
 
-	ctxMain := ctx_Connect
+	ctxMain := *ctx_Connect
 	ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second)
 	defer cancel()
 
@@ -281,7 +281,7 @@ func WaitStop() {
 	defer waitGroup_Connect.Done()
 
 	select {
-	case <-ctx_Connect.Done():
+	case <-(*ctx_Connect).Done():
 		log.Warn("Context app is canceled. postgres_pgx")
 	}
 
@@ -296,7 +296,7 @@ func WaitStop() {
 func StartDB() {
 	var err error
 
-	ctx := &ctx_Connect
+	ctx := ctx_Connect
 	WaitGroup := waitGroup_Connect
 	err = Start_ctx(ctx, WaitGroup)
 	LogInfo_Connected(err)
@@ -320,7 +320,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	//	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
-		ctx = &ctx_Connect
+		ctx = ctx_Connect
 	}
 
 	//запомним к себе WaitGroup
@@ -355,7 +355,7 @@ func Start(ApplicationName string) {
 	LogInfo_Connected(err)
 
 	//сохраним в список подключений
-	ctx := &ctx_Connect
+	ctx := ctx_Connect
 	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: waitGroup_Connect, Ctx: ctx, CancelCtxFunc: cancelCtxFunc}
 	stopapp.OrderedMapConnections.Put(PackageName, WaitGroupContext1)
 
@@ -419,7 +419,7 @@ func ping_go() {
 	//бесконечный цикл
 loop:
 	for {
-		ctx = ctx_Connect
+		ctx = *ctx_Connect
 
 		select {
 		case <-ctx.Done():
@@ -544,7 +544,7 @@ func RawMultipleSQL(tx IConnectionTransaction, TextSQL string) (pgx.Rows, error)
 	if pos1 > 0 {
 		TextSQL1 = TextSQL[0:pos1]
 		TextSQL2 = TextSQL[pos1:]
-		_, err := tx.Exec(ctx, TextSQL1)
+		_, err := tx.Exec(*ctx, TextSQL1)
 		if err != nil {
 			TextError := fmt.Sprint("tx.Exec() error: ", err, ", TextSQL: \n", TextSQL1)
 			err = errors.New(TextError)
@@ -554,7 +554,7 @@ func RawMultipleSQL(tx IConnectionTransaction, TextSQL string) (pgx.Rows, error)
 	}
 
 	//запустим последний запрос, с возвратом результата
-	rows, err = tx.Query(ctx, TextSQL2)
+	rows, err = tx.Query(*ctx, TextSQL2)
 	if err != nil {
 		TextError := fmt.Sprint("tx.Raw() error: ", err, ", TextSQL: \n", TextSQL2)
 		err = errors.New(TextError)

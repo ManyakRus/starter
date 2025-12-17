@@ -41,7 +41,7 @@ func Start() {
 
 	ctx := ctx_Connect
 	WaitGroup := waitGroup_Connect
-	Start_ctx(&ctx, WaitGroup)
+	Start_ctx(ctx, WaitGroup)
 
 }
 
@@ -57,7 +57,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) {
 	//	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
-		ctx = &ctx_Connect
+		ctx = ctx_Connect
 	}
 
 	//запомним к себе WaitGroup

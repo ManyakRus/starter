@@ -101,7 +101,7 @@ func StartKafka() {
 
 	ctx := ctx_Connect
 	WaitGroup := waitGroup_Connect
-	err = Start_ctx(&ctx, WaitGroup)
+	err = Start_ctx(ctx, WaitGroup)
 	LogInfo_Connected(err)
 
 }
@@ -118,7 +118,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	//	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
-		ctx = &ctx_Connect
+		ctx = ctx_Connect
 	}
 
 	//запомним к себе WaitGroup
@@ -170,7 +170,7 @@ func WaitStop() {
 	defer waitGroup_Connect.Done()
 
 	select {
-	case <-ctx_Connect.Done():
+	case <-(*ctx_Connect).Done():
 		log.Warn("Context app is canceled. kafka_connect")
 	}
 
@@ -230,7 +230,7 @@ func GetOffsetFromGroupID(TopicName, GroupID string) (int64, error) {
 	var err error
 
 	//
-	ctxMain := ctx_Connect
+	ctxMain := *ctx_Connect
 	ctx, ctxCancelFunc := context.WithTimeout(ctxMain, time.Duration(60)*time.Second)
 	defer ctxCancelFunc()
 

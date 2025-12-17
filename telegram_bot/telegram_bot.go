@@ -248,7 +248,7 @@ func WaitStop() {
 	defer waitGroup_Connect.Done()
 
 	select {
-	case <-ctx_Connect.Done():
+	case <-(*ctx_Connect).Done():
 		log.Warn("Context app is canceled. telegram_bot")
 	}
 
@@ -272,7 +272,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	//	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
-		ctx = &ctx_Connect
+		ctx = ctx_Connect
 	}
 
 	//запомним к себе WaitGroup
@@ -306,7 +306,7 @@ func Start() {
 	}
 
 	//сохраним в список подключений
-	ctx := &ctx_Connect
+	ctx := ctx_Connect
 	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: waitGroup_Connect, Ctx: ctx, CancelCtxFunc: cancelCtxFunc}
 	stopapp.OrderedMapConnections.Put(PackageName, WaitGroupContext1)
 

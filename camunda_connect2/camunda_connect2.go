@@ -187,7 +187,7 @@ func WaitStop() {
 	defer waitGroup_Connect.Done()
 
 	select {
-	case <-ctx_Connect.Done():
+	case <-(*ctx_Connect).Done():
 		log.Warn("Context app is canceled. camunda_connect")
 	}
 
@@ -206,7 +206,7 @@ func StartCamunda(HandleJob func(client worker.JobClient, job entities.Job), CAM
 
 	ctx := ctx_Connect
 	WaitGroup := waitGroup_Connect
-	err = Start_ctx(&ctx, WaitGroup, HandleJob, CAMUNDA_JOBTYPE, BPMN_filename)
+	err = Start_ctx(ctx, WaitGroup, HandleJob, CAMUNDA_JOBTYPE, BPMN_filename)
 	LogInfo_Connected(err)
 }
 
@@ -222,7 +222,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, HandleJob func(c
 	//	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
-		ctx = &ctx_Connect
+		ctx = ctx_Connect
 	}
 
 	//запомним к себе WaitGroup
@@ -264,7 +264,7 @@ func Send_BPMN_File(BPMN_filename string) {
 		return
 	}
 
-	ctxMain := ctx_Connect
+	ctxMain := *ctx_Connect
 	ctx, ctxCancelFunc := context.WithTimeout(ctxMain, time.Second*60)
 	defer ctxCancelFunc()
 
@@ -300,7 +300,7 @@ func ping_go(HandleJob func(client worker.JobClient, job entities.Job), CAMUNDA_
 loop:
 	for {
 		select {
-		case <-ctx_Connect.Done():
+		case <-(*ctx_Connect).Done():
 			log.Warn("Context app is canceled. camunda_connect.ping")
 			break loop
 		case <-ticker.C:

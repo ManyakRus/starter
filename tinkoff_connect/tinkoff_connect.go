@@ -98,7 +98,7 @@ func Connect_err() error {
 		}
 	}
 
-	ctx := ctx_Connect
+	ctx := *ctx_Connect
 
 	//addr := Settings.Host + ":" + Settings.Port
 	Config := Settings.Config
@@ -155,7 +155,7 @@ func WaitStop() {
 	defer waitGroup_Connect.Done()
 
 	select {
-	case <-ctx_Connect.Done():
+	case <-(*ctx_Connect).Done():
 		log.Warn("Context app is canceled. tinkoff_connect")
 	}
 
@@ -171,7 +171,7 @@ func WaitStop() {
 // и есть waitGroup_Connect
 // при ошибке вызывает панику
 func Start() {
-	Start_ctx(&ctx_Connect, waitGroup_Connect)
+	Start_ctx(ctx_Connect, waitGroup_Connect)
 
 	//waitGroup_Connect.Add(1)
 	//go WaitStop()
@@ -189,6 +189,7 @@ func Start_ctx(ctx *context.Context, wg *sync.WaitGroup) error {
 	//	if contextmain.Ctx != ctx {
 	//		contextmain.SetContext(ctx)
 	//	}
+
 	//contextmain.Ctx = ctx
 	//stopapp.SetWaitGroup_Main(wg)
 
@@ -242,7 +243,7 @@ func ping_go() {
 loop:
 	for {
 		select {
-		case <-ctx_Connect.Done():
+		case <-(*ctx_Connect).Done():
 			log.Warn("Context app is canceled. tinkoff_connect.ping")
 			break loop
 		case <-ticker.C:

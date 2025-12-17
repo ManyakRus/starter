@@ -114,8 +114,8 @@ func Connect_WithApplicationName_err(ApplicationName string) error {
 	}
 
 	//
-	if ctx_Connect.Err() != nil {
-		return ctx_Connect.Err()
+	if (*ctx_Connect).Err() != nil {
+		return (*ctx_Connect).Err()
 	}
 
 	//get the database connection URL.
@@ -269,7 +269,7 @@ func WaitStop() {
 	defer waitGroup_Connect.Done()
 
 	select {
-	case <-ctx_Connect.Done():
+	case <-(*ctx_Connect).Done():
 		log.Warn("Context app is canceled. postgres_gorm2")
 	}
 
@@ -285,7 +285,7 @@ func WaitStop() {
 func StartDB() {
 	var err error
 
-	ctx := &ctx_Connect
+	ctx := ctx_Connect
 	WaitGroup := waitGroup_Connect
 	err = Start_ctx(ctx, WaitGroup)
 	LogInfo_Connected(err)
@@ -309,7 +309,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	//	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
-		ctx = &ctx_Connect
+		ctx = ctx_Connect
 	}
 
 	//запомним к себе WaitGroup
@@ -347,7 +347,7 @@ func Start(ApplicationName string) {
 	//}
 
 	//сохраним в список подключений
-	ctx := &ctx_Connect
+	ctx := ctx_Connect
 	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: waitGroup_Connect, Ctx: ctx, CancelCtxFunc: cancelCtxFunc}
 	stopapp.OrderedMapConnections.Put(PackageName, WaitGroupContext1)
 
@@ -473,7 +473,7 @@ func ping_go() {
 loop:
 	for {
 		select {
-		case <-ctx_Connect.Done():
+		case <-(*ctx_Connect).Done():
 			log.Warn("Context app is canceled. postgres_gorm2.ping")
 			break loop
 		case <-ticker.C:

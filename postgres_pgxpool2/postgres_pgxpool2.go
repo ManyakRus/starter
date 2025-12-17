@@ -123,12 +123,12 @@ func Connect_WithApplicationName_err(ApplicationName string) error {
 	}
 
 	//
-	if ctx_Connect.Err() != nil {
-		return ctx_Connect.Err()
+	if (*ctx_Connect).Err() != nil {
+		return (*ctx_Connect).Err()
 	}
 
 	//
-	ctxMain := ctx_Connect
+	ctxMain := *ctx_Connect
 	ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second)
 	defer cancel()
 
@@ -176,7 +176,7 @@ func IsClosed() bool {
 		return true
 	}
 
-	ctxMain := ctx_Connect
+	ctxMain := *ctx_Connect
 	ctx, cancelFunc := context.WithTimeout(ctxMain, timeOutSeconds*time.Second)
 	defer cancelFunc()
 
@@ -261,7 +261,7 @@ func CloseConnection_err() error {
 		return err
 	}
 
-	//ctxMain := ctx_Connect
+	//ctxMain := *ctx_Connect
 	//ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second)
 	//defer cancel()
 
@@ -279,7 +279,7 @@ func WaitStop() {
 	defer waitGroup_Connect.Done()
 
 	select {
-	case <-ctx_Connect.Done():
+	case <-(*ctx_Connect).Done():
 		log.Warn("Context app is canceled. postgres_pgxpool2")
 	}
 
@@ -294,7 +294,7 @@ func WaitStop() {
 func StartDB() {
 	var err error
 
-	ctx := &ctx_Connect
+	ctx := ctx_Connect
 	WaitGroup := waitGroup_Connect
 	err = Start_ctx(ctx, WaitGroup)
 	LogInfo_Connected(err)
@@ -313,7 +313,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	//	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
-		ctx = &ctx_Connect
+		ctx = ctx_Connect
 	}
 
 	//запомним к себе WaitGroup
@@ -351,7 +351,7 @@ func Start_NoNull(ApplicationName string) {
 	LogInfo_Connected(err)
 
 	//сохраним в список подключений
-	ctx := &ctx_Connect
+	ctx := ctx_Connect
 	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: waitGroup_Connect, Ctx: ctx, CancelCtxFunc: cancelCtxFunc}
 	stopapp.OrderedMapConnections.Put(PackageName, WaitGroupContext1)
 
@@ -370,7 +370,7 @@ func Start(ApplicationName string) {
 	LogInfo_Connected(err)
 
 	//сохраним в список подключений
-	ctx := &ctx_Connect
+	ctx := ctx_Connect
 	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: waitGroup_Connect, Ctx: ctx, CancelCtxFunc: cancelCtxFunc}
 	stopapp.OrderedMapConnections.Put(PackageName, WaitGroupContext1)
 
@@ -434,7 +434,7 @@ func ping_go() {
 	//бесконечный цикл
 loop:
 	for {
-		ctx = ctx_Connect
+		ctx = *ctx_Connect
 
 		select {
 		case <-ctx.Done():
@@ -546,7 +546,7 @@ func RawMultipleSQL(tx postgres_pgx.IConnectionTransaction, TextSQL string) (pgx
 		return rows, err
 	}
 
-	ctx := ctx_Connect
+	ctx := *ctx_Connect
 
 	//запустим транзакцию
 	//tx, err := tx.Begin(ctx)

@@ -82,7 +82,7 @@ func Connect_err() error {
 	}
 
 	//ctxMain := context.Background()
-	//ctxMain := ctx_Connect
+	//ctxMain := *ctx_Connect
 	//ctx, cancel := context.WithTimeout(ctxMain, 5*time.Second)
 	//defer cancel()
 
@@ -110,7 +110,7 @@ func IsClosed() bool {
 		return true
 	}
 
-	ctx := ctx_Connect
+	ctx := *ctx_Connect
 	err := Conn.PingContext(ctx)
 	if err != nil {
 		otvet = true
@@ -209,7 +209,7 @@ func WaitStop() {
 	defer waitGroup_Connect.Done()
 
 	select {
-	case <-ctx_Connect.Done():
+	case <-(*ctx_Connect).Done():
 		log.Warn("Context app is canceled. postgres_sqlx")
 	}
 
@@ -229,7 +229,7 @@ func StartDB() {
 
 	ctx := ctx_Connect
 	WaitGroup := waitGroup_Connect
-	err = Start_ctx(&ctx, WaitGroup)
+	err = Start_ctx(ctx, WaitGroup)
 	LogInfo_Connected(err)
 
 }
@@ -246,7 +246,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	//	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
-		ctx = &ctx_Connect
+		ctx = ctx_Connect
 	}
 
 	//запомним к себе WaitGroup
@@ -326,7 +326,7 @@ func ping_go() {
 loop:
 	for {
 		select {
-		case <-ctx_Connect.Done():
+		case <-(*ctx_Connect).Done():
 			log.Warn("Context app is canceled. postgres_sqlx.ping")
 			break loop
 		case <-ticker.C:

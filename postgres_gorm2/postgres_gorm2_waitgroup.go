@@ -5,8 +5,18 @@ import (
 	"sync"
 )
 
-// ctx_Connect, cancelCtxFunc - контекст для одного соединения, при отмене контекста соединение закроется
-var ctx_Connect, cancelCtxFunc = context.WithCancel(context.Background())
+// ctx_Connect - контекст для одного соединения, при отмене контекста соединение закроется
+var ctx_Connect *context.Context
+
+// cancelCtxFunc - функция для отмены контекста
+var cancelCtxFunc func()
+
+// init - инициализация переменных
+func init() {
+	ctx1, CancelFunc1 := context.WithCancel(context.Background())
+	ctx_Connect = &ctx1
+	cancelCtxFunc = CancelFunc1
+}
 
 // waitGroup_Connect - группа ожидания завершения всех частей программы
 var waitGroup_Connect = new(sync.WaitGroup)

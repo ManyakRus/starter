@@ -131,7 +131,7 @@ func WaitStop() {
 	defer waitGroup_Connect.Done()
 
 	select {
-	case <-ctx_Connect.Done():
+	case <-(*ctx_Connect).Done():
 		log.Warn("Context app is canceled. chatgpt_connect")
 	}
 
@@ -151,7 +151,7 @@ func Start() {
 
 	ctx := ctx_Connect
 	WaitGroup := waitGroup_Connect
-	err = Start_ctx(&ctx, WaitGroup)
+	err = Start_ctx(ctx, WaitGroup)
 	LogInfo_Connected(err)
 
 }
@@ -168,7 +168,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	//	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
-		ctx = &ctx_Connect
+		ctx = ctx_Connect
 	}
 
 	//запомним к себе WaitGroup

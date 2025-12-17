@@ -94,7 +94,7 @@ func Connect_err() error {
 		return err
 	}
 
-	ctxMain := ctx_Connect
+	ctxMain := *ctx_Connect
 	ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second)
 	defer cancel()
 	err = micro.GoGo(ctx, fn)
@@ -158,7 +158,7 @@ func SelectFolder(FolderName string) *imap.MailboxStatus {
 		return err
 	}
 
-	ctxMain := ctx_Connect
+	ctxMain := *ctx_Connect
 	ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second)
 	defer cancel()
 	err = micro.GoGo(ctx, fn)
@@ -263,7 +263,7 @@ func WaitStop() {
 	defer waitGroup_Connect.Done()
 
 	select {
-	case <-ctx_Connect.Done():
+	case <-(*ctx_Connect).Done():
 		log.Warn("Context app is canceled. email_imap")
 	}
 
@@ -280,7 +280,7 @@ func Start() {
 
 	ctx := ctx_Connect
 	WaitGroup := waitGroup_Connect
-	err = Start_ctx(&ctx, WaitGroup)
+	err = Start_ctx(ctx, WaitGroup)
 	LogInfo_Connected(err)
 
 }
@@ -297,7 +297,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	//	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
-		ctx = &ctx_Connect
+		ctx = ctx_Connect
 	}
 
 	//запомним к себе WaitGroup
@@ -415,7 +415,7 @@ func CloseConnection_err() error {
 		return err
 	}
 
-	ctxMain := ctx_Connect
+	ctxMain := *ctx_Connect
 	ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second)
 	defer cancel()
 	err = micro.GoGo(ctx, fn)
@@ -595,7 +595,7 @@ func ReadMessage(id int) (*imap.Message, error) {
 
 	TimeOutSeconds := 60
 	duration := time.Duration(TimeOutSeconds) * time.Second
-	Ctx1, CancelFunc1 := context.WithTimeout(ctx_Connect, duration)
+	Ctx1, CancelFunc1 := context.WithTimeout(*ctx_Connect, duration)
 	defer CancelFunc1()
 	select {
 	case <-Ctx1.Done():

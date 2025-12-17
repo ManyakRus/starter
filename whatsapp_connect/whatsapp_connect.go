@@ -181,12 +181,12 @@ func Connect_err(eventHandler func(evt interface{})) error {
 	filenameDB = ProgramDir + "whatsapp.db"
 
 	dbLog := waLog.Stdout("Database", "WARN", true)
-	container, err := sqlstore.New(ctx_Connect, "sqlite3", "file:"+filenameDB+"?_foreign_keys=on", dbLog)
+	container, err := sqlstore.New(*ctx_Connect, "sqlite3", "file:"+filenameDB+"?_foreign_keys=on", dbLog)
 	if err != nil {
 		panic(err)
 	}
 	// If you want multiple sessions, remember their JIDs and use .GetDevice(jid) or .GetAllDevices() instead.
-	deviceStore, err := container.GetFirstDevice(ctx_Connect)
+	deviceStore, err := container.GetFirstDevice(*ctx_Connect)
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -237,7 +237,7 @@ func WaitStop() {
 	defer waitGroup_Connect.Done()
 
 	select {
-	case <-ctx_Connect.Done():
+	case <-(*ctx_Connect).Done():
 		log.Warn("Context app is canceled. whatsapp_connect")
 	}
 
@@ -318,7 +318,7 @@ func Start(eventHandler func(evt interface{})) {
 
 	ctx := ctx_Connect
 	WaitGroup := waitGroup_Connect
-	err = Start_ctx(&ctx, WaitGroup, eventHandler)
+	err = Start_ctx(ctx, WaitGroup, eventHandler)
 	LogInfo_Connected(err)
 
 }
@@ -335,7 +335,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, eventHandler fun
 	//	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
-		ctx = &ctx_Connect
+		ctx = ctx_Connect
 	}
 
 	//запомним к себе WaitGroup

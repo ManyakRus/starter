@@ -190,7 +190,7 @@ func WaitStop() {
 	defer waitGroup_Connect.Done()
 
 	select {
-	case <-ctx_Connect.Done():
+	case <-(*ctx_Connect).Done():
 		log.Warn("Context app is canceled. minio_connect")
 	}
 
@@ -210,7 +210,7 @@ func StartMinio() {
 
 	ctx := ctx_Connect
 	WaitGroup := waitGroup_Connect
-	err = Start_ctx(&ctx, WaitGroup)
+	err = Start_ctx(ctx, WaitGroup)
 	LogInfo_Connected(err)
 
 }
@@ -227,7 +227,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	//	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
-		ctx = &ctx_Connect
+		ctx = ctx_Connect
 	}
 
 	//запомним к себе WaitGroup
@@ -314,7 +314,7 @@ func ping_go() {
 loop:
 	for {
 		select {
-		case <-ctx_Connect.Done():
+		case <-(*ctx_Connect).Done():
 			log.Warn("Context app is canceled. minio_connect.ping")
 			break loop
 		case <-ticker.C:
@@ -339,7 +339,7 @@ loop:
 func CreateBucketCtx_err(ctx context.Context, bucketName string, location string) error {
 	var err error
 
-	ctxMain := ctx_Connect
+	ctxMain := *ctx_Connect
 	ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second)
 	defer cancel()
 
