@@ -305,6 +305,12 @@ func Start() {
 		log.Panic("telegram_bot Start() error: ", err)
 	}
 
+	//сохраним в список подключений
+	ctx := &ctx_Connect
+	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: waitGroup_Connect, Ctx: ctx, CancelCtxFunc: cancelCtxFunc}
+	stopapp.OrderedMapConnections.Put(PackageName, WaitGroupContext1)
+
+	//
 	waitGroup_Connect.Add(1)
 	go WaitStop()
 

@@ -841,11 +841,16 @@ func AsFloodWait(err error) (d int, ok bool) {
 func StartTelegram(func_OnNewMessage func(ctx context.Context, entities tg.Entities, u *tg.UpdateNewMessage, Peer1 storage.Peer) error) {
 	var err error
 
-	ctx := ctx_Connect
+	ctx := &ctx_Connect
 	WaitGroup := waitGroup_Connect
-	err = Start_ctx(&ctx, WaitGroup, func_OnNewMessage)
+	err = Start_ctx(ctx, WaitGroup, func_OnNewMessage)
 	LogInfo_Connected(err)
 
+	//сохраним в список подключений
+	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: waitGroup_Connect, Ctx: ctx, CancelCtxFunc: cancelCtxFunc}
+	stopapp.OrderedMapConnections.Put(PackageName, WaitGroupContext1)
+
+	//
 }
 
 // Start_ctx - необходимые процедуры для подключения к серверу Telegram

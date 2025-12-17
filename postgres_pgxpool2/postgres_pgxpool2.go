@@ -294,9 +294,9 @@ func WaitStop() {
 func StartDB() {
 	var err error
 
-	ctx := ctx_Connect
+	ctx := &ctx_Connect
 	WaitGroup := waitGroup_Connect
-	err = Start_ctx(&ctx, WaitGroup)
+	err = Start_ctx(ctx, WaitGroup)
 	LogInfo_Connected(err)
 
 }
@@ -350,6 +350,12 @@ func Start_NoNull(ApplicationName string) {
 	err := Connect_WithApplicationName_err(ApplicationName)
 	LogInfo_Connected(err)
 
+	//сохраним в список подключений
+	ctx := &ctx_Connect
+	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: waitGroup_Connect, Ctx: ctx, CancelCtxFunc: cancelCtxFunc}
+	stopapp.OrderedMapConnections.Put(PackageName, WaitGroupContext1)
+
+	//
 	waitGroup_Connect.Add(1)
 	go WaitStop()
 
@@ -363,6 +369,12 @@ func Start(ApplicationName string) {
 	err := Connect_WithApplicationName_err(ApplicationName)
 	LogInfo_Connected(err)
 
+	//сохраним в список подключений
+	ctx := &ctx_Connect
+	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: waitGroup_Connect, Ctx: ctx, CancelCtxFunc: cancelCtxFunc}
+	stopapp.OrderedMapConnections.Put(PackageName, WaitGroupContext1)
+
+	//
 	waitGroup_Connect.Add(1)
 	go WaitStop()
 

@@ -172,13 +172,13 @@ func WaitStop() {
 // и есть waitGroup_Connect
 // при ошибке вызывает панику
 func Start() {
-	Connect()
+	Start_ctx(&ctx_Connect, waitGroup_Connect)
 
-	waitGroup_Connect.Add(1)
-	go WaitStop()
-
-	waitGroup_Connect.Add(1)
-	go ping_go()
+	//waitGroup_Connect.Add(1)
+	//go WaitStop()
+	//
+	//waitGroup_Connect.Add(1)
+	//go ping_go()
 
 }
 
