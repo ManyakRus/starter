@@ -13,7 +13,7 @@ import (
 	"sync"
 	//"time"
 
-	"github.com/ManyakRus/starter/contextmain"
+	//"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/stopapp"
 
 	gogpt "github.com/rugatling/go-openai"

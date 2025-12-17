@@ -10,7 +10,7 @@ import (
 	"time"
 
 	//"github.com/ManyakRus/starter/common/v0/micro"
-	"github.com/ManyakRus/starter/contextmain"
+	//"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/stopapp"
 
 	"github.com/segmentio/kafka-go"

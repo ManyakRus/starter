@@ -4,7 +4,7 @@ package camunda_connect
 import (
 	"context"
 	"fmt"
-	"github.com/ManyakRus/starter/contextmain"
+	//"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/port_checker"
 	"github.com/ManyakRus/starter/stopapp"

@@ -13,7 +13,7 @@ import (
 
 	_ "github.com/denisenkom/go-mssqldb"
 
-	"github.com/ManyakRus/starter/contextmain"
+	//"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/micro"
 	"github.com/ManyakRus/starter/stopapp"

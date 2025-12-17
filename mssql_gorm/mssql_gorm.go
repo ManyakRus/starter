@@ -12,7 +12,7 @@ import (
 	"sync"
 	//_ "github.com/denisenkom/go-mssqldb"
 
-	"github.com/ManyakRus/starter/contextmain"
+	//"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/micro"
 	"github.com/ManyakRus/starter/stopapp"
 

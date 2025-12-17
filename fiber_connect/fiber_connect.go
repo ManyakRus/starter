@@ -2,7 +2,7 @@ package fiber_connect
 
 import (
 	"context"
-	"github.com/ManyakRus/starter/contextmain"
+	//"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/stopapp"
 	"github.com/gofiber/fiber/v2"

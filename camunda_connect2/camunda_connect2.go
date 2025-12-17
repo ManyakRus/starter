@@ -4,7 +4,7 @@ package camunda_connect2
 
 import (
 	"context"
-	"github.com/ManyakRus/starter/contextmain"
+	//"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/micro"
 	"github.com/ManyakRus/starter/port_checker"

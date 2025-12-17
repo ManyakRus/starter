@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/ManyakRus/starter/constants_starter"
-	"github.com/ManyakRus/starter/contextmain"
+	//"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/micro"
 	"github.com/ManyakRus/starter/stopapp"
 	"os"
