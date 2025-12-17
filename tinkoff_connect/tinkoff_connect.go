@@ -3,7 +3,6 @@ package tinkoff_connect
 import (
 	"context"
 	"errors"
-	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/microl"
 	"github.com/ManyakRus/starter/port_checker"
@@ -187,9 +186,9 @@ func Start() {
 // wg - глобальный WaitGroup приложения
 func Start_ctx(ctx *context.Context, wg *sync.WaitGroup) error {
 	var err error
-	if contextmain.Ctx != ctx {
-		contextmain.SetContext(ctx)
-	}
+	//	if contextmain.Ctx != ctx {
+	//		contextmain.SetContext(ctx)
+	//	}
 	//contextmain.Ctx = ctx
 	stopapp.SetWaitGroup_Main(wg)
 

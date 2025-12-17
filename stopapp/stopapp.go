@@ -86,34 +86,34 @@ func WaitStop() {
 		if contextmain.CancelContext != nil {
 			contextmain.CancelContext()
 		}
-	case <-ctx_Connect.Done():
+	case <-contextmain.GetContext().Done():
 		log.Warn("Context app is canceled. stopapp")
 	}
 
-	//ожидаем закрытие всех подключений
-	//создаём массив для обратной сортировки
-	MassWait := make([]KeyValueWaitGroupContext, 0)
-	OrderedMapConnections.OrderedRange(func(key string, value WaitGroupContext) {
-		KeyValueWaitGroupContext1 := KeyValueWaitGroupContext{Key: key, Value: value}
-		MassWait = append(MassWait, KeyValueWaitGroupContext1)
-	})
-
-	//запускаем Wait() в обратном порядке
-	for i := len(MassWait) - 1; i >= 0; i-- {
-		key := MassWait[i].Key
-		value := MassWait[i].Value
-		log.Debugf("Ожидаем закрытия соединения: %s", key)
-		if value.CancelCtxFunc != nil {
-			value.CancelCtxFunc()
-		}
-		if value.WaitGroup != nil {
-			WaitGroup1 := value.WaitGroup
-			WaitGroup1.Wait()
-		}
-
-		//
-		OrderedMapConnections.Delete(key)
-	}
+	////ожидаем закрытие всех подключений
+	////создаём массив для обратной сортировки
+	//MassWait := make([]KeyValueWaitGroupContext, 0)
+	//OrderedMapConnections.OrderedRange(func(key string, value WaitGroupContext) {
+	//	KeyValueWaitGroupContext1 := KeyValueWaitGroupContext{Key: key, Value: value}
+	//	MassWait = append(MassWait, KeyValueWaitGroupContext1)
+	//})
+	//
+	////запускаем Wait() в обратном порядке
+	//for i := len(MassWait) - 1; i >= 0; i-- {
+	//	key := MassWait[i].Key
+	//	value := MassWait[i].Value
+	//	log.Debugf("Ожидаем закрытия соединения: %s", key)
+	//	if value.CancelCtxFunc != nil {
+	//		value.CancelCtxFunc()
+	//	}
+	//	if value.WaitGroup != nil {
+	//		WaitGroup1 := value.WaitGroup
+	//		WaitGroup1.Wait()
+	//	}
+	//
+	//	//
+	//	OrderedMapConnections.Delete(key)
+	//}
 
 }
 
@@ -137,6 +137,13 @@ type KeyValueWaitGroupContext struct {
 
 // Wait_GracefulShutdown - ожидает завершения всех горутин программы, а потом ожидает закрытие всех подключений
 func Wait_GracefulShutdown() {
+
+	//ожидаем отмену контекста
+	select {
+	case <-contextmain.GetContext().Done():
+
+	}
+
 	//ожидаем завершения всех горутин программы
 	GetWaitGroup_Main().Wait()
 
@@ -153,8 +160,14 @@ func Wait_GracefulShutdown() {
 		key := MassWait[i].Key
 		value := MassWait[i].Value
 		log.Debugf("Ожидаем закрытия соединения: %s", key)
+		CancelCtxFunc1 := value.CancelCtxFunc
+		if CancelCtxFunc1 != nil {
+			CancelCtxFunc1()
+		}
 		WaitGroup1 := value.WaitGroup
-		WaitGroup1.Wait()
+		if WaitGroup1 == nil {
+			WaitGroup1.Wait()
+		}
 
 		//
 		OrderedMapConnections.Delete(key)

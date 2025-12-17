@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/ManyakRus/starter/constants_starter"
-	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/micro"
 	"github.com/ManyakRus/starter/stopapp"
 	"os"
@@ -305,9 +304,9 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	var err error
 
 	//запомним к себе контекст
-	if contextmain.Ctx != ctx {
-		contextmain.SetContext(ctx)
-	}
+	//	if contextmain.Ctx != ctx {
+	//		contextmain.SetContext(ctx)
+	//	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
 		ctx = &ctx_Connect

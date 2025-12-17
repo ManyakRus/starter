@@ -217,9 +217,9 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, HandleJob func(c
 	var err error
 
 	//запомним к себе контекст
-	if contextmain.Ctx != ctx {
-		contextmain.SetContext(ctx)
-	}
+	//	if contextmain.Ctx != ctx {
+	//		contextmain.SetContext(ctx)
+	//	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
 		ctx = &ctx_Connect
