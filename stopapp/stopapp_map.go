@@ -2,11 +2,20 @@ package stopapp
 
 import (
 	ordered_map "github.com/m-murad/ordered-sync-map"
+	"golang.org/x/net/context"
+	"sync"
 )
 
-// MapWaitGroups - содержит все WaitGroup от разных компонент, в порядке подключения компонентов
-var MapWaitGroups *ordered_map.Map[string, IWait]
+// WaitGroupContext - структура для хранения WaitGroup и контекста
+type WaitGroupContext struct {
+	WaitGroup     *sync.WaitGroup
+	Ctx           *context.Context
+	CancelCtxFunc func()
+}
+
+// OrderedMapConnections - содержит все WaitGroup от разных компонент, в порядке подключения компонентов
+var OrderedMapConnections *ordered_map.Map[string, WaitGroupContext]
 
 func init() {
-	MapWaitGroups = ordered_map.New[string, IWait]()
+	OrderedMapConnections = ordered_map.New[string, WaitGroupContext]()
 }

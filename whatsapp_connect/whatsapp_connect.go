@@ -29,6 +29,9 @@ import (
 	"github.com/ManyakRus/starter/stopapp"
 )
 
+// PackageName - имя текущего пакета, для логирования
+const PackageName = "whatsapp_connect"
+
 // ClientWhatsApp - клиент соединения мессенджера Whatsapp
 var ClientWhatsApp *whatsmeow.Client
 
@@ -178,12 +181,12 @@ func Connect_err(eventHandler func(evt interface{})) error {
 	filenameDB = ProgramDir + "whatsapp.db"
 
 	dbLog := waLog.Stdout("Database", "WARN", true)
-	container, err := sqlstore.New("sqlite3", "file:"+filenameDB+"?_foreign_keys=on", dbLog)
+	container, err := sqlstore.New(ctx_Connect, "sqlite3", "file:"+filenameDB+"?_foreign_keys=on", dbLog)
 	if err != nil {
 		panic(err)
 	}
 	// If you want multiple sessions, remember their JIDs and use .GetDevice(jid) or .GetAllDevices() instead.
-	deviceStore, err := container.GetFirstDevice()
+	deviceStore, err := container.GetFirstDevice(ctx_Connect)
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -216,7 +219,7 @@ func Connect_err(eventHandler func(evt interface{})) error {
 		}
 	}
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	waitGroup_Connect.Add(1)
 	go WaitStop()
 
 	//StopWhatsApp()
@@ -231,10 +234,10 @@ func StopWhatsApp() {
 
 // WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
-	defer stopapp.GetWaitGroup_Main().Done()
+	defer waitGroup_Connect.Done()
 
 	select {
-	case <-contextmain.GetContext().Done():
+	case <-ctx_Connect.Done():
 		log.Warn("Context app is canceled. whatsapp_connect")
 	}
 
@@ -313,8 +316,8 @@ func FillSettings() {
 func Start(eventHandler func(evt interface{})) {
 	var err error
 
-	ctx := contextmain.GetContext()
-	WaitGroup := stopapp.GetWaitGroup_Main()
+	ctx := ctx_Connect
+	WaitGroup := waitGroup_Connect
 	err = Start_ctx(&ctx, WaitGroup, eventHandler)
 	LogInfo_Connected(err)
 
@@ -332,7 +335,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, eventHandler fun
 	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
-		contextmain.GetContext()
+		ctx = &ctx_Connect
 	}
 
 	//запомним к себе WaitGroup
@@ -347,7 +350,12 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, eventHandler fun
 		return err
 	}
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	//сохраним в список подключений
+	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: waitGroup_Connect, Ctx: ctx, CancelCtxFunc: cancelCtxFunc}
+	stopapp.OrderedMapConnections.Put(PackageName, WaitGroupContext1)
+
+	//
+	waitGroup_Connect.Add(1)
 	go WaitStop()
 
 	return err

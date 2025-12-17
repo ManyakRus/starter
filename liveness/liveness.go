@@ -14,6 +14,9 @@ import (
 	"sync"
 )
 
+// PackageName - имя текущего пакета, для логирования
+const PackageName = "liveness"
+
 // LIVENESS_URL - адрес URL веб-сервера для функции Liveness
 const LIVENESS_URL = "/liveness/"
 
@@ -36,8 +39,8 @@ const TEXT_OK = `{"status":"ok"}`
 func Start() {
 	//var err error
 
-	ctx := contextmain.GetContext()
-	WaitGroup := stopapp.GetWaitGroup_Main()
+	ctx := ctx_Connect
+	WaitGroup := waitGroup_Connect
 	Start_ctx(&ctx, WaitGroup)
 
 }
@@ -54,7 +57,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) {
 	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
-		contextmain.GetContext()
+		ctx = &ctx_Connect
 	}
 
 	//запомним к себе WaitGroup
@@ -78,6 +81,11 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) {
 
 	Client.Get(LIVENESS_URL, Handlerliveness)
 
+	//сохраним в список подключений
+	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: waitGroup_Connect, Ctx: ctx, CancelCtxFunc: cancelCtxFunc}
+	stopapp.OrderedMapConnections.Put(PackageName, WaitGroupContext1)
+
+	//
 	log.Info("Liveness start OK. URL: ", LIVENESS_URL)
 
 	//return err

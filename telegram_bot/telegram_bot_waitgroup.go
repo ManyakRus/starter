@@ -1,6 +1,12 @@
 package telegram_bot
 
-import "sync"
+import (
+	"golang.org/x/net/context"
+	"sync"
+)
+
+// ctx_Connect, cancelCtxFunc - контекст для одного соединения, при отмене контекста соединение закроется
+var ctx_Connect, cancelCtxFunc = context.WithCancel(context.Background())
 
 // waitGroup_Connect - группа ожидания завершения всех частей программы
 var waitGroup_Connect *sync.WaitGroup

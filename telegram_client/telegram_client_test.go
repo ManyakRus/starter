@@ -64,7 +64,7 @@ func TestSendMessage(t *testing.T) {
 
 	CloseConnection()
 	//stopapp.SignalInterrupt <- syscall.SIGINT
-	//stopapp.GetWaitGroup_Main().Wait()
+	//waitGroup_Connect.Wait()
 
 	MaxSendMessageCountIn1Second = MaxSendMessageCountIn1Second0
 }
@@ -138,7 +138,7 @@ func TestSendMessage_Many(t *testing.T) {
 
 	CloseConnection()
 	//stopapp.SignalInterrupt <- syscall.SIGINT
-	//stopapp.GetWaitGroup_Main().Wait()
+	//waitGroup_Connect.Wait()
 }
 
 func TestFloodWait(t *testing.T) {

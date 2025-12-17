@@ -19,6 +19,9 @@ import (
 	gogpt "github.com/rugatling/go-openai"
 )
 
+// PackageName - имя текущего пакета, для логирования
+const PackageName = "chatgpt_proxy"
+
 // Conn - соединение к CHAT GPT
 // var Conn *gogpt.CompletionStream
 var Conn *gogpt.Client
@@ -124,10 +127,10 @@ func CloseConnection_err() error {
 
 // WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
-	defer stopapp.GetWaitGroup_Main().Done()
+	defer waitGroup_Connect.Done()
 
 	select {
-	case <-contextmain.GetContext().Done():
+	case <-ctx_Connect.Done():
 		log.Warn("Context app is canceled. chatgpt_proxy")
 	}
 
@@ -145,8 +148,8 @@ func WaitStop() {
 func Start() {
 	var err error
 
-	ctx := contextmain.GetContext()
-	WaitGroup := stopapp.GetWaitGroup_Main()
+	ctx := ctx_Connect
+	WaitGroup := waitGroup_Connect
 	err = Start_ctx(&ctx, WaitGroup)
 	LogInfo_Connected(err)
 
@@ -164,7 +167,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
-		contextmain.GetContext()
+		ctx = &ctx_Connect
 	}
 
 	//запомним к себе WaitGroup
@@ -179,7 +182,12 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 		return err
 	}
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	//сохраним в список подключений
+	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: waitGroup_Connect, Ctx: ctx, CancelCtxFunc: cancelCtxFunc}
+	stopapp.OrderedMapConnections.Put(PackageName, WaitGroupContext1)
+
+	//
+	waitGroup_Connect.Add(1)
 	go WaitStop()
 
 	return err

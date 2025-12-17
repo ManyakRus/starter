@@ -1,6 +1,12 @@
 package stopapp
 
-import "sync"
+import (
+	"golang.org/x/net/context"
+	"sync"
+)
+
+// ctx_Connect, cancelCtxFunc - контекст для одного соединения, при отмене контекста соединение закроется
+var ctx_Connect, cancelCtxFunc = context.WithCancel(context.Background())
 
 // wgMain - группа ожидания завершения всех частей программы (кроме подключений к внешним сервисам)
 var wgMain *sync.WaitGroup

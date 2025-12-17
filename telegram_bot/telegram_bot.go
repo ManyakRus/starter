@@ -13,6 +13,9 @@ import (
 	"sync"
 )
 
+// PackageName - имя текущего пакета, для логирования
+const PackageName = "telegram_bot"
+
 // SettingsINI - структура для хранения всех нужных переменных окружения
 type SettingsINI struct {
 	TELEGRAM_API_KEY      string
@@ -242,10 +245,10 @@ func CloseConnection_err() error {
 
 // WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
-	defer stopapp.GetWaitGroup_Main().Done()
+	defer waitGroup_Connect.Done()
 
 	select {
-	case <-contextmain.GetContext().Done():
+	case <-ctx_Connect.Done():
 		log.Warn("Context app is canceled. telegram_bot")
 	}
 
@@ -269,7 +272,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
-		contextmain.GetContext()
+		ctx = &ctx_Connect
 	}
 
 	//запомним к себе WaitGroup
@@ -284,7 +287,12 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 		return err
 	}
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	//сохраним в список подключений
+	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: waitGroup_Connect, Ctx: ctx, CancelCtxFunc: cancelCtxFunc}
+	stopapp.OrderedMapConnections.Put(PackageName, WaitGroupContext1)
+
+	//
+	waitGroup_Connect.Add(1)
 	go WaitStop()
 
 	return err
@@ -297,7 +305,7 @@ func Start() {
 		log.Panic("telegram_bot Start() error: ", err)
 	}
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	waitGroup_Connect.Add(1)
 	go WaitStop()
 
 }

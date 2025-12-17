@@ -14,6 +14,9 @@ import (
 	"time"
 )
 
+// PackageName - имя текущего пакета, для логирования
+const PackageName = "tinkoff_connect"
+
 // SettingsINI - тип для хранения настроек подключени
 type SettingsINI struct {
 	investgo.Config
@@ -96,7 +99,7 @@ func Connect_err() error {
 		}
 	}
 
-	ctx := contextmain.GetContext()
+	ctx := ctx_Connect
 
 	//addr := Settings.Host + ":" + Settings.Port
 	Config := Settings.Config
@@ -150,10 +153,10 @@ func FillSettings() error {
 
 // WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
-	defer stopapp.GetWaitGroup_Main().Done()
+	defer waitGroup_Connect.Done()
 
 	select {
-	case <-contextmain.GetContext().Done():
+	case <-ctx_Connect.Done():
 		log.Warn("Context app is canceled. tinkoff_connect")
 	}
 
@@ -165,16 +168,16 @@ func WaitStop() {
 }
 
 // Start - необходимые процедуры для запуска сервера Tinkoff-GRPC
-// если контекст хранится в contextmain.GetContext()
-// и есть stopapp.GetWaitGroup_Main()
+// если контекст хранится в ctx_Connect
+// и есть waitGroup_Connect
 // при ошибке вызывает панику
 func Start() {
 	Connect()
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	waitGroup_Connect.Add(1)
 	go WaitStop()
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	waitGroup_Connect.Add(1)
 	go ping_go()
 
 }
@@ -195,10 +198,15 @@ func Start_ctx(ctx *context.Context, wg *sync.WaitGroup) error {
 		return err
 	}
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	//сохраним в список подключений
+	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: waitGroup_Connect, Ctx: ctx, CancelCtxFunc: cancelCtxFunc}
+	stopapp.OrderedMapConnections.Put(PackageName, WaitGroupContext1)
+
+	//
+	waitGroup_Connect.Add(1)
 	go WaitStop()
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	waitGroup_Connect.Add(1)
 	go ping_go()
 
 	return err
@@ -224,7 +232,7 @@ func CloseConnection_err() error {
 func ping_go() {
 	var err error
 
-	defer stopapp.GetWaitGroup_Main().Done()
+	defer waitGroup_Connect.Done()
 
 	ticker := time.NewTicker(60 * time.Second)
 	defer ticker.Stop()
@@ -235,7 +243,7 @@ func ping_go() {
 loop:
 	for {
 		select {
-		case <-contextmain.GetContext().Done():
+		case <-ctx_Connect.Done():
 			log.Warn("Context app is canceled. tinkoff_connect.ping")
 			break loop
 		case <-ticker.C:

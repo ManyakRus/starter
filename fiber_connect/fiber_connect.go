@@ -7,16 +7,17 @@ import (
 	"github.com/ManyakRus/starter/stopapp"
 	"github.com/gofiber/fiber/v2"
 	"os"
-	"path/filepath"
-	"reflect"
 	"sync"
 )
+
+// PackageName - имя текущего пакета, для логирования
+const PackageName = "fiber_connect"
 
 // empty - пустая структура для имени пакета
 type empty struct{}
 
 // PackageName - имя пакета golang
-var PackageName = filepath.Base(reflect.TypeOf(empty{}).PkgPath())
+//var PackageName = filepath.Base(reflect.TypeOf(empty{}).PkgPath())
 
 // log - глобальный логгер
 //var log = logger.GetLog()
@@ -102,10 +103,10 @@ func Listen_err() error {
 
 // WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
-	defer stopapp.GetWaitGroup_Main().Done()
+	defer waitGroup_Connect.Done()
 
 	select {
-	case <-contextmain.GetContext().Done():
+	case <-ctx_Connect.Done():
 		log.Warn("Context app is canceled. fiber_connect")
 	}
 
@@ -131,8 +132,8 @@ func GetHost() string {
 func Start() {
 	//var err error
 
-	ctx := contextmain.GetContext()
-	WaitGroup := stopapp.GetWaitGroup_Main()
+	ctx := ctx_Connect
+	WaitGroup := waitGroup_Connect
 	Start_ctx(&ctx, WaitGroup)
 	LogInfo_Connected()
 
@@ -150,7 +151,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) {
 	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
-		contextmain.GetContext()
+		ctx = &ctx_Connect
 	}
 
 	//запомним к себе WaitGroup
@@ -165,7 +166,12 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) {
 		Connect()
 	}
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	//сохраним в список подключений
+	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: waitGroup_Connect, Ctx: ctx, CancelCtxFunc: cancelCtxFunc}
+	stopapp.OrderedMapConnections.Put(PackageName, WaitGroupContext1)
+
+	//
+	waitGroup_Connect.Add(1)
 	go WaitStop()
 
 	//return err

@@ -42,20 +42,20 @@ func TestStart(t *testing.T) {
 	_ = contextmain.GetContext()
 	contextmain.CancelContext()
 
-	stopapp.GetWaitGroup_Main().Wait()
+	waitGroup_Connect.Wait()
 
 	contextmain.GetNewContext()
 }
 
 func TestWaitStop(t *testing.T) {
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	waitGroup_Connect.Add(1)
 	go WaitStop()
 
 	_ = contextmain.GetContext()
 	contextmain.CancelContext()
 
-	stopapp.GetWaitGroup_Main().Wait()
+	waitGroup_Connect.Wait()
 
 	contextmain.GetNewContext()
 }

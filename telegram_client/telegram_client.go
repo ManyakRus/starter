@@ -42,6 +42,9 @@ import (
 	lj "gopkg.in/natefinch/lumberjack.v2"
 )
 
+// PackageName - имя текущего пакета, для логирования
+const PackageName = "telegram_client"
+
 // filenameSession - имя файла сохранения сессии мессенджера Телеграм
 var filenameSession string
 
@@ -634,7 +637,7 @@ func Connect_err(func_OnNewMessage func(ctx context.Context, entities tg.Entitie
 
 	//
 	ctxMain := context.Background()
-	//ctxMain := contextmain.GetContext()
+	//ctxMain := ctx_Connect
 	ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second) //60
 	defer cancel()
 
@@ -754,10 +757,10 @@ func FindMessageByID(ctx context.Context, id int) (*tg.Message, error) {
 
 // WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
-	defer stopapp.GetWaitGroup_Main().Done()
+	defer waitGroup_Connect.Done()
 
 	select {
-	case <-contextmain.GetContext().Done():
+	case <-ctx_Connect.Done():
 		log.Warn("Context app is canceled. telegram_client")
 	}
 
@@ -838,8 +841,8 @@ func AsFloodWait(err error) (d int, ok bool) {
 func StartTelegram(func_OnNewMessage func(ctx context.Context, entities tg.Entities, u *tg.UpdateNewMessage, Peer1 storage.Peer) error) {
 	var err error
 
-	ctx := contextmain.GetContext()
-	WaitGroup := stopapp.GetWaitGroup_Main()
+	ctx := ctx_Connect
+	WaitGroup := waitGroup_Connect
 	err = Start_ctx(&ctx, WaitGroup, func_OnNewMessage)
 	LogInfo_Connected(err)
 
@@ -857,7 +860,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, func_OnNewMessag
 	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
-		contextmain.GetContext()
+		ctx = &ctx_Connect
 	}
 
 	//запомним к себе WaitGroup
@@ -874,7 +877,12 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, func_OnNewMessag
 		return err
 	}
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	//сохраним в список подключений
+	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: waitGroup_Connect, Ctx: ctx, CancelCtxFunc: cancelCtxFunc}
+	stopapp.OrderedMapConnections.Put(PackageName, WaitGroupContext1)
+
+	//
+	waitGroup_Connect.Add(1)
 	go WaitStop()
 
 	return err
@@ -926,7 +934,7 @@ func FillMessageTelegramFromMessage(m *tg.Message) MessageTelegram {
 	}
 
 	//
-	//ctxMain := contextmain.GetContext()
+	//ctxMain := ctx_Connect
 	//ctx, cancel_func := context.WithTimeout(ctxMain, 60*time.Second) //60
 	//defer cancel_func()
 	IsGroup := false
@@ -1005,7 +1013,7 @@ func FillMessageTelegramFromMessage(m *tg.Message) MessageTelegram {
 
 // GetContactsAll - обновляет список контактов
 func GetContactsAll() {
-	ctxMain := contextmain.GetContext()
+	ctxMain := ctx_Connect
 	ctx, cancel_func := context.WithTimeout(ctxMain, time.Second*60)
 	defer cancel_func()
 	IContacts, err := Client.API().ContactsGetContacts(ctx, 0)

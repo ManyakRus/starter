@@ -26,6 +26,9 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+// PackageName - имя текущего пакета, для логирования
+const PackageName = "postgres_gorm2"
+
 // Conn - соединение к базе данных
 var Conn *gorm.DB
 
@@ -112,8 +115,8 @@ func Connect_WithApplicationName_err(ApplicationName string) error {
 	}
 
 	//
-	if contextmain.GetContext().Err() != nil {
-		return contextmain.GetContext().Err()
+	if ctx_Connect.Err() != nil {
+		return ctx_Connect.Err()
 	}
 
 	//get the database connection URL.
@@ -264,10 +267,10 @@ func CloseConnection_err() error {
 
 // WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
-	defer stopapp.GetWaitGroup_Main().Done()
+	defer waitGroup_Connect.Done()
 
 	select {
-	case <-contextmain.GetContext().Done():
+	case <-ctx_Connect.Done():
 		log.Warn("Context app is canceled. postgres_gorm2")
 	}
 
@@ -283,8 +286,8 @@ func WaitStop() {
 func StartDB() {
 	var err error
 
-	ctx := contextmain.GetContext()
-	WaitGroup := stopapp.GetWaitGroup_Main()
+	ctx := ctx_Connect
+	WaitGroup := waitGroup_Connect
 	err = Start_ctx(&ctx, WaitGroup)
 	LogInfo_Connected(err)
 
@@ -302,7 +305,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
-		contextmain.GetContext()
+		ctx = &ctx_Connect
 	}
 
 	//запомним к себе WaitGroup
@@ -317,10 +320,15 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 		return err
 	}
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	//сохраним в список подключений
+	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: waitGroup_Connect, Ctx: ctx, CancelCtxFunc: cancelCtxFunc}
+	stopapp.OrderedMapConnections.Put(PackageName, WaitGroupContext1)
+
+	//
+	waitGroup_Connect.Add(1)
 	go WaitStop()
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	waitGroup_Connect.Add(1)
 	go ping_go()
 
 	return err
@@ -334,10 +342,10 @@ func Start(ApplicationName string) {
 	//	log.Panic("Postgres gorm Start() error: ", err)
 	//}
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	waitGroup_Connect.Add(1)
 	go WaitStop()
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	waitGroup_Connect.Add(1)
 	go ping_go()
 
 }
@@ -444,7 +452,7 @@ func GetConnection_WithApplicationName(ApplicationName string) *gorm.DB {
 func ping_go() {
 	var err error
 
-	defer stopapp.GetWaitGroup_Main().Done()
+	defer waitGroup_Connect.Done()
 
 	ticker := time.NewTicker(60 * time.Second)
 	defer ticker.Stop()
@@ -455,7 +463,7 @@ func ping_go() {
 loop:
 	for {
 		select {
-		case <-contextmain.GetContext().Done():
+		case <-ctx_Connect.Done():
 			log.Warn("Context app is canceled. postgres_gorm2.ping")
 			break loop
 		case <-ticker.C:

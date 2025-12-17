@@ -78,6 +78,7 @@ func StopAppAndWait() {
 
 // WaitStop - ожидает отмену глобального контекста или сигнала завершения приложения
 func WaitStop() {
+	defer GetWaitGroup_Main().Done()
 
 	select {
 	case <-SignalInterrupt:
@@ -85,11 +86,35 @@ func WaitStop() {
 		if contextmain.CancelContext != nil {
 			contextmain.CancelContext()
 		}
-	case <-contextmain.GetContext().Done():
+	case <-ctx_Connect.Done():
 		log.Warn("Context app is canceled. stopapp")
 	}
 
-	GetWaitGroup_Main().Done()
+	//ожидаем закрытие всех подключений
+	//создаём массив для обратной сортировки
+	MassWait := make([]KeyValueWaitGroupContext, 0)
+	OrderedMapConnections.OrderedRange(func(key string, value WaitGroupContext) {
+		KeyValueWaitGroupContext1 := KeyValueWaitGroupContext{Key: key, Value: value}
+		MassWait = append(MassWait, KeyValueWaitGroupContext1)
+	})
+
+	//запускаем Wait() в обратном порядке
+	for i := len(MassWait) - 1; i >= 0; i-- {
+		key := MassWait[i].Key
+		value := MassWait[i].Value
+		log.Debugf("Ожидаем закрытия соединения: %s", key)
+		if value.CancelCtxFunc != nil {
+			value.CancelCtxFunc()
+		}
+		if value.WaitGroup != nil {
+			WaitGroup1 := value.WaitGroup
+			WaitGroup1.Wait()
+		}
+
+		//
+		OrderedMapConnections.Delete(key)
+	}
+
 }
 
 // ожидает чтоб прям щас ничего не отправлялось
@@ -104,19 +129,34 @@ func WaitTotalMessagesSendingNow(filename string) {
 	}
 }
 
+// KeyValueWaitGroupContext - структура ключ-значение
+type KeyValueWaitGroupContext struct {
+	Key   string
+	Value WaitGroupContext
+}
+
 // Wait_GracefulShutdown - ожидает завершения всех горутин программы, а потом ожидает закрытие всех подключений
 func Wait_GracefulShutdown() {
 	//ожидаем завершения всех горутин программы
 	GetWaitGroup_Main().Wait()
 
 	//ожидаем закрытие всех подключений
-	MassWait := make([]IWait, 0)
-	MapWaitGroups.OrderedRange(func(key string, value IWait) {
-		MassWait = append(MassWait, value)
+	//создаём массив для обратной сортировки
+	MassWait := make([]KeyValueWaitGroupContext, 0)
+	OrderedMapConnections.OrderedRange(func(key string, value WaitGroupContext) {
+		KeyValueWaitGroupContext1 := KeyValueWaitGroupContext{Key: key, Value: value}
+		MassWait = append(MassWait, KeyValueWaitGroupContext1)
 	})
 
 	//запускаем Wait() в обратном порядке
 	for i := len(MassWait) - 1; i >= 0; i-- {
-		MassWait[i].Wait()
+		key := MassWait[i].Key
+		value := MassWait[i].Value
+		log.Debugf("Ожидаем закрытия соединения: %s", key)
+		WaitGroup1 := value.WaitGroup
+		WaitGroup1.Wait()
+
+		//
+		OrderedMapConnections.Delete(key)
 	}
 }

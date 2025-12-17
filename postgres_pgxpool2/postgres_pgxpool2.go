@@ -25,6 +25,9 @@ import (
 	"sync"
 )
 
+// PackageName - имя текущего пакета, для логирования
+const PackageName = "postgres_pgxpool2"
+
 // PgxPool - пул соединений к базе данных
 var PgxPool *pgxpool.Pool
 
@@ -120,12 +123,12 @@ func Connect_WithApplicationName_err(ApplicationName string) error {
 	}
 
 	//
-	if contextmain.GetContext().Err() != nil {
-		return contextmain.GetContext().Err()
+	if ctx_Connect.Err() != nil {
+		return ctx_Connect.Err()
 	}
 
 	//
-	ctxMain := contextmain.GetContext()
+	ctxMain := ctx_Connect
 	ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second)
 	defer cancel()
 
@@ -173,7 +176,7 @@ func IsClosed() bool {
 		return true
 	}
 
-	ctxMain := contextmain.GetContext()
+	ctxMain := ctx_Connect
 	ctx, cancelFunc := context.WithTimeout(ctxMain, timeOutSeconds*time.Second)
 	defer cancelFunc()
 
@@ -258,7 +261,7 @@ func CloseConnection_err() error {
 		return err
 	}
 
-	//ctxMain := contextmain.GetContext()
+	//ctxMain := ctx_Connect
 	//ctx, cancel := context.WithTimeout(ctxMain, 60*time.Second)
 	//defer cancel()
 
@@ -273,10 +276,10 @@ func CloseConnection_err() error {
 
 // WaitStop - ожидает отмену глобального контекста
 func WaitStop() {
-	defer stopapp.GetWaitGroup_Main().Done()
+	defer waitGroup_Connect.Done()
 
 	select {
-	case <-contextmain.GetContext().Done():
+	case <-ctx_Connect.Done():
 		log.Warn("Context app is canceled. postgres_pgxpool2")
 	}
 
@@ -291,8 +294,8 @@ func WaitStop() {
 func StartDB() {
 	var err error
 
-	ctx := contextmain.GetContext()
-	WaitGroup := stopapp.GetWaitGroup_Main()
+	ctx := ctx_Connect
+	WaitGroup := waitGroup_Connect
 	err = Start_ctx(&ctx, WaitGroup)
 	LogInfo_Connected(err)
 
@@ -310,7 +313,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	}
 	//contextmain.Ctx = ctx
 	if ctx == nil {
-		contextmain.GetContext()
+		ctx = &ctx_Connect
 	}
 
 	//запомним к себе WaitGroup
@@ -325,10 +328,15 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 		return err
 	}
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	//сохраним в список подключений
+	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: waitGroup_Connect, Ctx: ctx, CancelCtxFunc: cancelCtxFunc}
+	stopapp.OrderedMapConnections.Put(PackageName, WaitGroupContext1)
+
+	//
+	waitGroup_Connect.Add(1)
 	go WaitStop()
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	waitGroup_Connect.Add(1)
 	go ping_go()
 
 	return err
@@ -342,10 +350,10 @@ func Start_NoNull(ApplicationName string) {
 	err := Connect_WithApplicationName_err(ApplicationName)
 	LogInfo_Connected(err)
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	waitGroup_Connect.Add(1)
 	go WaitStop()
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	waitGroup_Connect.Add(1)
 	go ping_go()
 
 }
@@ -355,10 +363,10 @@ func Start(ApplicationName string) {
 	err := Connect_WithApplicationName_err(ApplicationName)
 	LogInfo_Connected(err)
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	waitGroup_Connect.Add(1)
 	go WaitStop()
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	waitGroup_Connect.Add(1)
 	go ping_go()
 
 }
@@ -403,7 +411,7 @@ func FillSettings() {
 func ping_go() {
 	var err error
 
-	defer stopapp.GetWaitGroup_Main().Done()
+	defer waitGroup_Connect.Done()
 
 	ticker := time.NewTicker(60 * time.Second)
 	defer ticker.Stop()
@@ -414,7 +422,7 @@ func ping_go() {
 	//бесконечный цикл
 loop:
 	for {
-		ctx = contextmain.GetContext()
+		ctx = ctx_Connect
 
 		select {
 		case <-ctx.Done():
@@ -526,7 +534,7 @@ func RawMultipleSQL(tx postgres_pgx.IConnectionTransaction, TextSQL string) (pgx
 		return rows, err
 	}
 
-	ctx := contextmain.GetContext()
+	ctx := ctx_Connect
 
 	//запустим транзакцию
 	//tx, err := tx.Begin(ctx)

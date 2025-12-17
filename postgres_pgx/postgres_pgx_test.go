@@ -74,7 +74,7 @@ func TestReconnect(t *testing.T) {
 func TestWaitStop(t *testing.T) {
 	stopapp.StartWaitStop()
 
-	stopapp.GetWaitGroup_Main().Add(1)
+	waitGroup_Connect.Add(1)
 	go WaitStop()
 
 	micro.Pause(10)

@@ -48,6 +48,6 @@ func TestSetWaitGroup_Main(t *testing.T) {
 	SetWaitGroup_Main(nil)
 	wg := GetWaitGroup_Main()
 	if wg == nil {
-		t.Error("TestSetWaitGroup_Main() error: wg = nil")
+		t.Error("TestSetWaitGroup_Main() error: WaitGroup = nil")
 	}
 }
