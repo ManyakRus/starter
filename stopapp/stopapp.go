@@ -163,10 +163,14 @@ func Wait_GracefulShutdown() {
 		CancelCtxFunc1 := value.CancelCtxFunc
 		if CancelCtxFunc1 != nil {
 			CancelCtxFunc1()
+		} else {
+			log.Warnf("warning: CancelCtxFunc1 = nil, name: %s", key)
 		}
 		WaitGroup1 := value.WaitGroup
-		if WaitGroup1 == nil {
+		if WaitGroup1 != nil {
 			WaitGroup1.Wait()
+		} else {
+			log.Warnf("warning: WaitGroup1 = nil, name: %s", key)
 		}
 
 		//
