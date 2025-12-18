@@ -171,7 +171,7 @@ func WaitStop() {
 // и есть waitGroup_Connect
 // при ошибке вызывает панику
 func Start() {
-	Start_ctx(ctx_Connect, waitGroup_Connect)
+	Start_ctx(GetContext(), GetWaitGroup())
 
 	//waitGroup_Connect.Add(1)
 	//go WaitStop()
@@ -184,14 +184,21 @@ func Start() {
 // Start_ctx - необходимые процедуры для запуска сервера Tinkoff-GRPC
 // ctx - глобальный контекст приложения
 // wg - глобальный WaitGroup приложения
-func Start_ctx(ctx *context.Context, wg *sync.WaitGroup) error {
+func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	var err error
-	//	if contextmain.Ctx != ctx {
-	//		contextmain.SetContext(ctx)
-	//	}
+	//запомним к себе контекст
+	if ctx == nil {
+		ctx = GetContext()
+	} else {
+		SetContext(ctx)
+	}
 
-	//contextmain.Ctx = ctx
-	//stopapp.SetWaitGroup_Main(wg)
+	//запомним к себе WaitGroup
+	if WaitGroup == nil {
+		WaitGroup = GetWaitGroup()
+	} else {
+		SetWaitGroup(WaitGroup)
+	}
 
 	err = Connect_err()
 	if err != nil {
@@ -199,7 +206,7 @@ func Start_ctx(ctx *context.Context, wg *sync.WaitGroup) error {
 	}
 
 	//сохраним в список подключений
-	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: waitGroup_Connect, Ctx: ctx, CancelCtxFunc: cancelCtxFunc}
+	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: WaitGroup, Ctx: ctx, CancelCtxFunc: cancelCtxFunc}
 	stopapp.OrderedMapConnections.Put(PackageName, WaitGroupContext1)
 
 	//

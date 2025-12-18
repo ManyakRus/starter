@@ -53,3 +53,6 @@ licenses:
 	golicense -out-xlsx=./docs/licenses.xlsx $(FILEAPP)
 gocyclo:
 	golangci-lint run ./... --disable-all -E gocyclo -v
+vet:
+	clear
+	go vet ./...

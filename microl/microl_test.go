@@ -1,6 +1,7 @@
 package microl
 
 import (
+	"github.com/ManyakRus/starter/constants_starter"
 	"os"
 	"testing"
 	"time"

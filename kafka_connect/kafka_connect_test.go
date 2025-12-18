@@ -9,9 +9,6 @@ import (
 	"github.com/segmentio/kafka-go"
 	"testing"
 	"time"
-
-	//"github.com/ManyakRus/starter/common/v0/logger"
-	"github.com/ManyakRus/starter/stopapp"
 )
 
 var TEXT_CONTEXT_DEADLINE = "context deadline exceeded"

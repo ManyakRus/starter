@@ -204,8 +204,8 @@ func WaitStop() {
 func StartCamunda(HandleJob func(client worker.JobClient, job entities.Job), CAMUNDA_JOBTYPE string, BPMN_filename string) {
 	var err error
 
-	ctx := ctx_Connect
-	WaitGroup := waitGroup_Connect
+	ctx := GetContext()
+	WaitGroup := GetWaitGroup()
 	err = Start_ctx(ctx, WaitGroup, HandleJob, CAMUNDA_JOBTYPE, BPMN_filename)
 	LogInfo_Connected(err)
 }
@@ -217,18 +217,17 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, HandleJob func(c
 	var err error
 
 	//запомним к себе контекст
-	//	if contextmain.Ctx != ctx {
-	//		contextmain.SetContext(ctx)
-	//	}
-	//contextmain.Ctx = ctx
 	if ctx == nil {
-		ctx = ctx_Connect
+		ctx = GetContext()
+	} else {
+		SetContext(ctx)
 	}
 
 	//запомним к себе WaitGroup
-	//stopapp.SetWaitGroup_Main(WaitGroup)
 	if WaitGroup == nil {
-		stopapp.StartWaitStop()
+		WaitGroup = GetWaitGroup()
+	} else {
+		SetWaitGroup(WaitGroup)
 	}
 
 	//
@@ -282,7 +281,7 @@ func Send_BPMN_File(BPMN_filename string) {
 	if err != nil {
 		log.Panicln(err)
 	}
-	log.Info("Send .bpmn file, result: %v", res)
+	log.Infof("Send .bpmn file, result: %v", res)
 }
 
 // ping_go - делает пинг каждые 60 секунд, и реконнект

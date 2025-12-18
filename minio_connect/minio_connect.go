@@ -208,8 +208,8 @@ func WaitStop() {
 func StartMinio() {
 	var err error
 
-	ctx := ctx_Connect
-	WaitGroup := waitGroup_Connect
+	ctx := GetContext()
+	WaitGroup := GetWaitGroup()
 	err = Start_ctx(ctx, WaitGroup)
 	LogInfo_Connected(err)
 
@@ -222,18 +222,17 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	var err error
 
 	//запомним к себе контекст
-	//	if contextmain.Ctx != ctx {
-	//		contextmain.SetContext(ctx)
-	//	}
-	//contextmain.Ctx = ctx
 	if ctx == nil {
-		ctx = ctx_Connect
+		ctx = GetContext()
+	} else {
+		SetContext(ctx)
 	}
 
 	//запомним к себе WaitGroup
-	//stopapp.SetWaitGroup_Main(WaitGroup)
 	if WaitGroup == nil {
-		stopapp.StartWaitStop()
+		WaitGroup = GetWaitGroup()
+	} else {
+		SetWaitGroup(WaitGroup)
 	}
 
 	//
@@ -400,9 +399,9 @@ func DownloadFileCtx(ctx context.Context, bucketName, objectName string) []byte 
 	Otvet, err := DownloadFileCtx_err(ctx, bucketName, objectName)
 
 	if err != nil {
-		log.Panic("UploadFileCtx() objectName: %s, bucketName: %s, error: %v", objectName, bucketName, err)
+		log.Panicf("UploadFileCtx() objectName: %s, bucketName: %s, error: %v", objectName, bucketName, err)
 	} else {
-		log.Debug("UploadFileCtx() objectName: %s, bucketName: %s, OK", objectName, bucketName)
+		log.Debugf("UploadFileCtx() objectName: %s, bucketName: %s, OK", objectName, bucketName)
 	}
 
 	return Otvet

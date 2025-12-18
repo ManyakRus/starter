@@ -22,7 +22,7 @@ func EnableAfterDuration(Object IEnable, Duration time.Duration) {
 	if Object == nil {
 		return
 	}
-	waitGroup_Connect.Add(1)
+	stopapp.GetWaitGroup_Main().Add(1)
 	go EnableAfterDuration_go(Object, Duration)
 }
 
@@ -31,13 +31,13 @@ func EnableAfterMilliSeconds(Object IEnable, MilliSeconds int) {
 	if Object == nil {
 		return
 	}
-	waitGroup_Connect.Add(1)
+	stopapp.GetWaitGroup_Main().Add(1)
 	go EnableAfterDuration_go(Object, time.Duration(MilliSeconds)*time.Millisecond)
 }
 
 // EnableAfterDuration_go - горутина, выполняет Enable() после паузы
 func EnableAfterDuration_go(Object IEnable, Duration time.Duration) {
-	defer waitGroup_Connect.Done()
+	defer stopapp.GetWaitGroup_Main().Done()
 
 	if Object == nil {
 		return

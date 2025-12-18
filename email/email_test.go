@@ -14,7 +14,7 @@ func TestSendMessage(t *testing.T) {
 
 	err := SendMessage(EMAIL_SEND_TO_TEST, text, "Test")
 	if err != nil {
-		log.Info("email_test.TestSendMessage() error: ", err)
+		t.Log("email_test.TestSendMessage() error: ", err)
 	}
 
 	CloseConnection()
@@ -35,7 +35,7 @@ func TestSendEmail(t *testing.T) {
 
 	err := SendEmail(EMAIL_SEND_TO_TEST, text, "Test", MassAttachment)
 	if err != nil {
-		log.Info("email_test.TestSendEmail() error: ", err)
+		t.Log("email_test.TestSendEmail() error: ", err)
 	}
 
 	CloseConnection()

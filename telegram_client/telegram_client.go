@@ -841,8 +841,8 @@ func AsFloodWait(err error) (d int, ok bool) {
 func StartTelegram(func_OnNewMessage func(ctx context.Context, entities tg.Entities, u *tg.UpdateNewMessage, Peer1 storage.Peer) error) {
 	var err error
 
-	ctx := ctx_Connect
-	WaitGroup := waitGroup_Connect
+	ctx := GetContext()
+	WaitGroup := GetWaitGroup()
 	err = Start_ctx(ctx, WaitGroup, func_OnNewMessage)
 	LogInfo_Connected(err)
 
@@ -860,18 +860,17 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, func_OnNewMessag
 	var err error
 
 	//запомним к себе контекст
-	//	if contextmain.Ctx != ctx {
-	//		contextmain.SetContext(ctx)
-	//	}
-	//contextmain.Ctx = ctx
 	if ctx == nil {
-		ctx = ctx_Connect
+		ctx = GetContext()
+	} else {
+		SetContext(ctx)
 	}
 
 	//запомним к себе WaitGroup
-	//stopapp.SetWaitGroup_Main(WaitGroup)
 	if WaitGroup == nil {
-		stopapp.StartWaitStop()
+		WaitGroup = GetWaitGroup()
+	} else {
+		SetWaitGroup(WaitGroup)
 	}
 
 	//

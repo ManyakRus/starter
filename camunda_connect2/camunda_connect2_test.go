@@ -70,7 +70,7 @@ func TestGetURL(t *testing.T) {
 }
 
 func createJob() entities.Job {
-	job := entities.Job{&pb.ActivatedJob{}}
+	job := entities.Job{ActivatedJob: &pb.ActivatedJob{}}
 
 	s := make(map[string]interface{})
 

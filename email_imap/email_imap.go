@@ -278,8 +278,8 @@ func WaitStop() {
 func Start() {
 	var err error
 
-	ctx := ctx_Connect
-	WaitGroup := waitGroup_Connect
+	ctx := GetContext()
+	WaitGroup := GetWaitGroup()
 	err = Start_ctx(ctx, WaitGroup)
 	LogInfo_Connected(err)
 
@@ -292,18 +292,17 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	var err error
 
 	//запомним к себе контекст
-	//	if contextmain.Ctx != ctx {
-	//		contextmain.SetContext(ctx)
-	//	}
-	//contextmain.Ctx = ctx
 	if ctx == nil {
-		ctx = ctx_Connect
+		ctx = GetContext()
+	} else {
+		SetContext(ctx)
 	}
 
 	//запомним к себе WaitGroup
-	//stopapp.SetWaitGroup_Main(WaitGroup)
 	if WaitGroup == nil {
-		stopapp.StartWaitStop()
+		WaitGroup = GetWaitGroup()
+	} else {
+		SetWaitGroup(WaitGroup)
 	}
 
 	//
@@ -449,7 +448,7 @@ func ReadBody(Msg *imap.Message) (BodyText string, Attachments []Attachment, err
 	if Msg == nil {
 		//chErr <- "MsgEmail.readBody().fnRead(): сообщение не присвоена в структуре"
 		sError := "MsgEmail.readBody(): Msg == nil"
-		err = fmt.Errorf(sError)
+		err = fmt.Errorf("%s", sError)
 		chErr <- sError
 		return
 	}
@@ -457,7 +456,7 @@ func ReadBody(Msg *imap.Message) (BodyText string, Attachments []Attachment, err
 	l := Msg.GetBody(&section)
 	if l == nil {
 		sError := "MsgEmail.readBody(): GetBody() = nil"
-		err = fmt.Errorf(sError)
+		err = fmt.Errorf("%s", sError)
 		chErr <- sError
 		return
 		//log.Fatal("Server didn't returned message body")
@@ -469,7 +468,7 @@ func ReadBody(Msg *imap.Message) (BodyText string, Attachments []Attachment, err
 	mr, err := mail.CreateReader(l)
 	if err != nil {
 		sError := fmt.Sprintf("MsgEmail.readBody(): CreateReader() error: %v", err)
-		err = fmt.Errorf(sError)
+		err = fmt.Errorf("%s", sError)
 		chErr <- sError
 		return
 		//log.Fatal(err)
@@ -491,7 +490,7 @@ func ReadBody(Msg *imap.Message) (BodyText string, Attachments []Attachment, err
 		}
 		if err != nil {
 			sError := fmt.Sprintf("MsgEmail.readBody(): NextPart() error: %v", err)
-			err = fmt.Errorf(sError)
+			err = fmt.Errorf("%s", sError)
 			chErr <- sError
 			if strings.Contains(err.Error(), "EOF") {
 				break
@@ -508,7 +507,7 @@ func ReadBody(Msg *imap.Message) (BodyText string, Attachments []Attachment, err
 			b, err := ioutil.ReadAll(p.Body)
 			if err != nil {
 				sError := fmt.Sprintf("MsgEmail.readBody(): ReadAll() error: %v", err)
-				err = fmt.Errorf(sError)
+				err = fmt.Errorf("%s", sError)
 				chErr <- sError
 			}
 			//sBody = sBody + string(b)
@@ -524,7 +523,7 @@ func ReadBody(Msg *imap.Message) (BodyText string, Attachments []Attachment, err
 			Data, err := ioutil.ReadAll(p.Body)
 			if err != nil {
 				sError := fmt.Sprintf("MsgEmail.readBody(): ReadAll() error: %v", err)
-				err = fmt.Errorf(sError)
+				err = fmt.Errorf("%s", sError)
 				chErr <- sError
 			}
 

@@ -197,7 +197,7 @@ func CloseConnection_err() error {
 		return nil
 	}
 
-	//ctx := ctx_Connect
+	//ctx := GetContext()
 	//ctx := context.Background()
 	err := Conn.Close()
 
@@ -227,8 +227,8 @@ func WaitStop() {
 func StartDB() {
 	var err error
 
-	ctx := ctx_Connect
-	WaitGroup := waitGroup_Connect
+	ctx := GetContext()
+	WaitGroup := GetWaitGroup()
 	err = Start_ctx(ctx, WaitGroup)
 	LogInfo_Connected(err)
 
@@ -241,18 +241,17 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	var err error
 
 	//запомним к себе контекст
-	//	if contextmain.Ctx != ctx {
-	//		contextmain.SetContext(ctx)
-	//	}
-	//contextmain.Ctx = ctx
 	if ctx == nil {
-		ctx = ctx_Connect
+		ctx = GetContext()
+	} else {
+		SetContext(ctx)
 	}
 
 	//запомним к себе WaitGroup
-	//stopapp.SetWaitGroup_Main(WaitGroup)
 	if WaitGroup == nil {
-		stopapp.StartWaitStop()
+		WaitGroup = GetWaitGroup()
+	} else {
+		SetWaitGroup(WaitGroup)
 	}
 
 	//

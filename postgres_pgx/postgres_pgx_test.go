@@ -2,6 +2,7 @@ package postgres_pgx
 
 import (
 	"errors"
+	"github.com/ManyakRus/starter/microl"
 	"golang.org/x/net/context"
 	"testing"
 	"time"
@@ -162,8 +163,7 @@ func TestRawMultipleSQL2(t *testing.T) {
 	GetConnection()
 	defer CloseConnection()
 
-	TimeStart := time.Now()
-	defer t.Log("Прошло время: ", time.Since(TimeStart))
+	defer microl.ShowTimePassed(time.Now())
 
 	TextSQL := `
 drop table if exists temp_TestRawMultipleSQL2; 

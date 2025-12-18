@@ -296,8 +296,8 @@ func WaitStop() {
 func StartDB() {
 	var err error
 
-	ctx := ctx_Connect
-	WaitGroup := waitGroup_Connect
+	ctx := GetContext()
+	WaitGroup := GetWaitGroup()
 	err = Start_ctx(ctx, WaitGroup)
 	LogInfo_Connected(err)
 
@@ -315,18 +315,17 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	var err error
 
 	//запомним к себе контекст
-	//	if contextmain.Ctx != ctx {
-	//		contextmain.SetContext(ctx)
-	//	}
-	//contextmain.Ctx = ctx
 	if ctx == nil {
-		ctx = ctx_Connect
+		ctx = GetContext()
+	} else {
+		SetContext(ctx)
 	}
 
 	//запомним к себе WaitGroup
-	//stopapp.SetWaitGroup_Main(WaitGroup)
 	if WaitGroup == nil {
-		stopapp.StartWaitStop()
+		WaitGroup = GetWaitGroup()
+	} else {
+		SetWaitGroup(WaitGroup)
 	}
 
 	//
@@ -355,8 +354,7 @@ func Start(ApplicationName string) {
 	LogInfo_Connected(err)
 
 	//сохраним в список подключений
-	ctx := ctx_Connect
-	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: waitGroup_Connect, Ctx: ctx, CancelCtxFunc: cancelCtxFunc}
+	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: GetWaitGroup(), Ctx: GetContext(), CancelCtxFunc: cancelCtxFunc}
 	stopapp.OrderedMapConnections.Put(PackageName, WaitGroupContext1)
 
 	//
@@ -525,7 +523,7 @@ func RawMultipleSQL(tx IConnectionTransaction, TextSQL string) (pgx.Rows, error)
 	//	return rows, err
 	//}
 
-	ctx := ctx_Connect
+	ctx := GetContext()
 
 	//запустим транзакцию
 	//tx, err := tx.Begin(ctx)

@@ -234,8 +234,8 @@ func WaitStop() {
 func StartCamunda(HandleJob func(client worker.JobClient, job entities.Job), CAMUNDA_JOBTYPE string, BPMN_filename string) {
 	var err error
 
-	ctx := ctx_Connect
-	WaitGroup := waitGroup_Connect
+	ctx := GetContext()
+	WaitGroup := GetWaitGroup()
 	err = Start_ctx(ctx, WaitGroup, HandleJob, CAMUNDA_JOBTYPE, BPMN_filename)
 	LogInfo_Connected(err)
 }
@@ -263,8 +263,7 @@ func Start_WithSettings(settings StartSettings) {
 	JobWorker = JobWorkerStep3.Open()
 
 	//сохраним в список подключений
-	ctx := ctx_Connect
-	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: waitGroup_Connect, Ctx: ctx, CancelCtxFunc: cancelCtxFunc}
+	WaitGroupContext1 := stopapp.WaitGroupContext{WaitGroup: GetWaitGroup(), Ctx: GetContext(), CancelCtxFunc: cancelCtxFunc}
 	stopapp.OrderedMapConnections.Put(PackageName, WaitGroupContext1)
 
 	//
@@ -284,18 +283,17 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, HandleJob func(c
 	var err error
 
 	//запомним к себе контекст
-	//	if contextmain.Ctx != ctx {
-	//		contextmain.SetContext(ctx)
-	//	}
-	//contextmain.Ctx = ctx
 	if ctx == nil {
-		ctx = ctx_Connect
+		ctx = GetContext()
+	} else {
+		SetContext(ctx)
 	}
 
 	//запомним к себе WaitGroup
-	//stopapp.SetWaitGroup_Main(WaitGroup)
 	if WaitGroup == nil {
-		stopapp.StartWaitStop()
+		WaitGroup = GetWaitGroup()
+	} else {
+		SetWaitGroup(WaitGroup)
 	}
 
 	settings := StartSettings{}
@@ -314,10 +312,10 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup, HandleJob func(c
 	//
 	//JobWorker = Client.NewJobWorker().JobType(CAMUNDA_JOBTYPE).Handler(HandleJob).Open()
 	//
-	//stopapp.GetWaitGroup_Connect().Add(1)
+	//stopapp.GetWaitGroup().Add(1)
 	//go WaitStop()
 	//
-	//stopapp.GetWaitGroup_Connect().Add(1)
+	//stopapp.GetWaitGroup().Add(1)
 	//go ping_go(HandleJob, CAMUNDA_JOBTYPE)
 
 	return err

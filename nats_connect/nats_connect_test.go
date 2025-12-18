@@ -3,13 +3,11 @@ package nats_connect
 import (
 	"context"
 	"github.com/ManyakRus/starter/config_main"
+	"github.com/ManyakRus/starter/constants_starter"
 	"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/micro"
 	"testing"
 	"time"
-
-	//"github.com/ManyakRus/starter/common/v0/logger"
-	"github.com/ManyakRus/starter/stopapp"
 )
 
 func TestConnect_err(t *testing.T) {
