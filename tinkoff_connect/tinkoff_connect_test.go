@@ -14,7 +14,7 @@ func TestFillSettings(t *testing.T) {
 }
 
 func TestConnect_err(t *testing.T) {
-	config_main.LoadEnv()
+	config_main.LoadEnvTest()
 	err := Connect_err()
 	if err != nil {
 		t.Error("TestConnect error: ", err)

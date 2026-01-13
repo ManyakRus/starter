@@ -82,6 +82,23 @@ func (sm *Map[Key, Value]) GetDefault(key Key, def Value) Value {
 	return def
 }
 
+// GetOrSetFactory gets a value in the map if the key already exists,
+// otherwise inserts a new value from the given function and returns it.
+func (sm *Map[Key, Value]) GetOrSetFactory(key Key, def func() Value) Value {
+	val, ok := sm.Get(key)
+	if ok {
+		return val
+	}
+	sm.lock.Lock()
+	defer sm.lock.Unlock()
+	value, ok := sm.data[key]
+	if !ok {
+		value = def()
+		sm.data[key] = value
+	}
+	return value
+}
+
 // GetOrSet gets a value in the map if the key already exists, otherwise inserts the given value and returns it.
 //
 // The boolean return parameter is true if the key already exists, and false if the given value was inserted.
@@ -118,6 +135,21 @@ func (sm *Map[Key, Value]) CopyFrom(other map[Key]Value) {
 	sm.lock.Lock()
 	maps.Copy(sm.data, other)
 	sm.lock.Unlock()
+}
+
+// SwapData replaces the internal map with the given map, returning the previous map.
+// If the given map is nil, a new empty map is created.
+// The given map must not be modified after passing it to this function.
+func (sm *Map[Key, Value]) SwapData(other map[Key]Value) map[Key]Value {
+	sm.lock.Lock()
+	prev := sm.data
+	if other == nil {
+		sm.data = make(map[Key]Value)
+	} else {
+		sm.data = other
+	}
+	sm.lock.Unlock()
+	return prev
 }
 
 // Clone returns a copy of the map.

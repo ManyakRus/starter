@@ -33,6 +33,18 @@ var ErrForeignTables = errors.New("the database contains foreign tables")
 var ErrNotOwned = errors.New("the database is owned by")
 var ErrUnsupportedDialect = errors.New("unsupported database dialect")
 
+type NotOwnedError struct {
+	Owner string
+}
+
+func (e NotOwnedError) Error() string {
+	return fmt.Sprintf("%v %s", ErrNotOwned, e.Owner)
+}
+
+func (e NotOwnedError) Unwrap() error {
+	return ErrNotOwned
+}
+
 func DangerousInternalUpgradeVersionTable(ctx context.Context, db *Database) error {
 	return db.upgradeVersionTable(ctx)
 }
@@ -143,7 +155,7 @@ func (db *Database) checkDatabaseOwner(ctx context.Context) error {
 	} else if err != nil {
 		return fmt.Errorf("failed to check database owner: %w", err)
 	} else if owner != db.Owner {
-		return fmt.Errorf("%w %s", ErrNotOwned, owner)
+		return NotOwnedError{owner}
 	}
 	return nil
 }

@@ -2314,7 +2314,7 @@ func (s *Server) serveConn(c net.Conn) error {
 			// outgoing buffer first so it doesn't have to wait.
 			if bw != nil && bw.Buffered() > 0 {
 				err = ctx.Request.Header.readLoop(br, false)
-				if err == errNeedMore {
+				if err == ErrNeedMore {
 					err = bw.Flush()
 					if err != nil {
 						break
@@ -2718,7 +2718,7 @@ func acquireByteReader(ctxP **RequestCtx) (*bufio.Reader, error) {
 	}
 
 	ctx.fbr.c = c
-	ctx.fbr.ch = b[0]
+	ctx.fbr.ch = b[0] // #nosec G602
 	ctx.fbr.byteRead = false
 	r := acquireReader(ctx)
 	r.Reset(&ctx.fbr)

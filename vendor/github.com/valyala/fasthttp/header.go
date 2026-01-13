@@ -463,7 +463,22 @@ func (h *header) AddTrailer(trailer string) error {
 	return h.AddTrailerBytes(s2b(trailer))
 }
 
-var ErrBadTrailer = errors.New("contain forbidden trailer")
+var (
+	ErrBadTrailer                    = errors.New("contain forbidden trailer")
+	ErrReadingResponseHeaders        = errors.New("error when reading response headers")
+	ErrReadingResponseTrailer        = errors.New("error when reading response trailer")
+	ErrResponseFirstLineMissingSpace = errors.New("cannot find whitespace in the first line of response")
+	ErrUnexpectedStatusCodeChar      = errors.New("unexpected char at the end of status code")
+	ErrMissingRequestMethod          = errors.New("cannot find http request method")
+	ErrUnsupportedRequestMethod      = errors.New("unsupported http request method")
+	ErrExtraWhitespaceInRequestLine  = errors.New("extra whitespace in request line")
+	ErrEmptyRequestURI               = errors.New("requestURI cannot be empty")
+	ErrDuplicateContentLength        = errors.New("duplicate Content-Length header")
+	ErrUnsupportedTransferEncoding   = errors.New("unsupported Transfer-Encoding")
+	ErrNonNumericChars               = errors.New("non-numeric chars found")
+	ErrNeedMore                      = errors.New("need more data: cannot find trailing lf")
+	ErrSmallReadBuffer               = errors.New("small read buffer. Increase ReadBufferSize")
+)
 
 // AddTrailerBytes add Trailer header value for chunked response
 // to indicate which headers will be sent after the body.
@@ -1039,6 +1054,9 @@ func (h *RequestHeader) CopyTo(dst *RequestHeader) {
 // The key and value may invalid outside the iteration loop.
 // Copy key and/or value contents for each iteration if you need retaining
 // them.
+//
+// Making modifications to the ResponseHeader during the iteration loop leads to undefined
+// behavior and can cause panics.
 func (h *ResponseHeader) All() iter.Seq2[[]byte, []byte] {
 	return func(yield func([]byte, []byte) bool) {
 		if len(h.contentLengthBytes) > 0 && !yield(strContentLength, h.contentLengthBytes) {
@@ -1125,6 +1143,9 @@ func (h *header) VisitAllTrailer(f func(value []byte)) {
 // The key and value may invalid outside the iteration loop.
 // Copy key and/or value contents for each iteration if you need retaining
 // them.
+//
+// Making modifications to the ResponseHeader during the iteration loop leads to undefined
+// behavior and can cause panics.
 func (h *ResponseHeader) Cookies() iter.Seq2[[]byte, []byte] {
 	return func(yield func([]byte, []byte) bool) {
 		for i := range h.cookies {
@@ -1156,6 +1177,9 @@ func (h *ResponseHeader) VisitAllCookie(f func(key, value []byte)) {
 // The key and value may invalid outside the iteration loop.
 // Copy key and/or value contents for each iteration if you need retaining
 // them.
+//
+// Making modifications to the RequestHeader during the iteration loop leads to undefined
+// behavior and can cause panics.
 func (h *RequestHeader) Cookies() iter.Seq2[[]byte, []byte] {
 	return func(yield func([]byte, []byte) bool) {
 		h.collectCookies()
@@ -1186,6 +1210,9 @@ func (h *RequestHeader) VisitAllCookie(f func(key, value []byte)) {
 // them.
 //
 // To get the headers in order they were received use AllInOrder.
+//
+// Making modifications to the RequestHeader during the iteration loop leads to undefined
+// behavior and can cause panics.
 func (h *RequestHeader) All() iter.Seq2[[]byte, []byte] {
 	return func(yield func([]byte, []byte) bool) {
 		if host := h.Host(); len(host) > 0 && !yield(strHost, host) {
@@ -1251,6 +1278,9 @@ func (h *RequestHeader) VisitAll(f func(key, value []byte)) {
 //
 // The returned iterator is slightly slower than All because it has to reparse
 // the raw headers to get the order.
+//
+// Making modifications to the RequestHeader during the iteration loop leads to undefined
+// behavior and can cause panics.
 func (h *RequestHeader) AllInOrder() iter.Seq2[[]byte, []byte] {
 	return func(yield func([]byte, []byte) bool) {
 		var s headerScanner
@@ -2088,7 +2118,7 @@ func (h *ResponseHeader) Read(r *bufio.Reader) error {
 		if err == nil {
 			return nil
 		}
-		if err != errNeedMore {
+		if err != ErrNeedMore {
 			h.resetSkipNormalize()
 			return err
 		}
@@ -2113,11 +2143,11 @@ func (h *ResponseHeader) tryRead(r *bufio.Reader, n int) error {
 		if err == bufio.ErrBufferFull {
 			if h.secureErrorLogMessage {
 				return &ErrSmallBuffer{
-					error: errors.New("error when reading response headers"),
+					error: ErrReadingResponseHeaders,
 				}
 			}
 			return &ErrSmallBuffer{
-				error: fmt.Errorf("error when reading response headers: %w", errSmallBuffer),
+				error: fmt.Errorf("error when reading response headers: %w", ErrSmallReadBuffer),
 			}
 		}
 
@@ -2142,7 +2172,7 @@ func (h *header) ReadTrailer(r *bufio.Reader) error {
 		if err == nil {
 			return nil
 		}
-		if err != errNeedMore {
+		if err != ErrNeedMore {
 			return err
 		}
 		n = r.Buffered() + 1
@@ -2165,11 +2195,11 @@ func (h *header) tryReadTrailer(r *bufio.Reader, n int) error {
 		if err == bufio.ErrBufferFull {
 			if h.secureErrorLogMessage {
 				return &ErrSmallBuffer{
-					error: errors.New("error when reading response trailer"),
+					error: ErrReadingResponseTrailer,
 				}
 			}
 			return &ErrSmallBuffer{
-				error: fmt.Errorf("error when reading response trailer: %w", errSmallBuffer),
+				error: fmt.Errorf("error when reading response trailer: %w", ErrSmallReadBuffer),
 			}
 		}
 
@@ -2189,11 +2219,11 @@ func (h *header) tryReadTrailer(r *bufio.Reader, n int) error {
 }
 
 func headerError(typ string, err, errParse error, b []byte, secureErrorLogMessage bool) error {
-	if errParse != errNeedMore {
+	if errParse != ErrNeedMore {
 		return headerErrorMsg(typ, errParse, b, secureErrorLogMessage)
 	}
 	if err == nil {
-		return errNeedMore
+		return ErrNeedMore
 	}
 
 	// Buggy servers may leave trailing CRLFs after http body.
@@ -2206,7 +2236,7 @@ func headerError(typ string, err, errParse error, b []byte, secureErrorLogMessag
 		return headerErrorMsg(typ, err, b, secureErrorLogMessage)
 	}
 	return &ErrSmallBuffer{
-		error: headerErrorMsg(typ, errSmallBuffer, b, secureErrorLogMessage),
+		error: headerErrorMsg(typ, ErrSmallReadBuffer, b, secureErrorLogMessage),
 	}
 }
 
@@ -2234,7 +2264,7 @@ func (h *RequestHeader) readLoop(r *bufio.Reader, waitForMore bool) error {
 		if err == nil {
 			return nil
 		}
-		if !waitForMore || err != errNeedMore {
+		if !waitForMore || err != ErrNeedMore {
 			h.resetSkipNormalize()
 			return err
 		}
@@ -2257,7 +2287,7 @@ func (h *RequestHeader) tryRead(r *bufio.Reader, n int) error {
 		// This is for go 1.6 bug. See https://github.com/golang/go/issues/14121 .
 		if err == bufio.ErrBufferFull {
 			return &ErrSmallBuffer{
-				error: fmt.Errorf("error when reading request headers: %w (n=%d, r.Buffered()=%d)", errSmallBuffer, n, r.Buffered()),
+				error: fmt.Errorf("error when reading request headers: %w (n=%d, r.Buffered()=%d)", ErrSmallReadBuffer, n, r.Buffered()),
 			}
 		}
 
@@ -2744,7 +2774,7 @@ func (h *ResponseHeader) parseFirstLine(buf []byte) (int, error) {
 	n := bytes.IndexByte(b, ' ')
 	if n < 0 {
 		if h.secureErrorLogMessage {
-			return 0, errors.New("cannot find whitespace in the first line of response")
+			return 0, ErrResponseFirstLineMissingSpace
 		}
 		return 0, fmt.Errorf("cannot find whitespace in the first line of response %q", buf)
 	}
@@ -2761,7 +2791,7 @@ func (h *ResponseHeader) parseFirstLine(buf []byte) (int, error) {
 	}
 	if len(b) > n && b[n] != ' ' {
 		if h.secureErrorLogMessage {
-			return 0, errors.New("unexpected char at the end of status code")
+			return 0, ErrUnexpectedStatusCodeChar
 		}
 		return 0, fmt.Errorf("unexpected char at the end of status code. Response %q", buf)
 	}
@@ -2795,7 +2825,7 @@ func (h *RequestHeader) parseFirstLine(buf []byte) (int, error) {
 	n := bytes.IndexByte(b, ' ')
 	if n <= 0 {
 		if h.secureErrorLogMessage {
-			return 0, errors.New("cannot find http request method")
+			return 0, ErrMissingRequestMethod
 		}
 		return 0, fmt.Errorf("cannot find http request method in %q", buf)
 	}
@@ -2803,7 +2833,7 @@ func (h *RequestHeader) parseFirstLine(buf []byte) (int, error) {
 
 	if !isValidMethod(h.method) {
 		if h.secureErrorLogMessage {
-			return 0, errors.New("unsupported http request method")
+			return 0, ErrUnsupportedRequestMethod
 		}
 		return 0, fmt.Errorf("unsupported http request method %q in %q", h.method, buf)
 	}
@@ -2813,7 +2843,7 @@ func (h *RequestHeader) parseFirstLine(buf []byte) (int, error) {
 	// Check for extra whitespace after method - only one space should separate method from URI
 	if len(b) > 0 && b[0] == ' ' {
 		if h.secureErrorLogMessage {
-			return 0, errors.New("extra whitespace in request line")
+			return 0, ErrExtraWhitespaceInRequestLine
 		}
 		return 0, fmt.Errorf("extra whitespace in request line %q", buf)
 	}
@@ -2824,7 +2854,7 @@ func (h *RequestHeader) parseFirstLine(buf []byte) (int, error) {
 		return 0, fmt.Errorf("cannot find whitespace in the first line of request %q", buf)
 	} else if n == 0 {
 		if h.secureErrorLogMessage {
-			return 0, errors.New("requestURI cannot be empty")
+			return 0, ErrEmptyRequestURI
 		}
 		return 0, fmt.Errorf("requestURI cannot be empty in %q", buf)
 	}
@@ -2832,7 +2862,7 @@ func (h *RequestHeader) parseFirstLine(buf []byte) (int, error) {
 	// Check for extra whitespace - only one space should separate URI from HTTP version
 	if n+1 < len(b) && b[n+1] == ' ' {
 		if h.secureErrorLogMessage {
-			return 0, errors.New("extra whitespace in request line")
+			return 0, ErrExtraWhitespaceInRequestLine
 		}
 		return 0, fmt.Errorf("extra whitespace in request line %q", buf)
 	}
@@ -2869,7 +2899,7 @@ func (h *RequestHeader) parseFirstLine(buf []byte) (int, error) {
 func readRawHeaders(dst, buf []byte) ([]byte, int, error) {
 	n := bytes.IndexByte(buf, nChar)
 	if n < 0 {
-		return dst[:0], 0, errNeedMore
+		return dst[:0], 0, ErrNeedMore
 	}
 	if (n == 1 && buf[0] == rChar) || n == 0 {
 		// empty headers
@@ -2883,7 +2913,7 @@ func readRawHeaders(dst, buf []byte) ([]byte, int, error) {
 		b = b[m:]
 		m = bytes.IndexByte(b, nChar)
 		if m < 0 {
-			return dst, 0, errNeedMore
+			return dst, 0, ErrNeedMore
 		}
 		m++
 		n += m
@@ -3077,7 +3107,7 @@ func (h *RequestHeader) parseHeaders(buf []byte) (int, error) {
 			if caseInsensitiveCompare(s.key, strContentLength) {
 				if contentLengthSeen {
 					h.connectionClose = true
-					return 0, errors.New("duplicate Content-Length header")
+					return 0, ErrDuplicateContentLength
 				}
 				contentLengthSeen = true
 
@@ -3110,7 +3140,7 @@ func (h *RequestHeader) parseHeaders(buf []byte) (int, error) {
 				if !isIdentity && !isChunked {
 					h.connectionClose = true
 					if h.secureErrorLogMessage {
-						return 0, errors.New("unsupported Transfer-Encoding")
+						return 0, ErrUnsupportedTransferEncoding
 					}
 					return 0, fmt.Errorf("unsupported Transfer-Encoding: %q", s.value)
 				}
@@ -3169,15 +3199,13 @@ func (h *RequestHeader) collectCookies() {
 	h.cookiesCollected = true
 }
 
-var errNonNumericChars = errors.New("non-numeric chars found")
-
 func parseContentLength(b []byte) (int, error) {
 	v, n, err := parseUintBuf(b)
 	if err != nil {
 		return -1, fmt.Errorf("cannot parse Content-Length: %w", err)
 	}
 	if n != len(b) {
-		return -1, fmt.Errorf("cannot parse Content-Length: %w", errNonNumericChars)
+		return -1, fmt.Errorf("cannot parse Content-Length: %w", ErrNonNumericChars)
 	}
 	return v, nil
 }
@@ -3227,7 +3255,7 @@ func hasHeaderValue(s, value []byte) bool {
 func nextLine(b []byte) ([]byte, []byte, error) {
 	nNext := bytes.IndexByte(b, nChar)
 	if nNext < 0 {
-		return nil, nil, errNeedMore
+		return nil, nil, ErrNeedMore
 	}
 	n := nNext
 	if n > 0 && b[n-1] == rChar {
@@ -3369,11 +3397,6 @@ func copyTrailer(dst, src [][]byte) [][]byte {
 	}
 	return dst
 }
-
-var (
-	errNeedMore    = errors.New("need more data: cannot find trailing lf")
-	errSmallBuffer = errors.New("small read buffer. Increase ReadBufferSize")
-)
 
 // ErrNothingRead is returned when a keep-alive connection is closed,
 // either because the remote closed it or because of a read timeout.

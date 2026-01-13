@@ -69,6 +69,9 @@ func (a *Args) CopyTo(dst *Args) {
 //
 // The key and value may invalid outside the iteration loop.
 // Make copies if you need to use them after the loop ends.
+//
+// Making modifications to the Args during the iteration loop leads to undefined
+// behavior and can cause panics.
 func (a *Args) All() iter.Seq2[[]byte, []byte] {
 	return func(yield func([]byte, []byte) bool) {
 		for i := range a.args {
@@ -144,6 +147,15 @@ func (a *Args) Sort(f func(x, y []byte) int) {
 			return f(a.args[i].value, a.args[j].value) == -1
 		}
 		return n == -1
+	})
+}
+
+// SortKeys sorts Args by key only using 'f' as comparison function.
+//
+// For example args.SortKeys(bytes.Compare).
+func (a *Args) SortKeys(f func(x, y []byte) int) {
+	sort.SliceStable(a.args, func(i, j int) bool {
+		return f(a.args[i].key, a.args[j].key) == -1
 	})
 }
 
