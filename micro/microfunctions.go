@@ -107,16 +107,32 @@ func Pause(ms int) {
 	Sleep(ms)
 }
 
-// Pause_ctx - приостановка работы программы на нужное число миллисекунд, с учётом глобального контекста
 func Pause_ctx(ctx context.Context, ms int) {
+	if ms <= 0 {
+		return
+	}
 
-	Duration := time.Duration(ms) * time.Millisecond
+	timer := time.NewTimer(time.Duration(ms) * time.Millisecond)
+	defer timer.Stop() // ← ГАРАНТИРОВАННО освобождает ресурсы таймера
 
 	select {
 	case <-ctx.Done():
-	case <-time.After(Duration):
+		return
+	case <-timer.C:
+		return
 	}
 }
+
+//// Pause_ctx - приостановка работы программы на нужное число миллисекунд, с учётом глобального контекста
+//func Pause_ctx(ctx context.Context, ms int) {
+//
+//	Duration := time.Duration(ms) * time.Millisecond
+//
+//	select {
+//	case <-ctx.Done():
+//	case <-time.After(Duration):
+//	}
+//}
 
 // Pause_duration - приостановка работы программы на время duration
 func Pause_duration(duration time.Duration) {
