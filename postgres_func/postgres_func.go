@@ -102,12 +102,11 @@ func NullTime_DefaultNull[T time.Time | int64](Value T) sql.NullTime {
 		}
 	case int64:
 		v := any(Value).(int64)
-		Time1 := time.Unix(v, 0)
-		Otvet.Time = Time1
-		Otvet.Valid = true
-
-		if Time1.IsZero() == true {
+		if v == 0 { // 0 считаем пустым значением
 			Otvet.Valid = false
+		} else {
+			Otvet.Time = time.Unix(v, 0)
+			Otvet.Valid = true
 		}
 	}
 
