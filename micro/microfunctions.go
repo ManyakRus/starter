@@ -107,6 +107,7 @@ func Pause(ms int) {
 	Sleep(ms)
 }
 
+// Pause_ctx - приостановка работы программы на нужное число миллисекунд, с учётом глобального контекста
 func Pause_ctx(ctx context.Context, ms int) {
 	if ms <= 0 {
 		return
