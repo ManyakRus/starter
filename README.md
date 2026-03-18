@@ -49,8 +49,6 @@ func main() {
 func main() {
 	config.LoadEnv()
 
-	contextmain.GetContext()
-
 	stopapp.StartWaitStop()
 
 	mssql_gorm.StartDB()

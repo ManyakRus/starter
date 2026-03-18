@@ -52,8 +52,6 @@ var log = logger.GetLog()
 func main() {
 	config.LoadEnv()
 
-	contextmain.GetContext()
-
 	stopapp.StartWaitStop()
 
 	mssql_gorm.StartDB()
