@@ -197,7 +197,8 @@ func ShowTimePassed(StartAt time.Time) {
 // запускать:
 // defer micro.ShowTimePassed(time.Now())
 func ShowTimePassed_FormatText(FormatText string, StartAt time.Time) {
-	log.Debugf(FormatText, time.Since(StartAt))
+	elapsed := time.Since(StartAt).Round(time.Millisecond)
+	log.Debugf(FormatText, elapsed)
 }
 
 // ShowTimePassedSeconds - показывает время секунд прошедшее с момента старта
