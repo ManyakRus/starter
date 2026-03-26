@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ManyakRus/starter/micro"
-	"github.com/joho/godotenv"
 	"os"
 	"strconv"
 	"strings"
@@ -28,20 +27,20 @@ import (
 // PackageName - имя текущего пакета, для логирования
 const PackageName = "email"
 
-// lastSendTime - время последней отправки сообщения и мьютекс
-var lastSendTime = lastSendTimeMutex{}
+//// lastSendTime - время последней отправки сообщения и мьютекс
+//var lastSendTime = lastSendTimeMutex{}
 
 // Conn - клиент соединения Email
 var Conn *mail.SMTPClient
 
-// MaxSendMessageCountIn1Second - максимальное количество сообщений в 1 секунду
-var MaxSendMessageCountIn1Second float32 = 33 //Валера сказал 33 оптимально было при испытании
+//// MaxSendMessageCountIn1Second - максимальное количество сообщений в 1 секунду
+//var MaxSendMessageCountIn1Second float32 = 33 //Валера сказал 33 оптимально было при испытании
 
-// lastSendTimeMutex - структура хранения времени последней отправки и мьютекс
-type lastSendTimeMutex struct {
-	time time.Time
-	sync.Mutex
-}
+//// lastSendTimeMutex - структура хранения времени последней отправки и мьютекс
+//type lastSendTimeMutex struct {
+//	time time.Time
+//	sync.Mutex
+//}
 
 // Settings хранит все нужные переменные окружения
 var Settings SettingsINI
@@ -161,7 +160,7 @@ func Connect_err() error {
 	var err error
 
 	if Settings.EMAIL_LOGIN == "" {
-		LoadEnv()
+		FillSettings()
 	}
 
 	Encryption := FindEncryption_FromString(Settings.EMAIL_ENCRYPTION)
@@ -273,7 +272,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	}
 
 	//
-	LoadEnv()
+	FillSettings()
 	err = Connect_err()
 
 	if err != nil {
@@ -291,28 +290,8 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	return err
 }
 
-// LoadEnv - загружает переменные окружения в структуру из файла или из переменных окружения
-func LoadEnv() {
-
-	dir := micro.ProgramDir()
-	filename := dir + ".env"
-	LoadEnv_FromFile(filename)
-}
-
-// LoadEnv_FromFile загружает переменные окружения в структуру из файла или из переменных окружения
-func LoadEnv_FromFile(filename string) {
-	//var err error
-	//err := godotenv.Load(Filename_Settings)
-	//if err != nil {
-	//	log.Fatal("Error loading " + Filename_Settings + " file, error: " + err.Error())
-	//}
-
-	err := godotenv.Load(filename)
-	if err != nil {
-		log.Debug("Error parse .env file error: " + err.Error())
-	} else {
-		log.Info("load .env from file: ", filename)
-	}
+// FillSettings загружает переменные окружения в структуру из переменных окружения
+func FillSettings() {
 
 	Settings = SettingsINI{}
 	Settings.EMAIL_SMTP_SERVER = os.Getenv("EMAIL_SMTP_SERVER")
@@ -326,7 +305,7 @@ func LoadEnv_FromFile(filename string) {
 	Settings.EMAIL_ENCRYPTION = os.Getenv("EMAIL_ENCRYPTION")
 
 	if Settings.EMAIL_SMTP_SERVER == "" {
-		log.Warn("Need fill EMAIL_SMTP_SERVER ! in file ", filename)
+		log.Warn("Need fill EMAIL_SMTP_SERVER")
 	}
 
 	//if Settings.EMAIL_POP3_SERVER == "" {
@@ -334,15 +313,15 @@ func LoadEnv_FromFile(filename string) {
 	//}
 
 	if Settings.EMAIL_SMTP_PORT == "" {
-		log.Panicln("Need fill EMAIL_SMTP_PORT ! in file ", filename)
+		log.Panicln("Need fill EMAIL_SMTP_PORT")
 	}
 
 	if Settings.EMAIL_LOGIN == "" {
-		log.Panicln("Need fill EMAIL_LOGIN ! in file ", filename)
+		log.Panicln("Need fill EMAIL_LOGIN")
 	}
 
 	if Settings.EMAIL_PASSWORD == "" {
-		log.Panicln("Need fill EMAIL_PASSWORD ! in file ", filename)
+		log.Panicln("Need fill EMAIL_PASSWORD")
 	}
 
 	if Settings.EMAIL_SEND_TO_TEST == "" && micro.IsTestApp() == true {
@@ -354,11 +333,11 @@ func LoadEnv_FromFile(filename string) {
 	//}
 
 	if Settings.EMAIL_AUTHENTICATION == "" {
-		log.Warn("Need fill EMAIL_AUTHENTICATION ! in file ", filename)
+		log.Warn("Need fill EMAIL_AUTHENTICATION")
 	}
 
 	if Settings.EMAIL_ENCRYPTION == "" {
-		log.Warn("Need fill EMAIL_ENCRYPTION ! in file ", filename)
+		log.Warn("Need fill EMAIL_ENCRYPTION")
 	}
 
 }

@@ -14,7 +14,6 @@ import (
 	imapModule "github.com/emersion/go-imap/client"
 	"github.com/emersion/go-message"
 	mail "github.com/emersion/go-message/mail"
-	"github.com/joho/godotenv"
 	simplemail "github.com/xhit/go-simple-mail/v2"
 	"io"
 	"io/ioutil"
@@ -28,13 +27,15 @@ import (
 const PackageName = "email_imap"
 
 var Conn *imapModule.Client
+
 var MailInbox *imap.MailboxStatus // папка inbox
 
 // Settings хранит все нужные переменные окружения
 var Settings SettingsINI
 
 var FOLDER_NAME_INBOX = `INBOX`
-var ErrEmptyInbox = fmt.Errorf("empty inbox")
+
+//var ErrEmptyInbox = fmt.Errorf("empty inbox")
 
 // SettingsINI - структура для хранения всех нужных переменных окружения
 type SettingsINI struct {
@@ -75,7 +76,7 @@ func Connect_err() error {
 	var err error
 
 	if Settings.EMAIL_LOGIN == "" {
-		LoadEnv()
+		FillSettings()
 	}
 
 	strFrom := Settings.EMAIL_LOGIN
@@ -306,7 +307,7 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	}
 
 	//
-	LoadEnv()
+	FillSettings()
 	err = Connect_err()
 	if err != nil {
 		return err
@@ -323,28 +324,8 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) error {
 	return err
 }
 
-// LoadEnv - загружает переменные окружения в структуру из файла или из переменных окружения
-func LoadEnv() {
-
-	dir := micro.ProgramDir()
-	filename := dir + ".env"
-	LoadEnv_FromFile(filename)
-}
-
-// LoadEnv_FromFile загружает переменные окружения в структуру из файла или из переменных окружения
-func LoadEnv_FromFile(filename string) {
-	//var err error
-	//err := godotenv.Load(Filename_Settings)
-	//if err != nil {
-	//	log.Fatal("Error loading " + Filename_Settings + " file, error: " + err.Error())
-	//}
-
-	err := godotenv.Load(filename)
-	if err != nil {
-		log.Debug("Error parse .env file error: " + err.Error())
-	} else {
-		log.Info("load .env from file: ", filename)
-	}
+// FillSettings загружает переменные окружения в структуру из переменных окружения
+func FillSettings() {
 
 	Settings = SettingsINI{}
 	Settings.EMAIL_IMAP_SERVER = os.Getenv("EMAIL_IMAP_SERVER")
@@ -357,23 +338,23 @@ func LoadEnv_FromFile(filename string) {
 	Settings.EMAIL_ENCRYPTION = os.Getenv("EMAIL_ENCRYPTION")
 
 	if Settings.EMAIL_IMAP_SERVER == "" {
-		log.Panicln("Need fill EMAIL_SMTP_SERVER ! in file ", filename)
+		log.Panicln("error: Need fill EMAIL_SMTP_SERVER")
 	}
 
 	if Settings.EMAIL_IMAP_PORT == "" {
-		log.Panicln("Need fill EMAIL_SMTP_PORT ! in file ", filename)
+		log.Panicln("error: Need fill EMAIL_SMTP_PORT")
 	}
 
 	if Settings.EMAIL_LOGIN == "" {
-		log.Panicln("Need fill EMAIL_LOGIN ! in file ", filename)
+		log.Panicln("error: Need fill EMAIL_LOGIN")
 	}
 
 	if Settings.EMAIL_PASSWORD == "" {
-		log.Panicln("Need fill EMAIL_PASSWORD ! in file ", filename)
+		log.Panicln("error: Need fill EMAIL_PASSWORD")
 	}
 
 	if Settings.EMAIL_SEND_TO_TEST == "" && micro.IsTestApp() == true {
-		log.Info("Need fill EMAIL_SEND_TO_TEST ! in file ", filename)
+		//log.Info("Need fill EMAIL_SEND_TO_TEST")
 	}
 
 	//if Settings.EMAIL_SUBJECT == "" {
@@ -381,11 +362,11 @@ func LoadEnv_FromFile(filename string) {
 	//}
 
 	if Settings.EMAIL_AUTHENTICATION == "" {
-		log.Warn("Need fill EMAIL_AUTHENTICATION ! in file ", filename)
+		log.Warn("warning: Need fill EMAIL_AUTHENTICATION")
 	}
 
 	if Settings.EMAIL_ENCRYPTION == "" {
-		log.Warn("Need fill EMAIL_ENCRYPTION ! in file ", filename)
+		log.Warn("warning: Need fill EMAIL_ENCRYPTION")
 	}
 
 }
