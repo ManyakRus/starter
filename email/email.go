@@ -346,7 +346,7 @@ func LoadEnv_FromFile(filename string) {
 	}
 
 	if Settings.EMAIL_SEND_TO_TEST == "" && micro.IsTestApp() == true {
-		log.Info("Need fill EMAIL_SEND_TO_TEST ! in file ", filename)
+		//log.Info("Need fill EMAIL_SEND_TO_TEST ! in file ", filename)
 	}
 
 	//if Settings.EMAIL_SUBJECT == "" {
