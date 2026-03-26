@@ -22,13 +22,14 @@ import (
 
 	mail "github.com/xhit/go-simple-mail/v2"
 	//	"gopkg.in/gomail.v2"
+	"go.uber.org/atomic"
 )
 
 // PackageName - имя текущего пакета, для логирования
 const PackageName = "email"
 
-//// lastSendTime - время последней отправки сообщения и мьютекс
-//var lastSendTime = lastSendTimeMutex{}
+// // lastSendTime - время последней отправки сообщения и мьютекс
+var lastSendTime = atomic.Time{}
 
 // Conn - клиент соединения Email
 var Conn *mail.SMTPClient
@@ -96,7 +97,18 @@ func SendEmail(email_send_to string, text string, subject string, MassAttachment
 		}
 	}
 
-	log.Debug("email_send_to: ", email_send_to, " text: ", text)
+	//log.Debug("email_send_to: ", email_send_to, " text: ", text)
+
+	//переподключение
+	//Проверяем, прошло ли больше 10 минут
+	if time.Since(lastSendTime.Load()) > 10*time.Minute {
+		err = Connect_err()
+		if err != nil {
+			err = fmt.Errorf("Connect_err() error: ", err)
+			log.Debug(err)
+			return err
+		}
+	}
 
 	to := string(email_send_to)
 	msg := text
@@ -134,6 +146,9 @@ func SendEmail(email_send_to string, text string, subject string, MassAttachment
 		return err
 	}
 	err = micro.GoGo(ctx, fn)
+	if err == nil {
+		lastSendTime.Store(time.Now())
+	}
 
 	return err
 }
