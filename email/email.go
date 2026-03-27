@@ -342,14 +342,14 @@ func FillSettings() {
 func FindEncryption_FromString(s string) mail.Encryption {
 	Otvet := mail.EncryptionNone
 
-	switch s {
-	case "EncryptionSSL":
+	switch strings.ToUpper(s) {
+	case "SSL":
 		Otvet = mail.EncryptionSSL
-	case "EncryptionSSLTLS":
+	case "SSLTLS":
 		Otvet = mail.EncryptionSSLTLS
-	case "EncryptionSTARTTLS":
+	case "STARTTLS":
 		Otvet = mail.EncryptionSTARTTLS
-	case "EncryptionTLS":
+	case "TLS":
 		Otvet = mail.EncryptionTLS
 	}
 
