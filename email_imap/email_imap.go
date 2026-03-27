@@ -334,7 +334,7 @@ func FillSettings() {
 	Settings.EMAIL_PASSWORD = os.Getenv("EMAIL_PASSWORD")
 	Settings.EMAIL_SEND_TO_TEST = os.Getenv("EMAIL_SEND_TO_TEST")
 	//Settings.EMAIL_SUBJECT = os.Getenv("EMAIL_SUBJECT")
-	Settings.EMAIL_AUTHENTICATION = os.Getenv("EMAIL_AUTHENTICATION")
+	Settings.EMAIL_AUTHENTICATION = os.Getenv("EMAIL_SMTP_AUTHENTICATION")
 	Settings.EMAIL_ENCRYPTION = os.Getenv("EMAIL_ENCRYPTION")
 
 	if Settings.EMAIL_IMAP_SERVER == "" {
@@ -362,7 +362,7 @@ func FillSettings() {
 	//}
 
 	if Settings.EMAIL_AUTHENTICATION == "" {
-		log.Warn("warning: Need fill EMAIL_AUTHENTICATION")
+		log.Warn("warning: Need fill EMAIL_SMTP_AUTHENTICATION")
 	}
 
 	if Settings.EMAIL_ENCRYPTION == "" {

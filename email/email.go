@@ -1,8 +1,6 @@
-// модуль для отправки email сообщений
+// модуль для отправки email smtp сообщений
 
 package email
-
-//License:
 
 import (
 	"context"
@@ -15,13 +13,10 @@ import (
 	"sync"
 	"time"
 
-	//"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/log"
-	//"github.com/ManyakRus/starter/micro"
 	"github.com/ManyakRus/starter/stopapp"
 
 	mail "github.com/xhit/go-simple-mail/v2"
-	//	"gopkg.in/gomail.v2"
 	"go.uber.org/atomic"
 )
 
@@ -34,33 +29,19 @@ var lastSendTime = atomic.Time{}
 // Conn - клиент соединения Email
 var Conn *mail.SMTPClient
 
-//// MaxSendMessageCountIn1Second - максимальное количество сообщений в 1 секунду
-//var MaxSendMessageCountIn1Second float32 = 33 //Валера сказал 33 оптимально было при испытании
-
-//// lastSendTimeMutex - структура хранения времени последней отправки и мьютекс
-//type lastSendTimeMutex struct {
-//	time time.Time
-//	sync.Mutex
-//}
-
 // Settings хранит все нужные переменные окружения
 var Settings SettingsINI
 
 // SettingsINI - структура для хранения всех нужных переменных окружения
 type SettingsINI struct {
-	EMAIL_SMTP_SERVER    string
-	EMAIL_SMTP_PORT      string
-	EMAIL_LOGIN          string
-	EMAIL_PASSWORD       string
-	EMAIL_SEND_TO_TEST   string
-	EMAIL_AUTHENTICATION string
-	EMAIL_ENCRYPTION     string
+	EMAIL_SMTP_SERVER         string
+	EMAIL_SMTP_PORT           string
+	EMAIL_LOGIN               string
+	EMAIL_PASSWORD            string
+	EMAIL_SEND_TO_TEST        string
+	EMAIL_SMTP_AUTHENTICATION string
+	EMAIL_ENCRYPTION          string
 }
-
-//type Attachment struct {
-//	Filename string
-//	File     []byte
-//}
 
 // SendMessage - отправка сообщения Email, без вложений
 func SendMessage(email_send_to string, text string, subject string) error {
@@ -179,7 +160,7 @@ func Connect_err() error {
 	}
 
 	Encryption := FindEncryption_FromString(Settings.EMAIL_ENCRYPTION)
-	Authentication := FindAuthentication_FromString(Settings.EMAIL_AUTHENTICATION)
+	Authentication := FindAuthentication_FromString(Settings.EMAIL_SMTP_AUTHENTICATION)
 
 	SMTPClient := mail.NewSMTPClient()
 	SMTPClient.Host = Settings.EMAIL_SMTP_SERVER
@@ -316,7 +297,7 @@ func FillSettings() {
 	Settings.EMAIL_PASSWORD = os.Getenv("EMAIL_PASSWORD")
 	Settings.EMAIL_SEND_TO_TEST = os.Getenv("EMAIL_SEND_TO_TEST")
 	//Settings.EMAIL_SUBJECT = os.Getenv("EMAIL_SUBJECT")
-	Settings.EMAIL_AUTHENTICATION = os.Getenv("EMAIL_AUTHENTICATION")
+	Settings.EMAIL_SMTP_AUTHENTICATION = os.Getenv("EMAIL_SMTP_AUTHENTICATION")
 	Settings.EMAIL_ENCRYPTION = os.Getenv("EMAIL_ENCRYPTION")
 
 	if Settings.EMAIL_SMTP_SERVER == "" {
@@ -347,8 +328,8 @@ func FillSettings() {
 	//	log.Panicln("Need fill EMAIL_SUBJECT ! in file ", filename)
 	//}
 
-	if Settings.EMAIL_AUTHENTICATION == "" {
-		log.Warn("Need fill EMAIL_AUTHENTICATION")
+	if Settings.EMAIL_SMTP_AUTHENTICATION == "" {
+		log.Warn("Need fill EMAIL_SMTP_AUTHENTICATION")
 	}
 
 	if Settings.EMAIL_ENCRYPTION == "" {
@@ -377,14 +358,14 @@ func FindEncryption_FromString(s string) mail.Encryption {
 
 // FindAuthentication_FromString - находит AuthType из строки
 func FindAuthentication_FromString(s string) mail.AuthType {
-	Otvet := mail.AuthNone
+	Otvet := mail.AuthAuto
 
-	switch s {
-	case "AuthLogin":
+	switch strings.ToUpper(s) {
+	case "LOGIN":
 		Otvet = mail.AuthLogin
-	case "AuthPlain":
+	case "PLAIN":
 		Otvet = mail.AuthPlain
-	case "AuthCRAMMD5":
+	case "CRAMMD5":
 		Otvet = mail.AuthCRAMMD5
 	}
 
