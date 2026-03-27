@@ -178,6 +178,7 @@ github.com/emersion/go-imap/utf7
 # github.com/emersion/go-message v0.18.2
 ## explicit; go 1.14
 github.com/emersion/go-message
+github.com/emersion/go-message/charset
 github.com/emersion/go-message/mail
 github.com/emersion/go-message/textproto
 # github.com/emersion/go-sasl v0.0.0-20241020182733-b788ff22d5a6
@@ -390,6 +391,9 @@ github.com/klauspost/cpuid/v2
 # github.com/klauspost/crc32 v1.3.0
 ## explicit; go 1.23.0
 github.com/klauspost/crc32
+# github.com/knadh/go-pop3 v1.0.1
+## explicit; go 1.16
+github.com/knadh/go-pop3
 # github.com/kr/pretty v0.3.1
 ## explicit; go 1.12
 github.com/kr/pretty
@@ -877,8 +881,15 @@ golang.org/x/term
 ## explicit; go 1.24.0
 golang.org/x/text/cases
 golang.org/x/text/encoding
+golang.org/x/text/encoding/charmap
+golang.org/x/text/encoding/htmlindex
+golang.org/x/text/encoding/ianaindex
 golang.org/x/text/encoding/internal
 golang.org/x/text/encoding/internal/identifier
+golang.org/x/text/encoding/japanese
+golang.org/x/text/encoding/korean
+golang.org/x/text/encoding/simplifiedchinese
+golang.org/x/text/encoding/traditionalchinese
 golang.org/x/text/encoding/unicode
 golang.org/x/text/internal
 golang.org/x/text/internal/language

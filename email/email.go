@@ -36,11 +36,11 @@ var Settings SettingsINI
 type SettingsINI struct {
 	EMAIL_SMTP_SERVER         string
 	EMAIL_SMTP_PORT           string
-	EMAIL_LOGIN               string
-	EMAIL_PASSWORD            string
+	EMAIL_SMTP_LOGIN          string
+	EMAIL_SMTP_PASSWORD       string
 	EMAIL_SEND_TO_TEST        string
 	EMAIL_SMTP_AUTHENTICATION string
-	EMAIL_ENCRYPTION          string
+	EMAIL_SMTP_ENCRYPTION     string
 }
 
 // SendMessage - отправка сообщения Email, без вложений
@@ -94,7 +94,7 @@ func SendEmail(email_send_to string, text string, subject string, MassAttachment
 	to := string(email_send_to)
 	msg := text
 
-	strFrom := Settings.EMAIL_LOGIN
+	strFrom := Settings.EMAIL_SMTP_LOGIN
 	MessageEmail := mail.NewMSG()
 	MessageEmail.SetFrom(strFrom)
 	//MessageEmail.SetSender(strFrom)
@@ -146,7 +146,7 @@ func LogInfo_Connected(err error) {
 	if err != nil {
 		log.Panicln("Connect() error: ", err)
 	} else {
-		log.Info("Email connected: ", Settings.EMAIL_LOGIN)
+		log.Info("Email connected: ", Settings.EMAIL_SMTP_LOGIN)
 	}
 
 }
@@ -155,18 +155,18 @@ func LogInfo_Connected(err error) {
 func Connect_err() error {
 	var err error
 
-	if Settings.EMAIL_LOGIN == "" {
+	if Settings.EMAIL_SMTP_LOGIN == "" {
 		FillSettings()
 	}
 
-	Encryption := FindEncryption_FromString(Settings.EMAIL_ENCRYPTION)
+	Encryption := FindEncryption_FromString(Settings.EMAIL_SMTP_ENCRYPTION)
 	Authentication := FindAuthentication_FromString(Settings.EMAIL_SMTP_AUTHENTICATION)
 
 	SMTPClient := mail.NewSMTPClient()
 	SMTPClient.Host = Settings.EMAIL_SMTP_SERVER
 	SMTPClient.Port, _ = strconv.Atoi(Settings.EMAIL_SMTP_PORT)
-	SMTPClient.Username = Settings.EMAIL_LOGIN
-	SMTPClient.Password = Settings.EMAIL_PASSWORD
+	SMTPClient.Username = Settings.EMAIL_SMTP_LOGIN
+	SMTPClient.Password = Settings.EMAIL_SMTP_PASSWORD
 	SMTPClient.Encryption = Encryption
 	SMTPClient.Authentication = Authentication
 	SMTPClient.KeepAlive = true
@@ -293,12 +293,12 @@ func FillSettings() {
 	Settings.EMAIL_SMTP_SERVER = os.Getenv("EMAIL_SMTP_SERVER")
 	//Settings.EMAIL_POP3_SERVER = os.Getenv("EMAIL_POP3_SERVER")
 	Settings.EMAIL_SMTP_PORT = os.Getenv("EMAIL_SMTP_PORT")
-	Settings.EMAIL_LOGIN = os.Getenv("EMAIL_LOGIN")
-	Settings.EMAIL_PASSWORD = os.Getenv("EMAIL_PASSWORD")
+	Settings.EMAIL_SMTP_LOGIN = os.Getenv("EMAIL_SMTP_LOGIN")
+	Settings.EMAIL_SMTP_PASSWORD = os.Getenv("EMAIL_SMTP_PASSWORD")
 	Settings.EMAIL_SEND_TO_TEST = os.Getenv("EMAIL_SEND_TO_TEST")
 	//Settings.EMAIL_SUBJECT = os.Getenv("EMAIL_SUBJECT")
 	Settings.EMAIL_SMTP_AUTHENTICATION = os.Getenv("EMAIL_SMTP_AUTHENTICATION")
-	Settings.EMAIL_ENCRYPTION = os.Getenv("EMAIL_ENCRYPTION")
+	Settings.EMAIL_SMTP_ENCRYPTION = os.Getenv("EMAIL_SMTP_ENCRYPTION")
 
 	if Settings.EMAIL_SMTP_SERVER == "" {
 		log.Warn("Need fill EMAIL_SMTP_SERVER")
@@ -312,12 +312,12 @@ func FillSettings() {
 		log.Panicln("Need fill EMAIL_SMTP_PORT")
 	}
 
-	if Settings.EMAIL_LOGIN == "" {
-		log.Panicln("Need fill EMAIL_LOGIN")
+	if Settings.EMAIL_SMTP_LOGIN == "" {
+		log.Panicln("Need fill EMAIL_SMTP_LOGIN")
 	}
 
-	if Settings.EMAIL_PASSWORD == "" {
-		log.Panicln("Need fill EMAIL_PASSWORD")
+	if Settings.EMAIL_SMTP_PASSWORD == "" {
+		log.Panicln("Need fill EMAIL_SMTP_PASSWORD")
 	}
 
 	if Settings.EMAIL_SEND_TO_TEST == "" && micro.IsTestApp() == true {
@@ -332,8 +332,8 @@ func FillSettings() {
 		log.Warn("Need fill EMAIL_SMTP_AUTHENTICATION")
 	}
 
-	if Settings.EMAIL_ENCRYPTION == "" {
-		log.Warn("Need fill EMAIL_ENCRYPTION")
+	if Settings.EMAIL_SMTP_ENCRYPTION == "" {
+		log.Warn("Need fill EMAIL_SMTP_ENCRYPTION")
 	}
 
 }

@@ -39,14 +39,14 @@ var FOLDER_NAME_INBOX = `INBOX`
 
 // SettingsINI - структура для хранения всех нужных переменных окружения
 type SettingsINI struct {
-	EMAIL_IMAP_SERVER  string
-	EMAIL_IMAP_PORT    string
-	EMAIL_LOGIN        string
-	EMAIL_PASSWORD     string
-	EMAIL_SEND_TO_TEST string
+	EMAIL_IMAP_SERVER   string
+	EMAIL_IMAP_PORT     string
+	EMAIL_IMAP_LOGIN    string
+	EMAIL_IMAP_PASSWORD string
+	EMAIL_SEND_TO_TEST  string
 	//EMAIL_SUBJECT        string
-	EMAIL_AUTHENTICATION string
-	EMAIL_ENCRYPTION     string
+	EMAIL_IMAP_AUTHENTICATION string
+	EMAIL_IMAP_ENCRYPTION     string
 }
 
 type Attachment struct {
@@ -66,7 +66,7 @@ func LogInfo_Connected(err error) {
 	if err != nil {
 		log.Panicln("Connect() error: ", err)
 	} else {
-		log.Info("Email connected: ", Settings.EMAIL_LOGIN)
+		log.Info("Email connected: ", Settings.EMAIL_IMAP_LOGIN)
 	}
 
 }
@@ -75,12 +75,12 @@ func LogInfo_Connected(err error) {
 func Connect_err() error {
 	var err error
 
-	if Settings.EMAIL_LOGIN == "" {
+	if Settings.EMAIL_IMAP_LOGIN == "" {
 		FillSettings()
 	}
 
-	strFrom := Settings.EMAIL_LOGIN
-	strPass := Settings.EMAIL_PASSWORD
+	strFrom := Settings.EMAIL_IMAP_LOGIN
+	strPass := Settings.EMAIL_IMAP_PASSWORD
 	strHost := Settings.EMAIL_IMAP_SERVER
 
 	//log.Debugf("Connecting to server %s", strHost)
@@ -330,27 +330,27 @@ func FillSettings() {
 	Settings = SettingsINI{}
 	Settings.EMAIL_IMAP_SERVER = os.Getenv("EMAIL_IMAP_SERVER")
 	Settings.EMAIL_IMAP_PORT = os.Getenv("EMAIL_IMAP_PORT")
-	Settings.EMAIL_LOGIN = os.Getenv("EMAIL_LOGIN")
-	Settings.EMAIL_PASSWORD = os.Getenv("EMAIL_PASSWORD")
+	Settings.EMAIL_IMAP_LOGIN = os.Getenv("EMAIL_IMAP_LOGIN")
+	Settings.EMAIL_IMAP_PASSWORD = os.Getenv("EMAIL_IMAP_PASSWORD")
 	Settings.EMAIL_SEND_TO_TEST = os.Getenv("EMAIL_SEND_TO_TEST")
 	//Settings.EMAIL_SUBJECT = os.Getenv("EMAIL_SUBJECT")
-	Settings.EMAIL_AUTHENTICATION = os.Getenv("EMAIL_SMTP_AUTHENTICATION")
-	Settings.EMAIL_ENCRYPTION = os.Getenv("EMAIL_ENCRYPTION")
+	Settings.EMAIL_IMAP_AUTHENTICATION = os.Getenv("EMAIL_IMAP_AUTHENTICATION")
+	Settings.EMAIL_IMAP_ENCRYPTION = os.Getenv("EMAIL_IMAP_ENCRYPTION")
 
 	if Settings.EMAIL_IMAP_SERVER == "" {
-		log.Panicln("error: Need fill EMAIL_SMTP_SERVER")
+		log.Panicln("error: Need fill EMAIL_IMAP_SERVER")
 	}
 
 	if Settings.EMAIL_IMAP_PORT == "" {
-		log.Panicln("error: Need fill EMAIL_SMTP_PORT")
+		log.Panicln("error: Need fill EMAIL_IMAP_PORT")
 	}
 
-	if Settings.EMAIL_LOGIN == "" {
-		log.Panicln("error: Need fill EMAIL_LOGIN")
+	if Settings.EMAIL_IMAP_LOGIN == "" {
+		log.Panicln("error: Need fill EMAIL_IMAP_LOGIN")
 	}
 
-	if Settings.EMAIL_PASSWORD == "" {
-		log.Panicln("error: Need fill EMAIL_PASSWORD")
+	if Settings.EMAIL_IMAP_PASSWORD == "" {
+		log.Panicln("error: Need fill EMAIL_IMAP_PASSWORD")
 	}
 
 	if Settings.EMAIL_SEND_TO_TEST == "" && micro.IsTestApp() == true {
@@ -361,12 +361,12 @@ func FillSettings() {
 	//	log.Panicln("Need fill EMAIL_SUBJECT ! in file ", filename)
 	//}
 
-	if Settings.EMAIL_AUTHENTICATION == "" {
-		log.Warn("warning: Need fill EMAIL_SMTP_AUTHENTICATION")
+	if Settings.EMAIL_IMAP_AUTHENTICATION == "" {
+		log.Warn("warning: Need fill EMAIL_IMAP_AUTHENTICATION")
 	}
 
-	if Settings.EMAIL_ENCRYPTION == "" {
-		log.Warn("warning: Need fill EMAIL_ENCRYPTION")
+	if Settings.EMAIL_IMAP_ENCRYPTION == "" {
+		log.Warn("warning: Need fill EMAIL_IMAP_ENCRYPTION")
 	}
 
 }

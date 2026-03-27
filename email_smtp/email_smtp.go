@@ -33,11 +33,11 @@ var Settings SettingsINI
 type SettingsINI struct {
 	EMAIL_SMTP_SERVER         string
 	EMAIL_SMTP_PORT           string
-	EMAIL_LOGIN               string
-	EMAIL_PASSWORD            string
+	EMAIL_SMTP_LOGIN          string
+	EMAIL_SMTP_PASSWORD       string
 	EMAIL_SEND_TO_TEST        string
 	EMAIL_SMTP_AUTHENTICATION string // "NTLM", "LOGIN", "PLAIN", "CRAM-MD5"
-	EMAIL_ENCRYPTION          string // "SSL", "TLS", "STARTTLS", "NONE"
+	EMAIL_SMTP_ENCRYPTION     string // "SSL", "TLS", "STARTTLS", "NONE"
 }
 
 // Attachment - структура для вложения (для совместимости)
@@ -77,7 +77,7 @@ func SendEmail(email_send_to string, text string, subject string, filePaths []st
 
 // sendWithNTLM - отправка письма с использованием smtp_ntlm
 func sendWithNTLM(to, body, subject string, filePaths []string) error {
-	if Settings.EMAIL_LOGIN == "" {
+	if Settings.EMAIL_SMTP_LOGIN == "" {
 		FillSettings()
 	}
 
@@ -89,14 +89,14 @@ func sendWithNTLM(to, body, subject string, filePaths []string) error {
 
 	// Создаём email-объект
 	email := smtp_ntlm.NewEMail(fmt.Sprintf(`{"port":%d}`, port))
-	email.From = Settings.EMAIL_LOGIN
+	email.From = Settings.EMAIL_SMTP_LOGIN
 	email.Host = Settings.EMAIL_SMTP_SERVER
 	email.Port = port
-	email.Username = extractUsername(Settings.EMAIL_LOGIN)
-	email.Password = Settings.EMAIL_PASSWORD
+	email.Username = extractUsername(Settings.EMAIL_SMTP_LOGIN)
+	email.Password = Settings.EMAIL_SMTP_PASSWORD
 
 	// Настройка шифрования
-	switch strings.ToUpper(Settings.EMAIL_ENCRYPTION) {
+	switch strings.ToUpper(Settings.EMAIL_SMTP_ENCRYPTION) {
 	case "SSL":
 		email.Secure = "SSL"
 	case "TLS":
@@ -176,7 +176,7 @@ func Connect() {
 	if err := Connect_err(); err != nil {
 		log.Panicln("Connect() error: ", err)
 	}
-	log.Info("Email configured: ", Settings.EMAIL_LOGIN)
+	log.Info("Email configured: ", Settings.EMAIL_SMTP_LOGIN)
 }
 
 // WaitStop - ожидание остановки
@@ -231,11 +231,11 @@ func FillSettings() {
 	Settings = SettingsINI{
 		EMAIL_SMTP_SERVER:         os.Getenv("EMAIL_SMTP_SERVER"),
 		EMAIL_SMTP_PORT:           os.Getenv("EMAIL_SMTP_PORT"),
-		EMAIL_LOGIN:               os.Getenv("EMAIL_LOGIN"),
-		EMAIL_PASSWORD:            os.Getenv("EMAIL_PASSWORD"),
+		EMAIL_SMTP_LOGIN:          os.Getenv("EMAIL_SMTP_LOGIN"),
+		EMAIL_SMTP_PASSWORD:       os.Getenv("EMAIL_SMTP_PASSWORD"),
 		EMAIL_SEND_TO_TEST:        os.Getenv("EMAIL_SEND_TO_TEST"),
 		EMAIL_SMTP_AUTHENTICATION: os.Getenv("EMAIL_SMTP_AUTHENTICATION"),
-		EMAIL_ENCRYPTION:          os.Getenv("EMAIL_ENCRYPTION"),
+		EMAIL_SMTP_ENCRYPTION:     os.Getenv("EMAIL_SMTP_ENCRYPTION"),
 	}
 
 	if Settings.EMAIL_SMTP_SERVER == "" {
@@ -244,18 +244,18 @@ func FillSettings() {
 	if Settings.EMAIL_SMTP_PORT == "" {
 		log.Panicln("Need fill EMAIL_SMTP_PORT")
 	}
-	if Settings.EMAIL_LOGIN == "" {
-		log.Panicln("Need fill EMAIL_LOGIN")
+	if Settings.EMAIL_SMTP_LOGIN == "" {
+		log.Panicln("Need fill EMAIL_SMTP_LOGIN")
 	}
-	if Settings.EMAIL_PASSWORD == "" {
-		log.Panicln("Need fill EMAIL_PASSWORD")
+	if Settings.EMAIL_SMTP_PASSWORD == "" {
+		log.Panicln("Need fill EMAIL_SMTP_PASSWORD")
 	}
 	if Settings.EMAIL_SMTP_AUTHENTICATION == "" {
 		log.Warn("EMAIL_SMTP_AUTHENTICATION not set, using NONE as default")
-		Settings.EMAIL_SMTP_AUTHENTICATION = "NONE"
+		//Settings.EMAIL_SMTP_AUTHENTICATION = "NONE"
 	}
-	if Settings.EMAIL_ENCRYPTION == "" {
-		log.Warn("EMAIL_ENCRYPTION not set, using EncryptionNone")
-		Settings.EMAIL_ENCRYPTION = "EncryptionNone"
+	if Settings.EMAIL_SMTP_ENCRYPTION == "" {
+		log.Warn("EMAIL_SMTP_ENCRYPTION not set, using EncryptionNone")
+		//Settings.EMAIL_SMTP_ENCRYPTION = "EncryptionNone"
 	}
 }

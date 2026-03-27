@@ -48,6 +48,7 @@ require (
 require (
 	github.com/Azure/go-ntlmssp v0.1.0 // indirect
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible // indirect
+	github.com/knadh/go-pop3 v1.0.1 // indirect
 	github.com/wneessen/go-mail v0.7.2 // indirect
 	gitlab.com/c4sp/go/smtp_ntlm v1.0.1 // indirect
 )
