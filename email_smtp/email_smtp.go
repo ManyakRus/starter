@@ -60,11 +60,6 @@ func SendEmail(email_send_to string, text string, subject string, filePaths []st
 		return errors.New("text is empty")
 	}
 
-	// Проверяем, нужно ли переподключаться (если прошло больше 10 минут)
-	if time.Since(lastSendTime.Load()) > 10*time.Minute {
-		log.Debug("Reconnecting due to 10 min timeout")
-	}
-
 	// Отправляем письмо
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
