@@ -517,4 +517,10 @@ func FillSettings() {
 	if Settings.EMAIL_POP3_PASSWORD == "" {
 		log.Panicln("Need fill EMAIL_POP3_PASSWORD for POP3")
 	}
+
+	//
+	if ProcessedUIDsFilename == "" {
+		dir := micro.ProgramDir()
+		ProcessedUIDsFilename = dir + ProcessedUIDsFilename_short
+	}
 }

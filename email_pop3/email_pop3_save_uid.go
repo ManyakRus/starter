@@ -3,12 +3,12 @@ package email_pop3
 import (
 	"encoding/json"
 	"github.com/ManyakRus/starter/log"
-	"github.com/ManyakRus/starter/micro"
 	"os"
 	"sync"
 )
 
-var ProcessedUIDsFilename = "pop3_processed.json"
+var ProcessedUIDsFilename = ""
+var ProcessedUIDsFilename_short = "pop3_processed.json"
 
 // ProcessedUIDs - хранилище обработанных UID
 var ProcessedUIDs = struct {
@@ -20,11 +20,10 @@ var ProcessedUIDs = struct {
 
 // LoadProcessedUIDs - загружает обработанные UID из файла
 func LoadProcessedUIDs() error {
-	dir := micro.ProgramDir_bin()
-	data, err := os.ReadFile(dir + ProcessedUIDsFilename)
+	data, err := os.ReadFile(ProcessedUIDsFilename)
 	if err != nil {
 		if os.IsNotExist(err) {
-			log.Info("No processed UIDs file, starting fresh")
+			log.Infof("No processed UIDs file, starting fresh. Filename: %s", ProcessedUIDsFilename)
 			return nil
 		}
 		return err
@@ -59,8 +58,7 @@ func SaveProcessedUIDs() error {
 		return err
 	}
 
-	dir := micro.ProgramDir_bin()
-	return os.WriteFile(dir+ProcessedUIDsFilename, data, 0644)
+	return os.WriteFile(ProcessedUIDsFilename, data, 0644)
 }
 
 // MarkUIDAsProcessed - отмечает UID как обработанный
