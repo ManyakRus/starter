@@ -19,6 +19,7 @@ import (
 	"github.com/ManyakRus/starter/micro"
 	"github.com/ManyakRus/starter/stopapp"
 	"github.com/emersion/go-message"
+	_ "github.com/emersion/go-message/charset" // поддержка всех кодировок
 	"go.uber.org/atomic"
 )
 
@@ -55,127 +56,205 @@ type MessageInfo struct {
 	Raw     []byte
 }
 
-// ReadMessages - получает все сообщения из почтового ящика
+// ReadMessages - получает все новые сообщения из почтового ящика
 // Возвращает список сообщений и ошибку
 func ReadMessages() ([]MessageInfo, error) {
 	var err error
-
-	// Загружаем настройки
-	FillSettings()
 
 	// Создаём соединение и получаем письма
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
+	messages, err := ReadMessages_ctx(ctx)
+
+	return messages, err
+}
+
+// ReadMessages_ctx - получает все новые сообщения из почтового ящика
+// Возвращает список сообщений и ошибку
+func ReadMessages_ctx(ctx context.Context) ([]MessageInfo, error) {
+	var err error
+
+	// Загружаем настройки
+	if Settings.EMAIL_POP3_SERVER == "" {
+		FillSettings()
+	}
+
 	var messages []MessageInfo
 	err = micro.GoGo(ctx, func() error {
 		var err2 error
-		messages, err2 = receiveMessages()
+		messages, err2 = receiveMessages(false) // false = полные письма
 		return err2
 	})
 
 	return messages, err
 }
 
+// ReadMessagesChan - возвращает канал, в который будут поступать новые сообщения
+// onlyHeaders: если true, загружает только заголовки (быстрее, меньше трафика)
+func ReadMessagesChan(onlyHeaders bool) (<-chan MessageInfo, error) {
+	// Загружаем настройки
+	if Settings.EMAIL_POP3_SERVER == "" {
+		FillSettings()
+	}
+
+	// Создаём канал с буфером для неблокирующей записи
+	ch := make(chan MessageInfo, 10)
+
+	// Запускаем горутину для чтения писем
+	go func() {
+		defer close(ch)
+
+		for {
+			select {
+			case <-(*ctx_Connect).Done():
+				log.Info("POP3 reader stopped by context")
+				return
+			default:
+				// Получаем новые письма
+				messages, err := receiveMessages(onlyHeaders)
+				if err != nil {
+					log.Errorf("POP3 fetch error: %v", err)
+					time.Sleep(30 * time.Second) // пауза при ошибке
+					continue
+				}
+
+				// Отправляем каждое письмо в канал
+				for _, msg := range messages {
+					select {
+					case ch <- msg:
+						// успешно отправлено
+					case <-(*ctx_Connect).Done():
+						return
+					}
+				}
+
+				// Пауза перед следующей проверкой
+				time.Sleep(60 * time.Second)
+			}
+		}
+	}()
+
+	return ch, nil
+}
+
 // receiveMessages - внутренняя функция для получения писем
-func receiveMessages() ([]MessageInfo, error) {
-	// Создаём клиент POP3
+// onlyHeaders: true - только заголовки, false - полные письма
+func receiveMessages(onlyHeaders bool) ([]MessageInfo, error) {
 	p := pop3.New(pop3.Opt{
 		Host:       Settings.EMAIL_POP3_SERVER,
 		Port:       getPOP3Port(),
 		TLSEnabled: isPOP3TLSEnabled(),
 	})
 
-	// Создаём соединение
 	conn, err := p.NewConn()
 	if err != nil {
 		return nil, fmt.Errorf("POP3 connection failed: %w", err)
 	}
 	defer conn.Quit()
 
-	// Аутентификация
 	if err := authenticatePOP3(conn); err != nil {
 		return nil, fmt.Errorf("POP3 auth failed: %w", err)
 	}
 
-	// Получаем статистику (количество писем)
-	count, _, err := conn.Stat()
+	// Получаем UIDL для всех писем (содержит ID и UID)
+	uidsSlice, err := conn.Uidl(0)
 	if err != nil {
-		return nil, fmt.Errorf("POP3 stat failed: %w", err)
+		return nil, fmt.Errorf("POP3 UIDL failed: %w", err)
 	}
 
-	if count == 0 {
-		log.Debug("POP3: no messages")
+	if len(uidsSlice) == 0 {
 		return []MessageInfo{}, nil
 	}
 
-	// Получаем список всех писем
-	msgs, err := conn.List(0)
-	if err != nil {
-		return nil, fmt.Errorf("POP3 list failed: %w", err)
-	}
+	// Загружаем только новые письма
+	result := make([]MessageInfo, 0, len(uidsSlice))
+	newCount := 0
+	alreadyProcessed := 0
 
-	// Получаем UIDL для каждого письма (если нужно)
-	uids, _ := conn.Uidl(0)
+	for _, msg := range uidsSlice {
+		uid := msg.UID
+		id := msg.ID
 
-	// Загружаем каждое письмо
-	result := make([]MessageInfo, 0, len(msgs))
-	for _, msg := range msgs {
-		// Загружаем письмо
-		entity, err := conn.Retr(msg.ID)
-		if err != nil {
-			log.Warnf("POP3: failed to retrieve message %d: %v", msg.ID, err)
+		// Пропускаем уже обработанные
+		if IsUIDProcessed(uid) {
+			alreadyProcessed++
 			continue
 		}
 
-		// Парсим письмо
-		info := parseMessage(msg.ID, msg.Size, entity, uids)
+		var info MessageInfo
+
+		if onlyHeaders {
+			// Только заголовки (TOP 0)
+			entity, err := conn.Top(id, 0)
+			if err != nil {
+				log.Warnf("POP3: failed to get headers for %d: %v", id, err)
+				continue
+			}
+			info = parseMessageHeaders(id, 0, entity, uid)
+		} else {
+			// Полное письмо
+			entity, err := conn.Retr(id)
+			if err != nil {
+				log.Warnf("POP3: failed to retrieve message %d: %v", id, err)
+				continue
+			}
+			info = parseMessageFull(id, 0, entity, uid)
+		}
+
 		result = append(result, info)
 
-		// Опционально: удаляем письмо с сервера (раскомментировать если нужно)
-		// conn.Dele(msg.ID)
+		// Сохраняем UID как обработанный (в память)
+		MarkUIDAsProcessed(uid)
+		newCount++
 	}
 
-	log.Infof("POP3: received %d messages", len(result))
+	// ✅ ЕСЛИ ЕСТЬ НОВЫЕ СООБЩЕНИЯ - СОХРАНЯЕМ В ФАЙЛ
+	if newCount > 0 {
+		if err := SaveProcessedUIDs(); err != nil {
+			log.Errorf("Failed to save processed UIDs: %v", err)
+		} else {
+			//log.Infof("Saved %d new UIDs to file", newCount)
+		}
+	}
+
+	//log.Infof("POP3: total %d messages, %d new, %d already processed",
+	//	len(uidsSlice), newCount, alreadyProcessed)
 	return result, nil
 }
 
-// parseMessage - парсит письмо и извлекает информацию
-func parseMessage(id, size int, entity *message.Entity, uids []pop3.MessageID) MessageInfo {
+// parseMessageHeaders - парсит только заголовки письма
+func parseMessageHeaders(id, size int, entity *message.Entity, uid string) MessageInfo {
 	info := MessageInfo{
 		ID:   id,
 		Size: size,
-	}
-
-	// Ищем UIDL для текущего письма
-	for _, uid := range uids {
-		if uid.ID == id {
-			info.UIDL = uid.UID
-			break
-		}
+		UIDL: uid,
 	}
 
 	// Парсим заголовки
 	header := entity.Header
+	info.Subject = decodeHeader(header.Get("Subject"))
+	info.From = decodeHeader(header.Get("From"))
+	info.To = decodeHeader(header.Get("To"))
 
-	if subject := header.Get("Subject"); subject != "" {
-		info.Subject = decodeHeader(subject)
-	}
-	if from := header.Get("From"); from != "" {
-		info.From = decodeHeader(from)
-	}
-	if to := header.Get("To"); to != "" {
-		info.To = decodeHeader(to)
-	}
 	if dateStr := header.Get("Date"); dateStr != "" {
 		if date, err := time.Parse(time.RFC1123Z, dateStr); err == nil {
 			info.Date = date
 		}
 	}
 
-	// Парсим тело письма
-	info.Text, info.HTML = parseBody(entity)
+	// Тело не заполняем (только заголовки)
+	info.Text = ""
+	info.HTML = ""
 
+	return info
+}
+
+// parseMessageFull - парсит полное письмо (с телом)
+func parseMessageFull(id, size int, entity *message.Entity, uid string) MessageInfo {
+	info := parseMessageHeaders(id, size, entity, uid)
+	// Добавляем тело письма
+	info.Text, info.HTML = parseBody(entity)
 	return info
 }
 
@@ -183,7 +262,6 @@ func parseMessage(id, size int, entity *message.Entity, uids []pop3.MessageID) M
 func parseBody(entity *message.Entity) (string, string) {
 	var textBody, htmlBody string
 
-	// Создаём mail.Reader для парсинга структуры письма
 	mr := mail.NewReader(entity)
 
 	for {
@@ -196,19 +274,19 @@ func parseBody(entity *message.Entity) (string, string) {
 			continue
 		}
 
-		// Получаем Content-Type из заголовков части
+		// Получаем Content-Type
 		contentType := p.Header.Get("Content-Type")
-
-		// Извлекаем только тип (например, "text/plain" из "text/plain; charset=utf-8")
 		mediaType := strings.Split(contentType, ";")[0]
 		mediaType = strings.ToLower(strings.TrimSpace(mediaType))
 
-		// Читаем тело части
+		// Читаем тело части — теперь оно автоматически декодируется в UTF-8
 		bodyBytes, err := io.ReadAll(p.Body)
 		if err != nil {
+			log.Warnf("Failed to read part body: %v", err)
 			continue
 		}
 
+		// Тело уже в UTF-8, можно смело преобразовывать в строку
 		switch mediaType {
 		case "text/plain":
 			if textBody == "" {
@@ -221,11 +299,10 @@ func parseBody(entity *message.Entity) (string, string) {
 		}
 	}
 
-	// Если HTML найден, но текст отсутствует — используем HTML как текст
+	// Если текст пуст, используем HTML как текст
 	if textBody == "" && htmlBody != "" {
 		textBody = stripHTML(htmlBody)
 	}
-	// Если текст найден, но HTML отсутствует — используем текст как HTML
 	if htmlBody == "" && textBody != "" {
 		htmlBody = textBody
 	}
@@ -309,15 +386,48 @@ func isPOP3TLSEnabled() bool {
 }
 
 // Connect - подключение клиента POP3 (для совместимости с интерфейсом)
-func Connect() error {
+func Connect() {
+	err := Connect_err()
+	if err != nil {
+		log.Errorf("Failed to load processed UIDs: %v", err)
+	} else {
+		log.Info("POP3 configured: ", Settings.EMAIL_POP3_SERVER)
+	}
+
+	return
+}
+
+// Connect_err - подключение клиента POP3
+func Connect_err() error {
+	var err error
+
+	//
 	FillSettings()
-	log.Info("POP3 configured: ", Settings.EMAIL_POP3_SERVER)
-	return nil
+
+	// Загружаем историю обработанных UID
+	err = LoadProcessedUIDs()
+
+	return err
 }
 
 // CloseConnection - закрытие соединения (для совместимости)
 func CloseConnection() {
-	//log.Info("POP3 client closed")
+	var err error
+
+	err = CloseConnection_err()
+	if err != nil {
+		log.Errorf("CloseConnection_err() error: %v", err)
+	}
+}
+
+// CloseConnection_err - закрытие соединения (для совместимости)
+func CloseConnection_err() error {
+	var err error
+
+	// Сохраняем обработанные UID перед закрытием
+	err = SaveProcessedUIDs()
+
+	return err
 }
 
 // WaitStop - ожидает отмену глобального контекста
@@ -327,6 +437,7 @@ func WaitStop() {
 	case <-(*ctx_Connect).Done():
 		log.Warn("Context app is canceled. pop3")
 	}
+
 	stopapp.WaitTotalMessagesSendingNow(PackageName)
 	CloseConnection()
 }
@@ -353,8 +464,13 @@ func Start_ctx(ctx *context.Context, wg *sync.WaitGroup) error {
 		SetWaitGroup(wg)
 	}
 
+	//// Загружаем историю обработанных UID
+	//if err := LoadProcessedUIDs(); err != nil {
+	//	log.Errorf("Failed to load processed UIDs: %v", err)
+	//}
+
 	FillSettings()
-	if err := Connect(); err != nil {
+	if err := Connect_err(); err != nil {
 		return err
 	}
 
@@ -393,7 +509,7 @@ func FillSettings() {
 
 	// Проверки
 	if Settings.EMAIL_POP3_SERVER == "" {
-		log.Warn("Need fill EMAIL_POP3_SERVER")
+		log.Panicln("Need fill EMAIL_POP3_SERVER")
 	}
 	if Settings.EMAIL_POP3_LOGIN == "" {
 		log.Panicln("Need fill EMAIL_POP3_LOGIN for POP3")
