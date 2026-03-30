@@ -90,9 +90,9 @@ func ReadMessages_ctx(ctx context.Context) ([]MessageInfo, error) {
 	return messages, err
 }
 
-// ReadMessagesChan - возвращает канал, в который будут поступать новые сообщения
+// ReadMessages_chan - возвращает канал, в который будут поступать новые сообщения
 // onlyHeaders: если true, загружает только заголовки (быстрее, меньше трафика)
-func ReadMessagesChan(onlyHeaders bool) (<-chan MessageInfo, error) {
+func ReadMessages_chan(onlyHeaders bool) (<-chan MessageInfo, error) {
 	// Загружаем настройки
 	if Settings.EMAIL_POP3_SERVER == "" {
 		FillSettings()

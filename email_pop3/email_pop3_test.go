@@ -68,9 +68,9 @@ func TestReadMessagesChan_Headers(t *testing.T) {
 	defer CloseConnection()
 
 	// Запускаем чтение только заголовков
-	ch, err := ReadMessagesChan(true)
+	ch, err := ReadMessages_chan(true)
 	if err != nil {
-		t.Errorf("ReadMessagesChan(true) error: %v", err)
+		t.Errorf("ReadMessages_chan(true) error: %v", err)
 		return
 	}
 
@@ -115,9 +115,9 @@ func TestReadMessagesChan_Full(t *testing.T) {
 	defer CloseConnection()
 
 	// Запускаем чтение полных писем
-	ch, err := ReadMessagesChan(false)
+	ch, err := ReadMessages_chan(false)
 	if err != nil {
-		t.Errorf("ReadMessagesChan(false) error: %v", err)
+		t.Errorf("ReadMessages_chan(false) error: %v", err)
 		return
 	}
 
