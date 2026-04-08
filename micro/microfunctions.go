@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/csv"
 	"encoding/gob"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/ManyakRus/starter/constants_starter"
@@ -2302,4 +2303,22 @@ func IsToday(Date1 time.Time) bool {
 	}
 
 	return Otvet
+}
+
+// StringJSON_from_Map - конвертирует map в строку JSON
+func StringJSON_from_Map(m map[string]interface{}) (string, error) {
+	jsonBytes, err := json.Marshal(m)
+	if err != nil {
+		return "", err
+	}
+	return string(jsonBytes), nil
+}
+
+// StringJSON_from_Map_pretty - конвертирует map в строку JSON, с форматированием (pretty print)
+func StringJSON_from_Map_pretty(m map[string]interface{}) (string, error) {
+	jsonBytes, err := json.MarshalIndent(m, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(jsonBytes), nil
 }

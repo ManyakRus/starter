@@ -2,6 +2,7 @@ package micro
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/ManyakRus/starter/constants_starter"
@@ -2749,5 +2750,256 @@ func TestIsToday(t *testing.T) {
 	Otvet := IsToday(time.Now())
 	if Otvet != true {
 		t.Errorf("Expected true, but got %v", Otvet)
+	}
+}
+
+// Тесты для StringJSON_from_Map
+func TestStringJSON_from_Map(t *testing.T) {
+	tests := []struct {
+		name    string
+		m       map[string]interface{}
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "простой map",
+			m: map[string]interface{}{
+				"name": "John",
+				"age":  30,
+			},
+			want:    `{"age":30,"name":"John"}`,
+			wantErr: false,
+		},
+		{
+			name:    "пустой map",
+			m:       map[string]interface{}{},
+			want:    `{}`,
+			wantErr: false,
+		},
+		{
+			name:    "nil map",
+			m:       nil,
+			want:    `null`,
+			wantErr: false,
+		},
+		{
+			name: "вложенный map",
+			m: map[string]interface{}{
+				"user": map[string]interface{}{
+					"name": "Alice",
+					"age":  25,
+				},
+			},
+			want:    `{"user":{"age":25,"name":"Alice"}}`,
+			wantErr: false,
+		},
+		{
+			name: "массив значений",
+			m: map[string]interface{}{
+				"hobbies": []string{"reading", "gaming"},
+				"scores":  []int{10, 20, 30},
+			},
+			want:    `{"hobbies":["reading","gaming"],"scores":[10,20,30]}`,
+			wantErr: false,
+		},
+		{
+			name: "разные типы данных",
+			m: map[string]interface{}{
+				"string": "text",
+				"int":    42,
+				"float":  3.14,
+				"bool":   true,
+				"null":   nil,
+			},
+			want:    `{"bool":true,"float":3.14,"int":42,"null":null,"string":"text"}`,
+			wantErr: false,
+		},
+		{
+			name: "ошибка - неподдерживаемый тип (chan)",
+			m: map[string]interface{}{
+				"invalid": make(chan int),
+			},
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name: "ошибка - комплексное число",
+			m: map[string]interface{}{
+				"complex": complex(1, 2),
+			},
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name: "ошибка - функция",
+			m: map[string]interface{}{
+				"fn": func() {},
+			},
+			want:    "",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := StringJSON_from_Map(tt.m)
+
+			// Проверка ошибки
+			if (err != nil) != tt.wantErr {
+				t.Errorf("StringJSON_from_Map() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			// Проверка результата (только если нет ошибки)
+			if !tt.wantErr && got != tt.want {
+				// Для отладки показываем оба JSON
+				t.Errorf("StringJSON_from_Map() = %v, want %v", got, tt.want)
+
+				// Дополнительная проверка: пробуем распарсить результат
+				var parsed map[string]interface{}
+				if err := json.Unmarshal([]byte(got), &parsed); err != nil {
+					t.Errorf("Результат не является валидным JSON: %v", err)
+				}
+			}
+		})
+	}
+}
+
+// Тесты для StringJSON_from_Map_pretty
+func TestStringJSON_from_Map_pretty(t *testing.T) {
+	tests := []struct {
+		name    string
+		m       map[string]interface{}
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "простой map",
+			m: map[string]interface{}{
+				"name": "John",
+				"age":  30,
+			},
+			want: `{
+  "age": 30,
+  "name": "John"
+}`,
+			wantErr: false,
+		},
+		{
+			name:    "пустой map",
+			m:       map[string]interface{}{},
+			want:    `{}`,
+			wantErr: false,
+		},
+		{
+			name:    "nil map",
+			m:       nil,
+			want:    `null`,
+			wantErr: false,
+		},
+		{
+			name: "вложенный map",
+			m: map[string]interface{}{
+				"user": map[string]interface{}{
+					"name": "Alice",
+					"age":  25,
+				},
+			},
+			want: `{
+  "user": {
+    "age": 25,
+    "name": "Alice"
+  }
+}`,
+			wantErr: false,
+		},
+		{
+			name: "массив значений",
+			m: map[string]interface{}{
+				"hobbies": []string{"reading", "gaming"},
+				"scores":  []int{10, 20, 30},
+			},
+			want: `{
+  "hobbies": [
+    "reading",
+    "gaming"
+  ],
+  "scores": [
+    10,
+    20,
+    30
+  ]
+}`,
+			wantErr: false,
+		},
+		{
+			name: "сложная структура",
+			m: map[string]interface{}{
+				"user": map[string]interface{}{
+					"name": "Bob",
+					"address": map[string]interface{}{
+						"city":    "Moscow",
+						"street":  "Tverskaya",
+						"zipcode": 125009,
+					},
+				},
+				"active": true,
+			},
+			want: `{
+  "active": true,
+  "user": {
+    "address": {
+      "city": "Moscow",
+      "street": "Tverskaya",
+      "zipcode": 125009
+    },
+    "name": "Bob"
+  }
+}`,
+			wantErr: false,
+		},
+		{
+			name: "разные типы данных",
+			m: map[string]interface{}{
+				"string": "text",
+				"int":    42,
+				"float":  3.14,
+				"bool":   true,
+				"null":   nil,
+			},
+			want: `{
+  "bool": true,
+  "float": 3.14,
+  "int": 42,
+  "null": null,
+  "string": "text"
+}`,
+			wantErr: false,
+		},
+		{
+			name: "ошибка - неподдерживаемый тип",
+			m: map[string]interface{}{
+				"invalid": make(chan int),
+			},
+			want:    "",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := StringJSON_from_Map_pretty(tt.m)
+
+			// Проверка ошибки
+			if (err != nil) != tt.wantErr {
+				t.Errorf("StringJSON_from_Map_pretty() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			// Проверка результата
+			if !tt.wantErr && got != tt.want {
+				t.Errorf("StringJSON_from_Map_pretty() = \n%v\n, want \n%v", got, tt.want)
+			}
+		})
 	}
 }
