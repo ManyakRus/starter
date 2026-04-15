@@ -2322,3 +2322,13 @@ func StringJSON_from_Map_pretty(m map[string]interface{}) (string, error) {
 	}
 	return string(jsonBytes), nil
 }
+
+// IsSliceContainsString - возвращает true если слайс строк содержит нужную строку
+func IsSliceContainsString(slice []string, target string) bool {
+	for _, item := range slice {
+		if item == target {
+			return true
+		}
+	}
+	return false
+}

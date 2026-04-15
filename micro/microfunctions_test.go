@@ -3003,3 +3003,95 @@ func TestStringJSON_from_Map_pretty(t *testing.T) {
 		})
 	}
 }
+
+func TestIsSliceContainString(t *testing.T) {
+	tests := []struct {
+		name     string
+		slice    []string
+		target   string
+		expected bool
+	}{
+		{
+			name:     "строка найдена в середине слайса",
+			slice:    []string{"apple", "banana", "cherry", "date"},
+			target:   "banana",
+			expected: true,
+		},
+		{
+			name:     "строка найдена в начале слайса",
+			slice:    []string{"apple", "banana", "cherry", "date"},
+			target:   "apple",
+			expected: true,
+		},
+		{
+			name:     "строка найдена в конце слайса",
+			slice:    []string{"apple", "banana", "cherry", "date"},
+			target:   "date",
+			expected: true,
+		},
+		{
+			name:     "строка не найдена",
+			slice:    []string{"apple", "banana", "cherry", "date"},
+			target:   "grape",
+			expected: false,
+		},
+		{
+			name:     "пустой слайс",
+			slice:    []string{},
+			target:   "apple",
+			expected: false,
+		},
+		{
+			name:     "слайс с одним элементом - найдено",
+			slice:    []string{"apple"},
+			target:   "apple",
+			expected: true,
+		},
+		{
+			name:     "слайс с одним элементом - не найдено",
+			slice:    []string{"apple"},
+			target:   "banana",
+			expected: false,
+		},
+		{
+			name:     "пустая строка в слайсе - найдено",
+			slice:    []string{"", "apple", "banana"},
+			target:   "",
+			expected: true,
+		},
+		{
+			name:     "пустая строка в слайсе - не найдено",
+			slice:    []string{"apple", "banana"},
+			target:   "",
+			expected: false,
+		},
+		{
+			name:     "регистрозависимость",
+			slice:    []string{"Apple", "Banana", "Cherry"},
+			target:   "apple",
+			expected: false,
+		},
+		{
+			name:     "дубликаты строк - найдено",
+			slice:    []string{"apple", "banana", "apple", "cherry"},
+			target:   "apple",
+			expected: true,
+		},
+		{
+			name:     "nil слайс",
+			slice:    nil,
+			target:   "apple",
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := IsSliceContainsString(tt.slice, tt.target)
+			if result != tt.expected {
+				t.Errorf("IsSliceContainsString(%v, %q) = %v, ожидалось %v",
+					tt.slice, tt.target, result, tt.expected)
+			}
+		})
+	}
+}
