@@ -2332,3 +2332,13 @@ func IsSliceContainsString(slice []string, target string) bool {
 	}
 	return false
 }
+
+// IsSliceContainsString_CaseInsensitive - возвращает true если слайс строк содержит нужную строку, проверка без учёта регистра символов
+func IsSliceContainsString_CaseInsensitive(slice []string, target string) bool {
+	for _, item := range slice {
+		if strings.ToLower(item) == strings.ToLower(target) {
+			return true
+		}
+	}
+	return false
+}

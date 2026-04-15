@@ -3095,3 +3095,143 @@ func TestIsSliceContainString(t *testing.T) {
 		})
 	}
 }
+
+func TestIsSliceContainsString_CaseInsensitive(t *testing.T) {
+	tests := []struct {
+		name     string
+		slice    []string
+		target   string
+		expected bool
+	}{
+		{
+			name:     "точное совпадение - нижний регистр",
+			slice:    []string{"apple", "banana", "cherry"},
+			target:   "banana",
+			expected: true,
+		},
+		{
+			name:     "без учета регистра - target в верхнем регистре",
+			slice:    []string{"apple", "banana", "cherry"},
+			target:   "BANANA",
+			expected: true,
+		},
+		{
+			name:     "без учета регистра - target с разным регистром",
+			slice:    []string{"apple", "banana", "cherry"},
+			target:   "BaNaNa",
+			expected: true,
+		},
+		{
+			name:     "без учета регистра - элемент в верхнем регистре",
+			slice:    []string{"APPLE", "BANANA", "CHERRY"},
+			target:   "apple",
+			expected: true,
+		},
+		{
+			name:     "без учета регистра - смешанный регистр в слайсе",
+			slice:    []string{"Apple", "Banana", "Cherry"},
+			target:   "apple",
+			expected: true,
+		},
+		{
+			name:     "строка не найдена",
+			slice:    []string{"apple", "banana", "cherry"},
+			target:   "grape",
+			expected: false,
+		},
+		{
+			name:     "пустой слайс",
+			slice:    []string{},
+			target:   "apple",
+			expected: false,
+		},
+		{
+			name:     "nil слайс",
+			slice:    nil,
+			target:   "apple",
+			expected: false,
+		},
+		{
+			name:     "пустая строка в слайсе - найдено",
+			slice:    []string{"", "apple", "banana"},
+			target:   "",
+			expected: true,
+		},
+		{
+			name:     "пустая строка в слайсе - не найдено",
+			slice:    []string{"apple", "banana"},
+			target:   "",
+			expected: false,
+		},
+		{
+			name:     "пустая строка в target - найдено",
+			slice:    []string{"", "apple", "banana"},
+			target:   "",
+			expected: true,
+		},
+		{
+			name:     "один элемент - найдено с разным регистром",
+			slice:    []string{"Hello"},
+			target:   "hello",
+			expected: true,
+		},
+		{
+			name:     "один элемент - не найдено",
+			slice:    []string{"Hello"},
+			target:   "world",
+			expected: false,
+		},
+		{
+			name:     "unicode символы - русский язык",
+			slice:    []string{"Привет", "Мир", "Go"},
+			target:   "привет",
+			expected: true,
+		},
+		{
+			name:     "unicode символы - разные регистры",
+			slice:    []string{"ПРИВЕТ", "МИР"},
+			target:   "привет",
+			expected: true,
+		},
+		{
+			name:     "unicode символы - смешанный регистр",
+			slice:    []string{"ПрИвЕт", "Мир"},
+			target:   "привет",
+			expected: true,
+		},
+		{
+			name:     "специальные символы",
+			slice:    []string{"hello-world", "hello_world", "hello@world"},
+			target:   "HELLO-WORLD",
+			expected: true,
+		},
+		{
+			name:     "цифры и буквы",
+			slice:    []string{"item123", "item456", "item789"},
+			target:   "ITEM123",
+			expected: true,
+		},
+		{
+			name:     "пробелы в начале и конце",
+			slice:    []string{"  apple  ", "banana", "cherry"},
+			target:   "  APPLE  ",
+			expected: true,
+		},
+		{
+			name:     "дубликаты - найдено",
+			slice:    []string{"apple", "banana", "apple", "cherry"},
+			target:   "APPLE",
+			expected: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := IsSliceContainsString_CaseInsensitive(tt.slice, tt.target)
+			if result != tt.expected {
+				t.Errorf("IsSliceContainsString_CaseInsensitive(%v, %q) = %v, ожидалось %v",
+					tt.slice, tt.target, result, tt.expected)
+			}
+		})
+	}
+}
