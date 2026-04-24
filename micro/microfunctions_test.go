@@ -316,6 +316,18 @@ func TestStringDate(t *testing.T) {
 	}
 }
 
+func TestStringDate_or_empty(t *testing.T) {
+	Otvet := StringDate_or_empty(time.Now())
+	if Otvet == "" {
+		t.Error("StringDate_or_empty() error: =''")
+	}
+
+	Otvet = StringDate_or_empty(time.Time{})
+	if Otvet != "" {
+		t.Error("StringDate_or_empty() error: !=''")
+	}
+}
+
 func TestProgramDir_bin(t *testing.T) {
 	Otvet := ProgramDir_bin()
 	if Otvet == "" {

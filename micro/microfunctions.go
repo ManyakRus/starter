@@ -760,6 +760,20 @@ func StringDate(t time.Time) string {
 	return Otvet
 }
 
+// StringDate_or_empty - возвращает строку дата без времени, или пустую строку
+func StringDate_or_empty(t time.Time) string {
+	Otvet := ""
+
+	//пустая дата = пустая строка
+	if t.IsZero() == true {
+		return Otvet
+	}
+
+	Otvet = t.Format("02.01.2006")
+
+	return Otvet
+}
+
 // StringDateTime - возвращает строку дата и время, без миллисекунд
 func StringDateTime(t time.Time) string {
 	Otvet := ""
