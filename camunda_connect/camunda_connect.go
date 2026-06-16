@@ -4,6 +4,8 @@ package camunda_connect
 import (
 	"context"
 	"fmt"
+	"github.com/ManyakRus/starter/contextmain"
+
 	//"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/port_checker"
@@ -101,6 +103,14 @@ func Connect_err() error {
 	})
 	if err != nil {
 		return err
+	}
+
+	//отправим ping для проверки соединения
+	ctx, cancel := context.WithTimeout(contextmain.GetContext(), 60*time.Second)
+	defer cancel()
+	_, err = Client.NewTopologyCommand().Send(ctx)
+	if err != nil {
+		err = fmt.Errorf("Connect_err() проверка ping() error: %w", err)
 	}
 
 	//log.Infoln("CAMUNDA connected. ip: ", Settings.CAMUNDA_HOST)
