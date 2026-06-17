@@ -203,10 +203,14 @@ func WorkComplete_answer(client worker.JobClient, jobKey int64, variables map[st
 
 // WorkFails - отправляет статус ошибки на сервер Camunda
 func WorkFails(err error, client worker.JobClient, job entities.Job) error {
+	//err должен быть непустой
 	if err == nil {
-		log.Panicln("err =nil")
+		err2 := fmt.Errorf("WorkFails() error: err=nil")
+		log.Warn(err2)
+		return err2
 	}
 
+	//
 	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
 	defer cancel()
 

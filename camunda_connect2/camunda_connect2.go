@@ -4,6 +4,9 @@ package camunda_connect2
 
 import (
 	"context"
+	"fmt"
+	"github.com/ManyakRus/starter/contextmain"
+
 	//"github.com/ManyakRus/starter/contextmain"
 	"github.com/ManyakRus/starter/log"
 	"github.com/ManyakRus/starter/micro"
@@ -93,6 +96,14 @@ func Connect_err() error {
 		return err
 	}
 
+	//отправим ping для проверки соединения
+	ctx, cancel := context.WithTimeout(contextmain.GetContext(), 60*time.Second)
+	defer cancel()
+	_, err = Client.NewTopologyCommand().Send(ctx)
+	if err != nil {
+		err = fmt.Errorf("Connect_err() проверка ping() error: %w", err)
+	}
+
 	//log.Infoln("CAMUNDA connected. ip: ", Settings.CAMUNDA_HOST)
 
 	// JobWorker = Client.NewJobWorker().JobType(CAMUNDA_ID).Handler(HandleJob).Open()
@@ -163,10 +174,14 @@ func WorkComplete(client worker.JobClient, jobKey int64, variables map[string]in
 
 // WorkFails - отправляет статус ошибки на сервер Camunda
 func WorkFails(err error, client worker.JobClient, job entities.Job) error {
+	//err должен быть непустой
 	if err == nil {
-		log.Panicln("err =nil")
+		err2 := fmt.Errorf("WorkFails() error: err=nil")
+		log.Warn(err2)
+		return err2
 	}
 
+	//
 	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
 	defer cancel()
 
