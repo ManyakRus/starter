@@ -139,6 +139,12 @@ func Connect_WithApplicationName_err(ApplicationName string) error {
 		config.AfterConnect = AfterConnect_NoNull
 	}
 	//config.PreferSimpleProtocol = true //для мульти-запросов
+
+	// ✅ Закрываем старый пул
+	if PgxPool != nil {
+		PgxPool.Close()
+	}
+
 	PgxPool = nil
 	PgxPool, err = pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
