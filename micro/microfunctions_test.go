@@ -3247,3 +3247,131 @@ func TestIsSliceContainsString_CaseInsensitive(t *testing.T) {
 		})
 	}
 }
+
+func TestIsStringContainsSlice(t *testing.T) {
+	tests := []struct {
+		name       string
+		s          string
+		substrings []string
+		expected   bool
+	}{
+		{
+			name:       "строка содержит одно из значений",
+			s:          "Hello, World!",
+			substrings: []string{"foo", "bar", "World"},
+			expected:   true,
+		},
+		{
+			name:       "строка содержит первое значение",
+			s:          "foo bar baz",
+			substrings: []string{"foo", "test", "example"},
+			expected:   true,
+		},
+		{
+			name:       "строка содержит последнее значение",
+			s:          "hello world example",
+			substrings: []string{"foo", "bar", "example"},
+			expected:   true,
+		},
+		{
+			name:       "строка не содержит ни одного значения",
+			s:          "Hello, World!",
+			substrings: []string{"foo", "bar", "baz"},
+			expected:   false,
+		},
+		{
+			name:       "пустая строка",
+			s:          "",
+			substrings: []string{"foo", "bar"},
+			expected:   false,
+		},
+		{
+			name:       "пустой массив подстрок",
+			s:          "Hello, World!",
+			substrings: []string{},
+			expected:   false,
+		},
+		{
+			name:       "оба пустые",
+			s:          "",
+			substrings: []string{},
+			expected:   false,
+		},
+		{
+			name:       "точное совпадение",
+			s:          "test",
+			substrings: []string{"test"},
+			expected:   true,
+		},
+		{
+			name:       "подстрока в начале",
+			s:          "abcdef",
+			substrings: []string{"abc"},
+			expected:   true,
+		},
+		{
+			name:       "подстрока в конце",
+			s:          "abcdef",
+			substrings: []string{"def"},
+			expected:   true,
+		},
+		{
+			name:       "подстрока посередине",
+			s:          "abcdef",
+			substrings: []string{"cd"},
+			expected:   true,
+		},
+		{
+			name:       "чувствительность к регистру - не найдено",
+			s:          "Hello World",
+			substrings: []string{"hello"},
+			expected:   false,
+		},
+		{
+			name:       "чувствительность к регистру - найдено",
+			s:          "Hello World",
+			substrings: []string{"Hello"},
+			expected:   true,
+		},
+		{
+			name:       "несколько совпадений",
+			s:          "foo bar foo bar",
+			substrings: []string{"foo", "bar"},
+			expected:   true,
+		},
+		{
+			name:       "пробел как подстрока",
+			s:          "hello world",
+			substrings: []string{" "},
+			expected:   true,
+		},
+		{
+			name:       "специальные символы",
+			s:          "email@example.com",
+			substrings: []string{"@", "."},
+			expected:   true,
+		},
+		{
+			name:       "unicode символы",
+			s:          "Привет мир",
+			substrings: []string{"Привет", "мир"},
+			expected:   true,
+		},
+		{
+			name:       "empty string in substrings",
+			s:          "hello",
+			substrings: []string{""},
+			expected:   true, // strings.Contains("hello", "") возвращает true
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := IsStringContainsSlice(tt.s, tt.substrings)
+			if result != tt.expected {
+				t.Errorf("IsStringContainsSlice(%q, %v) = %v; want %v",
+					tt.s, tt.substrings, result, tt.expected)
+			}
+		})
+	}
+}

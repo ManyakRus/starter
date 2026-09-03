@@ -2356,3 +2356,14 @@ func IsSliceContainsString_CaseInsensitive(slice []string, target string) bool {
 	}
 	return false
 }
+
+// IsStringContainsSlice - возвращает true если строка содержит любое значение из массива
+func IsStringContainsSlice(s string, MassSubstrings []string) bool {
+	for _, sub := range MassSubstrings {
+		if strings.Contains(s, sub) {
+			return true
+		}
+	}
+
+	return false
+}
