@@ -504,8 +504,17 @@ func GetConnection_WithApplicationName(ApplicationName string) *pgx.Conn {
 // if err != nil {
 // }
 // defer rows.Close()
-
 func RawMultipleSQL(tx IConnectionTransaction, TextSQL string) (pgx.Rows, error) {
+	ctx := GetContext()
+	return RawMultipleSQL_ctx(*ctx, tx, TextSQL)
+}
+
+// RawMultipleSQL_ctx - выполняет текст запроса, отдельно для каждого запроса
+// после вызова, в конце необходимо закрыть rows!
+// if err != nil {
+// }
+// defer rows.Close()
+func RawMultipleSQL_ctx(ctx context.Context, tx IConnectionTransaction, TextSQL string) (pgx.Rows, error) {
 	var rows pgx.Rows
 	var err error
 
@@ -523,7 +532,7 @@ func RawMultipleSQL(tx IConnectionTransaction, TextSQL string) (pgx.Rows, error)
 	//	return rows, err
 	//}
 
-	ctx := GetContext()
+	//ctx := GetContext()
 
 	//запустим транзакцию
 	//tx, err := tx.Begin(ctx)
@@ -542,7 +551,7 @@ func RawMultipleSQL(tx IConnectionTransaction, TextSQL string) (pgx.Rows, error)
 	if pos1 > 0 {
 		TextSQL1 = TextSQL[0:pos1]
 		TextSQL2 = TextSQL[pos1:]
-		_, err := tx.Exec(*ctx, TextSQL1)
+		_, err := tx.Exec(ctx, TextSQL1)
 		if err != nil {
 			TextError := fmt.Sprint("tx.Exec() error: ", err, ", TextSQL: \n", TextSQL1)
 			err = errors.New(TextError)
@@ -552,7 +561,7 @@ func RawMultipleSQL(tx IConnectionTransaction, TextSQL string) (pgx.Rows, error)
 	}
 
 	//запустим последний запрос, с возвратом результата
-	rows, err = tx.Query(*ctx, TextSQL2)
+	rows, err = tx.Query(ctx, TextSQL2)
 	if err != nil {
 		TextError := fmt.Sprint("tx.Raw() error: ", err, ", TextSQL: \n", TextSQL2)
 		err = errors.New(TextError)

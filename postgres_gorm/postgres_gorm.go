@@ -546,6 +546,13 @@ loop:
 
 // RawMultipleSQL - выполняет текст запроса, отдельно для каждого запроса
 func RawMultipleSQL(db *gorm.DB, TextSQL string) *gorm.DB {
+	ctx := GetContext()
+	return RawMultipleSQL_ctx(*ctx, db, TextSQL)
+}
+
+// RawMultipleSQL_ctx - выполняет текст запроса, отдельно для каждого запроса
+// надо WithContext() но не буду, боюсь утечку памяти
+func RawMultipleSQL_ctx(ctx context.Context, db *gorm.DB, TextSQL string) *gorm.DB {
 	var tx *gorm.DB
 	var err error
 	tx = db

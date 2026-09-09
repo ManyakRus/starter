@@ -531,8 +531,17 @@ func GetConnection_WithApplicationName(ApplicationName string) *pgxpool.Pool {
 // if err != nil {
 // }
 // defer rows.Close()
-
 func RawMultipleSQL(tx postgres_pgx.IConnectionTransaction, TextSQL string) (pgx.Rows, error) {
+	ctx := GetContext()
+	return RawMultipleSQL_ctx(*ctx, tx, TextSQL)
+}
+
+// RawMultipleSQL_ctx - выполняет текст запроса, отдельно для каждого запроса
+// после вызова, в конце необходимо закрыть rows!
+// if err != nil {
+// }
+// defer rows.Close()
+func RawMultipleSQL_ctx(ctx context.Context, tx postgres_pgx.IConnectionTransaction, TextSQL string) (pgx.Rows, error) {
 	var rows pgx.Rows
 	var err error
 
@@ -543,7 +552,7 @@ func RawMultipleSQL(tx postgres_pgx.IConnectionTransaction, TextSQL string) (pgx
 		return rows, err
 	}
 
-	ctx := *ctx_Connect
+	//ctx := *ctx_Connect
 
 	//запустим транзакцию
 	//tx, err := tx.Begin(ctx)
