@@ -210,21 +210,35 @@ func TestMin(t *testing.T) {
 func TestMaxInt64(t *testing.T) {
 	Otvet := MaxInt64(1, 2, 3, 4)
 	if Otvet != 4 {
-		t.Error("microfunctions_test.TestMax() error: Otvet != 2")
+		t.Error("microfunctions_test.TestMaxInt64() error: Otvet != 2")
 	}
 }
 
 func TestMinInt64(t *testing.T) {
 	Otvet := MinInt64(1, 2, 3, 4)
 	if Otvet != 1 {
-		t.Error("microfunctions_test.TestMin() error: Otvet != 1")
+		t.Error("microfunctions_test.TestMinInt64() error: Otvet != 1")
+	}
+}
+
+func TestMinInt32(t *testing.T) {
+	Otvet := MinInt64(1, 2, 3, 4)
+	if Otvet != 1 {
+		t.Error("microfunctions_test.TestMinInt32() error: Otvet != 1")
 	}
 }
 
 func TestMaxInt(t *testing.T) {
 	Otvet := MaxInt(1, 2, 3, 4)
 	if Otvet != 4 {
-		t.Error("microfunctions_test.TestMaxInt() error: Otvet != 2")
+		t.Error("microfunctions_test.TestMaxInt() error: Otvet != 4")
+	}
+}
+
+func TestMaxInt32(t *testing.T) {
+	Otvet := MaxInt32(1, 2, 3, 4)
+	if Otvet != 4 {
+		t.Error("microfunctions_test.TestMaxInt32() error: Otvet != 4")
 	}
 }
 

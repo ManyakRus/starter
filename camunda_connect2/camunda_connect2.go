@@ -187,8 +187,12 @@ func WorkFails(err error, client worker.JobClient, job entities.Job) error {
 
 	jobKey := job.GetKey()
 	retries := job.GetRetries()
+	retries = retries - 1
+	if retries < 0 {
+		retries = 0
+	}
 
-	_, err1 := client.NewFailJobCommand().JobKey(jobKey).Retries(retries - 1).ErrorMessage(err.Error()).Send(ctx)
+	_, err1 := client.NewFailJobCommand().JobKey(jobKey).Retries(retries).ErrorMessage(err.Error()).Send(ctx)
 	if err1 != nil {
 		log.Error("camunda_connect.WorkFails() error: ", err1)
 	}
