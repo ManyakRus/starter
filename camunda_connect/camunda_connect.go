@@ -216,7 +216,26 @@ func WorkComplete_answer(client worker.JobClient, jobKey int64, variables map[st
 
 	Otvet, err := request.Send(ctx)
 	if err != nil {
-		log.Error("camunda_connect.WorkComplete() error: ", err)
+		log.Error("camunda_connect.WorkComplete_answer() error: ", err)
+
+		//вторая попытка
+		//реконнект
+		err = Connect_err()
+		if err != nil {
+			NeedReconnect = true
+			log.Error("Connect_err() error: ", err)
+		}
+
+		//повтор отправки
+		request, err = Client.NewCompleteJobCommand().JobKey(jobKey).VariablesFromMap(variables)
+		if err != nil {
+			log.Error(err)
+			return Otvet, err
+		}
+		_, err = request.Send(ctx)
+		if err != nil {
+			log.Error("camunda_connect.WorkComplete_answer() retry error: ", err)
+		}
 	}
 
 	// log.Debugf("[INFO] HandleJob, %v, complete\n", jobKey)
