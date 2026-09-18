@@ -238,7 +238,6 @@ func WorkComplete_answer(jobKey int64, variables map[string]interface{}) (*pb.Co
 		}
 	}
 
-	// log.Debugf("[INFO] HandleJob, %v, complete\n", jobKey)
 	return Otvet, err
 }
 
