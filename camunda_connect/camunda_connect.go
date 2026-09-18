@@ -204,9 +204,9 @@ func WorkComplete(jobKey int64, variables map[string]interface{}) error {
 }
 
 // WorkComplete_answer - отправляет статус ОК на сервер Camunda, и возвращает ответ
-func WorkComplete_answer(client worker.JobClient, jobKey int64, variables map[string]interface{}) (*pb.CompleteJobResponse, error) {
+func WorkComplete_answer(jobKey int64, variables map[string]interface{}) (*pb.CompleteJobResponse, error) {
 
-	request, err := client.NewCompleteJobCommand().JobKey(jobKey).VariablesFromMap(variables)
+	request, err := Client.NewCompleteJobCommand().JobKey(jobKey).VariablesFromMap(variables)
 	if err != nil {
 		log.Panicln(err)
 	}
