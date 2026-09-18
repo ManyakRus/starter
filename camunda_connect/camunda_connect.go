@@ -30,6 +30,9 @@ var Settings SettingsINI
 // NeedReconnect - флаг необходимости переподключения
 var NeedReconnect bool
 
+// TextRPCError - текст ошибки "rpc error"
+//const TextRPCError = "rpc error"
+
 // SettingsINI - структура для хранения всех нужных переменных окружения
 type SettingsINI struct {
 	CAMUNDA_HOST string
@@ -161,19 +164,39 @@ func GetURL() string {
 }
 
 // WorkComplete - отправляет статус ОК на сервер Camunda
-func WorkComplete(client worker.JobClient, jobKey int64, variables map[string]interface{}) error {
+func WorkComplete(jobKey int64, variables map[string]interface{}) error {
 
-	request, err := client.NewCompleteJobCommand().JobKey(jobKey).VariablesFromMap(variables)
+	request, err := Client.NewCompleteJobCommand().JobKey(jobKey).VariablesFromMap(variables)
 	if err != nil {
-		log.Panicln(err)
+		log.Error(err)
+		return err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
+	ctx, cancel := context.WithTimeout(contextmain.GetContext(), 300*time.Second)
 	defer cancel()
 
 	_, err = request.Send(ctx)
 	if err != nil {
-		log.Error("camunda_connect.WorkComplete() error: ", err)
+		log.Warn("camunda_connect.WorkComplete() error: ", err)
+
+		//вторая попытка
+		//реконнект
+		err = Connect_err()
+		if err != nil {
+			NeedReconnect = true
+			log.Error("Connect_err() error: ", err)
+		}
+
+		//повтор отправки
+		request, err = Client.NewCompleteJobCommand().JobKey(jobKey).VariablesFromMap(variables)
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+		_, err = request.Send(ctx)
+		if err != nil {
+			log.Error("camunda_connect.WorkComplete() retry error: ", err)
+		}
 	}
 
 	// log.Debugf("[INFO] HandleJob, %v, complete\n", jobKey)
@@ -201,9 +224,11 @@ func WorkComplete_answer(client worker.JobClient, jobKey int64, variables map[st
 }
 
 // WorkFails - отправляет статус ошибки на сервер Camunda
-func WorkFails(err error, client worker.JobClient, job entities.Job) error {
+func WorkFails(job entities.Job, err0 error) error {
+	var err error
+
 	//err должен быть непустой
-	if err == nil {
+	if err0 == nil {
 		err2 := fmt.Errorf("WorkFails() error: err=nil")
 		log.Warn(err2)
 		return err2
@@ -213,6 +238,7 @@ func WorkFails(err error, client worker.JobClient, job entities.Job) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
 	defer cancel()
 
+	//retries - 1
 	jobKey := job.GetKey()
 	retries := job.GetRetries()
 	retries = retries - 1
@@ -220,13 +246,27 @@ func WorkFails(err error, client worker.JobClient, job entities.Job) error {
 		retries = 0
 	}
 
-	_, err1 := client.NewFailJobCommand().JobKey(jobKey).Retries(retries).ErrorMessage(err.Error()).Send(ctx)
-	if err1 != nil {
-		log.Error("camunda_connect.WorkFails() error: ", err1)
+	_, err = Client.NewFailJobCommand().JobKey(jobKey).Retries(retries).ErrorMessage(err0.Error()).Send(ctx)
+	if err != nil {
+		log.Error("camunda_connect.WorkFails() error: ", err)
+
+		//вторая попытка
+		//реконнект
+		err = Connect_err()
+		if err != nil {
+			NeedReconnect = true
+			log.Error("Connect_err() error: ", err)
+		}
+
+		//повтор отправки
+		_, err = Client.NewFailJobCommand().JobKey(jobKey).Retries(retries).ErrorMessage(err0.Error()).Send(ctx)
+		if err != nil {
+			log.Error("camunda_connect.WorkFails() retry error: ", err)
+		}
 	}
 
 	// log.Debugf("[WARNING] HandleJob, %v, fail\n", jobKey)
-	return err1
+	return err
 }
 
 // WaitStop - ожидает отмену глобального контекста
@@ -382,19 +422,35 @@ loop:
 			log.Warn("Context app is canceled. camunda_connect.ping")
 			break loop
 		case <-ticker.C:
-			err = port_checker.CheckPort_err(Settings.CAMUNDA_HOST, Settings.CAMUNDA_PORT)
-			// log.Debug("ticker, ping err: ", err) //удалить
+			//проверяем порт
+			err_port := port_checker.CheckPort_err(Settings.CAMUNDA_HOST, Settings.CAMUNDA_PORT)
 			if err != nil {
+				log.Warn("CAMUNDA CheckPort(", addr, ") error: ", err_port)
 				NeedReconnect = true
-				log.Warn("CAMUNDA CheckPort(", addr, ") error: ", err)
-			} else if NeedReconnect == true {
-				log.Warn("CAMUNDA CheckPort(", addr, ") OK. Start Reconnect()")
+				continue //реконнект нужен когда не будет ошибки
+			}
+
+			//проверяем тестовый запрос в камунду
+			ctx, cancelfunc := context.WithTimeout(contextmain.GetContext(), time.Second*60)
+			defer cancelfunc()
+			_, err2 := Client.NewTopologyCommand().Send(ctx)
+			if err2 != nil {
+				log.Warn("CAMUNDA Check NewTopologyCommand() error: ", err2)
+				NeedReconnect = true
+			}
+
+			//
+			//err = errors.Join(err_port, err2)
+
+			//реконнект
+			if NeedReconnect == true {
+				log.Warn("CAMUNDA Check ", addr, " OK. Start Reconnect()")
 				NeedReconnect = false
 				err = Connect_err()
 				if err != nil {
 					NeedReconnect = true
 					log.Error("Connect_err() error: ", err)
-					break
+					continue
 				}
 
 				//новый JobWorker
@@ -403,6 +459,7 @@ loop:
 				}
 				JobWorker = Client.NewJobWorker().JobType(CAMUNDA_JOBTYPE).Handler(HandleJob).Open()
 			}
+
 		}
 	}
 
