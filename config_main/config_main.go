@@ -95,7 +95,7 @@ func LoadEnv_from_file(filename string) {
 func LoadEnv_from_file_err(filename string) error {
 	var err error
 
-	err = godotenv.Load(filename)
+	err = godotenv.Overload(filename)
 
 	return err
 }
