@@ -32,7 +32,7 @@ var getReportingFields = sync.OnceValue(func() (output []reportingField) {
 
 type reportingField struct {
 	FieldNumber int              `json:"f"`
-	IsMessage   bool             `json:"m,omitempty"`
+	IsMessage   bool             `json:"m,omitzero"`
 	Subfields   []reportingField `json:"s,omitempty"`
 }
 
@@ -53,7 +53,7 @@ func (cli *Client) getMessageReportingToken(
 	messageID types.MessageID,
 ) waBinary.Node {
 	reportingSecret, _ := generateMsgSecretKey(
-		EncSecretReportToken, senderJID, messageID, remoteJID,
+		EncSecretReportToken, remoteJID, messageID, senderJID,
 		msg.GetMessageContextInfo().GetMessageSecret(),
 	)
 	hasher := hmac.New(sha256.New, reportingSecret)

@@ -389,6 +389,71 @@ func (s MessageEntityClassArray) AsMessageEntityBlockquote() (to MessageEntityBl
 	return to
 }
 
+// AsMessageEntityFormattedDate returns copy with only MessageEntityFormattedDate constructors.
+func (s MessageEntityClassArray) AsMessageEntityFormattedDate() (to MessageEntityFormattedDateArray) {
+	for _, elem := range s {
+		value, ok := elem.(*MessageEntityFormattedDate)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsMessageEntityDiffInsert returns copy with only MessageEntityDiffInsert constructors.
+func (s MessageEntityClassArray) AsMessageEntityDiffInsert() (to MessageEntityDiffInsertArray) {
+	for _, elem := range s {
+		value, ok := elem.(*MessageEntityDiffInsert)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsMessageEntityDiffReplace returns copy with only MessageEntityDiffReplace constructors.
+func (s MessageEntityClassArray) AsMessageEntityDiffReplace() (to MessageEntityDiffReplaceArray) {
+	for _, elem := range s {
+		value, ok := elem.(*MessageEntityDiffReplace)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsMessageEntityDiffDelete returns copy with only MessageEntityDiffDelete constructors.
+func (s MessageEntityClassArray) AsMessageEntityDiffDelete() (to MessageEntityDiffDeleteArray) {
+	for _, elem := range s {
+		value, ok := elem.(*MessageEntityDiffDelete)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsMessageEntityTonAddress returns copy with only MessageEntityTonAddress constructors.
+func (s MessageEntityClassArray) AsMessageEntityTonAddress() (to MessageEntityTonAddressArray) {
+	for _, elem := range s {
+		value, ok := elem.(*MessageEntityTonAddress)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
 // MessageEntityUnknownArray is adapter for slice of MessageEntityUnknown.
 type MessageEntityUnknownArray []MessageEntityUnknown
 
@@ -2099,6 +2164,430 @@ func (s *MessageEntityBlockquoteArray) PopFirst() (v MessageEntityBlockquote, ok
 
 // Pop returns last element of slice (if exists) and deletes it.
 func (s *MessageEntityBlockquoteArray) Pop() (v MessageEntityBlockquote, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// MessageEntityFormattedDateArray is adapter for slice of MessageEntityFormattedDate.
+type MessageEntityFormattedDateArray []MessageEntityFormattedDate
+
+// Sort sorts slice of MessageEntityFormattedDate.
+func (s MessageEntityFormattedDateArray) Sort(less func(a, b MessageEntityFormattedDate) bool) MessageEntityFormattedDateArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of MessageEntityFormattedDate.
+func (s MessageEntityFormattedDateArray) SortStable(less func(a, b MessageEntityFormattedDate) bool) MessageEntityFormattedDateArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of MessageEntityFormattedDate.
+func (s MessageEntityFormattedDateArray) Retain(keep func(x MessageEntityFormattedDate) bool) MessageEntityFormattedDateArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s MessageEntityFormattedDateArray) First() (v MessageEntityFormattedDate, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s MessageEntityFormattedDateArray) Last() (v MessageEntityFormattedDate, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *MessageEntityFormattedDateArray) PopFirst() (v MessageEntityFormattedDate, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero MessageEntityFormattedDate
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *MessageEntityFormattedDateArray) Pop() (v MessageEntityFormattedDate, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// SortByDate sorts slice of MessageEntityFormattedDate by Date.
+func (s MessageEntityFormattedDateArray) SortByDate() MessageEntityFormattedDateArray {
+	return s.Sort(func(a, b MessageEntityFormattedDate) bool {
+		return a.GetDate() < b.GetDate()
+	})
+}
+
+// SortStableByDate sorts slice of MessageEntityFormattedDate by Date.
+func (s MessageEntityFormattedDateArray) SortStableByDate() MessageEntityFormattedDateArray {
+	return s.SortStable(func(a, b MessageEntityFormattedDate) bool {
+		return a.GetDate() < b.GetDate()
+	})
+}
+
+// MessageEntityDiffInsertArray is adapter for slice of MessageEntityDiffInsert.
+type MessageEntityDiffInsertArray []MessageEntityDiffInsert
+
+// Sort sorts slice of MessageEntityDiffInsert.
+func (s MessageEntityDiffInsertArray) Sort(less func(a, b MessageEntityDiffInsert) bool) MessageEntityDiffInsertArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of MessageEntityDiffInsert.
+func (s MessageEntityDiffInsertArray) SortStable(less func(a, b MessageEntityDiffInsert) bool) MessageEntityDiffInsertArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of MessageEntityDiffInsert.
+func (s MessageEntityDiffInsertArray) Retain(keep func(x MessageEntityDiffInsert) bool) MessageEntityDiffInsertArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s MessageEntityDiffInsertArray) First() (v MessageEntityDiffInsert, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s MessageEntityDiffInsertArray) Last() (v MessageEntityDiffInsert, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *MessageEntityDiffInsertArray) PopFirst() (v MessageEntityDiffInsert, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero MessageEntityDiffInsert
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *MessageEntityDiffInsertArray) Pop() (v MessageEntityDiffInsert, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// MessageEntityDiffReplaceArray is adapter for slice of MessageEntityDiffReplace.
+type MessageEntityDiffReplaceArray []MessageEntityDiffReplace
+
+// Sort sorts slice of MessageEntityDiffReplace.
+func (s MessageEntityDiffReplaceArray) Sort(less func(a, b MessageEntityDiffReplace) bool) MessageEntityDiffReplaceArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of MessageEntityDiffReplace.
+func (s MessageEntityDiffReplaceArray) SortStable(less func(a, b MessageEntityDiffReplace) bool) MessageEntityDiffReplaceArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of MessageEntityDiffReplace.
+func (s MessageEntityDiffReplaceArray) Retain(keep func(x MessageEntityDiffReplace) bool) MessageEntityDiffReplaceArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s MessageEntityDiffReplaceArray) First() (v MessageEntityDiffReplace, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s MessageEntityDiffReplaceArray) Last() (v MessageEntityDiffReplace, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *MessageEntityDiffReplaceArray) PopFirst() (v MessageEntityDiffReplace, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero MessageEntityDiffReplace
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *MessageEntityDiffReplaceArray) Pop() (v MessageEntityDiffReplace, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// MessageEntityDiffDeleteArray is adapter for slice of MessageEntityDiffDelete.
+type MessageEntityDiffDeleteArray []MessageEntityDiffDelete
+
+// Sort sorts slice of MessageEntityDiffDelete.
+func (s MessageEntityDiffDeleteArray) Sort(less func(a, b MessageEntityDiffDelete) bool) MessageEntityDiffDeleteArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of MessageEntityDiffDelete.
+func (s MessageEntityDiffDeleteArray) SortStable(less func(a, b MessageEntityDiffDelete) bool) MessageEntityDiffDeleteArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of MessageEntityDiffDelete.
+func (s MessageEntityDiffDeleteArray) Retain(keep func(x MessageEntityDiffDelete) bool) MessageEntityDiffDeleteArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s MessageEntityDiffDeleteArray) First() (v MessageEntityDiffDelete, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s MessageEntityDiffDeleteArray) Last() (v MessageEntityDiffDelete, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *MessageEntityDiffDeleteArray) PopFirst() (v MessageEntityDiffDelete, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero MessageEntityDiffDelete
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *MessageEntityDiffDeleteArray) Pop() (v MessageEntityDiffDelete, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// MessageEntityTonAddressArray is adapter for slice of MessageEntityTonAddress.
+type MessageEntityTonAddressArray []MessageEntityTonAddress
+
+// Sort sorts slice of MessageEntityTonAddress.
+func (s MessageEntityTonAddressArray) Sort(less func(a, b MessageEntityTonAddress) bool) MessageEntityTonAddressArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of MessageEntityTonAddress.
+func (s MessageEntityTonAddressArray) SortStable(less func(a, b MessageEntityTonAddress) bool) MessageEntityTonAddressArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of MessageEntityTonAddress.
+func (s MessageEntityTonAddressArray) Retain(keep func(x MessageEntityTonAddress) bool) MessageEntityTonAddressArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s MessageEntityTonAddressArray) First() (v MessageEntityTonAddress, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s MessageEntityTonAddressArray) Last() (v MessageEntityTonAddress, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *MessageEntityTonAddressArray) PopFirst() (v MessageEntityTonAddress, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero MessageEntityTonAddress
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *MessageEntityTonAddressArray) Pop() (v MessageEntityTonAddress, ok bool) {
 	if s == nil || len(*s) < 1 {
 		return
 	}

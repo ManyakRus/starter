@@ -22,7 +22,14 @@ func (c PeerCollector) Dialogs(ctx context.Context, iter *dialogs.Iterator) erro
 			p     Peer
 			value = iter.Value()
 		)
-		switch dlg := value.Dialog.GetPeer().(type) {
+		// td v0.161 dropped GetPeer from the DialogClass interface (DialogCommunity
+		// has no peer). Read it from dialogs that still expose one, like the dialogs
+		// package's own dialogPeer helper; skip peerless dialogs.
+		peerGetter, ok := value.Dialog.(interface{ GetPeer() tg.PeerClass })
+		if !ok {
+			continue
+		}
+		switch dlg := peerGetter.GetPeer().(type) {
 		case *tg.PeerUser:
 			user, ok := value.Entities.User(dlg.UserID)
 			if !ok || !p.FromUser(user) {
@@ -41,7 +48,7 @@ func (c PeerCollector) Dialogs(ctx context.Context, iter *dialogs.Iterator) erro
 		}
 
 		if err := c.storage.Add(ctx, p); err != nil {
-			return errors.Errorf("add: %w", err)
+			return errors.Wrap(err, "add")
 		}
 	}
 
@@ -64,7 +71,7 @@ func (c PeerCollector) Participants(ctx context.Context, iter *participants.Iter
 			continue
 		}
 		if err := c.storage.Add(ctx, p); err != nil {
-			return errors.Errorf("add: %w", err)
+			return errors.Wrap(err, "add")
 		}
 	}
 
@@ -79,7 +86,7 @@ func (c PeerCollector) Contacts(ctx context.Context, contacts *tg.ContactsContac
 			continue
 		}
 		if err := c.storage.Add(ctx, p); err != nil {
-			return errors.Errorf("add: %w", err)
+			return errors.Wrap(err, "add")
 		}
 	}
 	return nil

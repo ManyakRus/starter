@@ -69,7 +69,7 @@ func (k *PeerKey) Parse(r []byte) error {
 	{
 		v, err := strconv.Atoi(string(r[:idx]))
 		if err != nil {
-			return errors.Errorf("parse kind: %w", err)
+			return errors.Wrap(err, "parse kind")
 		}
 		if v > int(dialogs.Channel) {
 			return errors.Errorf("invalid kind %d", v)
@@ -80,7 +80,7 @@ func (k *PeerKey) Parse(r []byte) error {
 	{
 		v, err := strconv.ParseInt(string(r[idx+1:]), 10, 64)
 		if err != nil {
-			return errors.Errorf("parse id: %w", err)
+			return errors.Wrap(err, "parse id")
 		}
 		k.ID = v
 	}

@@ -33,11 +33,11 @@ func (r ResolverCache) notFound(
 
 	var value Peer
 	if err := value.FromInputPeer(resolved); err != nil {
-		return nil, errors.Errorf("extract object: %w", err)
+		return nil, errors.Wrap(err, "extract object")
 	}
 
 	if err := r.storage.Assign(ctx, key, value); err != nil {
-		return nil, errors.Errorf("assign %q: %w", key, err)
+		return nil, errors.Wrapf(err, "assign %q", key)
 	}
 
 	return resolved, nil
@@ -53,7 +53,7 @@ func (r ResolverCache) tryResolve(
 		if errors.Is(err, ErrPeerNotFound) {
 			return r.notFound(ctx, key, f)
 		}
-		return nil, errors.Errorf("get %q: %w", key, err)
+		return nil, errors.Wrapf(err, "get %q", key)
 	}
 	return b.AsInputPeer(), nil
 }

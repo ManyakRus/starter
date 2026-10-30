@@ -8,6 +8,7 @@ package exslices
 
 import (
 	"iter"
+	"slices"
 )
 
 type Stack[T comparable] []T
@@ -52,7 +53,7 @@ func (s *Stack[T]) PopValue() T {
 
 // Index returns the highest index of the given value in the stack, or -1 if not found.
 func (s *Stack[T]) Index(val T) int {
-	for i := len(*s) - 1; i >= 0; i-- {
+	for i := range slices.Backward(*s) {
 		if (*s)[i] == val {
 			return i
 		}

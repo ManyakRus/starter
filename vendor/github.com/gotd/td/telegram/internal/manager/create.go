@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
+	"github.com/gotd/log"
 
 	"github.com/gotd/td/clock"
 	"github.com/gotd/td/mtproto"
@@ -17,12 +18,16 @@ type SetupCallback = func(ctx context.Context, invoker tg.Invoker) error
 
 // ConnOptions is a Telegram client connection options.
 type ConnOptions struct {
-	DC      int
-	Test    bool
+	DC   int
+	Test bool
+	// Layer is the schema layer sent in invokeWithLayer.
+	//
+	// If not provided, tg.Layer will be used.
+	Layer   int
 	Device  DeviceConfig
 	Handler Handler
 	Setup   SetupCallback
-	OnDead  func()
+	OnDead  func(error)
 	Backoff func(ctx context.Context) backoff.BackOff
 }
 
@@ -40,6 +45,9 @@ func defaultBackoff(c clock.Clock) func(ctx context.Context) backoff.BackOff {
 func (c *ConnOptions) setDefaults(connClock clock.Clock) {
 	if c.DC == 0 {
 		c.DC = 2
+	}
+	if c.Layer == 0 {
+		c.Layer = tg.Layer
 	}
 	// It's okay to use zero value Test.
 	c.Device.SetDefaults()
@@ -61,9 +69,12 @@ func CreateConn(
 ) *Conn {
 	connOpts.setDefaults(opts.Clock)
 	conn := &Conn{
-		mode:        mode,
+		mode: mode,
+		// Store real DC id for mode-specific init shortcuts (CDN mode).
+		dc:          connOpts.DC,
 		appID:       appID,
 		device:      connOpts.Device,
+		layer:       connOpts.Layer,
 		clock:       opts.Clock,
 		handler:     connOpts.Handler,
 		sessionInit: tdsync.NewReady(),
@@ -73,8 +84,11 @@ func CreateConn(
 		onDead:      connOpts.OnDead,
 		connBackoff: connOpts.Backoff,
 	}
+	if mode == ConnModeCDN {
+		conn.cdnNeedsInit.Store(true)
+	}
 
-	conn.log = opts.Logger
+	conn.log = log.For(opts.Logger)
 	opts.DC = connOpts.DC
 	if connOpts.Test {
 		// New key exchange algorithm requires DC ID and uses mapping like MTProxy.
@@ -82,7 +96,7 @@ func CreateConn(
 		opts.DC += 10000
 	}
 	opts.Handler = conn
-	opts.Logger = conn.log.Named("mtproto")
+	opts.Logger = conn.log.Named("mtproto").Logger()
 	conn.proto = mtproto.New(create, opts)
 
 	return conn

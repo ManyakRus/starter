@@ -41,12 +41,7 @@ func (o *FakeTLS) Handshake(protocol [4]byte, dc int, s mtproxy.Secret) error {
 	o.readBuf.Reset()
 	o.readBufMux.Unlock()
 
-	var sessionID [32]byte
-	if _, err := o.rand.Read(sessionID[:]); err != nil {
-		return errors.Wrap(err, "generate sessionID")
-	}
-
-	clientDigest, err := writeClientHello(o.conn, o.clock, sessionID, s.CloakHost, s.Secret)
+	clientDigest, err := writeClientHello(o.conn, o.rand, o.clock, s.CloakHost, s.Secret)
 	if err != nil {
 		return errors.Wrap(err, "send ClientHello")
 	}
@@ -89,24 +84,25 @@ func (o *FakeTLS) Read(b []byte) (n int, err error) {
 	o.readBufMux.Lock()
 	defer o.readBufMux.Unlock()
 
-	if o.readBuf.Len() > 0 {
-		return o.readBuf.Read(b)
-	}
+	for {
+		if o.readBuf.Len() > 0 {
+			return o.readBuf.Read(b)
+		}
 
-	rec, err := readRecord(o.conn)
-	if err != nil {
-		return 0, errors.Wrap(err, "read TLS record")
-	}
+		rec, err := readRecord(o.conn)
+		if err != nil {
+			return 0, errors.Wrap(err, "read TLS record")
+		}
 
-	switch rec.Type {
-	case RecordTypeChangeCipherSpec:
-	case RecordTypeApplication:
-	case RecordTypeHandshake:
-		return 0, errors.New("unexpected record type handshake")
-	default:
-		return 0, errors.Errorf("unsupported record type %v", rec.Type)
+		switch rec.Type {
+		case RecordTypeChangeCipherSpec:
+			continue
+		case RecordTypeApplication:
+		case RecordTypeHandshake:
+			return 0, errors.New("unexpected record type handshake")
+		default:
+			return 0, errors.Errorf("unsupported record type %v", rec.Type)
+		}
+		o.readBuf.Write(rec.Data)
 	}
-	o.readBuf.Write(rec.Data)
-
-	return o.readBuf.Read(b)
 }

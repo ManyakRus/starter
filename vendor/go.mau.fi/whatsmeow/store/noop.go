@@ -36,6 +36,7 @@ var NoopDevice = &Device{
 	ChatSettings:  nilStore,
 	MsgSecrets:    nilStore,
 	PrivacyTokens: nilStore,
+	NCTSalt:       nilStore,
 	EventBuffer:   nilStore,
 	LIDs:          nilStore,
 	Container:     nilStore,
@@ -136,6 +137,10 @@ func (n *NoopStore) GetLatestAppStateSyncKeyID(ctx context.Context) ([]byte, err
 	return nil, n.Error
 }
 
+func (n *NoopStore) GetAllAppStateSyncKeys(ctx context.Context) ([]*AppStateSyncKey, error) {
+	return nil, nil
+}
+
 func (n *NoopStore) PutAppStateVersion(ctx context.Context, name string, version uint64, hash [128]byte) error {
 	return n.Error
 }
@@ -204,6 +209,14 @@ func (n *NoopStore) GetChatSettings(ctx context.Context, chat types.JID) (types.
 	return types.LocalChatSettings{}, n.Error
 }
 
+func (n *NoopStore) PutWASARootSecretID(ctx context.Context, chat types.JID, id types.MessageID) error {
+	return n.Error
+}
+
+func (n *NoopStore) GetWASARootSecretID(ctx context.Context, chat types.JID) (types.MessageID, error) {
+	return "", n.Error
+}
+
 func (n *NoopStore) PutMessageSecrets(ctx context.Context, inserts []MessageSecretInsert) error {
 	return n.Error
 }
@@ -222,6 +235,22 @@ func (n *NoopStore) PutPrivacyTokens(ctx context.Context, tokens ...PrivacyToken
 
 func (n *NoopStore) GetPrivacyToken(ctx context.Context, user types.JID) (*PrivacyToken, error) {
 	return nil, n.Error
+}
+
+func (n *NoopStore) PutNCTSalt(ctx context.Context, salt []byte) error {
+	return n.Error
+}
+
+func (n *NoopStore) GetNCTSalt(ctx context.Context) ([]byte, error) {
+	return nil, n.Error
+}
+
+func (n *NoopStore) DeleteNCTSalt(ctx context.Context) error {
+	return n.Error
+}
+
+func (n *NoopStore) DeleteExpiredPrivacyTokens(ctx context.Context, cutoff time.Time) (int64, error) {
+	return 0, n.Error
 }
 
 func (n *NoopStore) PutDevice(ctx context.Context, store *Device) error {
@@ -270,4 +299,16 @@ func (n *NoopStore) PutManyLIDMappings(ctx context.Context, mappings []LIDMappin
 
 func (n *NoopStore) PutLIDMapping(ctx context.Context, lid types.JID, jid types.JID) error {
 	return n.Error
+}
+
+func (n *NoopStore) DeleteOldOutgoingEvents(ctx context.Context) error {
+	return nil
+}
+
+func (n *NoopStore) GetOutgoingEvent(ctx context.Context, chatJID, altChatJID types.JID, id types.MessageID) (string, []byte, error) {
+	return "", nil, nil
+}
+
+func (n *NoopStore) AddOutgoingEvent(ctx context.Context, chatJID types.JID, id types.MessageID, format string, plaintext []byte) error {
+	return nil
 }

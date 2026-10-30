@@ -2197,18 +2197,32 @@ func (s *SendMessageEmojiInteractionSeen) GetEmoticon() (value string) {
 	return s.Emoticon
 }
 
-// SendMessageTextDraftAction represents TL type `sendMessageTextDraftAction#376d975c`.
+// SendMessageTextDraftAction represents TL type `sendMessageTextDraftAction#3630b85a`.
+// Used by bots to implement live message streaming »¹.
+//
+// Links:
+//  1. https://core.telegram.org/api/bots/ai#live-message-streaming
 //
 // See https://core.telegram.org/constructor/sendMessageTextDraftAction for reference.
 type SendMessageTextDraftAction struct {
-	// RandomID field of SendMessageTextDraftAction.
+	// Flags field of SendMessageTextDraftAction.
+	Flags bin.Fields
+	// CanStop field of SendMessageTextDraftAction.
+	CanStop bool
+	// KeepOnStop field of SendMessageTextDraftAction.
+	KeepOnStop bool
+	// Live draft ID: used by graphical clients to slightly change the rendering behavior,
+	// see here »¹ for more info.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/bots/ai#live-message-streaming
 	RandomID int64
-	// Text field of SendMessageTextDraftAction.
+	// The contents of the live draft.
 	Text TextWithEntities
 }
 
 // SendMessageTextDraftActionTypeID is TL type id of SendMessageTextDraftAction.
-const SendMessageTextDraftActionTypeID = 0x376d975c
+const SendMessageTextDraftActionTypeID = 0x3630b85a
 
 // construct implements constructor of SendMessageActionClass.
 func (s SendMessageTextDraftAction) construct() SendMessageActionClass { return &s }
@@ -2226,6 +2240,15 @@ var (
 func (s *SendMessageTextDraftAction) Zero() bool {
 	if s == nil {
 		return true
+	}
+	if !(s.Flags.Zero()) {
+		return false
+	}
+	if !(s.CanStop == false) {
+		return false
+	}
+	if !(s.KeepOnStop == false) {
+		return false
 	}
 	if !(s.RandomID == 0) {
 		return false
@@ -2248,9 +2271,13 @@ func (s *SendMessageTextDraftAction) String() string {
 
 // FillFrom fills SendMessageTextDraftAction from given interface.
 func (s *SendMessageTextDraftAction) FillFrom(from interface {
+	GetCanStop() (value bool)
+	GetKeepOnStop() (value bool)
 	GetRandomID() (value int64)
 	GetText() (value TextWithEntities)
 }) {
+	s.CanStop = from.GetCanStop()
+	s.KeepOnStop = from.GetKeepOnStop()
 	s.RandomID = from.GetRandomID()
 	s.Text = from.GetText()
 }
@@ -2279,6 +2306,16 @@ func (s *SendMessageTextDraftAction) TypeInfo() tdp.Type {
 	}
 	typ.Fields = []tdp.Field{
 		{
+			Name:       "CanStop",
+			SchemaName: "can_stop",
+			Null:       !s.Flags.Has(0),
+		},
+		{
+			Name:       "KeepOnStop",
+			SchemaName: "keep_on_stop",
+			Null:       !s.Flags.Has(1),
+		},
+		{
 			Name:       "RandomID",
 			SchemaName: "random_id",
 		},
@@ -2290,10 +2327,20 @@ func (s *SendMessageTextDraftAction) TypeInfo() tdp.Type {
 	return typ
 }
 
+// SetFlags sets flags for non-zero fields.
+func (s *SendMessageTextDraftAction) SetFlags() {
+	if !(s.CanStop == false) {
+		s.Flags.Set(0)
+	}
+	if !(s.KeepOnStop == false) {
+		s.Flags.Set(1)
+	}
+}
+
 // Encode implements bin.Encoder.
 func (s *SendMessageTextDraftAction) Encode(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't encode sendMessageTextDraftAction#376d975c as nil")
+		return fmt.Errorf("can't encode sendMessageTextDraftAction#3630b85a as nil")
 	}
 	b.PutID(SendMessageTextDraftActionTypeID)
 	return s.EncodeBare(b)
@@ -2302,11 +2349,15 @@ func (s *SendMessageTextDraftAction) Encode(b *bin.Buffer) error {
 // EncodeBare implements bin.BareEncoder.
 func (s *SendMessageTextDraftAction) EncodeBare(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't encode sendMessageTextDraftAction#376d975c as nil")
+		return fmt.Errorf("can't encode sendMessageTextDraftAction#3630b85a as nil")
+	}
+	s.SetFlags()
+	if err := s.Flags.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode sendMessageTextDraftAction#3630b85a: field flags: %w", err)
 	}
 	b.PutLong(s.RandomID)
 	if err := s.Text.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode sendMessageTextDraftAction#376d975c: field text: %w", err)
+		return fmt.Errorf("unable to encode sendMessageTextDraftAction#3630b85a: field text: %w", err)
 	}
 	return nil
 }
@@ -2314,10 +2365,10 @@ func (s *SendMessageTextDraftAction) EncodeBare(b *bin.Buffer) error {
 // Decode implements bin.Decoder.
 func (s *SendMessageTextDraftAction) Decode(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't decode sendMessageTextDraftAction#376d975c to nil")
+		return fmt.Errorf("can't decode sendMessageTextDraftAction#3630b85a to nil")
 	}
 	if err := b.ConsumeID(SendMessageTextDraftActionTypeID); err != nil {
-		return fmt.Errorf("unable to decode sendMessageTextDraftAction#376d975c: %w", err)
+		return fmt.Errorf("unable to decode sendMessageTextDraftAction#3630b85a: %w", err)
 	}
 	return s.DecodeBare(b)
 }
@@ -2325,21 +2376,66 @@ func (s *SendMessageTextDraftAction) Decode(b *bin.Buffer) error {
 // DecodeBare implements bin.BareDecoder.
 func (s *SendMessageTextDraftAction) DecodeBare(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't decode sendMessageTextDraftAction#376d975c to nil")
+		return fmt.Errorf("can't decode sendMessageTextDraftAction#3630b85a to nil")
 	}
+	{
+		if err := s.Flags.Decode(b); err != nil {
+			return fmt.Errorf("unable to decode sendMessageTextDraftAction#3630b85a: field flags: %w", err)
+		}
+	}
+	s.CanStop = s.Flags.Has(0)
+	s.KeepOnStop = s.Flags.Has(1)
 	{
 		value, err := b.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode sendMessageTextDraftAction#376d975c: field random_id: %w", err)
+			return fmt.Errorf("unable to decode sendMessageTextDraftAction#3630b85a: field random_id: %w", err)
 		}
 		s.RandomID = value
 	}
 	{
 		if err := s.Text.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode sendMessageTextDraftAction#376d975c: field text: %w", err)
+			return fmt.Errorf("unable to decode sendMessageTextDraftAction#3630b85a: field text: %w", err)
 		}
 	}
 	return nil
+}
+
+// SetCanStop sets value of CanStop conditional field.
+func (s *SendMessageTextDraftAction) SetCanStop(value bool) {
+	if value {
+		s.Flags.Set(0)
+		s.CanStop = true
+	} else {
+		s.Flags.Unset(0)
+		s.CanStop = false
+	}
+}
+
+// GetCanStop returns value of CanStop conditional field.
+func (s *SendMessageTextDraftAction) GetCanStop() (value bool) {
+	if s == nil {
+		return
+	}
+	return s.Flags.Has(0)
+}
+
+// SetKeepOnStop sets value of KeepOnStop conditional field.
+func (s *SendMessageTextDraftAction) SetKeepOnStop(value bool) {
+	if value {
+		s.Flags.Set(1)
+		s.KeepOnStop = true
+	} else {
+		s.Flags.Unset(1)
+		s.KeepOnStop = false
+	}
+}
+
+// GetKeepOnStop returns value of KeepOnStop conditional field.
+func (s *SendMessageTextDraftAction) GetKeepOnStop() (value bool) {
+	if s == nil {
+		return
+	}
+	return s.Flags.Has(1)
 }
 
 // GetRandomID returns value of RandomID field.
@@ -2356,6 +2452,643 @@ func (s *SendMessageTextDraftAction) GetText() (value TextWithEntities) {
 		return
 	}
 	return s.Text
+}
+
+// InputSendMessageRichMessageDraftAction represents TL type `inputSendMessageRichMessageDraftAction#a937c7be`.
+//
+// See https://core.telegram.org/constructor/inputSendMessageRichMessageDraftAction for reference.
+type InputSendMessageRichMessageDraftAction struct {
+	// Flags field of InputSendMessageRichMessageDraftAction.
+	Flags bin.Fields
+	// CanStop field of InputSendMessageRichMessageDraftAction.
+	CanStop bool
+	// KeepOnStop field of InputSendMessageRichMessageDraftAction.
+	KeepOnStop bool
+	// RandomID field of InputSendMessageRichMessageDraftAction.
+	RandomID int64
+	// RichMessage field of InputSendMessageRichMessageDraftAction.
+	RichMessage InputRichMessageClass
+}
+
+// InputSendMessageRichMessageDraftActionTypeID is TL type id of InputSendMessageRichMessageDraftAction.
+const InputSendMessageRichMessageDraftActionTypeID = 0xa937c7be
+
+// construct implements constructor of SendMessageActionClass.
+func (i InputSendMessageRichMessageDraftAction) construct() SendMessageActionClass { return &i }
+
+// Ensuring interfaces in compile-time for InputSendMessageRichMessageDraftAction.
+var (
+	_ bin.Encoder     = &InputSendMessageRichMessageDraftAction{}
+	_ bin.Decoder     = &InputSendMessageRichMessageDraftAction{}
+	_ bin.BareEncoder = &InputSendMessageRichMessageDraftAction{}
+	_ bin.BareDecoder = &InputSendMessageRichMessageDraftAction{}
+
+	_ SendMessageActionClass = &InputSendMessageRichMessageDraftAction{}
+)
+
+func (i *InputSendMessageRichMessageDraftAction) Zero() bool {
+	if i == nil {
+		return true
+	}
+	if !(i.Flags.Zero()) {
+		return false
+	}
+	if !(i.CanStop == false) {
+		return false
+	}
+	if !(i.KeepOnStop == false) {
+		return false
+	}
+	if !(i.RandomID == 0) {
+		return false
+	}
+	if !(i.RichMessage == nil) {
+		return false
+	}
+
+	return true
+}
+
+// String implements fmt.Stringer.
+func (i *InputSendMessageRichMessageDraftAction) String() string {
+	if i == nil {
+		return "InputSendMessageRichMessageDraftAction(nil)"
+	}
+	type Alias InputSendMessageRichMessageDraftAction
+	return fmt.Sprintf("InputSendMessageRichMessageDraftAction%+v", Alias(*i))
+}
+
+// FillFrom fills InputSendMessageRichMessageDraftAction from given interface.
+func (i *InputSendMessageRichMessageDraftAction) FillFrom(from interface {
+	GetCanStop() (value bool)
+	GetKeepOnStop() (value bool)
+	GetRandomID() (value int64)
+	GetRichMessage() (value InputRichMessageClass)
+}) {
+	i.CanStop = from.GetCanStop()
+	i.KeepOnStop = from.GetKeepOnStop()
+	i.RandomID = from.GetRandomID()
+	i.RichMessage = from.GetRichMessage()
+}
+
+// TypeID returns type id in TL schema.
+//
+// See https://core.telegram.org/mtproto/TL-tl#remarks.
+func (*InputSendMessageRichMessageDraftAction) TypeID() uint32 {
+	return InputSendMessageRichMessageDraftActionTypeID
+}
+
+// TypeName returns name of type in TL schema.
+func (*InputSendMessageRichMessageDraftAction) TypeName() string {
+	return "inputSendMessageRichMessageDraftAction"
+}
+
+// TypeInfo returns info about TL type.
+func (i *InputSendMessageRichMessageDraftAction) TypeInfo() tdp.Type {
+	typ := tdp.Type{
+		Name: "inputSendMessageRichMessageDraftAction",
+		ID:   InputSendMessageRichMessageDraftActionTypeID,
+	}
+	if i == nil {
+		typ.Null = true
+		return typ
+	}
+	typ.Fields = []tdp.Field{
+		{
+			Name:       "CanStop",
+			SchemaName: "can_stop",
+			Null:       !i.Flags.Has(0),
+		},
+		{
+			Name:       "KeepOnStop",
+			SchemaName: "keep_on_stop",
+			Null:       !i.Flags.Has(1),
+		},
+		{
+			Name:       "RandomID",
+			SchemaName: "random_id",
+		},
+		{
+			Name:       "RichMessage",
+			SchemaName: "rich_message",
+		},
+	}
+	return typ
+}
+
+// SetFlags sets flags for non-zero fields.
+func (i *InputSendMessageRichMessageDraftAction) SetFlags() {
+	if !(i.CanStop == false) {
+		i.Flags.Set(0)
+	}
+	if !(i.KeepOnStop == false) {
+		i.Flags.Set(1)
+	}
+}
+
+// Encode implements bin.Encoder.
+func (i *InputSendMessageRichMessageDraftAction) Encode(b *bin.Buffer) error {
+	if i == nil {
+		return fmt.Errorf("can't encode inputSendMessageRichMessageDraftAction#a937c7be as nil")
+	}
+	b.PutID(InputSendMessageRichMessageDraftActionTypeID)
+	return i.EncodeBare(b)
+}
+
+// EncodeBare implements bin.BareEncoder.
+func (i *InputSendMessageRichMessageDraftAction) EncodeBare(b *bin.Buffer) error {
+	if i == nil {
+		return fmt.Errorf("can't encode inputSendMessageRichMessageDraftAction#a937c7be as nil")
+	}
+	i.SetFlags()
+	if err := i.Flags.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode inputSendMessageRichMessageDraftAction#a937c7be: field flags: %w", err)
+	}
+	b.PutLong(i.RandomID)
+	if i.RichMessage == nil {
+		return fmt.Errorf("unable to encode inputSendMessageRichMessageDraftAction#a937c7be: field rich_message is nil")
+	}
+	if err := i.RichMessage.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode inputSendMessageRichMessageDraftAction#a937c7be: field rich_message: %w", err)
+	}
+	return nil
+}
+
+// Decode implements bin.Decoder.
+func (i *InputSendMessageRichMessageDraftAction) Decode(b *bin.Buffer) error {
+	if i == nil {
+		return fmt.Errorf("can't decode inputSendMessageRichMessageDraftAction#a937c7be to nil")
+	}
+	if err := b.ConsumeID(InputSendMessageRichMessageDraftActionTypeID); err != nil {
+		return fmt.Errorf("unable to decode inputSendMessageRichMessageDraftAction#a937c7be: %w", err)
+	}
+	return i.DecodeBare(b)
+}
+
+// DecodeBare implements bin.BareDecoder.
+func (i *InputSendMessageRichMessageDraftAction) DecodeBare(b *bin.Buffer) error {
+	if i == nil {
+		return fmt.Errorf("can't decode inputSendMessageRichMessageDraftAction#a937c7be to nil")
+	}
+	{
+		if err := i.Flags.Decode(b); err != nil {
+			return fmt.Errorf("unable to decode inputSendMessageRichMessageDraftAction#a937c7be: field flags: %w", err)
+		}
+	}
+	i.CanStop = i.Flags.Has(0)
+	i.KeepOnStop = i.Flags.Has(1)
+	{
+		value, err := b.Long()
+		if err != nil {
+			return fmt.Errorf("unable to decode inputSendMessageRichMessageDraftAction#a937c7be: field random_id: %w", err)
+		}
+		i.RandomID = value
+	}
+	{
+		value, err := DecodeInputRichMessage(b)
+		if err != nil {
+			return fmt.Errorf("unable to decode inputSendMessageRichMessageDraftAction#a937c7be: field rich_message: %w", err)
+		}
+		i.RichMessage = value
+	}
+	return nil
+}
+
+// SetCanStop sets value of CanStop conditional field.
+func (i *InputSendMessageRichMessageDraftAction) SetCanStop(value bool) {
+	if value {
+		i.Flags.Set(0)
+		i.CanStop = true
+	} else {
+		i.Flags.Unset(0)
+		i.CanStop = false
+	}
+}
+
+// GetCanStop returns value of CanStop conditional field.
+func (i *InputSendMessageRichMessageDraftAction) GetCanStop() (value bool) {
+	if i == nil {
+		return
+	}
+	return i.Flags.Has(0)
+}
+
+// SetKeepOnStop sets value of KeepOnStop conditional field.
+func (i *InputSendMessageRichMessageDraftAction) SetKeepOnStop(value bool) {
+	if value {
+		i.Flags.Set(1)
+		i.KeepOnStop = true
+	} else {
+		i.Flags.Unset(1)
+		i.KeepOnStop = false
+	}
+}
+
+// GetKeepOnStop returns value of KeepOnStop conditional field.
+func (i *InputSendMessageRichMessageDraftAction) GetKeepOnStop() (value bool) {
+	if i == nil {
+		return
+	}
+	return i.Flags.Has(1)
+}
+
+// GetRandomID returns value of RandomID field.
+func (i *InputSendMessageRichMessageDraftAction) GetRandomID() (value int64) {
+	if i == nil {
+		return
+	}
+	return i.RandomID
+}
+
+// GetRichMessage returns value of RichMessage field.
+func (i *InputSendMessageRichMessageDraftAction) GetRichMessage() (value InputRichMessageClass) {
+	if i == nil {
+		return
+	}
+	return i.RichMessage
+}
+
+// SendMessageRichMessageDraftAction represents TL type `sendMessageRichMessageDraftAction#52564893`.
+//
+// See https://core.telegram.org/constructor/sendMessageRichMessageDraftAction for reference.
+type SendMessageRichMessageDraftAction struct {
+	// Flags field of SendMessageRichMessageDraftAction.
+	Flags bin.Fields
+	// CanStop field of SendMessageRichMessageDraftAction.
+	CanStop bool
+	// KeepOnStop field of SendMessageRichMessageDraftAction.
+	KeepOnStop bool
+	// RandomID field of SendMessageRichMessageDraftAction.
+	RandomID int64
+	// RichMessage field of SendMessageRichMessageDraftAction.
+	RichMessage RichMessage
+}
+
+// SendMessageRichMessageDraftActionTypeID is TL type id of SendMessageRichMessageDraftAction.
+const SendMessageRichMessageDraftActionTypeID = 0x52564893
+
+// construct implements constructor of SendMessageActionClass.
+func (s SendMessageRichMessageDraftAction) construct() SendMessageActionClass { return &s }
+
+// Ensuring interfaces in compile-time for SendMessageRichMessageDraftAction.
+var (
+	_ bin.Encoder     = &SendMessageRichMessageDraftAction{}
+	_ bin.Decoder     = &SendMessageRichMessageDraftAction{}
+	_ bin.BareEncoder = &SendMessageRichMessageDraftAction{}
+	_ bin.BareDecoder = &SendMessageRichMessageDraftAction{}
+
+	_ SendMessageActionClass = &SendMessageRichMessageDraftAction{}
+)
+
+func (s *SendMessageRichMessageDraftAction) Zero() bool {
+	if s == nil {
+		return true
+	}
+	if !(s.Flags.Zero()) {
+		return false
+	}
+	if !(s.CanStop == false) {
+		return false
+	}
+	if !(s.KeepOnStop == false) {
+		return false
+	}
+	if !(s.RandomID == 0) {
+		return false
+	}
+	if !(s.RichMessage.Zero()) {
+		return false
+	}
+
+	return true
+}
+
+// String implements fmt.Stringer.
+func (s *SendMessageRichMessageDraftAction) String() string {
+	if s == nil {
+		return "SendMessageRichMessageDraftAction(nil)"
+	}
+	type Alias SendMessageRichMessageDraftAction
+	return fmt.Sprintf("SendMessageRichMessageDraftAction%+v", Alias(*s))
+}
+
+// FillFrom fills SendMessageRichMessageDraftAction from given interface.
+func (s *SendMessageRichMessageDraftAction) FillFrom(from interface {
+	GetCanStop() (value bool)
+	GetKeepOnStop() (value bool)
+	GetRandomID() (value int64)
+	GetRichMessage() (value RichMessage)
+}) {
+	s.CanStop = from.GetCanStop()
+	s.KeepOnStop = from.GetKeepOnStop()
+	s.RandomID = from.GetRandomID()
+	s.RichMessage = from.GetRichMessage()
+}
+
+// TypeID returns type id in TL schema.
+//
+// See https://core.telegram.org/mtproto/TL-tl#remarks.
+func (*SendMessageRichMessageDraftAction) TypeID() uint32 {
+	return SendMessageRichMessageDraftActionTypeID
+}
+
+// TypeName returns name of type in TL schema.
+func (*SendMessageRichMessageDraftAction) TypeName() string {
+	return "sendMessageRichMessageDraftAction"
+}
+
+// TypeInfo returns info about TL type.
+func (s *SendMessageRichMessageDraftAction) TypeInfo() tdp.Type {
+	typ := tdp.Type{
+		Name: "sendMessageRichMessageDraftAction",
+		ID:   SendMessageRichMessageDraftActionTypeID,
+	}
+	if s == nil {
+		typ.Null = true
+		return typ
+	}
+	typ.Fields = []tdp.Field{
+		{
+			Name:       "CanStop",
+			SchemaName: "can_stop",
+			Null:       !s.Flags.Has(0),
+		},
+		{
+			Name:       "KeepOnStop",
+			SchemaName: "keep_on_stop",
+			Null:       !s.Flags.Has(1),
+		},
+		{
+			Name:       "RandomID",
+			SchemaName: "random_id",
+		},
+		{
+			Name:       "RichMessage",
+			SchemaName: "rich_message",
+		},
+	}
+	return typ
+}
+
+// SetFlags sets flags for non-zero fields.
+func (s *SendMessageRichMessageDraftAction) SetFlags() {
+	if !(s.CanStop == false) {
+		s.Flags.Set(0)
+	}
+	if !(s.KeepOnStop == false) {
+		s.Flags.Set(1)
+	}
+}
+
+// Encode implements bin.Encoder.
+func (s *SendMessageRichMessageDraftAction) Encode(b *bin.Buffer) error {
+	if s == nil {
+		return fmt.Errorf("can't encode sendMessageRichMessageDraftAction#52564893 as nil")
+	}
+	b.PutID(SendMessageRichMessageDraftActionTypeID)
+	return s.EncodeBare(b)
+}
+
+// EncodeBare implements bin.BareEncoder.
+func (s *SendMessageRichMessageDraftAction) EncodeBare(b *bin.Buffer) error {
+	if s == nil {
+		return fmt.Errorf("can't encode sendMessageRichMessageDraftAction#52564893 as nil")
+	}
+	s.SetFlags()
+	if err := s.Flags.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode sendMessageRichMessageDraftAction#52564893: field flags: %w", err)
+	}
+	b.PutLong(s.RandomID)
+	if err := s.RichMessage.Encode(b); err != nil {
+		return fmt.Errorf("unable to encode sendMessageRichMessageDraftAction#52564893: field rich_message: %w", err)
+	}
+	return nil
+}
+
+// Decode implements bin.Decoder.
+func (s *SendMessageRichMessageDraftAction) Decode(b *bin.Buffer) error {
+	if s == nil {
+		return fmt.Errorf("can't decode sendMessageRichMessageDraftAction#52564893 to nil")
+	}
+	if err := b.ConsumeID(SendMessageRichMessageDraftActionTypeID); err != nil {
+		return fmt.Errorf("unable to decode sendMessageRichMessageDraftAction#52564893: %w", err)
+	}
+	return s.DecodeBare(b)
+}
+
+// DecodeBare implements bin.BareDecoder.
+func (s *SendMessageRichMessageDraftAction) DecodeBare(b *bin.Buffer) error {
+	if s == nil {
+		return fmt.Errorf("can't decode sendMessageRichMessageDraftAction#52564893 to nil")
+	}
+	{
+		if err := s.Flags.Decode(b); err != nil {
+			return fmt.Errorf("unable to decode sendMessageRichMessageDraftAction#52564893: field flags: %w", err)
+		}
+	}
+	s.CanStop = s.Flags.Has(0)
+	s.KeepOnStop = s.Flags.Has(1)
+	{
+		value, err := b.Long()
+		if err != nil {
+			return fmt.Errorf("unable to decode sendMessageRichMessageDraftAction#52564893: field random_id: %w", err)
+		}
+		s.RandomID = value
+	}
+	{
+		if err := s.RichMessage.Decode(b); err != nil {
+			return fmt.Errorf("unable to decode sendMessageRichMessageDraftAction#52564893: field rich_message: %w", err)
+		}
+	}
+	return nil
+}
+
+// SetCanStop sets value of CanStop conditional field.
+func (s *SendMessageRichMessageDraftAction) SetCanStop(value bool) {
+	if value {
+		s.Flags.Set(0)
+		s.CanStop = true
+	} else {
+		s.Flags.Unset(0)
+		s.CanStop = false
+	}
+}
+
+// GetCanStop returns value of CanStop conditional field.
+func (s *SendMessageRichMessageDraftAction) GetCanStop() (value bool) {
+	if s == nil {
+		return
+	}
+	return s.Flags.Has(0)
+}
+
+// SetKeepOnStop sets value of KeepOnStop conditional field.
+func (s *SendMessageRichMessageDraftAction) SetKeepOnStop(value bool) {
+	if value {
+		s.Flags.Set(1)
+		s.KeepOnStop = true
+	} else {
+		s.Flags.Unset(1)
+		s.KeepOnStop = false
+	}
+}
+
+// GetKeepOnStop returns value of KeepOnStop conditional field.
+func (s *SendMessageRichMessageDraftAction) GetKeepOnStop() (value bool) {
+	if s == nil {
+		return
+	}
+	return s.Flags.Has(1)
+}
+
+// GetRandomID returns value of RandomID field.
+func (s *SendMessageRichMessageDraftAction) GetRandomID() (value int64) {
+	if s == nil {
+		return
+	}
+	return s.RandomID
+}
+
+// GetRichMessage returns value of RichMessage field.
+func (s *SendMessageRichMessageDraftAction) GetRichMessage() (value RichMessage) {
+	if s == nil {
+		return
+	}
+	return s.RichMessage
+}
+
+// SendMessageStopDraftAction represents TL type `sendMessageStopDraftAction#fbf902b0`.
+//
+// See https://core.telegram.org/constructor/sendMessageStopDraftAction for reference.
+type SendMessageStopDraftAction struct {
+	// RandomID field of SendMessageStopDraftAction.
+	RandomID int64
+}
+
+// SendMessageStopDraftActionTypeID is TL type id of SendMessageStopDraftAction.
+const SendMessageStopDraftActionTypeID = 0xfbf902b0
+
+// construct implements constructor of SendMessageActionClass.
+func (s SendMessageStopDraftAction) construct() SendMessageActionClass { return &s }
+
+// Ensuring interfaces in compile-time for SendMessageStopDraftAction.
+var (
+	_ bin.Encoder     = &SendMessageStopDraftAction{}
+	_ bin.Decoder     = &SendMessageStopDraftAction{}
+	_ bin.BareEncoder = &SendMessageStopDraftAction{}
+	_ bin.BareDecoder = &SendMessageStopDraftAction{}
+
+	_ SendMessageActionClass = &SendMessageStopDraftAction{}
+)
+
+func (s *SendMessageStopDraftAction) Zero() bool {
+	if s == nil {
+		return true
+	}
+	if !(s.RandomID == 0) {
+		return false
+	}
+
+	return true
+}
+
+// String implements fmt.Stringer.
+func (s *SendMessageStopDraftAction) String() string {
+	if s == nil {
+		return "SendMessageStopDraftAction(nil)"
+	}
+	type Alias SendMessageStopDraftAction
+	return fmt.Sprintf("SendMessageStopDraftAction%+v", Alias(*s))
+}
+
+// FillFrom fills SendMessageStopDraftAction from given interface.
+func (s *SendMessageStopDraftAction) FillFrom(from interface {
+	GetRandomID() (value int64)
+}) {
+	s.RandomID = from.GetRandomID()
+}
+
+// TypeID returns type id in TL schema.
+//
+// See https://core.telegram.org/mtproto/TL-tl#remarks.
+func (*SendMessageStopDraftAction) TypeID() uint32 {
+	return SendMessageStopDraftActionTypeID
+}
+
+// TypeName returns name of type in TL schema.
+func (*SendMessageStopDraftAction) TypeName() string {
+	return "sendMessageStopDraftAction"
+}
+
+// TypeInfo returns info about TL type.
+func (s *SendMessageStopDraftAction) TypeInfo() tdp.Type {
+	typ := tdp.Type{
+		Name: "sendMessageStopDraftAction",
+		ID:   SendMessageStopDraftActionTypeID,
+	}
+	if s == nil {
+		typ.Null = true
+		return typ
+	}
+	typ.Fields = []tdp.Field{
+		{
+			Name:       "RandomID",
+			SchemaName: "random_id",
+		},
+	}
+	return typ
+}
+
+// Encode implements bin.Encoder.
+func (s *SendMessageStopDraftAction) Encode(b *bin.Buffer) error {
+	if s == nil {
+		return fmt.Errorf("can't encode sendMessageStopDraftAction#fbf902b0 as nil")
+	}
+	b.PutID(SendMessageStopDraftActionTypeID)
+	return s.EncodeBare(b)
+}
+
+// EncodeBare implements bin.BareEncoder.
+func (s *SendMessageStopDraftAction) EncodeBare(b *bin.Buffer) error {
+	if s == nil {
+		return fmt.Errorf("can't encode sendMessageStopDraftAction#fbf902b0 as nil")
+	}
+	b.PutLong(s.RandomID)
+	return nil
+}
+
+// Decode implements bin.Decoder.
+func (s *SendMessageStopDraftAction) Decode(b *bin.Buffer) error {
+	if s == nil {
+		return fmt.Errorf("can't decode sendMessageStopDraftAction#fbf902b0 to nil")
+	}
+	if err := b.ConsumeID(SendMessageStopDraftActionTypeID); err != nil {
+		return fmt.Errorf("unable to decode sendMessageStopDraftAction#fbf902b0: %w", err)
+	}
+	return s.DecodeBare(b)
+}
+
+// DecodeBare implements bin.BareDecoder.
+func (s *SendMessageStopDraftAction) DecodeBare(b *bin.Buffer) error {
+	if s == nil {
+		return fmt.Errorf("can't decode sendMessageStopDraftAction#fbf902b0 to nil")
+	}
+	{
+		value, err := b.Long()
+		if err != nil {
+			return fmt.Errorf("unable to decode sendMessageStopDraftAction#fbf902b0: field random_id: %w", err)
+		}
+		s.RandomID = value
+	}
+	return nil
+}
+
+// GetRandomID returns value of RandomID field.
+func (s *SendMessageStopDraftAction) GetRandomID() (value int64) {
+	if s == nil {
+		return
+	}
+	return s.RandomID
 }
 
 // SendMessageActionClassName is schema name of SendMessageActionClass.
@@ -2385,6 +3118,9 @@ const SendMessageActionClassName = "SendMessageAction"
 //   - [SendMessageEmojiInteraction]
 //   - [SendMessageEmojiInteractionSeen]
 //   - [SendMessageTextDraftAction]
+//   - [InputSendMessageRichMessageDraftAction]
+//   - [SendMessageRichMessageDraftAction]
+//   - [SendMessageStopDraftAction]
 //
 // Example:
 //
@@ -2411,7 +3147,10 @@ const SendMessageActionClassName = "SendMessageAction"
 //	case *tg.SendMessageChooseStickerAction: // sendMessageChooseStickerAction#b05ac6b1
 //	case *tg.SendMessageEmojiInteraction: // sendMessageEmojiInteraction#25972bcb
 //	case *tg.SendMessageEmojiInteractionSeen: // sendMessageEmojiInteractionSeen#b665902e
-//	case *tg.SendMessageTextDraftAction: // sendMessageTextDraftAction#376d975c
+//	case *tg.SendMessageTextDraftAction: // sendMessageTextDraftAction#3630b85a
+//	case *tg.InputSendMessageRichMessageDraftAction: // inputSendMessageRichMessageDraftAction#a937c7be
+//	case *tg.SendMessageRichMessageDraftAction: // sendMessageRichMessageDraftAction#52564893
+//	case *tg.SendMessageStopDraftAction: // sendMessageStopDraftAction#fbf902b0
 //	default: panic(v)
 //	}
 type SendMessageActionClass interface {
@@ -2567,8 +3306,29 @@ func DecodeSendMessageAction(buf *bin.Buffer) (SendMessageActionClass, error) {
 		}
 		return &v, nil
 	case SendMessageTextDraftActionTypeID:
-		// Decoding sendMessageTextDraftAction#376d975c.
+		// Decoding sendMessageTextDraftAction#3630b85a.
 		v := SendMessageTextDraftAction{}
+		if err := v.Decode(buf); err != nil {
+			return nil, fmt.Errorf("unable to decode SendMessageActionClass: %w", err)
+		}
+		return &v, nil
+	case InputSendMessageRichMessageDraftActionTypeID:
+		// Decoding inputSendMessageRichMessageDraftAction#a937c7be.
+		v := InputSendMessageRichMessageDraftAction{}
+		if err := v.Decode(buf); err != nil {
+			return nil, fmt.Errorf("unable to decode SendMessageActionClass: %w", err)
+		}
+		return &v, nil
+	case SendMessageRichMessageDraftActionTypeID:
+		// Decoding sendMessageRichMessageDraftAction#52564893.
+		v := SendMessageRichMessageDraftAction{}
+		if err := v.Decode(buf); err != nil {
+			return nil, fmt.Errorf("unable to decode SendMessageActionClass: %w", err)
+		}
+		return &v, nil
+	case SendMessageStopDraftActionTypeID:
+		// Decoding sendMessageStopDraftAction#fbf902b0.
+		v := SendMessageStopDraftAction{}
 		if err := v.Decode(buf); err != nil {
 			return nil, fmt.Errorf("unable to decode SendMessageActionClass: %w", err)
 		}

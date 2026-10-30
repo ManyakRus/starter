@@ -24,6 +24,8 @@ type Builder struct {
 
 	// Set this flag to disable generation of the webpage preview.
 	noWebpage bool
+	// Set this flag to move the media (e.g. link preview) above the message text.
+	invertMedia bool
 	// Send this message silently (no notifications for the receivers).
 	silent bool
 	// Send this message as background message.
@@ -39,6 +41,10 @@ type Builder struct {
 	replyMarkup tg.ReplyMarkupClass
 	// Scheduled message date for scheduled messages.
 	scheduleDate int
+	// randomID is a unique client message ID required to prevent message resending.
+	//
+	// If zero, the Sender generates one automatically.
+	randomID int64
 
 	// sendAs sets peer to send message as it.
 	sendAs tg.InputPeerClass
@@ -95,9 +101,24 @@ func (b *Builder) Schedule(date time.Time) *Builder {
 	return b.ScheduleTS(int(date.Unix()))
 }
 
+// RandomID sets a unique client message ID required to prevent message resending.
+//
+// If not set (or set to zero), the Sender generates a random ID automatically.
+func (b *Builder) RandomID(id int64) *Builder {
+	b.randomID = id
+	return b
+}
+
 // NoWebpage sets flag to disable generation of the webpage preview.
 func (b *Builder) NoWebpage() *Builder {
 	b.noWebpage = true
+	return b
+}
+
+// InvertMedia sets flag to move the media (e.g. link preview) above the message
+// text, instead of below it.
+func (b *Builder) InvertMedia() *Builder {
+	b.invertMedia = true
 	return b
 }
 
@@ -120,7 +141,7 @@ func (b *Builder) Markup(m tg.ReplyMarkupClass) *Builder {
 // Row sets single row keyboard markup  for sending bot buttons.
 //
 // NB: markup will not be used, if you send multiple media attachments.
-func (b *Builder) Row(buttons ...tg.KeyboardButtonClass) *Builder {
+func (b *Builder) Row(buttons ...tg.KeyboardInlineButton) *Builder {
 	return b.Markup(markup.InlineRow(buttons...))
 }
 
@@ -130,4 +151,28 @@ func (b *Builder) Row(buttons ...tg.KeyboardButtonClass) *Builder {
 func (b *Builder) SendAs(p tg.InputPeerClass) *Builder {
 	b.sendAs = p
 	return b
+}
+
+type commonSendRequest interface {
+	SetReplyTo(tg.InputReplyToClass)
+	SetSendAs(tg.InputPeerClass)
+}
+
+type protectedSendRequest interface {
+	commonSendRequest
+	SetNoforwards(bool)
+}
+
+func (b *Builder) applyCommonOptions(req commonSendRequest) {
+	if b.replyTo != nil {
+		req.SetReplyTo(b.replyTo)
+	}
+	if b.sendAs != nil {
+		req.SetSendAs(b.sendAs)
+	}
+}
+
+func (b *Builder) applyProtectedOptions(req protectedSendRequest) {
+	b.applyCommonOptions(req)
+	req.SetNoforwards(b.noForwards)
 }

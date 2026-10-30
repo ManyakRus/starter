@@ -11,7 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"strings"
+	"maps"
 	"time"
 
 	"github.com/beeper/argo-go/codec"
@@ -225,7 +225,7 @@ func (cli *Client) sendMexIQ(ctx context.Context, queryID string, variables any)
 		if err != nil {
 			log.Fatalf("argo to map error: %v", err)
 		}
-		b, err := json.Marshal(data)
+		b, err := json.Marshal(maps.Collect(data.AllFromFront()))
 		if err != nil {
 			return nil, err
 		}
@@ -278,7 +278,7 @@ func (cli *Client) GetNewsletterInfo(ctx context.Context, jid types.JID) (*types
 // Note that the ViewerMeta field of the returned NewsletterMetadata will be nil.
 func (cli *Client) GetNewsletterInfoWithInvite(ctx context.Context, key string) (*types.NewsletterMetadata, error) {
 	return cli.getNewsletterInfo(ctx, map[string]any{
-		"key":  strings.TrimPrefix(key, NewsletterLinkPrefix),
+		"key":  stripURLPrefix(key, NewsletterLinkPrefix),
 		"type": types.NewsletterKeyTypeInvite,
 	}, false)
 }

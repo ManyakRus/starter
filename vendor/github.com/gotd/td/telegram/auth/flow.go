@@ -72,14 +72,7 @@ func (f Flow) Run(ctx context.Context, client FlowClient) error {
 
 		_, signInErr := client.SignIn(ctx, phone, code, hash)
 		if errors.Is(signInErr, ErrPasswordAuthNeeded) {
-			password, err := f.Auth.Password(ctx)
-			if err != nil {
-				return errors.Wrap(err, "get password")
-			}
-			if _, err := client.Password(ctx, password); err != nil {
-				return errors.Wrap(err, "sign in with password")
-			}
-			return nil
+			return f.password(ctx, client)
 		}
 		var signUpRequired *SignUpRequired
 		if errors.As(signInErr, &signUpRequired) {
@@ -118,6 +111,38 @@ type FlowClient interface {
 	SendCode(ctx context.Context, phone string, options SendCodeOptions) (tg.AuthSentCodeClass, error)
 	Password(ctx context.Context, password string) (*tg.AuthAuthorization, error)
 	SignUp(ctx context.Context, s SignUp) (*tg.AuthAuthorization, error)
+}
+
+// PasswordHashProvider is an optional UserAuthenticator extension. When an
+// authenticator implements it, Flow obtains the 2FA SRP answer via PasswordHash
+// instead of Password, so the plaintext password can stay in protected memory
+// (see #755 and the telegram/auth/srpguard subpackage).
+type PasswordHashProvider interface {
+	PasswordHash(ctx context.Context, p *tg.AccountPassword) (*tg.InputCheckPasswordSRP, error)
+}
+
+// password supplies the 2FA password to the client, preferring a
+// PasswordHashProvider (protected memory) over the plaintext Password callback.
+func (f Flow) password(ctx context.Context, client FlowClient) error {
+	if hp, ok := f.Auth.(PasswordHashProvider); ok {
+		if ph, ok := client.(interface {
+			PasswordWith(ctx context.Context, hash PasswordHashFunc) (*tg.AuthAuthorization, error)
+		}); ok {
+			if _, err := ph.PasswordWith(ctx, hp.PasswordHash); err != nil {
+				return errors.Wrap(err, "sign in with password hash")
+			}
+			return nil
+		}
+	}
+
+	password, err := f.Auth.Password(ctx)
+	if err != nil {
+		return errors.Wrap(err, "get password")
+	}
+	if _, err := client.Password(ctx, password); err != nil {
+		return errors.Wrap(err, "sign in with password")
+	}
+	return nil
 }
 
 // CodeAuthenticator asks user for received authentication code.
@@ -282,6 +307,11 @@ func (t testAuth) SignUp(ctx context.Context) (UserInfo, error) {
 //
 // Can be used only with testing server. Will perform sign up if test user is
 // not registered.
+//
+// NB: as of 2026, Telegram no longer auto-provisions accounts for randomly
+// generated 99966X test phone numbers — sign in fails with PHONE_CODE_INVALID.
+// You now need a real, pre-registered test account (use TestUser with its
+// phone); see https://core.telegram.org/api/auth#test-accounts.
 func Test(randReader io.Reader, dc int) UserAuthenticator {
 	// 99966XYYYY, X = dc_id, Y = random numbers, code = X repeat 6.
 	// The n value is from 0000 to 9999.

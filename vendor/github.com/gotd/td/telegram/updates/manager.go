@@ -5,8 +5,8 @@ import (
 	"sync"
 
 	"github.com/go-faster/errors"
+	"github.com/gotd/log"
 	"go.opentelemetry.io/otel/trace"
-	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/gotd/td/telegram"
@@ -31,18 +31,20 @@ type Manager struct {
 
 	// immutable:
 
-	cfg    Config
-	lg     *zap.Logger
-	tracer trace.Tracer
+	cfg       Config
+	lg        log.Helper
+	tracer    trace.Tracer
+	chDiffSem chDiffSem
 }
 
 // New creates new manager.
 func New(cfg Config) *Manager {
 	cfg.setDefaults()
 	return &Manager{
-		cfg:    cfg,
-		lg:     cfg.Logger,
-		tracer: cfg.TracerProvider.Tracer(""),
+		cfg:       cfg,
+		lg:        log.For(cfg.Logger),
+		tracer:    cfg.TracerProvider.Tracer(""),
+		chDiffSem: newChDiffSem(cfg.MaxChannelDifferenceConcurrency),
 	}
 }
 
@@ -56,19 +58,49 @@ func (m *Manager) Handle(ctx context.Context, u tg.UpdatesClass) error {
 	ctx, span := m.tracer.Start(ctx, "updates.Manager.Handle")
 	defer span.End()
 
-	m.lg.Debug("Handle")
-	defer m.lg.Debug("Handled")
+	m.lg.Debug(ctx, "Handle")
+	defer m.lg.Debug(ctx, "Handled")
 
 	m.mux.Lock()
 	state := m.state
 	m.mux.Unlock()
 
 	if state == nil {
-		m.lg.Debug("Handle (no internalState)")
+		m.lg.Debug(ctx, "Handle (no internalState)")
 		return m.cfg.Handler.Handle(ctx, u)
 	}
 
 	return state.Push(ctx, u)
+}
+
+// HandleAffected applies the pts increment carried by a messages.affectedMessages
+// or messages.affectedHistory RPC result, keeping the local pts in sync after a
+// self-initiated read or delete (e.g. messages.readHistory, messages.deleteMessages).
+//
+// Without this, such results silently advance the server pts while the local pts
+// stays behind, so the next genuine update looks like a gap and is postponed
+// until the next pts-changing update or a getDifference (see issue #1382).
+//
+// channelID must be the channel the result belongs to, or 0 for the common
+// (user/basic-group) sequence. The affected pts for a channel is applied only
+// when that channel is already tracked. It is a no-op before Run is called.
+//
+// Most callers should not call this directly: use the hook middleware in
+// telegram/updates/hook, which wires it from RPC results automatically.
+func (m *Manager) HandleAffected(ctx context.Context, channelID int64, pts, ptsCount int) error {
+	ctx, span := m.tracer.Start(ctx, "updates.Manager.HandleAffected")
+	defer span.End()
+
+	m.mux.Lock()
+	state := m.state
+	m.mux.Unlock()
+
+	if state == nil {
+		m.lg.Debug(ctx, "HandleAffected (no internalState)")
+		return nil
+	}
+
+	return state.PushAffected(ctx, channelID, pts, ptsCount)
 }
 
 type AuthOptions struct {
@@ -83,12 +115,12 @@ type AuthOptions struct {
 // with remote internalState.
 func (m *Manager) Run(ctx context.Context, api API, userID int64, opt AuthOptions) error {
 	lg := m.lg.With(
-		zap.Int64("user_id", userID),
-		zap.Bool("is_bot", opt.IsBot),
-		zap.Bool("forget", opt.Forget),
+		log.Int64("user_id", userID),
+		log.Bool("is_bot", opt.IsBot),
+		log.Bool("forget", opt.Forget),
 	)
-	lg.Debug("Run")
-	defer lg.Debug("Done")
+	lg.Debug(ctx, "Run")
+	defer lg.Debug(ctx, "Done")
 
 	wg, ctx := errgroup.WithContext(ctx)
 
@@ -104,27 +136,9 @@ func (m *Manager) Run(ctx context.Context, api API, userID int64, opt AuthOption
 		if err != nil {
 			return errors.Wrap(err, "load internalState")
 		}
-		channels := make(map[int64]struct {
-			Pts        int
-			AccessHash int64
-		})
-		if err := m.cfg.Storage.ForEachChannels(ctx, userID, func(ctx context.Context, channelID int64, pts int) error {
-			hash, found, err := m.cfg.AccessHasher.GetChannelAccessHash(ctx, userID, channelID)
-			if err != nil {
-				return errors.Wrap(err, "get channel access hash")
-			}
-
-			if !found {
-				return nil
-			}
-
-			channels[channelID] = struct {
-				Pts        int
-				AccessHash int64
-			}{Pts: pts, AccessHash: hash}
-			return nil
-		}); err != nil {
-			return errors.Wrap(err, "iterate channels")
+		channels, err := m.loadChannels(ctx, userID)
+		if err != nil {
+			return errors.Wrap(err, "load channels")
 		}
 
 		diffLim := diffLimitUser
@@ -133,18 +147,22 @@ func (m *Manager) Run(ctx context.Context, api API, userID int64, opt AuthOption
 		}
 
 		m.state = newState(ctx, stateConfig{
-			State:            state,
-			Channels:         channels,
-			RawClient:        api,
-			Tracer:           m.tracer,
-			Logger:           m.cfg.Logger,
-			Handler:          m.cfg.Handler,
-			OnChannelTooLong: m.cfg.OnChannelTooLong,
-			Storage:          m.cfg.Storage,
-			Hasher:           m.cfg.AccessHasher,
-			SelfID:           userID,
-			DiffLimit:        diffLim,
-			WorkGroup:        wg,
+			State:                 state,
+			Channels:              channels,
+			RawClient:             api,
+			Tracer:                m.tracer,
+			Logger:                m.cfg.Logger,
+			Handler:               m.cfg.Handler,
+			OnChannelTooLong:      m.cfg.OnChannelTooLong,
+			OnChannelInaccessible: m.cfg.OnChannelInaccessible,
+			OnTooLong:             m.cfg.OnTooLong,
+			Storage:               m.cfg.Storage,
+			Hasher:                m.cfg.AccessHasher,
+			UserHasher:            m.cfg.UserAccessHasher,
+			SelfID:                userID,
+			DiffLimit:             diffLim,
+			WorkGroup:             wg,
+			ChannelDiffSem:        m.chDiffSem,
 		})
 
 		return nil
@@ -157,8 +175,42 @@ func (m *Manager) Run(ctx context.Context, api API, userID int64, opt AuthOption
 	wg.Go(func() error {
 		return m.state.Run(ctx)
 	})
-	lg.Debug("Wait")
+	lg.Debug(ctx, "Wait")
 	return wg.Wait()
+}
+
+// loadChannels loads the locally stored state of the user's channels.
+//
+// Channels with a missing access hash are skipped and reported via
+// Config.OnLoadChannelStateFailed.
+func (m *Manager) loadChannels(ctx context.Context, userID int64) (map[int64]struct {
+	Pts        int
+	AccessHash int64
+}, error) {
+	channels := make(map[int64]struct {
+		Pts        int
+		AccessHash int64
+	})
+	if err := m.cfg.Storage.ForEachChannels(ctx, userID, func(ctx context.Context, channelID int64, pts int) error {
+		hash, found, err := m.cfg.AccessHasher.GetChannelAccessHash(ctx, userID, channelID)
+		if err != nil {
+			return errors.Wrap(err, "get channel access hash")
+		}
+
+		if !found {
+			m.cfg.OnLoadChannelStateFailed(channelID)
+			return nil
+		}
+
+		channels[channelID] = struct {
+			Pts        int
+			AccessHash int64
+		}{Pts: pts, AccessHash: hash}
+		return nil
+	}); err != nil {
+		return nil, errors.Wrap(err, "iterate channels")
+	}
+	return channels, nil
 }
 
 func (m *Manager) loadState(ctx context.Context, api API, userID int64, forget bool) (State, error) {
@@ -184,6 +236,7 @@ onNotFound:
 	}
 
 	if !found {
+		m.cfg.OnLoadUserStateFailed()
 		forget = true
 		goto onNotFound
 	}

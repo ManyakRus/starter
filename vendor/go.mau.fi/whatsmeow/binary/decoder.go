@@ -44,7 +44,7 @@ func (r *binaryDecoder) readIntN(n int, littleEndian bool) (int, error) {
 
 	var ret int
 
-	for i := 0; i < n; i++ {
+	for i := range n {
 		var curShift int
 		if littleEndian {
 			curShift = i
@@ -165,7 +165,7 @@ func (r *binaryDecoder) readListSize(tag int) (int, error) {
 	}
 }
 
-func (r *binaryDecoder) read(string bool) (interface{}, error) {
+func (r *binaryDecoder) read(string bool) (any, error) {
 	tagByte, err := r.readByte()
 	if err != nil {
 		return nil, err
@@ -222,7 +222,7 @@ func (r *binaryDecoder) read(string bool) (interface{}, error) {
 	}
 }
 
-func (r *binaryDecoder) readJIDPair() (interface{}, error) {
+func (r *binaryDecoder) readJIDPair() (any, error) {
 	user, err := r.read(true)
 	if err != nil {
 		return nil, err
@@ -238,7 +238,7 @@ func (r *binaryDecoder) readJIDPair() (interface{}, error) {
 	return types.NewJID(user.(string), server.(string)), nil
 }
 
-func (r *binaryDecoder) readInteropJID() (interface{}, error) {
+func (r *binaryDecoder) readInteropJID() (any, error) {
 	user, err := r.read(true)
 	if err != nil {
 		return nil, err
@@ -265,7 +265,7 @@ func (r *binaryDecoder) readInteropJID() (interface{}, error) {
 	}, nil
 }
 
-func (r *binaryDecoder) readFBJID() (interface{}, error) {
+func (r *binaryDecoder) readFBJID() (any, error) {
 	user, err := r.read(true)
 	if err != nil {
 		return nil, err
@@ -287,7 +287,7 @@ func (r *binaryDecoder) readFBJID() (interface{}, error) {
 	}, nil
 }
 
-func (r *binaryDecoder) readADJID() (interface{}, error) {
+func (r *binaryDecoder) readADJID() (any, error) {
 	agent, err := r.readByte()
 	if err != nil {
 		return nil, err
@@ -309,7 +309,7 @@ func (r *binaryDecoder) readAttributes(n int) (Attrs, error) {
 	}
 
 	ret := make(Attrs)
-	for i := 0; i < n; i++ {
+	for range n {
 		keyIfc, err := r.read(true)
 		if err != nil {
 			return nil, err
@@ -336,7 +336,7 @@ func (r *binaryDecoder) readList(tag int) ([]Node, error) {
 	}
 
 	ret := make([]Node, size)
-	for i := 0; i < size; i++ {
+	for i := range size {
 		n, err := r.readNode()
 
 		if err != nil {
@@ -365,7 +365,7 @@ func (r *binaryDecoder) readNode() (*Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	ret.Tag = rawDesc.(string)
+	ret.Tag, _ = rawDesc.(string)
 	if listSize == 0 || ret.Tag == "" {
 		return nil, ErrInvalidNode
 	}
@@ -383,7 +383,7 @@ func (r *binaryDecoder) readNode() (*Node, error) {
 	return ret, err
 }
 
-func (r *binaryDecoder) readBytesOrString(length int, asString bool) (interface{}, error) {
+func (r *binaryDecoder) readBytesOrString(length int, asString bool) (any, error) {
 	data, err := r.readRaw(length)
 	if err != nil {
 		return nil, err

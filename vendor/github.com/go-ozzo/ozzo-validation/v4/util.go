@@ -25,7 +25,7 @@ func EnsureString(value interface{}) (string, error) {
 	if v.Kind() == reflect.String {
 		return v.String(), nil
 	}
-	if v.Type() == bytesType {
+	if v.Kind() == reflect.Slice && v.Type() == bytesType {
 		return string(v.Interface().([]byte)), nil
 	}
 	return "", errors.New("must be either a string or byte slice")
@@ -96,6 +96,10 @@ func ToFloat(value interface{}) (float64, error) {
 // - string, array: len() == 0
 // - slice, map: nil or len() == 0
 // - interface, pointer: nil or the referenced value is empty
+// - time.Time: the zero time
+// - a struct implementing EmptyChecker: its IsEmpty method returns true
+//
+// Any other struct is not empty.
 func IsEmpty(value interface{}) bool {
 	v := reflect.ValueOf(value)
 	switch v.Kind() {
@@ -117,13 +121,26 @@ func IsEmpty(value interface{}) bool {
 		}
 		return IsEmpty(v.Elem().Interface())
 	case reflect.Struct:
-		v, ok := value.(time.Time)
-		if ok && v.IsZero() {
-			return true
+		if t, ok := value.(time.Time); ok {
+			return t.IsZero()
+		}
+		if ec, ok := value.(EmptyChecker); ok {
+			return ec.IsEmpty()
 		}
 	}
 
 	return false
+}
+
+// EmptyChecker is implemented by a struct type that defines when its value is empty,
+// for example a struct whose zero value means "not set". IsEmpty, and so Required,
+// NilOrNotEmpty, Empty and every rule that skips empty values, use it.
+// Implement it on the value receiver: IsEmpty sees the struct value, not a pointer to it.
+// It is honored only for struct types, and only through the value receiver: a named
+// non-struct type (such as type ID string) with an IsEmpty method is checked by its kind
+// as usual, and an IsEmpty defined on a pointer receiver is ignored.
+type EmptyChecker interface {
+	IsEmpty() bool
 }
 
 // Indirect returns the value that the given interface or pointer references to.

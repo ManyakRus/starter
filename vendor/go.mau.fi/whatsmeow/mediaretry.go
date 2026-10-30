@@ -27,7 +27,7 @@ func getMediaRetryKey(mediaKey []byte) (cipherKey []byte) {
 
 func encryptMediaRetryReceipt(messageID types.MessageID, mediaKey []byte) (ciphertext, iv []byte, err error) {
 	receipt := &waMmsRetry.ServerErrorReceipt{
-		StanzaID: proto.String(messageID),
+		StanzaID: new(messageID),
 	}
 	var plaintext []byte
 	plaintext, err = proto.Marshal(receipt)
@@ -60,7 +60,7 @@ func encryptMediaRetryReceipt(messageID types.MessageID, mediaKey []byte) (ciphe
 // using DecryptMediaRetryNotification and the same media key passed here. If the media retry was successful,
 // the decrypted notification should contain an updated DirectPath, which can be used to download the file.
 //
-//	func eventHandler(rawEvt interface{}) {
+//	func eventHandler(rawEvt any) {
 //	  switch evt := rawEvt.(type) {
 //	  case *events.MediaRetry:
 //	    imageMsg := mediaRetryCache[evt.MessageID]

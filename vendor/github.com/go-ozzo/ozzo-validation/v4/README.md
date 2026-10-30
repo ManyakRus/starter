@@ -1,8 +1,8 @@
 # ozzo-validation
 
+[![CI](https://github.com/go-ozzo/ozzo-validation/actions/workflows/ci.yml/badge.svg)](https://github.com/go-ozzo/ozzo-validation/actions)
+[![codecov](https://codecov.io/gh/go-ozzo/ozzo-validation/branch/master/graph/badge.svg)](https://codecov.io/gh/go-ozzo/ozzo-validation)
 [![GoDoc](https://godoc.org/github.com/go-ozzo/ozzo-validation?status.png)](http://godoc.org/github.com/go-ozzo/ozzo-validation)
-[![Build Status](https://travis-ci.org/go-ozzo/ozzo-validation.svg?branch=master)](https://travis-ci.org/go-ozzo/ozzo-validation)
-[![Coverage Status](https://coveralls.io/repos/github/go-ozzo/ozzo-validation/badge.svg?branch=master)](https://coveralls.io/github/go-ozzo/ozzo-validation?branch=master)
 [![Go Report](https://goreportcard.com/badge/github.com/go-ozzo/ozzo-validation)](https://goreportcard.com/report/github.com/go-ozzo/ozzo-validation)
 
 ## Description
@@ -23,7 +23,7 @@ For an example on how this library is used in an application, please refer to [g
 
 ## Requirements
 
-Go 1.13 or above.
+Go 1.21 or above. CI tests the minimum (Go 1.21) and the two supported Go releases (oldstable and stable).
 
 
 ## Getting Started
@@ -38,7 +38,7 @@ or `validation.ValidateStruct()` to validate the value.
 Run the following command to install the package:
 
 ```
-go get github.com/go-ozzo/ozzo-validation
+go get github.com/go-ozzo/ozzo-validation/v4
 ```
 
 ### Validating a Simple Value
@@ -93,8 +93,8 @@ func (a Address) Validate() error {
 	return validation.ValidateStruct(&a,
 		// Street cannot be empty, and the length must between 5 and 50
 		validation.Field(&a.Street, validation.Required, validation.Length(5, 50)),
-		// City cannot be empty, and the length must between 5 and 50
-		validation.Field(&a.City, validation.Required, validation.Length(5, 50)),
+		// City cannot be empty, and the length must between 1 and 50
+		validation.Field(&a.City, validation.Required, validation.Length(1, 50)),
 		// State cannot be empty, and must be a string consisting of two letters in upper case
 		validation.Field(&a.State, validation.Required, validation.Match(regexp.MustCompile("^[A-Z]{2}$"))),
 		// State cannot be empty, and must be a string consisting of five digits
@@ -152,8 +152,8 @@ err := validation.Validate(c,
 		validation.Key("Address", validation.Map(
 			// Street cannot be empty, and the length must between 5 and 50
 			validation.Key("Street", validation.Required, validation.Length(5, 50)),
-			// City cannot be empty, and the length must between 5 and 50
-			validation.Key("City", validation.Required, validation.Length(5, 50)),
+			// City cannot be empty, and the length must between 1 and 50
+			validation.Key("City", validation.Required, validation.Length(1, 50)),
 			// State cannot be empty, and must be a string consisting of two letters in upper case
 			validation.Key("State", validation.Required, validation.Match(regexp.MustCompile("^[A-Z]{2}$"))),
 			// State cannot be empty, and must be a string consisting of five digits
@@ -170,6 +170,127 @@ When the map validation is performed, the keys are validated in the order they a
 And when each key is validated, its rules are also evaluated in the order they are associated with the key.
 If a rule fails, an error is recorded for that key, and the validation will continue with the next key.
 
+If a key is missing, the error `required key is missing` is recorded and the key's rules are not called.
+To report your own message instead, customize a `Required` or `NotNil` rule of the key,
+e.g. `validation.Key("Name", validation.Required.Error("name is required"))`.
+
+#### Allowing Extra Keys
+
+By default, `validation.Map()` will return an `Extra: key not expected` error if there's unexpected key inside the map (you have to specify all expected keys in the validation rules).
+
+```go
+c := map[string]interface{}{
+	"Name":  "Qiang Xue",
+	"Email": "q",
+	"Address": map[string]interface{}{
+		"Street": "123",
+		"City":   "Unknown",
+	},
+}
+
+err := validation.Validate(c,
+	validation.Map(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Validate Address using its own validation rules
+		validation.Key("Address", validation.Map(
+			// Street cannot be empty.
+			validation.Key("Street", validation.Required),
+		)),
+	),
+)
+fmt.Println(err)
+// Output:
+// Address: (City: key not expected); Email: key not expected.
+```
+
+If you need to allow extra keys, you can achieve this by using `validation.Map().AllowExtraKeys()`, or `validation.DynamicMap()`.
+
+```go
+err := validation.Validate(c,
+	validation.Map(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Validate Address using its own validation rules
+		validation.Key("Address", validation.Map(
+			// Street cannot be empty.
+			validation.Key("Street", validation.Required),
+		).AllowExtraKeys()),
+	).AllowExtraKeys(),
+)
+fmt.Println(err)
+// Output:
+// ""
+
+err2 := validation.Validate(c,
+	validation.DynamicMap(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Validate Address using its own validation rules
+		validation.Key("Address", validation.DynamicMap(
+			// Street cannot be empty.
+			validation.Key("Street", validation.Required),
+		)),
+	),
+)
+fmt.Println(err2)
+// Output:
+// ""
+```
+
+#### Allowing Optional Keys
+
+By default, `validation.Key()` expect the key to be provided and will return an `XXX: required key is missing.` error if the key doesn't exist in the map.
+
+```go
+c := map[string]interface{}{
+	"Name":  "Qiang Xue",
+}
+
+err := validation.Validate(c,
+	validation.Map(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Email cannot be empty and should be in a valid email format.
+		validation.Key("Email", validation.Required, is.Email),
+	),
+)
+fmt.Println(err)
+// Output:
+// Email: required key is missing.
+```
+
+If you need to allow optional key, you can achieve this by using `validation.Key().Optional()` or `validation.OptionalKey()`.
+
+```go
+c := map[string]interface{}{
+	"Name":  "Qiang Xue",
+}
+
+err := validation.Validate(c,
+	validation.Map(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Email is optional, when it exists, it cannot be empty and should be in a valid email format.
+		validation.Key("Email", validation.Required, is.Email).Optional(),
+	),
+)
+fmt.Println(err)
+// Output:
+// ""
+
+err2 := validation.Validate(c,
+	validation.Map(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Email is optional, when it exists, it cannot be empty and should be in a valid email format.
+		validation.OptionalKey("Email", validation.Required, is.Email),
+	),
+)
+fmt.Println(err2)
+// Output:
+// ""
+```
 
 ### Validation Errors
 
@@ -229,6 +350,49 @@ The above approach is very flexible as it allows you to freely build up your val
 it to validate both struct and non-struct values. Compared to using `ValidateStruct` to validate a struct, 
 it has the drawback that you have to redundantly specify the error keys while `ValidateStruct` can automatically 
 find them out.
+
+#### Checking for an Error
+
+`errors.Is` finds an error anywhere in `validation.Errors`, including the errors nested for maps, slices and nested
+structs. A validation error matches a built-in error by its code, so the check also holds when the rule has a custom
+message:
+
+```go
+err := validation.ValidateStruct(&c,
+	validation.Field(&c.Name, validation.Required.Error("is required")),
+)
+fmt.Println(errors.Is(err, validation.ErrRequired))
+// Output:
+// true
+```
+
+An error returned by a `By` rule matches its own sentinel the same way. `errors.As(err, &e)` with a
+`validation.Error` target does not look inside `validation.Errors`: it reports whether `err` itself is a single
+validation error, not a map of field errors.
+
+#### Listing Field Errors
+
+`validation.Flatten(err)` returns all errors as a flat, sorted list of `validation.FieldError`, walking into nested
+`validation.Errors`. Each entry has the path of keys to the error, its code, its rendered message and params, and the
+error itself. `Field()` joins the path with dots and `Pointer()` returns it as an RFC 6901 JSON Pointer, which stays
+unambiguous when a key contains a dot:
+
+```go
+for _, fe := range validation.Flatten(err) {
+	fmt.Println(fe.Field(), fe.Pointer(), fe.Code, fe.Message)
+}
+// Output:
+// id /id validation_length_out_of_range the length must be between 3 and 10
+// items.1.name /items/1/name validation_required cannot be blank
+```
+
+Each level is sorted: slice indexes come first in numeric order, so `items.2` comes before `items.10`, then the other
+keys in string order. A single error that is not a `validation.Errors`, such as the one `validation.Validate` returns,
+is one entry with an empty path. `Errors.Flatten()` does the same for a `validation.Errors` value.
+
+Errors that are not validation errors have an empty code. That includes internal errors that `Each` or a slice of
+validatables put into the map, so check `fe.Err` with `errors.As` for a `validation.InternalError` before sending
+`fe.Message` to a client.
 
 
 ### Internal Errors
@@ -396,6 +560,48 @@ used in this case so that you can detect if a value is entered or not by checkin
 You can use the `validation.NotNil` rule to ensure a value is entered (even if it is a zero value).
 
 
+### Empty Values
+
+Most rules, such as `Length`, `Match`, `In`, `Min`, `Max`, `Date` and the rules in the `is` package, consider an
+empty value valid and skip it. Use `validation.Required` to make sure a value is not empty. A value is empty if it is
+
+* a nil pointer or interface, or a pointer to an empty value,
+* a zero number, `false`, an empty string, slice, map or array,
+* the zero `time.Time`.
+
+Any other struct is not empty, even when all its fields have zero values. This keeps `Required` on a nested struct
+from hiding the struct's own validation errors.
+
+When an empty value must be validated too, there are two opt-ins:
+
+* `ValidateEmpty()` makes `Min` and `Max` check empty values against the threshold. Use it when zero is a meaningful
+  input, for example a value that must be strictly positive:
+
+  ```go
+  err := validation.Validate(0, validation.Min(0).Exclusive().ValidateEmpty())
+  fmt.Println(err)
+  // Output:
+  // must be greater than 0
+  ```
+
+* A struct type can define when its value is empty by implementing `validation.EmptyChecker` on its value receiver.
+  `Required`, `NilOrNotEmpty`, `Empty` and the rules that skip empty values then use it:
+
+  ```go
+  type Address struct {
+      Street string
+      City   string
+  }
+
+  func (a Address) IsEmpty() bool { return a == Address{} }
+
+  err := validation.Validate(Address{}, validation.Required)
+  fmt.Println(err)
+  // Output:
+  // cannot be blank
+  ```
+
+
 ### Embedded Structs
 
 The `validation.ValidateStruct` method will properly validate a struct that contains embedded structs. In particular,
@@ -455,8 +661,8 @@ The following code implements the aforementioned examples:
 ```go
 result := validation.ValidateStruct(&a,
     validation.Field(&a.Unit, validation.When(a.Quantity != "", validation.Required).Else(validation.Nil)),
-    validation.Field(&a.Phone, validation.When(a.Email == "", validation.Required.Error('Either phone or Email is required.')),
-    validation.Field(&a.Email, validation.When(a.Phone == "", validation.Required.Error('Either phone or Email is required.')),
+    validation.Field(&a.Phone, validation.When(a.Email == "", validation.Required.Error("Either phone or Email is required.")),
+    validation.Field(&a.Email, validation.When(a.Phone == "", validation.Required.Error("Either phone or Email is required.")),
 )
 ```
 
@@ -467,8 +673,8 @@ The above code can also be simplified using the shortcut `validation.Required.Wh
 ```go
 result := validation.ValidateStruct(&a,
     validation.Field(&a.Unit, validation.Required.When(a.Quantity != ""), validation.Nil.When(a.Quantity == "")),
-    validation.Field(&a.Phone, validation.Required.When(a.Email == "").Error('Either phone or Email is required.')),
-    validation.Field(&a.Email, validation.Required.When(a.Phone == "").Error('Either phone or Email is required.')),
+    validation.Field(&a.Phone, validation.Required.When(a.Email == "").Error("Either phone or Email is required.")),
+    validation.Field(&a.Email, validation.Required.When(a.Phone == "").Error("Either phone or Email is required.")),
 )
 ```
 
@@ -503,6 +709,23 @@ You can use error code to programmatically check a validation error or look for 
 
 If you are developing your own validation rules, you can use `validation.NewError()` to create a validation error which
 implements the aforementioned `Error` interface.
+
+### Smaller Binaries: `-tags ozzo_validation_no_template`
+
+Error messages are rendered with `text/template`, which fills in params such as `{{.min}}` and `{{.max}}`.
+`text/template` makes a binary noticeably larger, so you can build without it:
+
+```shell
+go build -tags ozzo_validation_no_template ./...
+```
+
+With the tag, a simple replacement fills in the params, and all built-in messages read exactly as without the tag. It
+supports only field placeholders: `{{.key}}`, and `{{ .key }}`, `{{.key }}` or `{{ .key}}` with one space. A param is
+formatted with `fmt.Sprint`. Custom messages that use more of the template language read differently:
+
+- pipelines, conditionals and functions (`{{.min | printf "%d"}}`, `{{if .min}}…{{end}}`) are left as written;
+- a placeholder whose key is not in the params is left as written, instead of `<no value>`;
+- a pointer param prints as a pointer address, while the template prints the value it points to.
 
 ## Creating Custom Rules
 
@@ -623,6 +846,7 @@ The following rules are provided in the `validation` package:
   its rune length instead of byte length.
 * `Min(min interface{})` and `Max(max interface{})`: checks if a value is within the specified range.
   These two rules should only be used for validating int, uint, float and time.Time types.
+  Empty values are considered valid; call `ValidateEmpty()` to check them too (see [Empty Values](#empty-values)).
 * `Match(*regexp.Regexp)`: checks if a value matches the specified regular expression.
   This rule should only be used for strings and byte slices.
 * `Date(layout string)`: checks if a string value is a date whose format is specified by the layout.
@@ -665,7 +889,9 @@ Below is the whole list of the rules provided by the `is` package:
 * `UUIDv3`: validates if a string is a valid version 3 UUID
 * `UUIDv4`: validates if a string is a valid version 4 UUID
 * `UUIDv5`: validates if a string is a valid version 5 UUID
+* `UUIDv7`: validates if a string is a valid version 7 UUID
 * `UUID`: validates if a string is a valid UUID
+* `ULID`: validates if a string is a valid ULID
 * `CreditCard`: validates if a string is a valid credit card number
 * `ISBN10`: validates if a string is an ISBN version 10
 * `ISBN13`: validates if a string is an ISBN version 13
@@ -693,11 +919,22 @@ Below is the whole list of the rules provided by the `is` package:
 * `Host`: validates if a string is a valid IP (both v4 and v6) or a valid DNS name
 * `Port`: validates if a string is a valid port number
 * `MongoID`: validates if a string is a valid Mongo ID
-* `Latitude`: validates if a string is a valid latitude
-* `Longitude`: validates if a string is a valid longitude
+* `Latitude`: validates if a string or a number is a valid latitude, in the range [-90, 90] (strings in decimal degrees)
+* `Longitude`: validates if a string or a number is a valid longitude, in the range [-180, 180] (strings in decimal degrees)
 * `SSN`: validates if a string is a social security number (SSN)
 * `Semver`: validates if a string is a valid semantic version
 
 ## Credits
 
 The `is` sub-package wraps the excellent validators provided by the [govalidator](https://github.com/asaskevich/govalidator) package.
+
+
+## Star History
+
+<a href="https://starhistory.io">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.starhistory.io/png?repos=go-ozzo/ozzo-validation&style=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.starhistory.io/png?repos=go-ozzo/ozzo-validation&style=professional" />
+   <img alt="Star History Chart" src="https://api.starhistory.io/png?repos=go-ozzo/ozzo-validation" width="800" />
+ </picture>
+</a>

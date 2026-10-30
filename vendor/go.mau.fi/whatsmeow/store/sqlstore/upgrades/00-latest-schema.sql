@@ -1,4 +1,4 @@
--- v0 -> v11 (compatible with v8+): Latest schema
+-- v0 -> v16 (compatible with v8+): Latest schema
 CREATE TABLE whatsmeow_device (
 	jid TEXT PRIMARY KEY,
 	lid TEXT,
@@ -24,7 +24,9 @@ CREATE TABLE whatsmeow_device (
 	business_name TEXT NOT NULL DEFAULT '',
 	push_name     TEXT NOT NULL DEFAULT '',
 
-	lid_migration_ts BIGINT NOT NULL DEFAULT 0
+	lid_migration_ts BIGINT NOT NULL DEFAULT 0,
+
+	companion_meta_nonce TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE whatsmeow_identity_keys (
@@ -116,6 +118,7 @@ CREATE TABLE whatsmeow_chat_settings (
 	muted_until   BIGINT  NOT NULL DEFAULT 0,
 	pinned        BOOLEAN NOT NULL DEFAULT false,
 	archived      BOOLEAN NOT NULL DEFAULT false,
+	wasa_root_secret_id TEXT NOT NULL DEFAULT '',
 
 	PRIMARY KEY (our_jid, chat_jid),
 	FOREIGN KEY (our_jid) REFERENCES whatsmeow_device(jid) ON DELETE CASCADE ON UPDATE CASCADE
@@ -133,11 +136,21 @@ CREATE TABLE whatsmeow_message_secrets (
 );
 
 CREATE TABLE whatsmeow_privacy_tokens (
-	our_jid   TEXT,
-	their_jid TEXT,
-	token     bytea  NOT NULL,
-	timestamp BIGINT NOT NULL,
+	our_jid          TEXT,
+	their_jid        TEXT,
+	token            bytea  NOT NULL,
+	timestamp        BIGINT NOT NULL,
+	sender_timestamp BIGINT,
 	PRIMARY KEY (our_jid, their_jid)
+);
+
+CREATE INDEX idx_whatsmeow_privacy_tokens_our_jid_timestamp
+ON whatsmeow_privacy_tokens (our_jid, timestamp);
+
+CREATE TABLE whatsmeow_nct_salt (
+	our_jid TEXT PRIMARY KEY,
+	salt    bytea NOT NULL,
+	FOREIGN KEY (our_jid) REFERENCES whatsmeow_device(jid) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE whatsmeow_lid_map (
@@ -154,3 +167,17 @@ CREATE TABLE whatsmeow_event_buffer (
 	PRIMARY KEY (our_jid, ciphertext_hash),
 	FOREIGN KEY (our_jid) REFERENCES whatsmeow_device(jid) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+CREATE TABLE whatsmeow_retry_buffer (
+	our_jid    TEXT   NOT NULL,
+	chat_jid   TEXT   NOT NULL,
+	message_id TEXT   NOT NULL,
+	format     TEXT   NOT NULL,
+	plaintext  bytea  NOT NULL,
+	timestamp  BIGINT NOT NULL,
+
+	PRIMARY KEY (our_jid, chat_jid, message_id),
+	FOREIGN KEY (our_jid) REFERENCES whatsmeow_device(jid) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE INDEX whatsmeow_retry_buffer_timestamp_idx ON whatsmeow_retry_buffer (our_jid, timestamp);

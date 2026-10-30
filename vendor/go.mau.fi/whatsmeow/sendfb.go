@@ -12,6 +12,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"maps"
 	"time"
 
 	"github.com/google/uuid"
@@ -137,10 +138,13 @@ func (cli *Client) SendFBMessage(
 	resp.DebugTimings.Queue = time.Since(start)
 	defer cli.messageSendLock.Unlock()
 
-	respChan := cli.waitResponse(req.ID)
 	if !req.Peer {
-		cli.addRecentMessage(to, req.ID, nil, messageAppProto)
+		err = cli.addRecentMessage(ctx, to, req.ID, nil, messageAppProto)
+		if err != nil {
+			return
+		}
 	}
+	respChan := cli.waitResponse(req.ID)
 	var phash string
 	var data []byte
 	switch to.Server {
@@ -197,10 +201,17 @@ func (cli *Client) SendFBMessage(
 	expectedPHash := ag.OptionalString("phash")
 	if len(expectedPHash) > 0 && phash != expectedPHash {
 		cli.Log.Warnf("Server returned different participant list hash when sending to %s. Some devices may not have received the message.", to)
-		// TODO also invalidate device list caches
-		cli.groupCacheLock.Lock()
-		delete(cli.groupCache, to)
-		cli.groupCacheLock.Unlock()
+		switch to.Server {
+		case types.GroupServer:
+			// TODO also invalidate device list caches
+			cli.groupCacheLock.Lock()
+			delete(cli.groupCache, to)
+			cli.groupCacheLock.Unlock()
+		case types.DefaultUserServer, types.MessengerServer:
+			cli.userDevicesCacheLock.Lock()
+			delete(cli.userDevicesCache, to)
+			cli.userDevicesCacheLock.Unlock()
+		}
 	}
 	return
 }
@@ -234,7 +245,7 @@ func (cli *Client) sendGroupV3(
 		return "", nil, fmt.Errorf("failed to create sender key distribution message to send %s to %s: %w", id, to, err)
 	}
 	skdm := &waMsgTransport.MessageTransport_Protocol_Ancillary_SenderKeyDistributionMessage{
-		GroupID:                             proto.String(to.String()),
+		GroupID:                             new(to.String()),
 		AxolotlSenderKeyDistributionMessage: signalSKDMessage.Serialize(),
 	}
 
@@ -463,8 +474,8 @@ func (cli *Client) prepareMessageNodeV3(
 	}
 
 	dsm := &waMsgTransport.MessageTransport_Protocol_Integral_DeviceSentMessage{
-		DestinationJID: proto.String(to.String()),
-		Phash:          proto.String(""),
+		DestinationJID: new(to.String()),
+		Phash:          new(""),
 	}
 
 	start = time.Now()
@@ -527,6 +538,9 @@ func (cli *Client) encryptMessageForDevicesV3(
 	sessionAddressToJID := make(map[string]types.JID, len(allDevices))
 	sessionAddresses := make([]string, 0, len(allDevices))
 	for _, jid := range allDevices {
+		if jid == ownID {
+			continue
+		}
 		addr := jid.SignalAddress().String()
 		sessionAddresses = append(sessionAddresses, addr)
 		sessionAddressToJID[addr] = jid
@@ -544,11 +558,11 @@ func (cli *Client) encryptMessageForDevicesV3(
 	bundles := cli.fetchPreKeysNoError(ctx, retryDevices)
 
 	for _, jid := range allDevices {
+		if jid == ownID {
+			continue
+		}
 		var dsmForDevice *waMsgTransport.MessageTransport_Protocol_Integral_DeviceSentMessage
 		if jid.User == ownID.User {
-			if jid == ownID {
-				continue
-			}
 			dsmForDevice = dsm
 		}
 		encrypted, err := cli.encryptMessageForDeviceAndWrapV3(ctx, payload, skdm, dsmForDevice, jid, bundles[jid], encAttrs)
@@ -649,7 +663,7 @@ func (cli *Client) encryptMessageForDeviceV3(
 	if ciphertext.Type() == protocol.PREKEY_TYPE {
 		encAttrs["type"] = "pkmsg"
 	}
-	copyAttrs(extraAttrs, encAttrs)
+	maps.Copy(encAttrs, extraAttrs)
 
 	return &waBinary.Node{
 		Tag:     "enc",

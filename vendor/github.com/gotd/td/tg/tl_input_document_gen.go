@@ -148,7 +148,7 @@ type InputDocument struct {
 	// File reference¹
 	//
 	// Links:
-	//  1) https://core.telegram.org/api/file_reference
+	//  1) https://core.telegram.org/api/file-references
 	FileReference []byte
 }
 
@@ -373,11 +373,12 @@ type InputDocumentClass interface {
 }
 
 // AsInputDocumentFileLocation tries to map InputDocument to InputDocumentFileLocation.
-func (i *InputDocument) AsInputDocumentFileLocation() *InputDocumentFileLocation {
+func (i *InputDocument) AsInputDocumentFileLocation(thumbSize string) *InputDocumentFileLocation {
 	value := new(InputDocumentFileLocation)
 	value.ID = i.GetID()
 	value.AccessHash = i.GetAccessHash()
 	value.FileReference = i.GetFileReference()
+	value.ThumbSize = thumbSize
 
 	return value
 }

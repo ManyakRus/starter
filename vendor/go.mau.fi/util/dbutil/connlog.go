@@ -53,8 +53,8 @@ func addErrorLine(query string, err error) error {
 	if pos <= 0 {
 		return err
 	}
-	lines := strings.Split(query, "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(query, "\n")
+	for line := range lines {
 		lineRunes := []rune(line)
 		if pos < len(lineRunes)+1 {
 			return &PQErrorWithLine{Underlying: err, Line: line}

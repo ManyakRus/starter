@@ -805,6 +805,149 @@ func (s MessageActionClassArray) AsMessageActionStarGiftPurchaseOfferDeclined() 
 	return to
 }
 
+// AsMessageActionNewCreatorPending returns copy with only MessageActionNewCreatorPending constructors.
+func (s MessageActionClassArray) AsMessageActionNewCreatorPending() (to MessageActionNewCreatorPendingArray) {
+	for _, elem := range s {
+		value, ok := elem.(*MessageActionNewCreatorPending)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsMessageActionChangeCreator returns copy with only MessageActionChangeCreator constructors.
+func (s MessageActionClassArray) AsMessageActionChangeCreator() (to MessageActionChangeCreatorArray) {
+	for _, elem := range s {
+		value, ok := elem.(*MessageActionChangeCreator)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsMessageActionNoForwardsToggle returns copy with only MessageActionNoForwardsToggle constructors.
+func (s MessageActionClassArray) AsMessageActionNoForwardsToggle() (to MessageActionNoForwardsToggleArray) {
+	for _, elem := range s {
+		value, ok := elem.(*MessageActionNoForwardsToggle)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsMessageActionNoForwardsRequest returns copy with only MessageActionNoForwardsRequest constructors.
+func (s MessageActionClassArray) AsMessageActionNoForwardsRequest() (to MessageActionNoForwardsRequestArray) {
+	for _, elem := range s {
+		value, ok := elem.(*MessageActionNoForwardsRequest)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsMessageActionPollAppendAnswer returns copy with only MessageActionPollAppendAnswer constructors.
+func (s MessageActionClassArray) AsMessageActionPollAppendAnswer() (to MessageActionPollAppendAnswerArray) {
+	for _, elem := range s {
+		value, ok := elem.(*MessageActionPollAppendAnswer)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsMessageActionPollDeleteAnswer returns copy with only MessageActionPollDeleteAnswer constructors.
+func (s MessageActionClassArray) AsMessageActionPollDeleteAnswer() (to MessageActionPollDeleteAnswerArray) {
+	for _, elem := range s {
+		value, ok := elem.(*MessageActionPollDeleteAnswer)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsMessageActionManagedBotCreated returns copy with only MessageActionManagedBotCreated constructors.
+func (s MessageActionClassArray) AsMessageActionManagedBotCreated() (to MessageActionManagedBotCreatedArray) {
+	for _, elem := range s {
+		value, ok := elem.(*MessageActionManagedBotCreated)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsMessageActionChangeCommunity returns copy with only MessageActionChangeCommunity constructors.
+func (s MessageActionClassArray) AsMessageActionChangeCommunity() (to MessageActionChangeCommunityArray) {
+	for _, elem := range s {
+		value, ok := elem.(*MessageActionChangeCommunity)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsMessageActionChatJoinedViaCommunity returns copy with only MessageActionChatJoinedViaCommunity constructors.
+func (s MessageActionClassArray) AsMessageActionChatJoinedViaCommunity() (to MessageActionChatJoinedViaCommunityArray) {
+	for _, elem := range s {
+		value, ok := elem.(*MessageActionChatJoinedViaCommunity)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsMessageActionGramTransfer returns copy with only MessageActionGramTransfer constructors.
+func (s MessageActionClassArray) AsMessageActionGramTransfer() (to MessageActionGramTransferArray) {
+	for _, elem := range s {
+		value, ok := elem.(*MessageActionGramTransfer)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
+// AsMessageActionWalletTonConnectRequest returns copy with only MessageActionWalletTonConnectRequest constructors.
+func (s MessageActionClassArray) AsMessageActionWalletTonConnectRequest() (to MessageActionWalletTonConnectRequestArray) {
+	for _, elem := range s {
+		value, ok := elem.(*MessageActionWalletTonConnectRequest)
+		if !ok {
+			continue
+		}
+		to = append(to, *value)
+	}
+
+	return to
+}
+
 // MessageActionChatCreateArray is adapter for slice of MessageActionChatCreate.
 type MessageActionChatCreateArray []MessageActionChatCreate
 
@@ -5139,6 +5282,908 @@ func (s *MessageActionStarGiftPurchaseOfferDeclinedArray) PopFirst() (v MessageA
 
 // Pop returns last element of slice (if exists) and deletes it.
 func (s *MessageActionStarGiftPurchaseOfferDeclinedArray) Pop() (v MessageActionStarGiftPurchaseOfferDeclined, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// MessageActionNewCreatorPendingArray is adapter for slice of MessageActionNewCreatorPending.
+type MessageActionNewCreatorPendingArray []MessageActionNewCreatorPending
+
+// Sort sorts slice of MessageActionNewCreatorPending.
+func (s MessageActionNewCreatorPendingArray) Sort(less func(a, b MessageActionNewCreatorPending) bool) MessageActionNewCreatorPendingArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of MessageActionNewCreatorPending.
+func (s MessageActionNewCreatorPendingArray) SortStable(less func(a, b MessageActionNewCreatorPending) bool) MessageActionNewCreatorPendingArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of MessageActionNewCreatorPending.
+func (s MessageActionNewCreatorPendingArray) Retain(keep func(x MessageActionNewCreatorPending) bool) MessageActionNewCreatorPendingArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s MessageActionNewCreatorPendingArray) First() (v MessageActionNewCreatorPending, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s MessageActionNewCreatorPendingArray) Last() (v MessageActionNewCreatorPending, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *MessageActionNewCreatorPendingArray) PopFirst() (v MessageActionNewCreatorPending, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero MessageActionNewCreatorPending
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *MessageActionNewCreatorPendingArray) Pop() (v MessageActionNewCreatorPending, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// MessageActionChangeCreatorArray is adapter for slice of MessageActionChangeCreator.
+type MessageActionChangeCreatorArray []MessageActionChangeCreator
+
+// Sort sorts slice of MessageActionChangeCreator.
+func (s MessageActionChangeCreatorArray) Sort(less func(a, b MessageActionChangeCreator) bool) MessageActionChangeCreatorArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of MessageActionChangeCreator.
+func (s MessageActionChangeCreatorArray) SortStable(less func(a, b MessageActionChangeCreator) bool) MessageActionChangeCreatorArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of MessageActionChangeCreator.
+func (s MessageActionChangeCreatorArray) Retain(keep func(x MessageActionChangeCreator) bool) MessageActionChangeCreatorArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s MessageActionChangeCreatorArray) First() (v MessageActionChangeCreator, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s MessageActionChangeCreatorArray) Last() (v MessageActionChangeCreator, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *MessageActionChangeCreatorArray) PopFirst() (v MessageActionChangeCreator, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero MessageActionChangeCreator
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *MessageActionChangeCreatorArray) Pop() (v MessageActionChangeCreator, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// MessageActionNoForwardsToggleArray is adapter for slice of MessageActionNoForwardsToggle.
+type MessageActionNoForwardsToggleArray []MessageActionNoForwardsToggle
+
+// Sort sorts slice of MessageActionNoForwardsToggle.
+func (s MessageActionNoForwardsToggleArray) Sort(less func(a, b MessageActionNoForwardsToggle) bool) MessageActionNoForwardsToggleArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of MessageActionNoForwardsToggle.
+func (s MessageActionNoForwardsToggleArray) SortStable(less func(a, b MessageActionNoForwardsToggle) bool) MessageActionNoForwardsToggleArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of MessageActionNoForwardsToggle.
+func (s MessageActionNoForwardsToggleArray) Retain(keep func(x MessageActionNoForwardsToggle) bool) MessageActionNoForwardsToggleArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s MessageActionNoForwardsToggleArray) First() (v MessageActionNoForwardsToggle, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s MessageActionNoForwardsToggleArray) Last() (v MessageActionNoForwardsToggle, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *MessageActionNoForwardsToggleArray) PopFirst() (v MessageActionNoForwardsToggle, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero MessageActionNoForwardsToggle
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *MessageActionNoForwardsToggleArray) Pop() (v MessageActionNoForwardsToggle, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// MessageActionNoForwardsRequestArray is adapter for slice of MessageActionNoForwardsRequest.
+type MessageActionNoForwardsRequestArray []MessageActionNoForwardsRequest
+
+// Sort sorts slice of MessageActionNoForwardsRequest.
+func (s MessageActionNoForwardsRequestArray) Sort(less func(a, b MessageActionNoForwardsRequest) bool) MessageActionNoForwardsRequestArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of MessageActionNoForwardsRequest.
+func (s MessageActionNoForwardsRequestArray) SortStable(less func(a, b MessageActionNoForwardsRequest) bool) MessageActionNoForwardsRequestArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of MessageActionNoForwardsRequest.
+func (s MessageActionNoForwardsRequestArray) Retain(keep func(x MessageActionNoForwardsRequest) bool) MessageActionNoForwardsRequestArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s MessageActionNoForwardsRequestArray) First() (v MessageActionNoForwardsRequest, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s MessageActionNoForwardsRequestArray) Last() (v MessageActionNoForwardsRequest, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *MessageActionNoForwardsRequestArray) PopFirst() (v MessageActionNoForwardsRequest, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero MessageActionNoForwardsRequest
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *MessageActionNoForwardsRequestArray) Pop() (v MessageActionNoForwardsRequest, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// MessageActionPollAppendAnswerArray is adapter for slice of MessageActionPollAppendAnswer.
+type MessageActionPollAppendAnswerArray []MessageActionPollAppendAnswer
+
+// Sort sorts slice of MessageActionPollAppendAnswer.
+func (s MessageActionPollAppendAnswerArray) Sort(less func(a, b MessageActionPollAppendAnswer) bool) MessageActionPollAppendAnswerArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of MessageActionPollAppendAnswer.
+func (s MessageActionPollAppendAnswerArray) SortStable(less func(a, b MessageActionPollAppendAnswer) bool) MessageActionPollAppendAnswerArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of MessageActionPollAppendAnswer.
+func (s MessageActionPollAppendAnswerArray) Retain(keep func(x MessageActionPollAppendAnswer) bool) MessageActionPollAppendAnswerArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s MessageActionPollAppendAnswerArray) First() (v MessageActionPollAppendAnswer, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s MessageActionPollAppendAnswerArray) Last() (v MessageActionPollAppendAnswer, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *MessageActionPollAppendAnswerArray) PopFirst() (v MessageActionPollAppendAnswer, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero MessageActionPollAppendAnswer
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *MessageActionPollAppendAnswerArray) Pop() (v MessageActionPollAppendAnswer, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// MessageActionPollDeleteAnswerArray is adapter for slice of MessageActionPollDeleteAnswer.
+type MessageActionPollDeleteAnswerArray []MessageActionPollDeleteAnswer
+
+// Sort sorts slice of MessageActionPollDeleteAnswer.
+func (s MessageActionPollDeleteAnswerArray) Sort(less func(a, b MessageActionPollDeleteAnswer) bool) MessageActionPollDeleteAnswerArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of MessageActionPollDeleteAnswer.
+func (s MessageActionPollDeleteAnswerArray) SortStable(less func(a, b MessageActionPollDeleteAnswer) bool) MessageActionPollDeleteAnswerArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of MessageActionPollDeleteAnswer.
+func (s MessageActionPollDeleteAnswerArray) Retain(keep func(x MessageActionPollDeleteAnswer) bool) MessageActionPollDeleteAnswerArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s MessageActionPollDeleteAnswerArray) First() (v MessageActionPollDeleteAnswer, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s MessageActionPollDeleteAnswerArray) Last() (v MessageActionPollDeleteAnswer, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *MessageActionPollDeleteAnswerArray) PopFirst() (v MessageActionPollDeleteAnswer, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero MessageActionPollDeleteAnswer
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *MessageActionPollDeleteAnswerArray) Pop() (v MessageActionPollDeleteAnswer, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// MessageActionManagedBotCreatedArray is adapter for slice of MessageActionManagedBotCreated.
+type MessageActionManagedBotCreatedArray []MessageActionManagedBotCreated
+
+// Sort sorts slice of MessageActionManagedBotCreated.
+func (s MessageActionManagedBotCreatedArray) Sort(less func(a, b MessageActionManagedBotCreated) bool) MessageActionManagedBotCreatedArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of MessageActionManagedBotCreated.
+func (s MessageActionManagedBotCreatedArray) SortStable(less func(a, b MessageActionManagedBotCreated) bool) MessageActionManagedBotCreatedArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of MessageActionManagedBotCreated.
+func (s MessageActionManagedBotCreatedArray) Retain(keep func(x MessageActionManagedBotCreated) bool) MessageActionManagedBotCreatedArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s MessageActionManagedBotCreatedArray) First() (v MessageActionManagedBotCreated, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s MessageActionManagedBotCreatedArray) Last() (v MessageActionManagedBotCreated, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *MessageActionManagedBotCreatedArray) PopFirst() (v MessageActionManagedBotCreated, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero MessageActionManagedBotCreated
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *MessageActionManagedBotCreatedArray) Pop() (v MessageActionManagedBotCreated, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// MessageActionChangeCommunityArray is adapter for slice of MessageActionChangeCommunity.
+type MessageActionChangeCommunityArray []MessageActionChangeCommunity
+
+// Sort sorts slice of MessageActionChangeCommunity.
+func (s MessageActionChangeCommunityArray) Sort(less func(a, b MessageActionChangeCommunity) bool) MessageActionChangeCommunityArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of MessageActionChangeCommunity.
+func (s MessageActionChangeCommunityArray) SortStable(less func(a, b MessageActionChangeCommunity) bool) MessageActionChangeCommunityArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of MessageActionChangeCommunity.
+func (s MessageActionChangeCommunityArray) Retain(keep func(x MessageActionChangeCommunity) bool) MessageActionChangeCommunityArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s MessageActionChangeCommunityArray) First() (v MessageActionChangeCommunity, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s MessageActionChangeCommunityArray) Last() (v MessageActionChangeCommunity, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *MessageActionChangeCommunityArray) PopFirst() (v MessageActionChangeCommunity, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero MessageActionChangeCommunity
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *MessageActionChangeCommunityArray) Pop() (v MessageActionChangeCommunity, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// MessageActionChatJoinedViaCommunityArray is adapter for slice of MessageActionChatJoinedViaCommunity.
+type MessageActionChatJoinedViaCommunityArray []MessageActionChatJoinedViaCommunity
+
+// Sort sorts slice of MessageActionChatJoinedViaCommunity.
+func (s MessageActionChatJoinedViaCommunityArray) Sort(less func(a, b MessageActionChatJoinedViaCommunity) bool) MessageActionChatJoinedViaCommunityArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of MessageActionChatJoinedViaCommunity.
+func (s MessageActionChatJoinedViaCommunityArray) SortStable(less func(a, b MessageActionChatJoinedViaCommunity) bool) MessageActionChatJoinedViaCommunityArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of MessageActionChatJoinedViaCommunity.
+func (s MessageActionChatJoinedViaCommunityArray) Retain(keep func(x MessageActionChatJoinedViaCommunity) bool) MessageActionChatJoinedViaCommunityArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s MessageActionChatJoinedViaCommunityArray) First() (v MessageActionChatJoinedViaCommunity, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s MessageActionChatJoinedViaCommunityArray) Last() (v MessageActionChatJoinedViaCommunity, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *MessageActionChatJoinedViaCommunityArray) PopFirst() (v MessageActionChatJoinedViaCommunity, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero MessageActionChatJoinedViaCommunity
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *MessageActionChatJoinedViaCommunityArray) Pop() (v MessageActionChatJoinedViaCommunity, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// MessageActionGramTransferArray is adapter for slice of MessageActionGramTransfer.
+type MessageActionGramTransferArray []MessageActionGramTransfer
+
+// Sort sorts slice of MessageActionGramTransfer.
+func (s MessageActionGramTransferArray) Sort(less func(a, b MessageActionGramTransfer) bool) MessageActionGramTransferArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of MessageActionGramTransfer.
+func (s MessageActionGramTransferArray) SortStable(less func(a, b MessageActionGramTransfer) bool) MessageActionGramTransferArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of MessageActionGramTransfer.
+func (s MessageActionGramTransferArray) Retain(keep func(x MessageActionGramTransfer) bool) MessageActionGramTransferArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s MessageActionGramTransferArray) First() (v MessageActionGramTransfer, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s MessageActionGramTransferArray) Last() (v MessageActionGramTransfer, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *MessageActionGramTransferArray) PopFirst() (v MessageActionGramTransfer, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero MessageActionGramTransfer
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *MessageActionGramTransferArray) Pop() (v MessageActionGramTransfer, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[len(a)-1]
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// MessageActionWalletTonConnectRequestArray is adapter for slice of MessageActionWalletTonConnectRequest.
+type MessageActionWalletTonConnectRequestArray []MessageActionWalletTonConnectRequest
+
+// Sort sorts slice of MessageActionWalletTonConnectRequest.
+func (s MessageActionWalletTonConnectRequestArray) Sort(less func(a, b MessageActionWalletTonConnectRequest) bool) MessageActionWalletTonConnectRequestArray {
+	sort.Slice(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// SortStable sorts slice of MessageActionWalletTonConnectRequest.
+func (s MessageActionWalletTonConnectRequestArray) SortStable(less func(a, b MessageActionWalletTonConnectRequest) bool) MessageActionWalletTonConnectRequestArray {
+	sort.SliceStable(s, func(i, j int) bool {
+		return less(s[i], s[j])
+	})
+	return s
+}
+
+// Retain filters in-place slice of MessageActionWalletTonConnectRequest.
+func (s MessageActionWalletTonConnectRequestArray) Retain(keep func(x MessageActionWalletTonConnectRequest) bool) MessageActionWalletTonConnectRequestArray {
+	n := 0
+	for _, x := range s {
+		if keep(x) {
+			s[n] = x
+			n++
+		}
+	}
+	s = s[:n]
+
+	return s
+}
+
+// First returns first element of slice (if exists).
+func (s MessageActionWalletTonConnectRequestArray) First() (v MessageActionWalletTonConnectRequest, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[0], true
+}
+
+// Last returns last element of slice (if exists).
+func (s MessageActionWalletTonConnectRequestArray) Last() (v MessageActionWalletTonConnectRequest, ok bool) {
+	if len(s) < 1 {
+		return
+	}
+	return s[len(s)-1], true
+}
+
+// PopFirst returns first element of slice (if exists) and deletes it.
+func (s *MessageActionWalletTonConnectRequestArray) PopFirst() (v MessageActionWalletTonConnectRequest, ok bool) {
+	if s == nil || len(*s) < 1 {
+		return
+	}
+
+	a := *s
+	v = a[0]
+
+	// Delete by index from SliceTricks.
+	copy(a[0:], a[1:])
+	var zero MessageActionWalletTonConnectRequest
+	a[len(a)-1] = zero
+	a = a[:len(a)-1]
+	*s = a
+
+	return v, true
+}
+
+// Pop returns last element of slice (if exists) and deletes it.
+func (s *MessageActionWalletTonConnectRequestArray) Pop() (v MessageActionWalletTonConnectRequest, ok bool) {
 	if s == nil || len(*s) < 1 {
 		return
 	}

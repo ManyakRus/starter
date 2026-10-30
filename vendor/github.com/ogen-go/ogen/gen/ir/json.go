@@ -39,6 +39,30 @@ func (j JSON) AnyFields() bool {
 	return false
 }
 
+// NeedsReceiver reports whether encoding the fields would reference the
+// receiver variable "s".  This is false when every non-excluded, non-inline
+// field carries a const value (encoded as a literal) and there are no
+// additional-properties, pattern-properties or inline-sum fields.
+func (j JSON) NeedsReceiver() bool {
+	for _, f := range j.t.Fields {
+		// Inline fields (additional / pattern / sum props) always reference s.
+		if f.Inline != InlineNone {
+			return true
+		}
+
+		t := f.Tag.JSON
+		if t == "" || slices.Contains(j.except, t) {
+			continue
+		}
+
+		// A non-const regular field will be encoded via field_elem → s.Name.
+		if !f.Const().Set {
+			return true
+		}
+	}
+	return false
+}
+
 // Except return JSON with filter by given properties.
 func (j JSON) Except(set ...string) JSON {
 	return JSON{
@@ -151,6 +175,8 @@ func (j JSON) Format() string {
 		return "Time"
 	case "date-time":
 		return "DateTime"
+	case "http-date":
+		return "HTTPDate"
 	case "duration":
 		return "Duration"
 	case "ip":
@@ -178,7 +204,7 @@ func (j JSON) Format() string {
 		return typePrefix("UnixMicro")
 	case "unix-milli":
 		return typePrefix("UnixMilli")
-	case "decimal": //nolint:goconst // This whole switch is duplicated in NamePostfix. Should create a common helper.
+	case "decimal":
 		return typePrefix("Decimal")
 	default:
 		return ""

@@ -32,7 +32,10 @@ var (
 )
 
 // PhoneAcceptCallRequest represents TL type `phone.acceptCall#3bd2b4a0`.
-// Accept incoming call
+// Accept incoming call, see here »¹ for more info on the full flow.
+//
+// Links:
+//  1. https://core.telegram.org/api/calls#one-to-one-calls
 //
 // See https://core.telegram.org/method/phone.acceptCall for reference.
 type PhoneAcceptCallRequest struct {
@@ -219,7 +222,10 @@ func (a *PhoneAcceptCallRequest) GetProtocol() (value PhoneCallProtocol) {
 }
 
 // PhoneAcceptCall invokes method phone.acceptCall#3bd2b4a0 returning error if any.
-// Accept incoming call
+// Accept incoming call, see here »¹ for more info on the full flow.
+//
+// Links:
+//  1. https://core.telegram.org/api/calls#one-to-one-calls
 //
 // Possible errors:
 //
@@ -229,6 +235,7 @@ func (a *PhoneAcceptCallRequest) GetProtocol() (value PhoneCallProtocol) {
 //	400 CALL_PEER_INVALID: The provided call peer object is invalid.
 //	406 CALL_PROTOCOL_COMPAT_LAYER_INVALID: The other side of the call does not support any of the VoIP protocols supported by the local client, as specified by the protocol.layer and protocol.library_versions fields.
 //	400 CALL_PROTOCOL_FLAGS_INVALID: Call protocol flags invalid.
+//	400 CALL_PROTOCOL_LAYER_INVALID: The specified protocol layer version range is invalid.
 //
 // See https://core.telegram.org/method/phone.acceptCall for reference.
 func (c *Client) PhoneAcceptCall(ctx context.Context, request *PhoneAcceptCallRequest) (*PhonePhoneCall, error) {

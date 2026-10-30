@@ -20,14 +20,16 @@ type DateRule struct {
 	layout        string
 	min, max      time.Time
 	err, rangeErr Error
+	loc           *time.Location
 }
 
 // Date returns a validation rule that checks if a string value is in a format that can be parsed into a date.
 // The format of the date should be specified as the layout parameter which accepts the same value as that for time.Parse.
 // For example,
-//    validation.Date(time.ANSIC)
-//    validation.Date("02 Jan 06 15:04 MST")
-//    validation.Date("2006-01-02")
+//
+//	validation.Date(time.ANSIC)
+//	validation.Date("02 Jan 06 15:04 MST")
+//	validation.Date("2006-01-02")
 //
 // By calling Min() and/or Max(), you can let the Date rule to check if a parsed date value is within
 // the specified date range.
@@ -38,6 +40,7 @@ func Date(layout string) DateRule {
 		layout:   layout,
 		err:      ErrDateInvalid,
 		rangeErr: ErrDateOutOfRange,
+		loc:      time.UTC,
 	}
 }
 
@@ -66,14 +69,25 @@ func (r DateRule) RangeErrorObject(err Error) DateRule {
 }
 
 // Min sets the minimum date range. A zero value means skipping the minimum range validation.
-func (r DateRule) Min(min time.Time) DateRule {
-	r.min = min
+func (r DateRule) Min(earliest time.Time) DateRule {
+	r.min = earliest
 	return r
 }
 
 // Max sets the maximum date range. A zero value means skipping the maximum range validation.
-func (r DateRule) Max(max time.Time) DateRule {
-	r.max = max
+func (r DateRule) Max(latest time.Time) DateRule {
+	r.max = latest
+	return r
+}
+
+// Location sets the time.Location used to interpret the date string when it doesn't
+// specify a time zone of its own. This matters when Min/Max are constructed in a
+// specific time zone: without it, values are parsed as UTC (time.Parse's default),
+// which can make dates that are actually within range appear out of range.
+// If not called, UTC is used, preserving the previous behavior. Passing nil defers back
+// to that default too, since Validate falls back to UTC whenever loc is nil.
+func (r DateRule) Location(loc *time.Location) DateRule {
+	r.loc = loc
 	return r
 }
 
@@ -89,7 +103,12 @@ func (r DateRule) Validate(value interface{}) error {
 		return err
 	}
 
-	date, err := time.Parse(r.layout, str)
+	loc := r.loc
+	if loc == nil {
+		loc = time.UTC
+	}
+
+	date, err := time.ParseInLocation(r.layout, str, loc)
 	if err != nil {
 		return r.err
 	}

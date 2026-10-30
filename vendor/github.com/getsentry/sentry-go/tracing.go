@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -14,11 +15,14 @@ import (
 	"time"
 
 	"github.com/getsentry/sentry-go/internal/debuglog"
+	"github.com/getsentry/sentry-go/internal/ratelimit"
+	"github.com/getsentry/sentry-go/report"
 )
 
 const (
 	SentryTraceHeader   = "sentry-trace"
 	SentryBaggageHeader = "baggage"
+	TraceparentHeader   = "traceparent"
 )
 
 // SpanOrigin indicates what created a trace or a span. See: https://develop.sentry.dev/sdk/performance/trace-origin/
@@ -33,6 +37,7 @@ const (
 	SpanOriginStdLib   = "auto.http.stdlib"
 	SpanOriginIris     = "auto.http.iris"
 	SpanOriginNegroni  = "auto.http.negroni"
+	SpanOriginGrpc     = "auto.rpc.grpc"
 )
 
 // A Span is the building block of a Sentry transaction. Spans build up a tree
@@ -41,22 +46,20 @@ const (
 //
 // Spans must be started with either StartSpan or Span.StartChild.
 type Span struct { //nolint: maligned // prefer readability over optimal memory layout (see note below *)
-	TraceID      TraceID           `json:"trace_id"`
-	SpanID       SpanID            `json:"span_id"`
-	ParentSpanID SpanID            `json:"parent_span_id"`
-	Name         string            `json:"name,omitempty"`
-	Op           string            `json:"op,omitempty"`
-	Description  string            `json:"description,omitempty"`
-	Status       SpanStatus        `json:"status,omitempty"`
-	Tags         map[string]string `json:"tags,omitempty"`
-	StartTime    time.Time         `json:"start_timestamp"`
-	EndTime      time.Time         `json:"timestamp"`
-	// Deprecated: use Data instead. To be removed in 0.33.0
-	Extra   map[string]interface{} `json:"-"`
-	Data    map[string]interface{} `json:"data,omitempty"`
-	Sampled Sampled                `json:"-"`
-	Source  TransactionSource      `json:"-"`
-	Origin  SpanOrigin             `json:"origin,omitempty"`
+	TraceID      TraceID                `json:"trace_id"`
+	SpanID       SpanID                 `json:"span_id"`
+	ParentSpanID SpanID                 `json:"parent_span_id,omitzero"`
+	Name         string                 `json:"name,omitempty"`
+	Op           string                 `json:"op,omitempty"`
+	Description  string                 `json:"description,omitempty"`
+	Status       SpanStatus             `json:"status,omitempty"`
+	Tags         map[string]string      `json:"tags,omitempty"`
+	StartTime    time.Time              `json:"start_timestamp,omitzero"`
+	EndTime      time.Time              `json:"timestamp,omitzero"`
+	Data         map[string]interface{} `json:"data,omitempty"`
+	Sampled      Sampled                `json:"-"`
+	Source       TransactionSource      `json:"-"`
+	Origin       SpanOrigin             `json:"origin,omitempty"`
 
 	// mu protects concurrent writes to map fields
 	mu sync.RWMutex
@@ -77,6 +80,10 @@ type Span struct { //nolint: maligned // prefer readability over optimal memory 
 	finishOnce sync.Once
 	// explicitSampled is a flag for configuring sampling by using `WithSpanSampled` option.
 	explicitSampled Sampled
+	// Pre-serialized copies of mutable fields, set by MakeSerializationSafe.
+	serializedTags    json.RawMessage
+	serializedData    json.RawMessage
+	serializationSafe bool
 }
 
 // TraceParentContext describes the context of a (remote) parent span.
@@ -226,6 +233,51 @@ func (s *Span) StartChild(operation string, options ...SpanOption) *Span {
 	return StartSpan(s.Context(), operation, options...)
 }
 
+// makeSerializationSafe pre-serializes user mutable fields.
+func (s *Span) makeSerializationSafe() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if len(s.Tags) > 0 {
+		if b, err := json.Marshal(s.Tags); err == nil {
+			s.serializedTags = b
+		}
+	}
+	if len(s.Data) > 0 {
+		if b, err := json.Marshal(s.Data); err == nil {
+			s.serializedData = b
+		}
+	}
+
+	s.serializationSafe = true
+}
+
+// MarshalJSON emits the span using pre-serialized fields if available.
+func (s *Span) MarshalJSON() ([]byte, error) {
+	s.mu.RLock()
+	serializationSafe := s.serializationSafe
+	serializedTags := s.serializedTags
+	serializedData := s.serializedData
+	s.mu.RUnlock()
+
+	if !serializationSafe {
+		type span Span
+		return json.Marshal((*span)(s))
+	}
+
+	type span Span
+	type safeSpan struct {
+		*span
+		Tags json.RawMessage `json:"tags,omitempty"`
+		Data json.RawMessage `json:"data,omitempty"`
+	}
+	return json.Marshal(safeSpan{
+		span: (*span)(s),
+		Tags: serializedTags,
+		Data: serializedData,
+	})
+}
+
 // SetTag sets a tag on the span. It is recommended to use SetTag instead of
 // accessing the tags map directly as SetTag takes care of initializing the map
 // when necessary.
@@ -318,6 +370,15 @@ func (s *Span) ToSentryTrace() string {
 		b.WriteString("-0")
 	}
 	return b.String()
+}
+
+// ToTraceparent returns the W3C traceparent header value for the span.
+func (s *Span) ToTraceparent() string {
+	traceFlags := "00"
+	if s.Sampled == SampledTrue {
+		traceFlags = "01"
+	}
+	return fmt.Sprintf("00-%s-%s-%s", s.TraceID.String(), s.SpanID.String(), traceFlags)
 }
 
 // ToBaggage returns the serialized DynamicSamplingContext from a transaction.
@@ -419,6 +480,17 @@ func (s *Span) doFinish() {
 	}
 
 	if !s.Sampled.Bool() {
+		c := hub.Client()
+		if c != nil {
+			if !s.IsTransaction() {
+				// we count the sampled spans from the transaction root. it is guaranteed that the whole transaction
+				// would be sampled
+				return
+			}
+			children := s.recorder.children()
+			c.reportRecorder.RecordOne(report.ReasonSampleRate, ratelimit.CategoryTransaction)
+			c.reportRecorder.Record(report.ReasonSampleRate, ratelimit.CategorySpan, int64(len(children)+1))
+		}
 		return
 	}
 	event := s.toEvent()
@@ -477,26 +549,9 @@ func (s *Span) updateFromBaggage(header []byte) {
 	}
 }
 
-func (s *Span) MarshalJSON() ([]byte, error) {
-	// span aliases Span to allow calling json.Marshal without an infinite loop.
-	// It preserves all fields while none of the attached methods.
-	type span Span
-	var parentSpanID string
-	if s.ParentSpanID != zeroSpanID {
-		parentSpanID = s.ParentSpanID.String()
-	}
-	return json.Marshal(struct {
-		*span
-		ParentSpanID string `json:"parent_span_id,omitempty"`
-	}{
-		span:         (*span)(s),
-		ParentSpanID: parentSpanID,
-	})
-}
-
 func (s *Span) clientOptions() *ClientOptions {
 	client := hubFromContext(s.ctx).Client()
-	if client != nil {
+	if client.IsEnabled() {
 		return &client.options
 	}
 	return &ClientOptions{}
@@ -534,9 +589,23 @@ func (s *Span) sample() Sampled {
 
 	// #3 use TracesSampler from ClientOptions.
 	sampler := clientOptions.TracesSampler
+	parentSampled := SampledUndefined
+	if s.parent != nil {
+		parentSampled = s.parent.Sampled
+	} else if s.ParentSpanID != zeroSpanID {
+		parentSampled = s.Sampled
+	}
+	var parentSampleRate *float64
+	if rateStr, ok := s.dynamicSamplingContext.Entries["sample_rate"]; ok {
+		if rate, err := strconv.ParseFloat(rateStr, 64); err == nil {
+			parentSampleRate = &rate
+		}
+	}
 	samplingContext := SamplingContext{
-		Span:   s,
-		Parent: s.parent,
+		Span:             s,
+		Parent:           s.parent,
+		ParentSampled:    parentSampled,
+		ParentSampleRate: parentSampleRate,
 	}
 
 	if sampler != nil {
@@ -626,7 +695,7 @@ func (s *Span) toEvent() *Event {
 	for k, v := range s.contexts {
 		contexts[k] = cloneContext(v)
 	}
-	contexts["trace"] = s.traceContext().Map()
+	contexts["trace"] = s.traceContextLockFree().Map()
 
 	// Make sure that the transaction source is valid
 	transactionSource := s.Source
@@ -638,7 +707,7 @@ func (s *Span) toEvent() *Event {
 		Type:        transactionType,
 		Transaction: s.Name,
 		Contexts:    contexts,
-		Tags:        s.Tags,
+		Tags:        maps.Clone(s.Tags),
 		Timestamp:   s.EndTime,
 		StartTime:   s.StartTime,
 		Spans:       finished,
@@ -651,7 +720,27 @@ func (s *Span) toEvent() *Event {
 	}
 }
 
+// traceContext returns a TraceContext snapshot for an active span.
+//
+// It needs to clone span Data to avoid holding any user mutable state.
 func (s *Span) traceContext() *TraceContext {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return &TraceContext{
+		TraceID:      s.TraceID,
+		SpanID:       s.SpanID,
+		ParentSpanID: s.ParentSpanID,
+		Op:           s.Op,
+		Data:         maps.Clone(s.Data),
+		Description:  s.Description,
+		Status:       s.Status,
+	}
+}
+
+// traceContextLockFree is the lock-free variant of traceContext.
+//
+// This is supposed to be used only when span Finish() was already called.
+func (s *Span) traceContextLockFree() *TraceContext {
 	return &TraceContext{
 		TraceID:      s.TraceID,
 		SpanID:       s.SpanID,
@@ -835,35 +924,17 @@ func (ss SpanStatus) MarshalJSON() ([]byte, error) {
 type TraceContext struct {
 	TraceID      TraceID                `json:"trace_id"`
 	SpanID       SpanID                 `json:"span_id"`
-	ParentSpanID SpanID                 `json:"parent_span_id"`
+	ParentSpanID SpanID                 `json:"parent_span_id,omitzero"`
 	Op           string                 `json:"op,omitempty"`
 	Description  string                 `json:"description,omitempty"`
 	Status       SpanStatus             `json:"status,omitempty"`
 	Data         map[string]interface{} `json:"data,omitempty"`
 }
 
-func (tc *TraceContext) MarshalJSON() ([]byte, error) {
-	// traceContext aliases TraceContext to allow calling json.Marshal without
-	// an infinite loop. It preserves all fields while none of the attached
-	// methods.
-	type traceContext TraceContext
-	var parentSpanID string
-	if tc.ParentSpanID != zeroSpanID {
-		parentSpanID = tc.ParentSpanID.String()
-	}
-	return json.Marshal(struct {
-		*traceContext
-		ParentSpanID string `json:"parent_span_id,omitempty"`
-	}{
-		traceContext: (*traceContext)(tc),
-		ParentSpanID: parentSpanID,
-	})
-}
-
 func (tc TraceContext) Map() map[string]interface{} {
 	m := map[string]interface{}{
-		"trace_id": tc.TraceID,
-		"span_id":  tc.SpanID,
+		traceIDContextKey: tc.TraceID,
+		spanIDContextKey:  tc.SpanID,
 	}
 
 	if tc.ParentSpanID != [8]byte{} {
@@ -978,8 +1049,15 @@ func WithSpanOrigin(origin SpanOrigin) SpanOption {
 func ContinueTrace(hub *Hub, traceparent, baggage string) SpanOption {
 	scope := hub.Scope()
 	propagationContext, _ := PropagationContextFromHeaders(traceparent, baggage)
-	scope.SetPropagationContext(propagationContext)
+	client := hub.Client()
 
+	if !shouldContinueTrace(client, propagationContext.DynamicSamplingContext) {
+		propagationContext = NewPropagationContext()
+		traceparent = ""
+		baggage = ""
+	}
+
+	scope.SetPropagationContext(propagationContext)
 	return ContinueFromHeaders(traceparent, baggage)
 }
 
@@ -998,19 +1076,35 @@ func ContinueFromRequest(r *http.Request) SpanOption {
 // an existing TraceID and propagates the Dynamic Sampling context.
 func ContinueFromHeaders(trace, baggage string) SpanOption {
 	return func(s *Span) {
-		if trace != "" {
-			s.updateFromSentryTrace([]byte(trace))
+		if trace == "" {
+			return
+		}
 
-			if baggage != "" {
-				s.updateFromBaggage([]byte(baggage))
+		// Parse baggage first to get org_id for comparison
+		var dsc DynamicSamplingContext
+		if baggage != "" {
+			parsed, err := DynamicSamplingContextFromHeader([]byte(baggage))
+			if err == nil {
+				dsc = parsed
 			}
+		}
 
-			// In case a sentry-trace header is present but there are no sentry-related
-			// values in the baggage, create an empty, frozen DynamicSamplingContext.
-			if !s.dynamicSamplingContext.HasEntries() {
-				s.dynamicSamplingContext = DynamicSamplingContext{
-					Frozen: true,
-				}
+		client := hubFromContext(s.ctx).Client()
+		if !shouldContinueTrace(client, dsc) {
+			return // leave span unchanged → behaves as head of trace
+		}
+
+		s.updateFromSentryTrace([]byte(trace))
+
+		if baggage != "" {
+			s.updateFromBaggage([]byte(baggage))
+		}
+
+		// In case a sentry-trace header is present but there are no sentry-related
+		// values in the baggage, create an empty, frozen DynamicSamplingContext.
+		if !s.dynamicSamplingContext.HasEntries() {
+			s.dynamicSamplingContext = DynamicSamplingContext{
+				Frozen: true,
 			}
 		}
 	}
@@ -1021,6 +1115,10 @@ func ContinueFromHeaders(trace, baggage string) SpanOption {
 func ContinueFromTrace(trace string) SpanOption {
 	return func(s *Span) {
 		if trace == "" {
+			return
+		}
+		client := hubFromContext(s.ctx).Client()
+		if !shouldContinueTrace(client, DynamicSamplingContext{}) {
 			return
 		}
 		s.updateFromSentryTrace([]byte(trace))
@@ -1101,4 +1199,36 @@ func HTTPtoSpanStatus(code int) SpanStatus {
 		}
 	}
 	return SpanStatusUnknown
+}
+
+func shouldContinueTrace(client *Client, dsc DynamicSamplingContext) bool {
+	if !client.IsEnabled() {
+		return true
+	}
+
+	var sdkOrgID uint64
+	if client.dsn != nil {
+		sdkOrgID = client.dsn.GetOrgID()
+	}
+
+	baggageOrgStr := dsc.Entries["org_id"]
+	baggageOrgID := uint64(0)
+	if baggageOrgStr != "" {
+		baggageOrgID, _ = strconv.ParseUint(baggageOrgStr, 10, 64)
+	}
+
+	// we reject non-matching orgs regardless of strict mode
+	if sdkOrgID != 0 && baggageOrgID != 0 && sdkOrgID != baggageOrgID {
+		return false
+	}
+
+	// If strict mode is on, both must be present and match
+	if client.options.StrictTraceContinuation {
+		if sdkOrgID == 0 && baggageOrgID == 0 {
+			return true
+		}
+		return sdkOrgID == baggageOrgID
+	}
+
+	return true
 }

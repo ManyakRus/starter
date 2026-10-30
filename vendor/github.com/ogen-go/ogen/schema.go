@@ -21,7 +21,10 @@ type Schema struct {
 	// Additional external documentation for this schema.
 	ExternalDocs *ExternalDocumentation `json:"externalDocs,omitempty" yaml:"externalDocs,omitempty"`
 
-	// Value MUST be a string. Multiple types via an array are not supported.
+	// Type is a single schema type.
+	// A type list like `[string, 'null']` (OpenAPI 3.1) is collapsed during unmarshaling to the
+	// single type it denotes, with "null" recorded in Nullable.
+	// Type lists with multiple non-null types are currently unsupported.
 	Type string `json:"type,omitempty" yaml:"type,omitempty"`
 
 	// See Data Type Formats for further details (https://swagger.io/specification/#data-type-format).
@@ -85,6 +88,11 @@ type Schema struct {
 	// This array SHOULD have at least one element.
 	// Elements in the array SHOULD be unique.
 	Enum Enum `json:"enum,omitempty" yaml:"enum,omitempty"`
+
+	// The value of this keyword can be of any type.
+	//
+	// Note: "const" is a JSON Schema keyword and is not specific to OpenAPI.
+	Const Const `json:"const,omitempty" yaml:"const,omitempty"`
 
 	// The value of "multipleOf" MUST be a number, strictly greater than 0.
 	//
@@ -244,6 +252,47 @@ type Schema struct {
 	Common jsonschema.OpenAPICommon `json:"-" yaml:",inline"`
 }
 
+// UnmarshalYAML implements yaml.Unmarshaler.
+//
+// It exists to support OpenAPI 3.1 type lists.
+// `type: [string, 'null']` is collapsed to `type: string` with Nullable set.
+func (s *Schema) UnmarshalYAML(node *yaml.Node) error {
+	collapsed, nullable, err := jsonschema.CollapseTypeNode(node)
+	if err != nil {
+		return err
+	}
+
+	type plain Schema
+	var val plain
+
+	if err := collapsed.Decode(&val); err != nil {
+		return err
+	}
+	val.Nullable = val.Nullable || nullable
+	*s = Schema(val)
+	return nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+//
+// It exists to support OpenAPI 3.1 type lists.
+// `"type": ["string", "null"]` is collapsed to `"type": "string"` with Nullable set.
+func (s *Schema) UnmarshalJSON(data []byte) error {
+	type plain Schema
+	var val struct {
+		plain
+		Type jsonschema.RawType `json:"type"`
+	}
+
+	if err := json.Unmarshal(data, &val); err != nil {
+		return err
+	}
+	val.plain.Type = val.Type.Type
+	val.Nullable = val.Nullable || val.Type.Nullable
+	*s = Schema(val.plain)
+	return nil
+}
+
 // Property is item of Properties.
 type Property struct {
 	Name   string
@@ -278,7 +327,7 @@ func (p *Properties) UnmarshalYAML(node *yaml.Node) error {
 	if node.Kind != yaml.MappingNode {
 		return &yaml.UnmarshalError{
 			Node: node,
-			Type: reflect.TypeOf(p),
+			Type: reflect.TypeFor[*Properties](),
 			Err:  errors.Errorf("cannot unmarshal %s into %T", node.ShortTag(), p),
 		}
 	}
@@ -434,7 +483,7 @@ func (p *PatternProperties) UnmarshalYAML(node *yaml.Node) error {
 	if node.Kind != yaml.MappingNode {
 		return &yaml.UnmarshalError{
 			Node: node,
-			Type: reflect.TypeOf(p),
+			Type: reflect.TypeFor[*PatternProperties](),
 			Err:  errors.Errorf("cannot unmarshal %s into %T", node.ShortTag(), p),
 		}
 	}

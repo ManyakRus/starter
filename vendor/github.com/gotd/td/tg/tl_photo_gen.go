@@ -185,7 +185,7 @@ type Photo struct {
 	// file reference¹
 	//
 	// Links:
-	//  1) https://core.telegram.org/api/file_reference
+	//  1) https://core.telegram.org/api/file-references
 	FileReference []byte
 	// Date of upload
 	Date int
@@ -648,6 +648,17 @@ func (p *Photo) AsInput() *InputPhoto {
 	value.ID = p.GetID()
 	value.AccessHash = p.GetAccessHash()
 	value.FileReference = p.GetFileReference()
+
+	return value
+}
+
+// AsInputPhotoFileLocation tries to map Photo to InputPhotoFileLocation.
+func (p *Photo) AsInputPhotoFileLocation(thumbSize string) *InputPhotoFileLocation {
+	value := new(InputPhotoFileLocation)
+	value.ID = p.GetID()
+	value.AccessHash = p.GetAccessHash()
+	value.FileReference = p.GetFileReference()
+	value.ThumbSize = thumbSize
 
 	return value
 }

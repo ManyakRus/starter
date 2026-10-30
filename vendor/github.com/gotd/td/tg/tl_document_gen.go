@@ -183,7 +183,7 @@ type Document struct {
 	// File reference¹
 	//
 	// Links:
-	//  1) https://core.telegram.org/api/file_reference
+	//  1) https://core.telegram.org/api/file-references
 	FileReference []byte
 	// Creation date
 	Date int
@@ -733,11 +733,12 @@ type DocumentClass interface {
 }
 
 // AsInputDocumentFileLocation tries to map Document to InputDocumentFileLocation.
-func (d *Document) AsInputDocumentFileLocation() *InputDocumentFileLocation {
+func (d *Document) AsInputDocumentFileLocation(thumbSize string) *InputDocumentFileLocation {
 	value := new(InputDocumentFileLocation)
 	value.ID = d.GetID()
 	value.AccessHash = d.GetAccessHash()
 	value.FileReference = d.GetFileReference()
+	value.ThumbSize = thumbSize
 
 	return value
 }

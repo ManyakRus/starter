@@ -1,10 +1,19 @@
 package jsonschema
 
+import (
+	"encoding/json"
+
+	"github.com/go-faster/yaml"
+)
+
 // RawSchema is unparsed JSON Schema.
 type RawSchema struct {
-	Ref                  string                `json:"$ref,omitempty" yaml:"$ref,omitempty"`
-	Summary              string                `json:"summary,omitempty" yaml:"summary,omitempty"`
-	Description          string                `json:"description,omitempty" yaml:"description,omitempty"`
+	Ref         string `json:"$ref,omitempty" yaml:"$ref,omitempty"`
+	Summary     string `json:"summary,omitempty" yaml:"summary,omitempty"`
+	Description string `json:"description,omitempty" yaml:"description,omitempty"`
+	// Type is a single schema type.
+	// A type list like `[string, 'null']` (JSON Schema, OpenAPI 3.1) is collapsed during unmarshaling to the
+	// single type it denotes, with "null" recorded in Nullable.
 	Type                 string                `json:"type,omitempty" yaml:"type,omitempty"`
 	Format               string                `json:"format,omitempty" yaml:"format,omitempty"`
 	Properties           RawProperties         `json:"properties,omitempty" yaml:"properties,omitempty"`
@@ -31,6 +40,7 @@ type RawSchema struct {
 	MaxProperties        *uint64               `json:"maxProperties,omitempty" yaml:"maxProperties,omitempty"`
 	MinProperties        *uint64               `json:"minProperties,omitempty" yaml:"minProperties,omitempty"`
 	Default              Default               `json:"default,omitempty" yaml:"default,omitempty"`
+	Const                Const                 `json:"const,omitempty" yaml:"const,omitempty"`
 	Deprecated           bool                  `json:"deprecated,omitempty" yaml:"deprecated,omitempty"`
 	ContentEncoding      string                `json:"contentEncoding,omitempty" yaml:"contentEncoding,omitempty"`
 	ContentMediaType     string                `json:"contentMediaType,omitempty" yaml:"contentMediaType,omitempty"`
@@ -40,6 +50,47 @@ type RawSchema struct {
 	Example       Example           `json:"example,omitempty" yaml:"example,omitempty"`
 
 	Common OpenAPICommon `json:"-" yaml:",inline"`
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+//
+// It exists to support type lists.
+// `type: [string, 'null']` is collapsed to `type: string` with Nullable set.
+func (s *RawSchema) UnmarshalYAML(node *yaml.Node) error {
+	collapsed, nullable, err := CollapseTypeNode(node)
+	if err != nil {
+		return err
+	}
+
+	type plain RawSchema
+	var val plain
+
+	if err := collapsed.Decode(&val); err != nil {
+		return err
+	}
+	val.Nullable = val.Nullable || nullable
+	*s = RawSchema(val)
+	return nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+//
+// It exists to support type lists.
+// `"type": ["string", "null"]` is collapsed to `"type": "string"` with Nullable set.
+func (s *RawSchema) UnmarshalJSON(data []byte) error {
+	type plain RawSchema
+	var val struct {
+		plain
+		Type RawType `json:"type"`
+	}
+
+	if err := json.Unmarshal(data, &val); err != nil {
+		return err
+	}
+	val.plain.Type = val.Type.Type
+	val.Nullable = val.Nullable || val.Type.Nullable
+	*s = RawSchema(val.plain)
+	return nil
 }
 
 // RawDiscriminator discriminates types for OneOf, AllOf, AnyOf.

@@ -166,7 +166,7 @@ func (u *UserEmpty) GetID() (value int64) {
 	return u.ID
 }
 
-// User represents TL type `user#31774388`.
+// User represents TL type `user#b1b8cc83`.
 // Indicates info about a certain user.
 // Unless specified otherwise, when updating the local peer database¹, all fields from
 // the newly received constructor take priority over the old constructor cached locally
@@ -294,42 +294,39 @@ type User struct {
 	StoriesHidden bool
 	// No stories from this user are visible.
 	StoriesUnavailable bool
-	// If set, we can only write to this user if they have already sent some messages to us,
-	// if we are subscribed to Telegram Premium¹, or if they're a mutual contact (user²
-	// mutual_contact).  All the secondary conditions listed above must be checked separately
-	// to verify whether we can still write to the user, even if this flag is set (i.e. a
-	// mutual contact will have this flag set even if we can still write to them, and so on..
-	// ); to avoid doing these extra checks if we haven't yet cached all the required
-	// information (for example while displaying the chat list in the sharing UI) the users
-	// getIsPremiumRequiredToContact³ method may be invoked instead, passing the list of
-	// users currently visible in the UI, returning a list of booleans that directly specify
-	// whether we can or cannot write to each user; alternatively, the userFull⁴
-	// contact_require_premium flag contains the same (fully checked, i.e. it's not just a
-	// copy of this flag) info returned by users.getIsPremiumRequiredToContact⁵. To set
-	// this flag for ourselves invoke account.setGlobalPrivacySettings⁶, setting the
-	// settings.new_noncontact_peers_require_premium flag.
+	// See here for more info on this flag »¹.
 	//
 	// Links:
-	//  1) https://core.telegram.org/api/premium
-	//  2) https://core.telegram.org/constructor/user
-	//  3) https://core.telegram.org/method/users.getIsPremiumRequiredToContact
-	//  4) https://core.telegram.org/constructor/userFull
-	//  5) https://core.telegram.org/method/users.getIsPremiumRequiredToContact
-	//  6) https://core.telegram.org/method/account.setGlobalPrivacySettings
+	//  1) https://core.telegram.org/api/privacy#require-premium-for-new-non-contact-users
 	ContactRequirePremium bool
 	// Whether this bot can be connected to a user as specified here »¹.
 	//
 	// Links:
-	//  1) https://core.telegram.org/api/business#connected-bots
+	//  1) https://core.telegram.org/api/bots/connected-business-bots
 	BotBusiness bool
 	// If set, this bot has configured a Main Mini App »¹.
 	//
 	// Links:
 	//  1) https://core.telegram.org/api/bots/webapps#main-mini-apps
 	BotHasMainApp bool
-	// BotForumView field of User.
+	// If set, this bot supports bot forum topics »¹.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/forum#bot-forums
 	BotForumView bool
-	// ID of the user, see here »¹ for more info.
+	// If set, this bot supports bot forum topics »¹, and users (not just the bot!) are
+	// allowed to create and manage bot forum topics in their private chat with the bot.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/forum#bot-forums
+	BotForumCanManageTopics bool
+	// BotCanManageBots field of User.
+	BotCanManageBots bool
+	// BotGuestchat field of User.
+	BotGuestchat bool
+	// BotGuard field of User.
+	BotGuard bool
+	// ID of the user, see here »¹ for more info and the available ID range.
 	//
 	// Links:
 	//  1) https://core.telegram.org/api/peers#peer-id
@@ -484,18 +481,35 @@ type User struct {
 	//
 	// Use SetBotActiveUsers and GetBotActiveUsers helpers.
 	BotActiveUsers int
-	// BotVerificationIcon field of User.
+	// Describes a bot verification icon »¹.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/bots/verification
 	//
 	// Use SetBotVerificationIcon and GetBotVerificationIcon helpers.
 	BotVerificationIcon int64
-	// SendPaidMessagesStars field of User.
+	// If set, the user has enabled paid messages »¹, we might need to pay the specified
+	// amount of Stars² to send them messages, depending on the configured exceptions: check
+	// userFull³.send_paid_messages_stars or users.getRequirementsToContact⁴ to see if the
+	// currently logged in user actually has to pay or not, see here »⁵ for the full flow.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/paid-messages
+	//  2) https://core.telegram.org/api/stars
+	//  3) https://core.telegram.org/constructor/userFull
+	//  4) https://core.telegram.org/method/users.getRequirementsToContact
+	//  5) https://core.telegram.org/api/paid-messages
 	//
 	// Use SetSendPaidMessagesStars and GetSendPaidMessagesStars helpers.
 	SendPaidMessagesStars int64
+	// LinkedCommunityID field of User.
+	//
+	// Use SetLinkedCommunityID and GetLinkedCommunityID helpers.
+	LinkedCommunityID int64
 }
 
 // UserTypeID is TL type id of User.
-const UserTypeID = 0x31774388
+const UserTypeID = 0xb1b8cc83
 
 // construct implements constructor of UserClass.
 func (u User) construct() UserClass { return &u }
@@ -598,6 +612,18 @@ func (u *User) Zero() bool {
 	if !(u.BotForumView == false) {
 		return false
 	}
+	if !(u.BotForumCanManageTopics == false) {
+		return false
+	}
+	if !(u.BotCanManageBots == false) {
+		return false
+	}
+	if !(u.BotGuestchat == false) {
+		return false
+	}
+	if !(u.BotGuard == false) {
+		return false
+	}
 	if !(u.ID == 0) {
 		return false
 	}
@@ -658,6 +684,9 @@ func (u *User) Zero() bool {
 	if !(u.SendPaidMessagesStars == 0) {
 		return false
 	}
+	if !(u.LinkedCommunityID == 0) {
+		return false
+	}
 
 	return true
 }
@@ -699,6 +728,10 @@ func (u *User) FillFrom(from interface {
 	GetBotBusiness() (value bool)
 	GetBotHasMainApp() (value bool)
 	GetBotForumView() (value bool)
+	GetBotForumCanManageTopics() (value bool)
+	GetBotCanManageBots() (value bool)
+	GetBotGuestchat() (value bool)
+	GetBotGuard() (value bool)
 	GetID() (value int64)
 	GetAccessHash() (value int64, ok bool)
 	GetFirstName() (value string, ok bool)
@@ -719,6 +752,7 @@ func (u *User) FillFrom(from interface {
 	GetBotActiveUsers() (value int, ok bool)
 	GetBotVerificationIcon() (value int64, ok bool)
 	GetSendPaidMessagesStars() (value int64, ok bool)
+	GetLinkedCommunityID() (value int64, ok bool)
 }) {
 	u.Self = from.GetSelf()
 	u.Contact = from.GetContact()
@@ -746,6 +780,10 @@ func (u *User) FillFrom(from interface {
 	u.BotBusiness = from.GetBotBusiness()
 	u.BotHasMainApp = from.GetBotHasMainApp()
 	u.BotForumView = from.GetBotForumView()
+	u.BotForumCanManageTopics = from.GetBotForumCanManageTopics()
+	u.BotCanManageBots = from.GetBotCanManageBots()
+	u.BotGuestchat = from.GetBotGuestchat()
+	u.BotGuard = from.GetBotGuard()
 	u.ID = from.GetID()
 	if val, ok := from.GetAccessHash(); ok {
 		u.AccessHash = val
@@ -821,6 +859,10 @@ func (u *User) FillFrom(from interface {
 
 	if val, ok := from.GetSendPaidMessagesStars(); ok {
 		u.SendPaidMessagesStars = val
+	}
+
+	if val, ok := from.GetLinkedCommunityID(); ok {
+		u.LinkedCommunityID = val
 	}
 
 }
@@ -979,6 +1021,26 @@ func (u *User) TypeInfo() tdp.Type {
 			Null:       !u.Flags2.Has(16),
 		},
 		{
+			Name:       "BotForumCanManageTopics",
+			SchemaName: "bot_forum_can_manage_topics",
+			Null:       !u.Flags2.Has(17),
+		},
+		{
+			Name:       "BotCanManageBots",
+			SchemaName: "bot_can_manage_bots",
+			Null:       !u.Flags2.Has(18),
+		},
+		{
+			Name:       "BotGuestchat",
+			SchemaName: "bot_guestchat",
+			Null:       !u.Flags2.Has(19),
+		},
+		{
+			Name:       "BotGuard",
+			SchemaName: "bot_guard",
+			Null:       !u.Flags2.Has(20),
+		},
+		{
 			Name:       "ID",
 			SchemaName: "id",
 		},
@@ -1077,6 +1139,11 @@ func (u *User) TypeInfo() tdp.Type {
 			SchemaName: "send_paid_messages_stars",
 			Null:       !u.Flags2.Has(15),
 		},
+		{
+			Name:       "LinkedCommunityID",
+			SchemaName: "linked_community_id",
+			Null:       !u.Flags2.Has(21),
+		},
 	}
 	return typ
 }
@@ -1161,6 +1228,18 @@ func (u *User) SetFlags() {
 	if !(u.BotForumView == false) {
 		u.Flags2.Set(16)
 	}
+	if !(u.BotForumCanManageTopics == false) {
+		u.Flags2.Set(17)
+	}
+	if !(u.BotCanManageBots == false) {
+		u.Flags2.Set(18)
+	}
+	if !(u.BotGuestchat == false) {
+		u.Flags2.Set(19)
+	}
+	if !(u.BotGuard == false) {
+		u.Flags2.Set(20)
+	}
 	if !(u.AccessHash == 0) {
 		u.Flags.Set(0)
 	}
@@ -1218,12 +1297,15 @@ func (u *User) SetFlags() {
 	if !(u.SendPaidMessagesStars == 0) {
 		u.Flags2.Set(15)
 	}
+	if !(u.LinkedCommunityID == 0) {
+		u.Flags2.Set(21)
+	}
 }
 
 // Encode implements bin.Encoder.
 func (u *User) Encode(b *bin.Buffer) error {
 	if u == nil {
-		return fmt.Errorf("can't encode user#31774388 as nil")
+		return fmt.Errorf("can't encode user#b1b8cc83 as nil")
 	}
 	b.PutID(UserTypeID)
 	return u.EncodeBare(b)
@@ -1232,14 +1314,14 @@ func (u *User) Encode(b *bin.Buffer) error {
 // EncodeBare implements bin.BareEncoder.
 func (u *User) EncodeBare(b *bin.Buffer) error {
 	if u == nil {
-		return fmt.Errorf("can't encode user#31774388 as nil")
+		return fmt.Errorf("can't encode user#b1b8cc83 as nil")
 	}
 	u.SetFlags()
 	if err := u.Flags.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode user#31774388: field flags: %w", err)
+		return fmt.Errorf("unable to encode user#b1b8cc83: field flags: %w", err)
 	}
 	if err := u.Flags2.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode user#31774388: field flags2: %w", err)
+		return fmt.Errorf("unable to encode user#b1b8cc83: field flags2: %w", err)
 	}
 	b.PutLong(u.ID)
 	if u.Flags.Has(0) {
@@ -1259,18 +1341,18 @@ func (u *User) EncodeBare(b *bin.Buffer) error {
 	}
 	if u.Flags.Has(5) {
 		if u.Photo == nil {
-			return fmt.Errorf("unable to encode user#31774388: field photo is nil")
+			return fmt.Errorf("unable to encode user#b1b8cc83: field photo is nil")
 		}
 		if err := u.Photo.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode user#31774388: field photo: %w", err)
+			return fmt.Errorf("unable to encode user#b1b8cc83: field photo: %w", err)
 		}
 	}
 	if u.Flags.Has(6) {
 		if u.Status == nil {
-			return fmt.Errorf("unable to encode user#31774388: field status is nil")
+			return fmt.Errorf("unable to encode user#b1b8cc83: field status is nil")
 		}
 		if err := u.Status.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode user#31774388: field status: %w", err)
+			return fmt.Errorf("unable to encode user#b1b8cc83: field status: %w", err)
 		}
 	}
 	if u.Flags.Has(14) {
@@ -1280,7 +1362,7 @@ func (u *User) EncodeBare(b *bin.Buffer) error {
 		b.PutVectorHeader(len(u.RestrictionReason))
 		for idx, v := range u.RestrictionReason {
 			if err := v.Encode(b); err != nil {
-				return fmt.Errorf("unable to encode user#31774388: field restriction_reason element with index %d: %w", idx, err)
+				return fmt.Errorf("unable to encode user#b1b8cc83: field restriction_reason element with index %d: %w", idx, err)
 			}
 		}
 	}
@@ -1292,39 +1374,39 @@ func (u *User) EncodeBare(b *bin.Buffer) error {
 	}
 	if u.Flags.Has(30) {
 		if u.EmojiStatus == nil {
-			return fmt.Errorf("unable to encode user#31774388: field emoji_status is nil")
+			return fmt.Errorf("unable to encode user#b1b8cc83: field emoji_status is nil")
 		}
 		if err := u.EmojiStatus.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode user#31774388: field emoji_status: %w", err)
+			return fmt.Errorf("unable to encode user#b1b8cc83: field emoji_status: %w", err)
 		}
 	}
 	if u.Flags2.Has(0) {
 		b.PutVectorHeader(len(u.Usernames))
 		for idx, v := range u.Usernames {
 			if err := v.Encode(b); err != nil {
-				return fmt.Errorf("unable to encode user#31774388: field usernames element with index %d: %w", idx, err)
+				return fmt.Errorf("unable to encode user#b1b8cc83: field usernames element with index %d: %w", idx, err)
 			}
 		}
 	}
 	if u.Flags2.Has(5) {
 		if err := u.StoriesMaxID.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode user#31774388: field stories_max_id: %w", err)
+			return fmt.Errorf("unable to encode user#b1b8cc83: field stories_max_id: %w", err)
 		}
 	}
 	if u.Flags2.Has(8) {
 		if u.Color == nil {
-			return fmt.Errorf("unable to encode user#31774388: field color is nil")
+			return fmt.Errorf("unable to encode user#b1b8cc83: field color is nil")
 		}
 		if err := u.Color.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode user#31774388: field color: %w", err)
+			return fmt.Errorf("unable to encode user#b1b8cc83: field color: %w", err)
 		}
 	}
 	if u.Flags2.Has(9) {
 		if u.ProfileColor == nil {
-			return fmt.Errorf("unable to encode user#31774388: field profile_color is nil")
+			return fmt.Errorf("unable to encode user#b1b8cc83: field profile_color is nil")
 		}
 		if err := u.ProfileColor.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode user#31774388: field profile_color: %w", err)
+			return fmt.Errorf("unable to encode user#b1b8cc83: field profile_color: %w", err)
 		}
 	}
 	if u.Flags2.Has(12) {
@@ -1336,16 +1418,19 @@ func (u *User) EncodeBare(b *bin.Buffer) error {
 	if u.Flags2.Has(15) {
 		b.PutLong(u.SendPaidMessagesStars)
 	}
+	if u.Flags2.Has(21) {
+		b.PutLong(u.LinkedCommunityID)
+	}
 	return nil
 }
 
 // Decode implements bin.Decoder.
 func (u *User) Decode(b *bin.Buffer) error {
 	if u == nil {
-		return fmt.Errorf("can't decode user#31774388 to nil")
+		return fmt.Errorf("can't decode user#b1b8cc83 to nil")
 	}
 	if err := b.ConsumeID(UserTypeID); err != nil {
-		return fmt.Errorf("unable to decode user#31774388: %w", err)
+		return fmt.Errorf("unable to decode user#b1b8cc83: %w", err)
 	}
 	return u.DecodeBare(b)
 }
@@ -1353,11 +1438,11 @@ func (u *User) Decode(b *bin.Buffer) error {
 // DecodeBare implements bin.BareDecoder.
 func (u *User) DecodeBare(b *bin.Buffer) error {
 	if u == nil {
-		return fmt.Errorf("can't decode user#31774388 to nil")
+		return fmt.Errorf("can't decode user#b1b8cc83 to nil")
 	}
 	{
 		if err := u.Flags.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode user#31774388: field flags: %w", err)
+			return fmt.Errorf("unable to decode user#b1b8cc83: field flags: %w", err)
 		}
 	}
 	u.Self = u.Flags.Has(10)
@@ -1380,7 +1465,7 @@ func (u *User) DecodeBare(b *bin.Buffer) error {
 	u.AttachMenuEnabled = u.Flags.Has(29)
 	{
 		if err := u.Flags2.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode user#31774388: field flags2: %w", err)
+			return fmt.Errorf("unable to decode user#b1b8cc83: field flags2: %w", err)
 		}
 	}
 	u.BotCanEdit = u.Flags2.Has(1)
@@ -1391,73 +1476,77 @@ func (u *User) DecodeBare(b *bin.Buffer) error {
 	u.BotBusiness = u.Flags2.Has(11)
 	u.BotHasMainApp = u.Flags2.Has(13)
 	u.BotForumView = u.Flags2.Has(16)
+	u.BotForumCanManageTopics = u.Flags2.Has(17)
+	u.BotCanManageBots = u.Flags2.Has(18)
+	u.BotGuestchat = u.Flags2.Has(19)
+	u.BotGuard = u.Flags2.Has(20)
 	{
 		value, err := b.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode user#31774388: field id: %w", err)
+			return fmt.Errorf("unable to decode user#b1b8cc83: field id: %w", err)
 		}
 		u.ID = value
 	}
 	if u.Flags.Has(0) {
 		value, err := b.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode user#31774388: field access_hash: %w", err)
+			return fmt.Errorf("unable to decode user#b1b8cc83: field access_hash: %w", err)
 		}
 		u.AccessHash = value
 	}
 	if u.Flags.Has(1) {
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode user#31774388: field first_name: %w", err)
+			return fmt.Errorf("unable to decode user#b1b8cc83: field first_name: %w", err)
 		}
 		u.FirstName = value
 	}
 	if u.Flags.Has(2) {
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode user#31774388: field last_name: %w", err)
+			return fmt.Errorf("unable to decode user#b1b8cc83: field last_name: %w", err)
 		}
 		u.LastName = value
 	}
 	if u.Flags.Has(3) {
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode user#31774388: field username: %w", err)
+			return fmt.Errorf("unable to decode user#b1b8cc83: field username: %w", err)
 		}
 		u.Username = value
 	}
 	if u.Flags.Has(4) {
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode user#31774388: field phone: %w", err)
+			return fmt.Errorf("unable to decode user#b1b8cc83: field phone: %w", err)
 		}
 		u.Phone = value
 	}
 	if u.Flags.Has(5) {
 		value, err := DecodeUserProfilePhoto(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode user#31774388: field photo: %w", err)
+			return fmt.Errorf("unable to decode user#b1b8cc83: field photo: %w", err)
 		}
 		u.Photo = value
 	}
 	if u.Flags.Has(6) {
 		value, err := DecodeUserStatus(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode user#31774388: field status: %w", err)
+			return fmt.Errorf("unable to decode user#b1b8cc83: field status: %w", err)
 		}
 		u.Status = value
 	}
 	if u.Flags.Has(14) {
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode user#31774388: field bot_info_version: %w", err)
+			return fmt.Errorf("unable to decode user#b1b8cc83: field bot_info_version: %w", err)
 		}
 		u.BotInfoVersion = value
 	}
 	if u.Flags.Has(18) {
 		headerLen, err := b.VectorHeader()
 		if err != nil {
-			return fmt.Errorf("unable to decode user#31774388: field restriction_reason: %w", err)
+			return fmt.Errorf("unable to decode user#b1b8cc83: field restriction_reason: %w", err)
 		}
 
 		if headerLen > 0 {
@@ -1466,7 +1555,7 @@ func (u *User) DecodeBare(b *bin.Buffer) error {
 		for idx := 0; idx < headerLen; idx++ {
 			var value RestrictionReason
 			if err := value.Decode(b); err != nil {
-				return fmt.Errorf("unable to decode user#31774388: field restriction_reason: %w", err)
+				return fmt.Errorf("unable to decode user#b1b8cc83: field restriction_reason: %w", err)
 			}
 			u.RestrictionReason = append(u.RestrictionReason, value)
 		}
@@ -1474,28 +1563,28 @@ func (u *User) DecodeBare(b *bin.Buffer) error {
 	if u.Flags.Has(19) {
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode user#31774388: field bot_inline_placeholder: %w", err)
+			return fmt.Errorf("unable to decode user#b1b8cc83: field bot_inline_placeholder: %w", err)
 		}
 		u.BotInlinePlaceholder = value
 	}
 	if u.Flags.Has(22) {
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode user#31774388: field lang_code: %w", err)
+			return fmt.Errorf("unable to decode user#b1b8cc83: field lang_code: %w", err)
 		}
 		u.LangCode = value
 	}
 	if u.Flags.Has(30) {
 		value, err := DecodeEmojiStatus(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode user#31774388: field emoji_status: %w", err)
+			return fmt.Errorf("unable to decode user#b1b8cc83: field emoji_status: %w", err)
 		}
 		u.EmojiStatus = value
 	}
 	if u.Flags2.Has(0) {
 		headerLen, err := b.VectorHeader()
 		if err != nil {
-			return fmt.Errorf("unable to decode user#31774388: field usernames: %w", err)
+			return fmt.Errorf("unable to decode user#b1b8cc83: field usernames: %w", err)
 		}
 
 		if headerLen > 0 {
@@ -1504,50 +1593,57 @@ func (u *User) DecodeBare(b *bin.Buffer) error {
 		for idx := 0; idx < headerLen; idx++ {
 			var value Username
 			if err := value.Decode(b); err != nil {
-				return fmt.Errorf("unable to decode user#31774388: field usernames: %w", err)
+				return fmt.Errorf("unable to decode user#b1b8cc83: field usernames: %w", err)
 			}
 			u.Usernames = append(u.Usernames, value)
 		}
 	}
 	if u.Flags2.Has(5) {
 		if err := u.StoriesMaxID.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode user#31774388: field stories_max_id: %w", err)
+			return fmt.Errorf("unable to decode user#b1b8cc83: field stories_max_id: %w", err)
 		}
 	}
 	if u.Flags2.Has(8) {
 		value, err := DecodePeerColor(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode user#31774388: field color: %w", err)
+			return fmt.Errorf("unable to decode user#b1b8cc83: field color: %w", err)
 		}
 		u.Color = value
 	}
 	if u.Flags2.Has(9) {
 		value, err := DecodePeerColor(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode user#31774388: field profile_color: %w", err)
+			return fmt.Errorf("unable to decode user#b1b8cc83: field profile_color: %w", err)
 		}
 		u.ProfileColor = value
 	}
 	if u.Flags2.Has(12) {
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode user#31774388: field bot_active_users: %w", err)
+			return fmt.Errorf("unable to decode user#b1b8cc83: field bot_active_users: %w", err)
 		}
 		u.BotActiveUsers = value
 	}
 	if u.Flags2.Has(14) {
 		value, err := b.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode user#31774388: field bot_verification_icon: %w", err)
+			return fmt.Errorf("unable to decode user#b1b8cc83: field bot_verification_icon: %w", err)
 		}
 		u.BotVerificationIcon = value
 	}
 	if u.Flags2.Has(15) {
 		value, err := b.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode user#31774388: field send_paid_messages_stars: %w", err)
+			return fmt.Errorf("unable to decode user#b1b8cc83: field send_paid_messages_stars: %w", err)
 		}
 		u.SendPaidMessagesStars = value
+	}
+	if u.Flags2.Has(21) {
+		value, err := b.Long()
+		if err != nil {
+			return fmt.Errorf("unable to decode user#b1b8cc83: field linked_community_id: %w", err)
+		}
+		u.LinkedCommunityID = value
 	}
 	return nil
 }
@@ -2046,6 +2142,82 @@ func (u *User) GetBotForumView() (value bool) {
 	return u.Flags2.Has(16)
 }
 
+// SetBotForumCanManageTopics sets value of BotForumCanManageTopics conditional field.
+func (u *User) SetBotForumCanManageTopics(value bool) {
+	if value {
+		u.Flags2.Set(17)
+		u.BotForumCanManageTopics = true
+	} else {
+		u.Flags2.Unset(17)
+		u.BotForumCanManageTopics = false
+	}
+}
+
+// GetBotForumCanManageTopics returns value of BotForumCanManageTopics conditional field.
+func (u *User) GetBotForumCanManageTopics() (value bool) {
+	if u == nil {
+		return
+	}
+	return u.Flags2.Has(17)
+}
+
+// SetBotCanManageBots sets value of BotCanManageBots conditional field.
+func (u *User) SetBotCanManageBots(value bool) {
+	if value {
+		u.Flags2.Set(18)
+		u.BotCanManageBots = true
+	} else {
+		u.Flags2.Unset(18)
+		u.BotCanManageBots = false
+	}
+}
+
+// GetBotCanManageBots returns value of BotCanManageBots conditional field.
+func (u *User) GetBotCanManageBots() (value bool) {
+	if u == nil {
+		return
+	}
+	return u.Flags2.Has(18)
+}
+
+// SetBotGuestchat sets value of BotGuestchat conditional field.
+func (u *User) SetBotGuestchat(value bool) {
+	if value {
+		u.Flags2.Set(19)
+		u.BotGuestchat = true
+	} else {
+		u.Flags2.Unset(19)
+		u.BotGuestchat = false
+	}
+}
+
+// GetBotGuestchat returns value of BotGuestchat conditional field.
+func (u *User) GetBotGuestchat() (value bool) {
+	if u == nil {
+		return
+	}
+	return u.Flags2.Has(19)
+}
+
+// SetBotGuard sets value of BotGuard conditional field.
+func (u *User) SetBotGuard(value bool) {
+	if value {
+		u.Flags2.Set(20)
+		u.BotGuard = true
+	} else {
+		u.Flags2.Unset(20)
+		u.BotGuard = false
+	}
+}
+
+// GetBotGuard returns value of BotGuard conditional field.
+func (u *User) GetBotGuard() (value bool) {
+	if u == nil {
+		return
+	}
+	return u.Flags2.Has(20)
+}
+
 // GetID returns value of ID field.
 func (u *User) GetID() (value int64) {
 	if u == nil {
@@ -2396,6 +2568,24 @@ func (u *User) GetSendPaidMessagesStars() (value int64, ok bool) {
 	return u.SendPaidMessagesStars, true
 }
 
+// SetLinkedCommunityID sets value of LinkedCommunityID conditional field.
+func (u *User) SetLinkedCommunityID(value int64) {
+	u.Flags2.Set(21)
+	u.LinkedCommunityID = value
+}
+
+// GetLinkedCommunityID returns value of LinkedCommunityID conditional field and
+// boolean which is true if field was set.
+func (u *User) GetLinkedCommunityID() (value int64, ok bool) {
+	if u == nil {
+		return
+	}
+	if !u.Flags2.Has(21) {
+		return value, false
+	}
+	return u.LinkedCommunityID, true
+}
+
 // UserClassName is schema name of UserClass.
 const UserClassName = "User"
 
@@ -2415,7 +2605,7 @@ const UserClassName = "User"
 //	}
 //	switch v := g.(type) {
 //	case *tg.UserEmpty: // userEmpty#d3bc4b7a
-//	case *tg.User: // user#31774388
+//	case *tg.User: // user#b1b8cc83
 //	default: panic(v)
 //	}
 type UserClass interface {
@@ -2500,7 +2690,7 @@ func DecodeUser(buf *bin.Buffer) (UserClass, error) {
 		}
 		return &v, nil
 	case UserTypeID:
-		// Decoding user#31774388.
+		// Decoding user#b1b8cc83.
 		v := User{}
 		if err := v.Decode(buf); err != nil {
 			return nil, fmt.Errorf("unable to decode UserClass: %w", err)

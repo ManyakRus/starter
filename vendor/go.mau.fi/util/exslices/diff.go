@@ -39,10 +39,7 @@ func SortedDiff[T any](a, b []T, compare func(a, b T) int) (uniqueToA, uniqueToB
 // Diff returns the difference between two slices. The slices may contain duplicates and don't need to be sorted.
 // The output will not be sorted, but is guaranteed to not contain any duplicates.
 func Diff[T comparable](a, b []T) (uniqueToA, uniqueToB []T) {
-	maxLen := len(a)
-	if len(b) > maxLen {
-		maxLen = len(b)
-	}
+	maxLen := max(len(b), len(a))
 	collector := make(map[T]uint8, maxLen)
 	for _, item := range a {
 		collector[item] |= 0b01

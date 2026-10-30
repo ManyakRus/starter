@@ -222,6 +222,7 @@ func (e *ChannelsEditPhotoRequest) GetChannelAsNotEmpty() (NotEmptyInputChannel,
 //	400 FILE_PARTS_INVALID: The number of file parts is invalid.
 //	400 FILE_REFERENCE_INVALID: The specified file reference is invalid.
 //	400 IMAGE_PROCESS_FAILED: Failure while processing image.
+//	400 PEER_ID_INVALID: The provided peer id is invalid.
 //	400 PHOTO_CROP_SIZE_SMALL: Photo is too small.
 //	400 PHOTO_EXT_INVALID: The extension of the photo is invalid.
 //	400 PHOTO_FILE_MISSING: Profile photo file missing.
@@ -229,7 +230,6 @@ func (e *ChannelsEditPhotoRequest) GetChannelAsNotEmpty() (NotEmptyInputChannel,
 //	400 STICKER_MIME_INVALID: The specified sticker MIME type is invalid.
 //
 // See https://core.telegram.org/method/channels.editPhoto for reference.
-// Can be used by bots.
 func (c *Client) ChannelsEditPhoto(ctx context.Context, request *ChannelsEditPhotoRequest) (UpdatesClass, error) {
 	var result UpdatesBox
 

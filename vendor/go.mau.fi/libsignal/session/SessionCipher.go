@@ -76,6 +76,9 @@ func (d *Cipher) Encrypt(ctx context.Context, plaintext []byte) (protocol.Cipher
 		return nil, fmt.Errorf("LoadSession returned nil")
 	}
 	sessionState := sessionRecord.SessionState()
+	if !sessionState.HasSenderChain() {
+		return nil, signalerror.ErrUninitializedSession
+	}
 	chainKey := sessionState.SenderChainKey()
 	messageKeys := chainKey.MessageKeys()
 	senderEphemeral := sessionState.SenderRatchetKey()

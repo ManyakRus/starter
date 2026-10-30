@@ -41,14 +41,32 @@ type (
 // Use Key() to specify map keys that need to be validated. Each Key() call specifies a single key which can
 // be associated with multiple rules.
 // For example,
-//    validation.Map(
-//        validation.Key("Name", validation.Required),
-//        validation.Key("Value", validation.Required, validation.Length(5, 10)),
-//    )
+//
+//	validation.Map(
+//	    validation.Key("Name", validation.Required),
+//	    validation.Key("Value", validation.Required, validation.Length(5, 10)),
+//	)
 //
 // A nil value is considered valid. Use the Required rule to make sure a map value is present.
 func Map(keys ...*KeyRules) MapRule {
 	return MapRule{keys: keys}
+}
+
+// DynamicMap returns a validation rule that checks the keys and values of a map.
+// The map is allowed to have extra keys by default, compared to original `Map(...)` function that will return an error when unspecified key(s) existed in the map.
+// This rule should only be used for validating maps, or a validation error will be reported.
+// Use Key() to specify map keys that need to be validated. Each Key() call specifies a single key which can
+// be associated with multiple rules.
+// For example,
+//
+//	validation.DynamicMap(
+//	    validation.Key("Name", validation.Required),
+//	    validation.Key("Value", validation.Required, validation.Length(5, 10)),
+//	)
+//
+// A nil value is considered valid. Use the Required rule to make sure a map value is present.
+func DynamicMap(keys ...*KeyRules) MapRule {
+	return MapRule{keys: keys, allowExtraKeys: true}
 }
 
 // AllowExtraKeys configures the rule to ignore extra keys.
@@ -60,6 +78,57 @@ func (r MapRule) AllowExtraKeys() MapRule {
 // Validate checks if the given value is valid or not.
 func (r MapRule) Validate(m interface{}) error {
 	return r.ValidateWithContext(nil, m)
+}
+
+// validateMapKey validates a single map key against its rules, returning the
+// resulting error, or nil if the key is valid (or optional and missing).
+func validateMapKey(ctx context.Context, value reflect.Value, kt reflect.Type, kr *KeyRules) error {
+	kv := reflect.ValueOf(kr.key)
+	if !kt.AssignableTo(kv.Type()) {
+		return ErrKeyWrongType
+	}
+
+	vv := value.MapIndex(kv)
+	if !vv.IsValid() {
+		if kr.optional {
+			return nil
+		}
+		return missingKeyError(kr.rules)
+	}
+
+	return validateWithOptionalContext(ctx, vv.Interface(), kr.rules...)
+}
+
+// missingKeyErrorer is implemented by the rules whose customized error replaces ErrKeyMissing
+// when a required map key is missing. missingKeyError returns nil when the error was not customized.
+type missingKeyErrorer interface {
+	missingKeyError() error
+}
+
+// missingKeyError returns the error for a missing required map key. The key's rules are never
+// called with a nil value: rules written for the key's type may not expect nil (#222). The first
+// Required or NotNil rule with an error set by Error or ErrorObject provides the error (#134);
+// otherwise it is ErrKeyMissing.
+func missingKeyError(rules []Rule) error {
+	for _, rule := range rules {
+		if s, ok := rule.(skipRule); ok && s.skip {
+			break
+		}
+		if r, ok := rule.(missingKeyErrorer); ok {
+			if err := r.missingKeyError(); err != nil {
+				return err
+			}
+		}
+	}
+	return ErrKeyMissing
+}
+
+// validateWithOptionalContext calls ValidateWithContext if ctx is set, or Validate otherwise.
+func validateWithOptionalContext(ctx context.Context, value interface{}, rules ...Rule) error {
+	if ctx == nil {
+		return Validate(value, rules...)
+	}
+	return ValidateWithContext(ctx, value, rules...)
 }
 
 // ValidateWithContext checks if the given value is valid or not.
@@ -89,18 +158,7 @@ func (r MapRule) ValidateWithContext(ctx context.Context, m interface{}) error {
 	}
 
 	for _, kr := range r.keys {
-		var err error
-		if kv := reflect.ValueOf(kr.key); !kt.AssignableTo(kv.Type()) {
-			err = ErrKeyWrongType
-		} else if vv := value.MapIndex(kv); !vv.IsValid() {
-			if !kr.optional {
-				err = ErrKeyMissing
-			}
-		} else if ctx == nil {
-			err = Validate(vv.Interface(), kr.rules...)
-		} else {
-			err = ValidateWithContext(ctx, vv.Interface(), kr.rules...)
-		}
+		err := validateMapKey(ctx, value, kt, kr)
 		if err != nil {
 			if ie, ok := err.(InternalError); ok && ie.InternalError() != nil {
 				return err
@@ -125,10 +183,25 @@ func (r MapRule) ValidateWithContext(ctx context.Context, m interface{}) error {
 }
 
 // Key specifies a map key and the corresponding validation rules.
+//
+// If the key is missing, ErrKeyMissing is reported and the rules are not called. A Required or NotNil
+// rule among them whose message or error was customized with Error or ErrorObject reports its own
+// error instead. A Required nested in When, or a change of the global ErrRequired, does not:
+// the error stays ErrKeyMissing.
 func Key(key interface{}, rules ...Rule) *KeyRules {
 	return &KeyRules{
 		key:   key,
 		rules: rules,
+	}
+}
+
+// OptionalKey specifies a map key and the corresponding validation rules.
+// The rule will be ignored if the key is missing.
+func OptionalKey(key interface{}, rules ...Rule) *KeyRules {
+	return &KeyRules{
+		key:      key,
+		rules:    rules,
+		optional: true,
 	}
 }
 

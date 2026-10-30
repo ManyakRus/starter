@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"strconv"
 
+	"google.golang.org/protobuf/proto"
+
 	"go.mau.fi/libsignal/logger"
 	"go.mau.fi/libsignal/protocol"
 	"go.mau.fi/libsignal/util/bytehelper"
 	"go.mau.fi/libsignal/util/optional"
-	proto "google.golang.org/protobuf/proto"
 )
 
 // NewProtoBufSerializer will return a serializer for all Signal objects that will
@@ -128,6 +129,9 @@ func (j *ProtoBufPreKeySignalMessageSerializer) Serialize(signalMessage *protoco
 
 // Deserialize will take in ProtoBuf bytes and return a prekey signal message structure.
 func (j *ProtoBufPreKeySignalMessageSerializer) Deserialize(serialized []byte) (*protocol.PreKeySignalMessageStructure, error) {
+	if len(serialized) < 2 {
+		return nil, fmt.Errorf("serialized prekey message is too short")
+	}
 	version := highBitsToInt(serialized[0])
 	message := serialized[1:]
 	var sm PreKeySignalMessage
@@ -182,6 +186,9 @@ func (j *ProtoBufSenderKeyDistributionMessageSerializer) Serialize(message *prot
 // Deserialize will take in ProtoBuf bytes and return a message structure, which can be
 // used to create a new SenderKey Distribution object.
 func (j *ProtoBufSenderKeyDistributionMessageSerializer) Deserialize(serialized []byte) (*protocol.SenderKeyDistributionMessageStructure, error) {
+	if len(serialized) < 2 {
+		return nil, fmt.Errorf("serialized sender key distribution message is too short")
+	}
 	version := uint32(highBitsToInt(serialized[0]))
 	message := serialized[1:]
 

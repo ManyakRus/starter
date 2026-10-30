@@ -9,15 +9,18 @@ package whatsmeow
 import (
 	"bytes"
 	"context"
+	"crypto/aes"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	"go.mau.fi/util/random"
 
@@ -36,6 +39,8 @@ type UploadResponse struct {
 	FileEncSHA256 []byte `json:"-"`
 	FileSHA256    []byte `json:"-"`
 	FileLength    uint64 `json:"-"`
+
+	StreamingSidecar []byte `json:"-"`
 }
 
 // Upload uploads the given attachment to WhatsApp servers.
@@ -89,6 +94,13 @@ func (cli *Client) Upload(ctx context.Context, plaintext []byte, appInfo MediaTy
 	dataHash := sha256.Sum256(dataToUpload)
 	resp.FileEncSHA256 = dataHash[:]
 
+	if appInfo == MediaVideo {
+		resp.StreamingSidecar, err = makeStreamingSidecar(iv, macKey, bytes.NewReader(dataToUpload))
+		if err != nil {
+			return
+		}
+	}
+
 	err = cli.rawUpload(ctx, bytes.NewReader(dataToUpload), uint64(len(dataToUpload)), resp.FileEncSHA256, appInfo, false, &resp)
 	return
 }
@@ -126,8 +138,44 @@ func (cli *Client) UploadReader(ctx context.Context, plaintext io.Reader, tempFi
 		err = fmt.Errorf("failed to seek to start of temporary file: %w", err)
 		return
 	}
+	if appInfo == MediaVideo {
+		resp.StreamingSidecar, err = makeStreamingSidecar(iv, macKey, tempFile)
+		if err != nil {
+			return
+		}
+		_, err = tempFile.Seek(0, io.SeekStart)
+		if err != nil {
+			err = fmt.Errorf("failed to seek to start of temporary file: %w", err)
+			return
+		}
+	}
 	err = cli.rawUpload(ctx, tempFile, uploadSize, resp.FileEncSHA256, appInfo, false, &resp)
 	return
+}
+
+const streamingSidecarChunkSize = 64 * 1024
+
+func makeStreamingSidecar(iv, macKey []byte, encrypted io.Reader) ([]byte, error) {
+	buf := make([]byte, streamingSidecarChunkSize+aes.BlockSize)
+	filled := copy(buf, iv)
+	mac := hmac.New(sha256.New, macKey)
+	var sidecar []byte
+	for {
+		n, err := io.ReadFull(encrypted, buf[filled:])
+		if err != nil && !errors.Is(err, io.EOF) && !errors.Is(err, io.ErrUnexpectedEOF) {
+			return nil, fmt.Errorf("failed to read encrypted file for sidecar: %w", err)
+		} else if n == 0 && len(sidecar) > 0 {
+			return sidecar, nil
+		}
+		filled += n
+		mac.Reset()
+		mac.Write(buf[:filled])
+		sidecar = append(sidecar, mac.Sum(nil)[:10]...)
+		if err != nil {
+			return sidecar, nil
+		}
+		filled = copy(buf, buf[streamingSidecarChunkSize:])
+	}
 }
 
 // UploadNewsletter uploads the given attachment to WhatsApp servers without encrypting it first.
@@ -177,6 +225,10 @@ func (cli *Client) UploadNewsletterReader(ctx context.Context, data io.ReadSeeke
 	hasher := sha256.New()
 	var fileLength int64
 	fileLength, err = io.Copy(hasher, data)
+	if err != nil {
+		err = fmt.Errorf("failed to hash data: %w", err)
+		return
+	}
 	resp.FileLength = uint64(fileLength)
 	resp.FileSHA256 = hasher.Sum(nil)
 	_, err = data.Seek(0, io.SeekStart)
@@ -243,6 +295,62 @@ func (cli *Client) rawUpload(ctx context.Context, dataToUpload io.Reader, upload
 		err = fmt.Errorf("upload failed with status code %d", httpResp.StatusCode)
 	} else if err = json.NewDecoder(httpResp.Body).Decode(&resp); err != nil {
 		err = fmt.Errorf("failed to parse upload response: %w", err)
+	}
+	if httpResp != nil {
+		_ = httpResp.Body.Close()
+	}
+	return err
+}
+
+// DeleteMedia deletes the media at the given direct path from WhatsApp servers.
+//
+// This is only used for things like history syncs, which should be deleted after processing.
+func (cli *Client) DeleteMedia(ctx context.Context, appInfo MediaType, directPath string, encFileHash []byte, encHandle string) error {
+	if directPath == "" {
+		return nil
+	}
+	mediaConn, err := cli.refreshMediaConn(ctx, false)
+	if err != nil {
+		return fmt.Errorf("failed to refresh media connections: %w", err)
+	}
+
+	queryStart := strings.IndexByte(directPath, '?')
+	if queryStart > 0 {
+		directPath = directPath[:queryStart]
+	}
+
+	token := base64.URLEncoding.EncodeToString(encFileHash)
+	query := url.Values{
+		"token": []string{token},
+		"d_md":  []string{base64.RawURLEncoding.EncodeToString([]byte(directPath))},
+		"auth":  []string{mediaConn.Auth},
+	}
+	if encHandle != "" {
+		query.Set("e_handle", encHandle)
+	}
+	deleteURL := url.URL{
+		Scheme:   "https",
+		Host:     mediaConn.Hosts[0].Hostname,
+		Path:     fmt.Sprintf("/mms/%s/%s", mediaTypeToMMSType[appInfo], token),
+		RawQuery: query.Encode(),
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, deleteURL.String(), nil)
+	if err != nil {
+		return fmt.Errorf("failed to prepare request: %w", err)
+	}
+
+	req.Header.Set("Origin", socket.Origin)
+	req.Header.Set("Referer", socket.Origin+"/")
+	if cmn := cli.Store.CompanionMetaNonce; cmn != "" && encHandle != "" {
+		req.Header.Set("Companion_User_Secret", cli.Store.CompanionMetaNonce)
+	}
+
+	httpResp, err := cli.mediaHTTP.Do(req)
+	if err != nil {
+		err = fmt.Errorf("failed to execute request: %w", err)
+	} else if httpResp.StatusCode < 200 || httpResp.StatusCode >= 300 {
+		err = fmt.Errorf("media delete failed with status code %d", httpResp.StatusCode)
 	}
 	if httpResp != nil {
 		_ = httpResp.Body.Close()

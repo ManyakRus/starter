@@ -292,6 +292,7 @@ func (c *MessagesCreateChatRequest) MapUsers() (value InputUserClassArray) {
 //
 //	500 CHAT_ID_GENERATE_FAILED: Failure while generating the chat ID.
 //	400 CHAT_INVALID: Invalid chat.
+//	400 CHAT_MEMBER_ADD_FAILED: Could not add participants.
 //	400 CHAT_TITLE_EMPTY: No chat title provided.
 //	400 INPUT_USER_DEACTIVATED: The specified user was deleted.
 //	400 TTL_PERIOD_INVALID: The specified TTL period is invalid.

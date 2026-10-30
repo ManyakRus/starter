@@ -23,9 +23,10 @@ var (
 
 // ThresholdRule is a validation rule that checks if a value satisfies the specified threshold requirement.
 type ThresholdRule struct {
-	threshold interface{}
-	operator  int
-	err       Error
+	threshold     interface{}
+	operator      int
+	err           Error
+	validateEmpty bool
 }
 
 const (
@@ -39,24 +40,25 @@ const (
 // By calling Exclusive, the rule will check if the value is strictly greater than the specified value.
 // Note that the value being checked and the threshold value must be of the same type.
 // Only int, uint, float and time.Time types are supported.
-// An empty value is considered valid. Please use the Required rule to make sure a value is not empty.
-func Min(min interface{}) ThresholdRule {
+// An empty value is considered valid. Please use the Required rule to make sure a value is not empty,
+// or call ValidateEmpty to check empty values against the threshold too.
+func Min(threshold interface{}) ThresholdRule {
 	return ThresholdRule{
-		threshold: min,
+		threshold: threshold,
 		operator:  greaterEqualThan,
 		err:       ErrMinGreaterEqualThanRequired,
 	}
-
 }
 
 // Max returns a validation rule that checks if a value is less or equal than the specified value.
 // By calling Exclusive, the rule will check if the value is strictly less than the specified value.
 // Note that the value being checked and the threshold value must be of the same type.
 // Only int, uint, float and time.Time types are supported.
-// An empty value is considered valid. Please use the Required rule to make sure a value is not empty.
-func Max(max interface{}) ThresholdRule {
+// An empty value is considered valid. Please use the Required rule to make sure a value is not empty,
+// or call ValidateEmpty to check empty values against the threshold too.
+func Max(threshold interface{}) ThresholdRule {
 	return ThresholdRule{
-		threshold: max,
+		threshold: threshold,
 		operator:  lessEqualThan,
 		err:       ErrMaxLessEqualThanRequired,
 	}
@@ -64,20 +66,29 @@ func Max(max interface{}) ThresholdRule {
 
 // Exclusive sets the comparison to exclude the boundary value.
 func (r ThresholdRule) Exclusive() ThresholdRule {
-	if r.operator == greaterEqualThan {
+	switch r.operator {
+	case greaterEqualThan:
 		r.operator = greaterThan
 		r.err = ErrMinGreaterThanRequired
-	} else if r.operator == lessEqualThan {
+	case lessEqualThan:
 		r.operator = lessThan
 		r.err = ErrMaxLessThanRequired
 	}
 	return r
 }
 
+// ValidateEmpty makes the rule check empty values (0, 0.0, a zero time.Time) against the threshold
+// instead of accepting them. Use it when zero is a meaningful input, for example when
+// Min(0).Exclusive() must reject 0. A nil pointer is still considered valid.
+func (r ThresholdRule) ValidateEmpty() ThresholdRule {
+	r.validateEmpty = true
+	return r
+}
+
 // Validate checks if the given value is valid or not.
 func (r ThresholdRule) Validate(value interface{}) error {
 	value, isNil := Indirect(value)
-	if isNil || IsEmpty(value) {
+	if isNil || !r.validateEmpty && IsEmpty(value) {
 		return nil
 	}
 
@@ -119,7 +130,7 @@ func (r ThresholdRule) Validate(value interface{}) error {
 		if !ok {
 			return fmt.Errorf("cannot convert %v to time.Time", reflect.TypeOf(value))
 		}
-		if v.IsZero() || r.compareTime(t, v) {
+		if r.compareTime(t, v) {
 			return nil
 		}
 

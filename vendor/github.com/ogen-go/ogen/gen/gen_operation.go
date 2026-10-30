@@ -15,11 +15,11 @@ func (g *Generator) generateOperation(ctx *genctx, webhookName string, spec *ope
 	var opName string
 	switch {
 	case spec.OperationID != "":
-		opName, err = pascalNonEmpty(spec.OperationID)
+		opName, err = g.namer().pascalNonEmpty(spec.OperationID)
 	case webhookName != "":
-		opName, err = pascalNonEmpty(webhookName, strings.ToLower(spec.HTTPMethod))
+		opName, err = g.namer().pascalNonEmpty(webhookName, strings.ToLower(spec.HTTPMethod))
 	default:
-		opName, err = pascal(spec.Path.String(), strings.ToLower(spec.HTTPMethod))
+		opName, err = g.namer().pascal(spec.Path.String(), strings.ToLower(spec.HTTPMethod))
 	}
 	if err != nil {
 		return nil, errors.Wrap(err, "operation name")
@@ -34,7 +34,7 @@ func (g *Generator) generateOperation(ctx *genctx, webhookName string, spec *ope
 	}
 
 	if spec.XOgenOperationGroup != "" {
-		op.OperationGroup, err = pascalNonEmpty(spec.XOgenOperationGroup)
+		op.OperationGroup, err = g.namer().pascalNonEmpty(spec.XOgenOperationGroup)
 		if err != nil {
 			return nil, errors.Wrap(err, "operation group")
 		}
@@ -60,6 +60,20 @@ func (g *Generator) generateOperation(ctx *genctx, webhookName string, spec *ope
 	op.Responses, err = g.generateResponses(ctx, op.Name, spec.Responses)
 	if err != nil {
 		return nil, errors.Wrap(err, "responses")
+	}
+
+	// Report unimplemented SSE server response encoding here, during IR
+	// generation, so that `ignore_not_implemented` skips the operation
+	// cleanly and the error is raised before the target directory is
+	// cleaned, instead of failing at template execution time.
+	if op.HasSSEStreamResponse() {
+		serverEnabled := g.features.Has(PathsServer)
+		if webhookName != "" {
+			serverEnabled = g.features.Has(WebhooksServer)
+		}
+		if serverEnabled {
+			return nil, errors.Wrap(&ErrNotImplemented{Name: "sse server response encoding"}, "responses")
+		}
 	}
 
 	op.Security, err = g.generateSecurities(ctx, opName, spec.Security)

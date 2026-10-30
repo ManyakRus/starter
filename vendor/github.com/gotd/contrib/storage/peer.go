@@ -310,7 +310,7 @@ func (p *Peer) Keys() []string {
 func (p *Peer) FromInputPeer(input tg.InputPeerClass) error {
 	k := dialogs.DialogKey{}
 	if err := k.FromInputPeer(input); err != nil {
-		return errors.Errorf("unpack input peer: %w", err)
+		return errors.Wrap(err, "unpack input peer")
 	}
 
 	*p = Peer{

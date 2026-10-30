@@ -32,14 +32,25 @@ var (
 )
 
 // PaymentsStarGiftUpgradePreview represents TL type `payments.starGiftUpgradePreview#3de1dfed`.
+// A preview of the possible attributes (chosen randomly) a gift »¹ can receive after
+// upgrading it to a collectible gift »², see here »³ for more info.
+//
+// Links:
+//  1. https://core.telegram.org/api/gifts
+//  2. https://core.telegram.org/api/gifts#collectible-gifts
+//  3. https://core.telegram.org/api/gifts#collectible-gifts
 //
 // See https://core.telegram.org/constructor/payments.starGiftUpgradePreview for reference.
 type PaymentsStarGiftUpgradePreview struct {
-	// SampleAttributes field of PaymentsStarGiftUpgradePreview.
+	// Possible gift attributes
 	SampleAttributes []StarGiftAttributeClass
-	// Prices field of PaymentsStarGiftUpgradePreview.
+	// Contains a similar list of upgrade prices and timestamps, not as granular as in
+	// next_prices (i.e. prices are approximately 1 month apart), to be used mainly to scale
+	// the price graph, and to show a more general future overview of the upgrade price.
 	Prices []StarGiftUpgradePrice
-	// NextPrices field of PaymentsStarGiftUpgradePreview.
+	// Contains the current upgrade price and a list of future prices, each associated to a
+	// UNIX timestamp that indicates when the price comes in effect (the current price is
+	// valid only until the next one comes into effect, and so on for all prices in the list).
 	NextPrices []StarGiftUpgradePrice
 }
 

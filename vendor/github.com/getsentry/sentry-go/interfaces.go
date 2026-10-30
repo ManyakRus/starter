@@ -10,10 +10,12 @@ import (
 	"time"
 
 	"github.com/getsentry/sentry-go/attribute"
+	"github.com/getsentry/sentry-go/internal/debuglog"
 	"github.com/getsentry/sentry-go/internal/protocol"
 	"github.com/getsentry/sentry-go/internal/ratelimit"
 )
 
+const errorType = ""
 const eventType = "event"
 const transactionType = "transaction"
 const checkInType = "check_in"
@@ -24,6 +26,14 @@ var logEvent = struct {
 }{
 	"log",
 	"application/vnd.sentry.items.log+json",
+}
+
+var traceMetricEvent = struct {
+	Type        string
+	ContentType string
+}{
+	"trace_metric",
+	"application/vnd.sentry.items.trace-metric+json",
 }
 
 // Level marks the severity of the event.
@@ -57,38 +67,11 @@ type Breadcrumb struct {
 	Message   string                 `json:"message,omitempty"`
 	Data      map[string]interface{} `json:"data,omitempty"`
 	Level     Level                  `json:"level,omitempty"`
-	Timestamp time.Time              `json:"timestamp"`
+	Timestamp time.Time              `json:"timestamp,omitzero"`
 }
 
 // TODO: provide constants for known breadcrumb types.
 // See https://develop.sentry.dev/sdk/event-payloads/breadcrumbs/#breadcrumb-types.
-
-// MarshalJSON converts the Breadcrumb struct to JSON.
-func (b *Breadcrumb) MarshalJSON() ([]byte, error) {
-	// We want to omit time.Time zero values, otherwise the server will try to
-	// interpret dates too far in the past. However, encoding/json doesn't
-	// support the "omitempty" option for struct types. See
-	// https://golang.org/issues/11939.
-	//
-	// We overcome the limitation and achieve what we want by shadowing fields
-	// and a few type tricks.
-
-	// breadcrumb aliases Breadcrumb to allow calling json.Marshal without an
-	// infinite loop. It preserves all fields while none of the attached
-	// methods.
-	type breadcrumb Breadcrumb
-
-	if b.Timestamp.IsZero() {
-		return json.Marshal(struct {
-			// Embed all of the fields of Breadcrumb.
-			*breadcrumb
-			// Timestamp shadows the original Timestamp field and is meant to
-			// remain nil, triggering the omitempty behavior.
-			Timestamp json.RawMessage `json:"timestamp,omitempty"`
-		}{breadcrumb: (*breadcrumb)(b)})
-	}
-	return json.Marshal((*breadcrumb)(b))
-}
 
 // Logger provides a chaining API for structured logging to Sentry.
 type Logger interface {
@@ -117,6 +100,9 @@ type Logger interface {
 	Fatal() LogEntry
 	// Panic defines the [sentry.LogLevel] for the log entry.
 	Panic() LogEntry
+	// LFatal defines the [sentry.LogLevel] for the log entry. This only sets
+	// the level to fatal, but does not panic or exit.
+	LFatal() LogEntry
 	// GetCtx returns the [context.Context] set on the logger.
 	GetCtx() context.Context
 }
@@ -125,20 +111,82 @@ type Logger interface {
 type LogEntry interface {
 	// WithCtx creates a new LogEntry with the specified context without overwriting the previous one.
 	WithCtx(ctx context.Context) LogEntry
+	// StringSlice adds a string slice attribute to the LogEntry.
+	StringSlice(key string, value []string) LogEntry
 	// String adds a string attribute to the LogEntry.
 	String(key, value string) LogEntry
 	// Int adds an int attribute to the LogEntry.
 	Int(key string, value int) LogEntry
+	// Int64Slice adds an int64 slice attribute to the LogEntry.
+	Int64Slice(key string, value []int64) LogEntry
 	// Int64 adds an int64 attribute to the LogEntry.
 	Int64(key string, value int64) LogEntry
+	// Float64Slice adds a float64 slice attribute to the LogEntry.
+	Float64Slice(key string, value []float64) LogEntry
 	// Float64 adds a float64 attribute to the LogEntry.
 	Float64(key string, value float64) LogEntry
+	// BoolSlice adds a bool slice attribute to the LogEntry.
+	BoolSlice(key string, value []bool) LogEntry
 	// Bool adds a bool attribute to the LogEntry.
 	Bool(key string, value bool) LogEntry
 	// Emit emits the LogEntry with the provided arguments.
 	Emit(args ...interface{})
 	// Emitf emits the LogEntry using a format string and arguments.
 	Emitf(format string, args ...interface{})
+}
+
+// Meter provides an interface for recording metrics.
+type Meter interface {
+	// WithCtx returns a new Meter that uses the given context for trace/span association.
+	WithCtx(ctx context.Context) Meter
+	// SetAttributes allows attaching parameters to the meter using the attribute API.
+	// These attributes will be included in all subsequent metrics.
+	SetAttributes(attrs ...attribute.Builder)
+	// Count records a count metric.
+	Count(name string, count int64, opts ...MeterOption)
+	// Gauge records a gauge metric.
+	Gauge(name string, value float64, opts ...MeterOption)
+	// Distribution records a distribution metric.
+	Distribution(name string, sample float64, opts ...MeterOption)
+}
+
+// MeterOption configures a metric recording call.
+type MeterOption func(*meterOptions)
+
+type meterOptions struct {
+	unit       string
+	scope      *Scope
+	attributes map[string]attribute.Value
+}
+
+// WithUnit sets the unit for the metric (e.g., "millisecond", "byte").
+func WithUnit(unit string) MeterOption {
+	return func(o *meterOptions) {
+		o.unit = unit
+	}
+}
+
+// WithScopeOverride sets a custom scope for the metric, overriding the default scope from the hub.
+func WithScopeOverride(scope *Scope) MeterOption {
+	return func(o *meterOptions) {
+		o.scope = scope
+	}
+}
+
+// WithAttributes sets attributes for the metric.
+func WithAttributes(attrs ...attribute.Builder) MeterOption {
+	return func(o *meterOptions) {
+		if o.attributes == nil {
+			o.attributes = make(map[string]attribute.Value, len(attrs))
+		}
+		for _, a := range attrs {
+			if a.Value.Type() == attribute.INVALID {
+				debuglog.Printf("invalid attribute: %v", a)
+				continue
+			}
+			o.attributes[a.Key] = a.Value
+		}
+	}
 }
 
 // Attachment allows associating files with your events to aid in investigation.
@@ -199,37 +247,47 @@ type Request struct {
 	Env         map[string]string `json:"env,omitempty"`
 }
 
-var sensitiveHeaders = map[string]struct{}{
-	"_csrf":               {},
-	"_csrf_token":         {},
-	"_session":            {},
-	"_xsrf":               {},
-	"Api-Key":             {},
-	"Apikey":              {},
-	"Auth":                {},
-	"Authorization":       {},
-	"Cookie":              {},
-	"Credentials":         {},
-	"Csrf":                {},
-	"Csrf-Token":          {},
-	"Csrftoken":           {},
-	"Ip-Address":          {},
-	"Passwd":              {},
-	"Password":            {},
-	"Private-Key":         {},
-	"Privatekey":          {},
-	"Proxy-Authorization": {},
-	"Remote-Addr":         {},
-	"Secret":              {},
-	"Session":             {},
-	"Sessionid":           {},
-	"Token":               {},
-	"User-Session":        {},
-	"X-Api-Key":           {},
-	"X-Csrftoken":         {},
-	"X-Forwarded-For":     {},
-	"X-Real-Ip":           {},
-	"XSRF-TOKEN":          {},
+func newRequest(r *http.Request, client *Client) *Request {
+	prot := protocol.SchemeHTTP
+	if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {
+		prot = protocol.SchemeHTTPS
+	}
+	url := fmt.Sprintf("%s://%s%s", prot, r.Host, r.URL.Path)
+
+	dc := client.GetDataCollection()
+
+	var cookies string
+	headers := make(map[string]string, len(r.Header)+1)
+	if dc.CollectCookies() {
+		cookies = dc.FilterCookies(r.Header.Values("Cookie"))
+		if cookies != "" {
+			headers["Cookie"] = cookies
+		}
+	}
+	for k, v := range r.Header {
+		if strings.EqualFold(k, "Cookie") {
+			continue
+		}
+		headers[k] = strings.Join(v, ",")
+	}
+	headers["Host"] = r.Host
+	headers = dc.FilterRequestHeaders(headers)
+
+	var env map[string]string
+	if dc.UserInfo.Value {
+		if addr, port, err := net.SplitHostPort(r.RemoteAddr); err == nil {
+			env = map[string]string{"REMOTE_ADDR": addr, "REMOTE_PORT": port}
+		}
+	}
+
+	return &Request{
+		URL:         url,
+		Method:      r.Method,
+		QueryString: dc.FilterQueryString(r.URL.RawQuery),
+		Cookies:     cookies,
+		Headers:     headers,
+		Env:         env,
+	}
 }
 
 // NewRequest returns a new Sentry Request from the given http.Request.
@@ -237,49 +295,7 @@ var sensitiveHeaders = map[string]struct{}{
 // NewRequest avoids operations that depend on network access. In particular, it
 // does not read r.Body.
 func NewRequest(r *http.Request) *Request {
-	prot := protocol.SchemeHTTP
-	if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {
-		prot = protocol.SchemeHTTPS
-	}
-	url := fmt.Sprintf("%s://%s%s", prot, r.Host, r.URL.Path)
-
-	var cookies string
-	var env map[string]string
-	headers := map[string]string{}
-
-	if client := CurrentHub().Client(); client != nil && client.options.SendDefaultPII {
-		// We read only the first Cookie header because of the specification:
-		// https://tools.ietf.org/html/rfc6265#section-5.4
-		// When the user agent generates an HTTP request, the user agent MUST NOT
-		// attach more than one Cookie header field.
-		cookies = r.Header.Get("Cookie")
-
-		headers = make(map[string]string, len(r.Header))
-		for k, v := range r.Header {
-			headers[k] = strings.Join(v, ",")
-		}
-
-		if addr, port, err := net.SplitHostPort(r.RemoteAddr); err == nil {
-			env = map[string]string{"REMOTE_ADDR": addr, "REMOTE_PORT": port}
-		}
-	} else {
-		for k, v := range r.Header {
-			if _, ok := sensitiveHeaders[k]; !ok {
-				headers[k] = strings.Join(v, ",")
-			}
-		}
-	}
-
-	headers["Host"] = r.Host
-
-	return &Request{
-		URL:         url,
-		Method:      r.Method,
-		QueryString: r.URL.RawQuery,
-		Cookies:     cookies,
-		Headers:     headers,
-		Env:         env,
-	}
+	return newRequest(r, CurrentHub().Client())
 }
 
 // Mechanism is the mechanism by which an exception was generated and handled.
@@ -358,35 +374,34 @@ type Context = map[string]interface{}
 
 // Event is the fundamental data structure that is sent to Sentry.
 type Event struct {
-	Breadcrumbs []*Breadcrumb          `json:"breadcrumbs,omitempty"`
-	Contexts    map[string]Context     `json:"contexts,omitempty"`
-	Dist        string                 `json:"dist,omitempty"`
-	Environment string                 `json:"environment,omitempty"`
-	EventID     EventID                `json:"event_id,omitempty"`
-	Extra       map[string]interface{} `json:"extra,omitempty"`
-	Fingerprint []string               `json:"fingerprint,omitempty"`
-	Level       Level                  `json:"level,omitempty"`
-	Message     string                 `json:"message,omitempty"`
-	Platform    string                 `json:"platform,omitempty"`
-	Release     string                 `json:"release,omitempty"`
-	Sdk         SdkInfo                `json:"sdk,omitempty"`
-	ServerName  string                 `json:"server_name,omitempty"`
-	Threads     []Thread               `json:"threads,omitempty"`
-	Tags        map[string]string      `json:"tags,omitempty"`
-	Timestamp   time.Time              `json:"timestamp"`
-	Transaction string                 `json:"transaction,omitempty"`
-	User        User                   `json:"user,omitempty"`
-	Logger      string                 `json:"logger,omitempty"`
-	Modules     map[string]string      `json:"modules,omitempty"`
-	Request     *Request               `json:"request,omitempty"`
-	Exception   []Exception            `json:"exception,omitempty"`
-	DebugMeta   *DebugMeta             `json:"debug_meta,omitempty"`
-	Attachments []*Attachment          `json:"-"`
+	Breadcrumbs []*Breadcrumb      `json:"breadcrumbs,omitempty"`
+	Contexts    map[string]Context `json:"contexts,omitempty"`
+	Dist        string             `json:"dist,omitempty"`
+	Environment string             `json:"environment,omitempty"`
+	EventID     EventID            `json:"event_id,omitempty"`
+	Fingerprint []string           `json:"fingerprint,omitempty"`
+	Level       Level              `json:"level,omitempty"`
+	Message     string             `json:"message,omitempty"`
+	Platform    string             `json:"platform,omitempty"`
+	Release     string             `json:"release,omitempty"`
+	Sdk         SdkInfo            `json:"sdk,omitempty"`
+	ServerName  string             `json:"server_name,omitempty"`
+	Threads     []Thread           `json:"threads,omitempty"`
+	Tags        map[string]string  `json:"tags,omitempty"`
+	Timestamp   time.Time          `json:"timestamp,omitzero"`
+	Transaction string             `json:"transaction,omitempty"`
+	User        User               `json:"user,omitempty"`
+	Logger      string             `json:"logger,omitempty"`
+	Modules     map[string]string  `json:"modules,omitempty"`
+	Request     *Request           `json:"request,omitempty"`
+	Exception   []Exception        `json:"exception,omitempty"`
+	DebugMeta   *DebugMeta         `json:"debug_meta,omitempty"`
+	Attachments []*Attachment      `json:"-"`
 
 	// The fields below are only relevant for transactions.
 
 	Type            string           `json:"type,omitempty"`
-	StartTime       time.Time        `json:"start_timestamp"`
+	StartTime       time.Time        `json:"start_timestamp,omitzero"`
 	Spans           []*Span          `json:"spans,omitempty"`
 	TransactionInfo *TransactionInfo `json:"transaction_info,omitempty"`
 
@@ -396,11 +411,22 @@ type Event struct {
 	MonitorConfig *MonitorConfig `json:"monitor_config,omitempty"`
 
 	// The fields below are only relevant for logs
-	Logs []Log `json:"items,omitempty"`
+	Logs []Log `json:"-"`
+
+	// The fields below are only relevant for metrics
+	Metrics []Metric `json:"-"`
 
 	// The fields below are not part of the final JSON payload.
 
 	sdkMetaData SDKMetaData
+
+	// Pre-serialized copies of mutable fields, set by MakeSerializationSafe.
+	serializedTags        json.RawMessage
+	serializedContexts    json.RawMessage
+	serializedBreadcrumbs json.RawMessage
+	serializedException   json.RawMessage
+	serializedUser        json.RawMessage
+	serializationSafe     bool
 }
 
 // SetException appends the unwrapped errors to the event's exception list.
@@ -421,114 +447,55 @@ func (e *Event) SetException(exception error, maxErrorDepth int) {
 	e.Exception = exceptions
 }
 
-// ToEnvelope converts the Event to a Sentry envelope.
-// This includes the event data and any attachments as separate envelope items.
-func (e *Event) ToEnvelope(dsn *protocol.Dsn) (*protocol.Envelope, error) {
-	return e.ToEnvelopeWithTime(dsn, time.Now())
-}
-
-// ToEnvelopeWithTime converts the Event to a Sentry envelope with a specific sentAt time.
-// This is primarily useful for testing with predictable timestamps.
-func (e *Event) ToEnvelopeWithTime(dsn *protocol.Dsn, sentAt time.Time) (*protocol.Envelope, error) {
-	// Create envelope header with trace context
-	trace := make(map[string]string)
-	if dsc := e.sdkMetaData.dsc; dsc.HasEntries() {
-		for k, v := range dsc.Entries {
-			trace[k] = v
+// safeMarshal wraps json.Marshal with a recover guard.
+//
+// we shouldn't panic since we already pre serialized all user mutable fields, but using this just to be safe.
+func (e *Event) safeMarshal() (b []byte, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			b = nil
+			err = fmt.Errorf("panic during event marshaling: %v", r)
 		}
-	}
-
-	header := &protocol.EnvelopeHeader{
-		EventID: string(e.EventID),
-		SentAt:  sentAt,
-		Trace:   trace,
-	}
-
-	if dsn != nil {
-		header.Dsn = dsn.String()
-	}
-
-	header.Sdk = &e.Sdk
-
-	envelope := protocol.NewEnvelope(header)
-
-	eventBody, err := json.Marshal(e)
-	if err != nil {
-		// Try fallback: remove problematic fields and retry
-		e.Breadcrumbs = nil
-		e.Contexts = nil
-		e.Extra = map[string]interface{}{
-			"info": fmt.Sprintf("Could not encode original event as JSON. "+
-				"Succeeded by removing Breadcrumbs, Contexts and Extra. "+
-				"Please verify the data you attach to the scope. "+
-				"Error: %s", err),
-		}
-
-		eventBody, err = json.Marshal(e)
-		if err != nil {
-			return nil, fmt.Errorf("event could not be marshaled even with fallback: %w", err)
-		}
-
-		DebugLogger.Printf("Event marshaling succeeded with fallback after removing problematic fields")
-	}
-
-	var mainItem *protocol.EnvelopeItem
-	switch e.Type {
-	case transactionType:
-		mainItem = protocol.NewEnvelopeItem(protocol.EnvelopeItemTypeTransaction, eventBody)
-	case checkInType:
-		mainItem = protocol.NewEnvelopeItem(protocol.EnvelopeItemTypeCheckIn, eventBody)
-	case logEvent.Type:
-		mainItem = protocol.NewLogItem(len(e.Logs), eventBody)
-	default:
-		mainItem = protocol.NewEnvelopeItem(protocol.EnvelopeItemTypeEvent, eventBody)
-	}
-
-	envelope.AddItem(mainItem)
-	for _, attachment := range e.Attachments {
-		attachmentItem := protocol.NewAttachmentItem(attachment.Filename, attachment.ContentType, attachment.Payload)
-		envelope.AddItem(attachmentItem)
-	}
-
-	return envelope, nil
+	}()
+	return json.Marshal(e)
 }
 
 // ToEnvelopeItem converts the Event to a Sentry envelope item.
-func (e *Event) ToEnvelopeItem() (*protocol.EnvelopeItem, error) {
-	eventBody, err := json.Marshal(e)
+func (e *Event) ToEnvelopeItem() (item *protocol.EnvelopeItem, err error) {
+	eventBody, err := e.safeMarshal()
 	if err != nil {
-		// Try fallback: remove problematic fields and retry
-		e.Breadcrumbs = nil
-		e.Contexts = nil
-		e.Extra = map[string]interface{}{
-			"info": fmt.Sprintf("Could not encode original event as JSON. "+
-				"Succeeded by removing Breadcrumbs, Contexts and Extra. "+
-				"Please verify the data you attach to the scope. "+
-				"Error: %s", err),
-		}
-
-		eventBody, err = json.Marshal(e)
-		if err != nil {
-			return nil, fmt.Errorf("event could not be marshaled even with fallback: %w", err)
-		}
-
-		DebugLogger.Printf("Event marshaling succeeded with fallback after removing problematic fields")
+		return nil, fmt.Errorf("could not encode event as JSON, skipping delivery: %w", err)
 	}
 
-	// TODO: all event types should be abstracted to implement EnvelopeItemConvertible and convert themselves.
-	var item *protocol.EnvelopeItem
 	switch e.Type {
 	case transactionType:
-		item = protocol.NewEnvelopeItem(protocol.EnvelopeItemTypeTransaction, eventBody)
+		item = protocol.NewTransactionItem(e.GetSpanCount(), eventBody)
 	case checkInType:
 		item = protocol.NewEnvelopeItem(protocol.EnvelopeItemTypeCheckIn, eventBody)
 	case logEvent.Type:
 		item = protocol.NewLogItem(len(e.Logs), eventBody)
+	case traceMetricEvent.Type:
+		item = protocol.NewTraceMetricItem(len(e.Metrics), eventBody)
 	default:
 		item = protocol.NewEnvelopeItem(protocol.EnvelopeItemTypeEvent, eventBody)
 	}
 
 	return item, nil
+}
+
+// ToEnvelope converts the Event to a Sentry envelope.
+func (e *Event) ToEnvelope(header *protocol.EnvelopeHeader) (*protocol.Envelope, error) {
+	item, err := e.ToEnvelopeItem()
+	if err != nil {
+		return nil, err
+	}
+
+	envelope := protocol.NewEnvelope(header, item)
+	for _, attachment := range e.Attachments {
+		attachmentItem := protocol.NewAttachmentItem(attachment.Filename, attachment.ContentType, attachment.Payload)
+		envelope.AddItem(attachmentItem)
+	}
+	return envelope, nil
 }
 
 // GetCategory returns the rate limit category for this event.
@@ -557,6 +524,28 @@ func (e *Event) GetDynamicSamplingContext() map[string]string {
 	return trace
 }
 
+// GetSpanCount returns the number of spans in the transaction including the transaction itself. It is used for client
+// reports. Returns 0 for non-transaction events.
+func (e *Event) GetSpanCount() int {
+	if e.Type != transactionType {
+		return 0
+	}
+	return len(e.Spans) + 1
+}
+
+// GetLogByteSize returns the approximate total byte size of all logs in the event. It is used for client
+// reports. Returns 0 for non-log events.
+func (e *Event) GetLogByteSize() int {
+	if e.Type != logEvent.Type {
+		return 0
+	}
+	var size int
+	for i := range e.Logs {
+		size += e.Logs[i].ApproximateSize()
+	}
+	return size
+}
+
 // TODO: Event.Contexts map[string]interface{} => map[string]EventContext,
 // to prevent accidentally storing T when we mean *T.
 // For example, the TraceContext must be stored as *TraceContext to pick up the
@@ -565,17 +554,6 @@ func (e *Event) GetDynamicSamplingContext() map[string]string {
 
 // MarshalJSON converts the Event struct to JSON.
 func (e *Event) MarshalJSON() ([]byte, error) {
-	// We want to omit time.Time zero values, otherwise the server will try to
-	// interpret dates too far in the past. However, encoding/json doesn't
-	// support the "omitempty" option for struct types. See
-	// https://golang.org/issues/11939.
-	//
-	// We overcome the limitation and achieve what we want by shadowing fields
-	// and a few type tricks.
-	if e.Type == transactionType {
-		return e.transactionMarshalJSON()
-	}
-
 	if e.Type == checkInType {
 		return e.checkInMarshalJSON()
 	}
@@ -587,14 +565,37 @@ func (e *Event) defaultMarshalJSON() ([]byte, error) {
 	// loop. It preserves all fields while none of the attached methods.
 	type event Event
 
+	// Use pre-serialized bytes for fields that contain user mutable data.
+	if e.hasPreSerializedFields() {
+		return e.preSerializedMarshalJSON()
+	}
+
+	if e.Type == transactionType {
+		return json.Marshal(struct{ *event }{(*event)(e)})
+	}
+	// metrics and logs should be serialized under the same `items` json field.
+	if e.Type == logEvent.Type {
+		type logEvent struct {
+			*event
+			Items []Log           `json:"items,omitempty"`
+			Type  json.RawMessage `json:"type,omitempty"`
+		}
+		return json.Marshal(logEvent{event: (*event)(e), Items: e.Logs})
+	}
+
+	if e.Type == traceMetricEvent.Type {
+		type metricEvent struct {
+			*event
+			Items []Metric        `json:"items,omitempty"`
+			Type  json.RawMessage `json:"type,omitempty"`
+		}
+		return json.Marshal(metricEvent{event: (*event)(e), Items: e.Metrics})
+	}
+
 	// errorEvent is like Event with shadowed fields for customizing JSON
 	// marshaling.
 	type errorEvent struct {
 		*event
-
-		// Timestamp shadows the original Timestamp field. It allows us to
-		// include the timestamp when non-zero and omit it otherwise.
-		Timestamp json.RawMessage `json:"timestamp,omitempty"`
 
 		// The fields below are not part of error events and only make sense to
 		// be sent for transactions. They shadow the respective fields in Event
@@ -607,49 +608,59 @@ func (e *Event) defaultMarshalJSON() ([]byte, error) {
 	}
 
 	x := errorEvent{event: (*event)(e)}
-	if !e.Timestamp.IsZero() {
-		b, err := e.Timestamp.MarshalJSON()
-		if err != nil {
-			return nil, err
-		}
-		x.Timestamp = b
-	}
 	return json.Marshal(x)
 }
 
-func (e *Event) transactionMarshalJSON() ([]byte, error) {
-	// event aliases Event to allow calling json.Marshal without an infinite
-	// loop. It preserves all fields while none of the attached methods.
+func (e *Event) hasPreSerializedFields() bool {
+	return e.serializationSafe
+}
+
+// preSerializedMarshalJSON handles marshaling when MakeSerializationSafe has
+// pre-serialized mutable fields. Shadow structs ensure the json.RawMessage
+// bytes are emitted directly, overriding the original fields.
+func (e *Event) preSerializedMarshalJSON() ([]byte, error) {
 	type event Event
 
-	// transactionEvent is like Event with shadowed fields for customizing JSON
-	// marshaling.
-	type transactionEvent struct {
+	if e.Type == transactionType {
+		type safeTransaction struct {
+			*event
+			Tags        json.RawMessage `json:"tags,omitempty"`
+			Contexts    json.RawMessage `json:"contexts,omitempty"`
+			Breadcrumbs json.RawMessage `json:"breadcrumbs,omitempty"`
+			Exception   json.RawMessage `json:"exception,omitempty"`
+			User        json.RawMessage `json:"user,omitempty"`
+		}
+		return json.Marshal(safeTransaction{
+			event:       (*event)(e),
+			Tags:        e.serializedTags,
+			Contexts:    e.serializedContexts,
+			Breadcrumbs: e.serializedBreadcrumbs,
+			Exception:   e.serializedException,
+			User:        e.serializedUser,
+		})
+	}
+
+	// Error event: also shadow transaction-only fields to exclude them.
+	type safeErrorEvent struct {
 		*event
-
-		// The fields below shadow the respective fields in Event. They allow us
-		// to include timestamps when non-zero and omit them otherwise.
-
-		StartTime json.RawMessage `json:"start_timestamp,omitempty"`
-		Timestamp json.RawMessage `json:"timestamp,omitempty"`
+		Tags            json.RawMessage `json:"tags,omitempty"`
+		Contexts        json.RawMessage `json:"contexts,omitempty"`
+		Breadcrumbs     json.RawMessage `json:"breadcrumbs,omitempty"`
+		Exception       json.RawMessage `json:"exception,omitempty"`
+		User            json.RawMessage `json:"user,omitempty"`
+		Type            json.RawMessage `json:"type,omitempty"`
+		StartTime       json.RawMessage `json:"start_timestamp,omitempty"`
+		Spans           json.RawMessage `json:"spans,omitempty"`
+		TransactionInfo json.RawMessage `json:"transaction_info,omitempty"`
 	}
-
-	x := transactionEvent{event: (*event)(e)}
-	if !e.Timestamp.IsZero() {
-		b, err := e.Timestamp.MarshalJSON()
-		if err != nil {
-			return nil, err
-		}
-		x.Timestamp = b
-	}
-	if !e.StartTime.IsZero() {
-		b, err := e.StartTime.MarshalJSON()
-		if err != nil {
-			return nil, err
-		}
-		x.StartTime = b
-	}
-	return json.Marshal(x)
+	return json.Marshal(safeErrorEvent{
+		event:       (*event)(e),
+		Tags:        e.serializedTags,
+		Contexts:    e.serializedContexts,
+		Breadcrumbs: e.serializedBreadcrumbs,
+		Exception:   e.serializedException,
+		User:        e.serializedUser,
+	})
 }
 
 func (e *Event) checkInMarshalJSON() ([]byte, error) {
@@ -679,7 +690,7 @@ func (e *Event) checkInMarshalJSON() ([]byte, error) {
 
 func (e *Event) toCategory() ratelimit.Category {
 	switch e.Type {
-	case "":
+	case errorType:
 		return ratelimit.CategoryError
 	case transactionType:
 		return ratelimit.CategoryTransaction
@@ -687,6 +698,8 @@ func (e *Event) toCategory() ratelimit.Category {
 		return ratelimit.CategoryLog
 	case checkInType:
 		return ratelimit.CategoryMonitor
+	case traceMetricEvent.Type:
+		return ratelimit.CategoryTraceMetric
 	default:
 		return ratelimit.CategoryUnknown
 	}
@@ -696,7 +709,6 @@ func (e *Event) toCategory() ratelimit.Category {
 func NewEvent() *Event {
 	return &Event{
 		Contexts: make(map[string]Context),
-		Extra:    make(map[string]interface{}),
 		Tags:     make(map[string]string),
 		Modules:  make(map[string]string),
 	}
@@ -723,88 +735,160 @@ type EventHint struct {
 }
 
 type Log struct {
-	Timestamp  time.Time            `json:"timestamp,omitempty"`
-	TraceID    TraceID              `json:"trace_id,omitempty"`
-	Level      LogLevel             `json:"level"`
-	Severity   int                  `json:"severity_number,omitempty"`
-	Body       string               `json:"body,omitempty"`
-	Attributes map[string]Attribute `json:"attributes,omitempty"`
+	Timestamp  time.Time                  `json:"timestamp,omitzero"`
+	TraceID    TraceID                    `json:"trace_id"`
+	SpanID     SpanID                     `json:"span_id,omitzero"`
+	Level      LogLevel                   `json:"level"`
+	Severity   int                        `json:"severity_number,omitempty"`
+	Body       string                     `json:"body"`
+	Attributes map[string]attribute.Value `json:"attributes,omitempty"`
+
+	// approximateSize is the pre-computed approximate size in bytes.
+	approximateSize int
 }
 
-// ToEnvelopeItem converts the Log to a Sentry envelope item for batching.
-func (l *Log) ToEnvelopeItem() (*protocol.EnvelopeItem, error) {
-	type logJSON struct {
-		Timestamp  *float64                         `json:"timestamp,omitempty"`
-		TraceID    string                           `json:"trace_id,omitempty"`
-		Level      string                           `json:"level"`
-		Severity   int                              `json:"severity_number,omitempty"`
-		Body       string                           `json:"body,omitempty"`
-		Attributes map[string]protocol.LogAttribute `json:"attributes,omitempty"`
-	}
+// ApproximateSize returns the pre-computed approximate serialized size in bytes.
+func (l *Log) ApproximateSize() int {
+	return l.approximateSize
+}
 
-	// Convert time.Time to seconds float if set
-	var ts *float64
-	if !l.Timestamp.IsZero() {
-		sec := float64(l.Timestamp.UnixNano()) / 1e9
-		ts = &sec
-	}
-
-	attrs := make(map[string]protocol.LogAttribute, len(l.Attributes))
+// computeLogSize estimates the serialized JSON size of a log entry.
+func computeLogSize(l *Log) int {
+	// Base overhead: timestamp, trace_id, level, severity, JSON structure
+	size := len(l.Body) + 60
 	for k, v := range l.Attributes {
-		attrs[k] = protocol.LogAttribute{Value: v.Value, Type: string(v.Type)}
+		// Key + type/value JSON overhead
+		size += len(k) + 20
+		s := fmt.Sprint(v.AsInterface())
+		size += len(s)
 	}
-
-	logData, err := json.Marshal(logJSON{
-		Timestamp:  ts,
-		TraceID:    l.TraceID.String(),
-		Level:      string(l.Level),
-		Severity:   l.Severity,
-		Body:       l.Body,
-		Attributes: attrs,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return &protocol.EnvelopeItem{
-		Header: &protocol.EnvelopeItemHeader{
-			Type: protocol.EnvelopeItemTypeLog,
-		},
-		Payload: logData,
-	}, nil
+	return size
 }
+
+// MakeSerializationSafe is a no-op for Log, all fields are passed from the safe attribute API.
+func (l *Log) MakeSerializationSafe() {}
 
 // GetCategory returns the rate limit category for logs.
 func (l *Log) GetCategory() ratelimit.Category {
 	return ratelimit.CategoryLog
 }
 
-// GetEventID returns empty string (event ID set when batching).
-func (l *Log) GetEventID() string {
-	return ""
-}
-
-// GetSdkInfo returns nil (SDK info set when batching).
-func (l *Log) GetSdkInfo() *protocol.SdkInfo {
-	return nil
-}
-
-// GetDynamicSamplingContext returns nil (trace context set when batching).
-func (l *Log) GetDynamicSamplingContext() map[string]string {
-	return nil
-}
-
-type AttrType string
+type MetricType string
 
 const (
-	AttributeInvalid AttrType = ""
-	AttributeBool    AttrType = "boolean"
-	AttributeInt     AttrType = "integer"
-	AttributeFloat   AttrType = "double"
-	AttributeString  AttrType = "string"
+	MetricTypeInvalid      MetricType = ""
+	MetricTypeCounter      MetricType = "counter"
+	MetricTypeGauge        MetricType = "gauge"
+	MetricTypeDistribution MetricType = "distribution"
 )
 
-type Attribute struct {
-	Value any      `json:"value"`
-	Type  AttrType `json:"type"`
+type Metric struct {
+	Timestamp  time.Time                  `json:"timestamp,omitzero"`
+	TraceID    TraceID                    `json:"trace_id"`
+	SpanID     SpanID                     `json:"span_id,omitzero"`
+	Type       MetricType                 `json:"type"`
+	Name       string                     `json:"name"`
+	Value      MetricValue                `json:"value"`
+	Unit       string                     `json:"unit,omitempty"`
+	Attributes map[string]attribute.Value `json:"attributes,omitempty"`
+}
+
+// MakeSerializationSafe is a no-op for Metric, all fields are passed from the safe attribute API.
+func (m *Metric) MakeSerializationSafe() {}
+
+// GetCategory returns the rate limit category for metrics.
+func (m *Metric) GetCategory() ratelimit.Category {
+	return ratelimit.CategoryTraceMetric
+}
+
+// MetricValue stores metric values with full precision.
+// It supports int64 (for counters) and float64 (for gauges and distributions).
+type MetricValue struct {
+	value attribute.Value
+}
+
+// Int64MetricValue creates a MetricValue from an int64.
+// Used for counter metrics to preserve full int64 precision.
+func Int64MetricValue(v int64) MetricValue {
+	return MetricValue{value: attribute.Int64Value(v)}
+}
+
+// Float64MetricValue creates a MetricValue from a float64.
+// Used for gauge and distribution metrics.
+func Float64MetricValue(v float64) MetricValue {
+	return MetricValue{value: attribute.Float64Value(v)}
+}
+
+// Type returns the type of the stored value (attribute.INT64 or attribute.FLOAT64).
+func (v MetricValue) Type() attribute.Type {
+	return v.value.Type()
+}
+
+// Int64 returns the value as int64 if it holds an int64.
+// The second return value indicates whether the type matched.
+func (v MetricValue) Int64() (int64, bool) {
+	if v.value.Type() == attribute.INT64 {
+		return v.value.AsInt64(), true
+	}
+	return 0, false
+}
+
+// Float64 returns the value as float64 if it holds a float64.
+// The second return value indicates whether the type matched.
+func (v MetricValue) Float64() (float64, bool) {
+	if v.value.Type() == attribute.FLOAT64 {
+		return v.value.AsFloat64(), true
+	}
+	return 0, false
+}
+
+// AsInterface returns the value as int64 or float64.
+// Use type assertion or type switch to handle the result.
+func (v MetricValue) AsInterface() any {
+	return v.value.AsInterface()
+}
+
+// MarshalJSON serializes the value as a bare number.
+func (v MetricValue) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.value.AsInterface())
+}
+
+// MakeSerializationSafe pre-serializes all fields containing user mutable data to json.RawMessage, preventing race
+// conditions when the event is later serialized on a background goroutine.
+func (e *Event) MakeSerializationSafe() {
+	if len(e.Tags) > 0 {
+		if b, err := json.Marshal(e.Tags); err == nil {
+			e.serializedTags = b
+		}
+	}
+
+	if len(e.Contexts) > 0 {
+		if b, err := json.Marshal(e.Contexts); err == nil {
+			e.serializedContexts = b
+		}
+	}
+
+	if len(e.Breadcrumbs) > 0 {
+		if b, err := json.Marshal(e.Breadcrumbs); err == nil {
+			e.serializedBreadcrumbs = b
+		}
+	}
+
+	if len(e.Exception) > 0 {
+		if b, err := json.Marshal(e.Exception); err == nil {
+			e.serializedException = b
+		}
+	}
+
+	if !e.User.IsEmpty() {
+		if b, err := json.Marshal(e.User); err == nil {
+			e.serializedUser = b
+		}
+	}
+
+	for _, span := range e.Spans {
+		span.makeSerializationSafe()
+	}
+
+	e.serializationSafe = true
 }

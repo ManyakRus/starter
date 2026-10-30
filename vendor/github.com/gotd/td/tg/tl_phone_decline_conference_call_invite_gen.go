@@ -32,10 +32,17 @@ var (
 )
 
 // PhoneDeclineConferenceCallInviteRequest represents TL type `phone.declineConferenceCallInvite#3c479971`.
+// Decline a conference call¹ invite.
+//
+// Links:
+//  1. https://core.telegram.org/api/group-calls#conference-calls
 //
 // See https://core.telegram.org/method/phone.declineConferenceCallInvite for reference.
 type PhoneDeclineConferenceCallInviteRequest struct {
-	// MsgID field of PhoneDeclineConferenceCallInviteRequest.
+	// The ID of the messageActionConferenceCall¹ to decline.
+	//
+	// Links:
+	//  1) https://core.telegram.org/constructor/messageActionConferenceCall
 	MsgID int
 }
 
@@ -161,9 +168,16 @@ func (d *PhoneDeclineConferenceCallInviteRequest) GetMsgID() (value int) {
 }
 
 // PhoneDeclineConferenceCallInvite invokes method phone.declineConferenceCallInvite#3c479971 returning error if any.
+// Decline a conference call¹ invite.
+//
+// Links:
+//  1. https://core.telegram.org/api/group-calls#conference-calls
+//
+// Possible errors:
+//
+//	400 MESSAGE_ID_INVALID: The provided message id is invalid.
 //
 // See https://core.telegram.org/method/phone.declineConferenceCallInvite for reference.
-// Can be used by bots.
 func (c *Client) PhoneDeclineConferenceCallInvite(ctx context.Context, msgid int) (UpdatesClass, error) {
 	var result UpdatesBox
 

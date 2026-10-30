@@ -30,6 +30,14 @@ import (
 	"github.com/minio/minio-go/v7/pkg/s3utils"
 )
 
+// useMultiDeleteForBulkDelete returns true if the client should use
+// multi-object delete API for bulk delete operations. Returns false
+// for endpoints that do not support multi-object delete (e.g., GCS).
+func (c *Client) useMultiDeleteForBulkDelete() bool {
+	// NOTE: GCS does not support multi-object delete API.
+	return !s3utils.IsGoogleEndpoint(*c.endpointURL)
+}
+
 //revive:disable
 
 // Deprecated: BucketOptions will be renamed to RemoveBucketOptions in future versions.
@@ -411,6 +419,12 @@ func hasInvalidXMLChar(str string) bool {
 
 // Generate and call MultiDelete S3 requests based on entries received from the iterator.
 func (c *Client) removeObjectsIter(ctx context.Context, bucketName string, objectsIter iter.Seq[ObjectInfo], yield func(RemoveObjectResult) bool, opts RemoveObjectsOptions) {
+	// NOTE: GCS does not support multi-object delete, use single DELETE requests.
+	if !c.useMultiDeleteForBulkDelete() {
+		c.removeObjectsSingleIter(ctx, bucketName, objectsIter, yield, opts)
+		return
+	}
+
 	maxEntries := 1000
 	urlValues := make(url.Values)
 	urlValues.Set("delete", "")
@@ -549,13 +563,19 @@ func (c *Client) removeObjectsIter(ctx context.Context, bucketName string, objec
 
 // Generate and call MultiDelete S3 requests based on entries received from objectsCh
 func (c *Client) removeObjects(ctx context.Context, bucketName string, objectsCh <-chan ObjectInfo, resultCh chan<- RemoveObjectResult, opts RemoveObjectsOptions) {
+	// Close result channel when delete finishes.
+	defer close(resultCh)
+
+	// NOTE: GCS does not support multi-object delete, use single DELETE requests.
+	if !c.useMultiDeleteForBulkDelete() {
+		c.removeObjectsSingle(ctx, bucketName, objectsCh, resultCh, opts)
+		return
+	}
+
 	maxEntries := 1000
 	finish := false
 	urlValues := make(url.Values)
 	urlValues.Set("delete", "")
-
-	// Close result channel when Multi delete finishes.
-	defer close(resultCh)
 
 	// Loop over entries by 1000 and call MultiDelete requests
 	for !finish {
@@ -640,6 +660,63 @@ func (c *Client) removeObjects(ctx context.Context, bucketName string, objectsCh
 	}
 }
 
+// removeObjectsSingle deletes objects one by one using single DELETE requests.
+// This is used for endpoints that do not support multi-object delete (e.g., GCS).
+func (c *Client) removeObjectsSingle(ctx context.Context, bucketName string, objectsCh <-chan ObjectInfo, resultCh chan<- RemoveObjectResult, opts RemoveObjectsOptions) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case object, ok := <-objectsCh:
+			if !ok {
+				return
+			}
+			removeResult := c.removeObject(ctx, bucketName, object.Key, RemoveObjectOptions{
+				VersionID:        object.VersionID,
+				GovernanceBypass: opts.GovernanceBypass,
+			})
+			if err := removeResult.Err; err != nil {
+				// Version/object does not exist is not an error, ignore and continue.
+				switch ToErrorResponse(err).Code {
+				case NoSuchVersion, NoSuchKey:
+					continue
+				}
+			}
+			select {
+			case <-ctx.Done():
+				return
+			case resultCh <- removeResult:
+			}
+		}
+	}
+}
+
+// removeObjectsSingleIter deletes objects one by one using single DELETE requests.
+// This is used for endpoints that do not support multi-object delete (e.g., GCS).
+func (c *Client) removeObjectsSingleIter(ctx context.Context, bucketName string, objectsIter iter.Seq[ObjectInfo], yield func(RemoveObjectResult) bool, opts RemoveObjectsOptions) {
+	for object := range objectsIter {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+		removeResult := c.removeObject(ctx, bucketName, object.Key, RemoveObjectOptions{
+			VersionID:        object.VersionID,
+			GovernanceBypass: opts.GovernanceBypass,
+		})
+		if err := removeResult.Err; err != nil {
+			// Version/object does not exist is not an error, ignore and continue.
+			switch ToErrorResponse(err).Code {
+			case NoSuchVersion, NoSuchKey:
+				continue
+			}
+		}
+		if !yield(removeResult) {
+			return
+		}
+	}
+}
+
 // RemoveIncompleteUpload aborts an partially uploaded object.
 func (c *Client) RemoveIncompleteUpload(ctx context.Context, bucketName, objectName string) error {
 	// Input validation.
@@ -664,6 +741,15 @@ func (c *Client) RemoveIncompleteUpload(ctx context.Context, bucketName, objectN
 	}
 
 	return nil
+}
+
+// abortFailedUpload aborts the multipart upload of a failed PutObject or
+// ComposeObject. It detaches from ctx so the abort is still sent when the
+// failure was the caller canceling ctx.
+func (c *Client) abortFailedUpload(ctx context.Context, bucketName, objectName, uploadID string) {
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), time.Minute)
+	defer cancel()
+	c.abortMultipartUpload(ctx, bucketName, objectName, uploadID)
 }
 
 // abortMultipartUpload aborts a multipart upload for the given

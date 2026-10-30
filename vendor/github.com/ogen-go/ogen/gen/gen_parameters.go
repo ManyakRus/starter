@@ -75,12 +75,12 @@ func (g *Generator) generateParameters(ctx *genctx, opName string, params []*ope
 				case inEqual && specNameEqual:
 					panic(unreachable(pp.Spec.Name))
 				case inEqual:
-					p.Name, err = pascalSpecial(p.Spec.Name)
+					p.Name, err = g.namer().pascalSpecial(p.Spec.Name)
 					if err != nil {
 						return nil, errors.Wrap(err, "parameter name")
 					}
 
-					pp.Name, err = pascalSpecial(pp.Spec.Name)
+					pp.Name, err = g.namer().pascalSpecial(pp.Spec.Name)
 					if err != nil {
 						return nil, errors.Wrap(err, "parameter name")
 					}
@@ -110,7 +110,7 @@ func (g *Generator) generateParameter(ctx *genctx, opName string, p *openapi.Par
 			return p, nil
 		}
 
-		n, err := pascal(cleanRef(ref))
+		n, err := g.namer().pascal(cleanRef(ref))
 		if err != nil {
 			return nil, errors.Wrapf(err, "parameter type name: %q", ref)
 		}
@@ -130,7 +130,7 @@ func (g *Generator) generateParameter(ctx *genctx, opName string, p *openapi.Par
 
 	if paramTypeName == "" {
 		var err error
-		paramTypeName, err = pascal(opName, p.Name)
+		paramTypeName, err = g.namer().pascal(opName, p.Name)
 		if err != nil {
 			return nil, errors.Wrapf(err, "parameter type name: %q", p.Name)
 		}
@@ -180,7 +180,7 @@ func (g *Generator) generateParameter(ctx *genctx, opName string, p *openapi.Par
 		paramName = p.XOgenName
 	} else {
 		var err error
-		paramName, err = pascalNonEmpty(p.Name)
+		paramName, err = g.namer().pascalNonEmpty(p.Name)
 		if err != nil {
 			return nil, errors.Wrapf(err, "parameter name: %q", p.Name)
 		}
@@ -234,7 +234,7 @@ func isParamAllowed(t *ir.Type, root bool, visited map[*ir.Type]struct{}) error 
 		return nil
 	case ir.KindArray:
 		if !root {
-			return errors.New("nested arrays not allowed")
+			return &ErrNotImplemented{Name: "nested arrays in form parameters"}
 		}
 		return isParamAllowed(t.Item, false, visited)
 	case ir.KindAlias:
@@ -243,7 +243,7 @@ func isParamAllowed(t *ir.Type, root bool, visited map[*ir.Type]struct{}) error 
 		return isParamAllowed(t.PointerTo, root, visited)
 	case ir.KindStruct:
 		if !root {
-			return errors.New("nested objects not allowed")
+			return &ErrNotImplemented{Name: "nested objects in form parameters"}
 		}
 		for _, field := range t.Fields {
 			if err := isParamAllowed(field.Type, false, visited); err != nil {
@@ -274,7 +274,9 @@ func isParamAllowed(t *ir.Type, root bool, visited map[*ir.Type]struct{}) error 
 func isSupportedParamStyle(param *openapi.Parameter) error {
 	switch param.Style {
 	case openapi.QueryStyleSpaceDelimited:
-		return &ErrNotImplemented{Name: "spaceDelimited parameter style"}
+		if s := param.Schema; s != nil && s.Type == jsonschema.Object {
+			return &ErrNotImplemented{Name: "spaceDelimited style for object parameters"}
+		}
 
 	case openapi.QueryStylePipeDelimited:
 		if s := param.Schema; s != nil && s.Type == jsonschema.Object {

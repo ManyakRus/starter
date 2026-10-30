@@ -55,6 +55,9 @@ func encodeErrorResponse(response {{ $.ErrorGoType }}, w http.ResponseWriter, {{
 {{- /*gotype: github.com/ogen-go/ogen/gen.OperationElem*/ -}}{{ $op := $.Operation }}
 {{- /*gotype: github.com/ogen-go/ogen/gen.TemplateConfig*/ -}}{{ $cfg := $.Config }}
 {{- $otel := $cfg.OpenTelemetryEnabled }}
+{{- if $op.HasSSEStreamResponse }}
+	{{- template "response_encoders/operation_sse" . }}
+{{- else }}
 func encode{{ $op.Name }}Response(response {{ $op.Responses.GoType }}, w http.ResponseWriter, {{ if $otel }}span trace.Span{{ end }}) error {
 	{{- $types := $op.ListResponseTypes $otel }}
 	{{- $hasRawResponse := false }}
@@ -88,6 +91,12 @@ func encode{{ $op.Name }}Response(response {{ $op.Responses.GoType }}, w http.Re
 		}
 	{{- end -}}
 }
+{{- end }}
+{{ end }}
+
+{{ define "response_encoders/operation_sse" }}
+{{- /*gotype: github.com/ogen-go/ogen/gen.OperationElem*/ -}}
+{{- sse_server_response_encoding $.Operation }}
 {{ end }}
 
 {{ define "respond" }}
@@ -98,6 +107,9 @@ func encode{{ $op.Name }}Response(response {{ $op.Responses.GoType }}, w http.Re
 {{- end }}
 
 {{- if $.WithHeaders }}
+{{- with $exposeHeaders := $.ExposeHeadersHeader }}
+w.Header().Set("Access-Control-Expose-Headers", {{ $exposeHeaders }})
+{{- end }}
 // Encoding response headers.
 {
 	h := uri.NewHeaderEncoder(w.Header())
@@ -135,19 +147,15 @@ func encode{{ $op.Name }}Response(response {{ $op.Responses.GoType }}, w http.Re
 	}
 	w.WriteHeader(code)
 	{{- if $.OpenTelemetry }}
-	if st := http.StatusText(code); code >= http.StatusBadRequest {
-		span.SetStatus(codes.Error, st)
-	} else {
-		span.SetStatus(codes.Ok, st)
+	if code >= http.StatusInternalServerError {
+		span.SetStatus(codes.Error, http.StatusText(code))
 	}
 	{{- end }}
 {{- else }}
 	w.WriteHeader({{ $.StatusCode }})
 	{{- if $.OpenTelemetry }}
-		{{- if ge .StatusCode 400 }}
+		{{- if ge .StatusCode 500 }}
 			span.SetStatus(codes.Error, http.StatusText({{ $.StatusCode }}))
-		{{- else }}
-			span.SetStatus(codes.Ok, http.StatusText({{ $.StatusCode }}))
 		{{- end }}
 	{{- end }}
 {{- end }}

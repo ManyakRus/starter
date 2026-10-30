@@ -90,22 +90,22 @@ type ChatBannedRights struct {
 	// Links:
 	//  1) https://core.telegram.org/api/channel
 	SendPolls bool
-	// If set, does not allow any user to change the description of a supergroup/chat¹
+	// If set, does not allow a user to change the description of a supergroup/chat¹
 	//
 	// Links:
 	//  1) https://core.telegram.org/api/channel
 	ChangeInfo bool
-	// If set, does not allow any user to invite users in a supergroup/chat¹
+	// If set, does not allow a user to invite users in a supergroup/chat¹
 	//
 	// Links:
 	//  1) https://core.telegram.org/api/channel
 	InviteUsers bool
-	// If set, does not allow any user to pin messages in a supergroup/chat¹
+	// If set, does not allow a user to pin messages in a supergroup/chat¹
 	//
 	// Links:
 	//  1) https://core.telegram.org/api/channel
 	PinMessages bool
-	// If set, does not allow any user to create, delete or modify forum topics »¹.
+	// If set, does not allow a user to create, delete or modify forum topics »¹.
 	//
 	// Links:
 	//  1) https://core.telegram.org/api/forum#forum-topics
@@ -145,6 +145,12 @@ type ChatBannedRights struct {
 	// Links:
 	//  1) https://core.telegram.org/api/channel
 	SendPlain bool
+	// EditRank field of ChatBannedRights.
+	EditRank bool
+	// SendReactions field of ChatBannedRights.
+	SendReactions bool
+	// ManageLinkedPeers field of ChatBannedRights.
+	ManageLinkedPeers bool
 	// Validity of said permissions (it is considered forever any value less then 30 seconds
 	// or more then 366 days).
 	UntilDate int
@@ -228,6 +234,15 @@ func (c *ChatBannedRights) Zero() bool {
 	if !(c.SendPlain == false) {
 		return false
 	}
+	if !(c.EditRank == false) {
+		return false
+	}
+	if !(c.SendReactions == false) {
+		return false
+	}
+	if !(c.ManageLinkedPeers == false) {
+		return false
+	}
 	if !(c.UntilDate == 0) {
 		return false
 	}
@@ -266,6 +281,9 @@ func (c *ChatBannedRights) FillFrom(from interface {
 	GetSendVoices() (value bool)
 	GetSendDocs() (value bool)
 	GetSendPlain() (value bool)
+	GetEditRank() (value bool)
+	GetSendReactions() (value bool)
+	GetManageLinkedPeers() (value bool)
 	GetUntilDate() (value int)
 }) {
 	c.ViewMessages = from.GetViewMessages()
@@ -288,6 +306,9 @@ func (c *ChatBannedRights) FillFrom(from interface {
 	c.SendVoices = from.GetSendVoices()
 	c.SendDocs = from.GetSendDocs()
 	c.SendPlain = from.GetSendPlain()
+	c.EditRank = from.GetEditRank()
+	c.SendReactions = from.GetSendReactions()
+	c.ManageLinkedPeers = from.GetManageLinkedPeers()
 	c.UntilDate = from.GetUntilDate()
 }
 
@@ -415,6 +436,21 @@ func (c *ChatBannedRights) TypeInfo() tdp.Type {
 			Null:       !c.Flags.Has(25),
 		},
 		{
+			Name:       "EditRank",
+			SchemaName: "edit_rank",
+			Null:       !c.Flags.Has(26),
+		},
+		{
+			Name:       "SendReactions",
+			SchemaName: "send_reactions",
+			Null:       !c.Flags.Has(27),
+		},
+		{
+			Name:       "ManageLinkedPeers",
+			SchemaName: "manage_linked_peers",
+			Null:       !c.Flags.Has(28),
+		},
+		{
 			Name:       "UntilDate",
 			SchemaName: "until_date",
 		},
@@ -484,6 +520,15 @@ func (c *ChatBannedRights) SetFlags() {
 	if !(c.SendPlain == false) {
 		c.Flags.Set(25)
 	}
+	if !(c.EditRank == false) {
+		c.Flags.Set(26)
+	}
+	if !(c.SendReactions == false) {
+		c.Flags.Set(27)
+	}
+	if !(c.ManageLinkedPeers == false) {
+		c.Flags.Set(28)
+	}
 }
 
 // Encode implements bin.Encoder.
@@ -549,6 +594,9 @@ func (c *ChatBannedRights) DecodeBare(b *bin.Buffer) error {
 	c.SendVoices = c.Flags.Has(23)
 	c.SendDocs = c.Flags.Has(24)
 	c.SendPlain = c.Flags.Has(25)
+	c.EditRank = c.Flags.Has(26)
+	c.SendReactions = c.Flags.Has(27)
+	c.ManageLinkedPeers = c.Flags.Has(28)
 	{
 		value, err := b.Int()
 		if err != nil {
@@ -937,6 +985,63 @@ func (c *ChatBannedRights) GetSendPlain() (value bool) {
 		return
 	}
 	return c.Flags.Has(25)
+}
+
+// SetEditRank sets value of EditRank conditional field.
+func (c *ChatBannedRights) SetEditRank(value bool) {
+	if value {
+		c.Flags.Set(26)
+		c.EditRank = true
+	} else {
+		c.Flags.Unset(26)
+		c.EditRank = false
+	}
+}
+
+// GetEditRank returns value of EditRank conditional field.
+func (c *ChatBannedRights) GetEditRank() (value bool) {
+	if c == nil {
+		return
+	}
+	return c.Flags.Has(26)
+}
+
+// SetSendReactions sets value of SendReactions conditional field.
+func (c *ChatBannedRights) SetSendReactions(value bool) {
+	if value {
+		c.Flags.Set(27)
+		c.SendReactions = true
+	} else {
+		c.Flags.Unset(27)
+		c.SendReactions = false
+	}
+}
+
+// GetSendReactions returns value of SendReactions conditional field.
+func (c *ChatBannedRights) GetSendReactions() (value bool) {
+	if c == nil {
+		return
+	}
+	return c.Flags.Has(27)
+}
+
+// SetManageLinkedPeers sets value of ManageLinkedPeers conditional field.
+func (c *ChatBannedRights) SetManageLinkedPeers(value bool) {
+	if value {
+		c.Flags.Set(28)
+		c.ManageLinkedPeers = true
+	} else {
+		c.Flags.Unset(28)
+		c.ManageLinkedPeers = false
+	}
+}
+
+// GetManageLinkedPeers returns value of ManageLinkedPeers conditional field.
+func (c *ChatBannedRights) GetManageLinkedPeers() (value bool) {
+	if c == nil {
+		return
+	}
+	return c.Flags.Has(28)
 }
 
 // GetUntilDate returns value of UntilDate field.

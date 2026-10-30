@@ -1,4 +1,4 @@
-# ige
+# ige [![Go Reference](https://img.shields.io/badge/go-pkg-00ADD8)](https://pkg.go.dev/github.com/gotd/ige#section-documentation) [![codecov](https://img.shields.io/codecov/c/github/gotd/ige?label=cover)](https://codecov.io/gh/gotd/ige) [![stable](https://img.shields.io/badge/-stable-brightgreen)](https://go-faster.org/docs/projects/status#stable)
 
 IGE block cipher mode for Go.
 

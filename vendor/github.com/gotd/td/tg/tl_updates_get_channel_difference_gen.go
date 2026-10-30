@@ -332,9 +332,12 @@ func (g *UpdatesGetChannelDifferenceRequest) GetFilterAsNotEmpty() (*ChannelMess
 //	400 CHANNEL_INVALID: The provided channel is invalid.
 //	406 CHANNEL_PRIVATE: You haven't joined this channel/supergroup.
 //	403 CHANNEL_PUBLIC_GROUP_NA: channel/supergroup not available.
+//	400 CHAT_NOT_MODIFIED: No changes were made to chat information because the new information you passed is identical to the current information.
 //	403 CHAT_WRITE_FORBIDDEN: You can't write in this chat.
 //	400 FROM_MESSAGE_BOT_DISABLED: Bots can't use fromMessage min constructors.
+//	400 FROZEN_PARTICIPANT_MISSING: The current account is frozen, and cannot access the specified peer.
 //	400 MSG_ID_INVALID: Invalid message ID provided.
+//	500 NEED_DOC_INVALID:
 //	400 PERSISTENT_TIMESTAMP_EMPTY: Persistent timestamp empty.
 //	400 PERSISTENT_TIMESTAMP_INVALID: Persistent timestamp invalid.
 //	500 PERSISTENT_TIMESTAMP_OUTDATED: Channel internal replication issues, try again later (treat this like an RPC_CALL_FAIL).
@@ -343,7 +346,6 @@ func (g *UpdatesGetChannelDifferenceRequest) GetFilterAsNotEmpty() (*ChannelMess
 //	400 USER_BANNED_IN_CHANNEL: You're banned from sending messages in supergroups/channels.
 //
 // See https://core.telegram.org/method/updates.getChannelDifference for reference.
-// Can be used by bots.
 func (c *Client) UpdatesGetChannelDifference(ctx context.Context, request *UpdatesGetChannelDifferenceRequest) (UpdatesChannelDifferenceClass, error) {
 	var result UpdatesChannelDifferenceBox
 

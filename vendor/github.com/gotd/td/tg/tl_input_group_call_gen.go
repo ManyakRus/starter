@@ -32,7 +32,10 @@ var (
 )
 
 // InputGroupCall represents TL type `inputGroupCall#d8aa840f`.
-// Points to a specific group call
+// Points to a specific group call¹.
+//
+// Links:
+//  1. https://core.telegram.org/api/group-calls
 //
 // See https://core.telegram.org/constructor/inputGroupCall for reference.
 type InputGroupCall struct {
@@ -194,10 +197,17 @@ func (i *InputGroupCall) GetAccessHash() (value int64) {
 }
 
 // InputGroupCallSlug represents TL type `inputGroupCallSlug#fe06823f`.
+// Join a conference call through an invitation link »¹.
+//
+// Links:
+//  1. https://core.telegram.org/api/links#conference-links
 //
 // See https://core.telegram.org/constructor/inputGroupCallSlug for reference.
 type InputGroupCallSlug struct {
-	// Slug field of InputGroupCallSlug.
+	// Slug from the conference link »¹.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/links#conference-links
 	Slug string
 }
 
@@ -328,10 +338,17 @@ func (i *InputGroupCallSlug) GetSlug() (value string) {
 }
 
 // InputGroupCallInviteMessage represents TL type `inputGroupCallInviteMessage#8c10603f`.
+// Join a group call through a messageActionConferenceCall¹ invitation message.
+//
+// Links:
+//  1. https://core.telegram.org/constructor/messageActionConferenceCall
 //
 // See https://core.telegram.org/constructor/inputGroupCallInviteMessage for reference.
 type InputGroupCallInviteMessage struct {
-	// MsgID field of InputGroupCallInviteMessage.
+	// ID of the messageActionConferenceCall¹.
+	//
+	// Links:
+	//  1) https://core.telegram.org/constructor/messageActionConferenceCall
 	MsgID int
 }
 

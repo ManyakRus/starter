@@ -9,7 +9,9 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/atomic"
-	"go.uber.org/zap"
+	"golang.org/x/sync/singleflight"
+
+	"github.com/gotd/log"
 
 	"github.com/gotd/td/bin"
 	"github.com/gotd/td/clock"
@@ -62,9 +64,11 @@ type Client struct {
 	connsCounter   atomic.Int64
 	create         connConstructor        // immutable
 	resolver       dcs.Resolver           // immutable
-	onDead         func()                 // immutable
+	onDead         func(error)            // immutable
 	newConnBackoff func() backoff.BackOff // immutable
 	defaultMode    manager.ConnMode       // immutable
+	// onConnectionState is called on primary connection state change.
+	onConnectionState func(ConnectionState) // immutable
 
 	// Migration state.
 	migrationTimeout time.Duration // immutable
@@ -80,6 +84,9 @@ type Client struct {
 	// Telegram device information.
 	device DeviceConfig // immutable
 
+	// Schema layer requested via invokeWithLayer.
+	layer int // immutable
+
 	// MTProto options.
 	opts mtproto.Options // immutable
 
@@ -90,9 +97,12 @@ type Client struct {
 	testDC bool // immutable
 
 	// Connection state. Guarded by connMux.
-	session     *pool.SyncSession
-	cfg         *manager.AtomicConfig
-	conn        clientConn
+	session *pool.SyncSession
+	cfg     *manager.AtomicConfig
+	conn    clientConn
+	// connChanged is closed and re-created on every primary connection
+	// replacement, letting invokeConn wait for reconnect and retry.
+	connChanged chan struct{}
 	connBackoff atomic.Pointer[backoff.BackOff]
 	connMux     sync.Mutex
 
@@ -102,12 +112,26 @@ type Client struct {
 	// Connections to non-primary DC.
 	subConns    map[int]CloseInvoker
 	subConnsMux sync.Mutex
-	sessions    map[int]*pool.SyncSession
+	// Shared CDN pools and handle references.
+	cdnPools cdnPoolManager
+	// sessions stores regular non-primary DC sessions.
+	sessions map[int]*pool.SyncSession
+	// cdnSessions stores session state for CDN pools separately from regular DCs.
+	cdnSessions map[int]*pool.SyncSession
 	sessionsMux sync.Mutex
+	// CDN public keys loaded from help.getCdnConfig and cached per CDN DC.
+	cdnKeys     []PublicKey
+	cdnKeysByDC map[int][]PublicKey
+	cdnKeysSet  bool
+	// cdnKeysGen increments on cache invalidation to avoid storing stale
+	// singleflight result after fingerprint miss.
+	cdnKeysGen  uint64
+	cdnKeysMux  sync.Mutex
+	cdnKeysLoad singleflight.Group
 
 	// Wrappers for external world, like logs or PRNG.
 	rand  io.Reader   // immutable
-	log   *zap.Logger // immutable
+	log   log.Helper  // immutable
 	clock clock.Clock // immutable
 
 	// Client context. Will be canceled by Run on exit.
@@ -117,6 +141,8 @@ type Client struct {
 	// Client config.
 	appID   int    // immutable
 	appHash string // immutable
+	// allowCDN is the explicit downloader policy copied from Options.AllowCDN.
+	allowCDN bool // immutable
 	// Session storage.
 	storage clientStorage // immutable, nillable
 
@@ -137,6 +163,9 @@ type Client struct {
 
 	// onSelfError is called on error calling Self().
 	onSelfError func(ctx context.Context, err error) error
+
+	// onSelfSuccess is called on success calling Self().
+	onSelfSuccess func(self *tg.User)
 }
 
 // NewClient creates new unstarted client.
@@ -149,9 +178,10 @@ func NewClient(appID int, appHash string, opt Options) *Client {
 	}
 	client := &Client{
 		rand:          opt.Random,
-		log:           opt.Logger,
+		log:           log.For(opt.Logger),
 		appID:         appID,
 		appHash:       appHash,
+		allowCDN:      opt.AllowCDN,
 		updateHandler: opt.UpdateHandler,
 		session: pool.NewSyncSession(pool.Session{
 			DC: opt.DC,
@@ -161,18 +191,21 @@ func NewClient(appID int, appHash string, opt Options) *Client {
 		cfg: manager.NewAtomicConfig(tg.Config{
 			DCOptions: opt.DCList.Options,
 		}),
-		create:           defaultConstructor(),
-		resolver:         opt.Resolver,
-		defaultMode:      mode,
-		newConnBackoff:   opt.ReconnectionBackoff,
-		onDead:           opt.OnDead,
-		clock:            opt.Clock,
-		device:           opt.Device,
-		migrationTimeout: opt.MigrationTimeout,
-		noUpdatesMode:    opt.NoUpdates,
-		mw:               opt.Middlewares,
-		onTransfer:       opt.OnTransfer,
-		onSelfError:      opt.OnSelfError,
+		create:            defaultConstructor(),
+		resolver:          opt.Resolver,
+		defaultMode:       mode,
+		newConnBackoff:    opt.ReconnectionBackoff,
+		onDead:            opt.OnDead,
+		onConnectionState: opt.OnConnectionState,
+		clock:             opt.Clock,
+		device:            opt.Device,
+		layer:             opt.Layer,
+		migrationTimeout:  opt.MigrationTimeout,
+		noUpdatesMode:     opt.NoUpdates,
+		mw:                opt.Middlewares,
+		onTransfer:        opt.OnTransfer,
+		onSelfError:       opt.OnSelfError,
+		onSelfSuccess:     opt.OnSelfSuccess,
 	}
 	if opt.TracerProvider != nil {
 		client.tracer = opt.TracerProvider.Tracer(oteltg.Name)
@@ -181,7 +214,7 @@ func NewClient(appID int, appHash string, opt Options) *Client {
 
 	// Including version into client logger to help with debugging.
 	if v := version.GetVersion(); v != "" {
-		client.log = client.log.With(zap.String("v", v))
+		client.log = client.log.With(log.String("v", v))
 	}
 
 	if opt.SessionStorage != nil {
@@ -202,7 +235,10 @@ func NewClient(appID int, appHash string, opt Options) *Client {
 		MessageID:         opt.MessageID,
 		ExchangeTimeout:   opt.ExchangeTimeout,
 		DialTimeout:       opt.DialTimeout,
-		Clock:             opt.Clock,
+		// Forward PFS toggles into low-level mtproto connection.
+		EnablePFS:  opt.EnablePFS,
+		TempKeyTTL: opt.TempKeyTTL,
+		Clock:      opt.Clock,
 
 		Types: getTypesMapping(),
 
@@ -211,6 +247,16 @@ func NewClient(appID int, appHash string, opt Options) *Client {
 	client.conn = client.createPrimaryConn(nil)
 
 	return client
+}
+
+// replaceConn replaces primary connection and notifies invokers waiting for
+// reconnection (see invokeConn).
+//
+// Caller must hold connMux.
+func (c *Client) replaceConn(conn clientConn) {
+	c.conn = conn
+	close(c.connChanged)
+	c.connChanged = make(chan struct{})
 }
 
 // init sets fields which needs explicit initialization, like maps or channels.
@@ -222,10 +268,19 @@ func (c *Client) init() {
 		c.cfg = manager.NewAtomicConfig(tg.Config{})
 	}
 	c.ready = tdsync.NewResetReady()
+	c.connChanged = make(chan struct{})
 	c.restart = make(chan struct{})
 	c.migration = make(chan struct{}, 1)
 	c.sessions = map[int]*pool.SyncSession{}
+	c.cdnSessions = map[int]*pool.SyncSession{}
 	c.subConns = map[int]CloseInvoker{}
+	c.cdnPools = newCDNPoolManager()
+	// CDN key cache is cold-started and filled lazily on first CDN pool create.
+	c.cdnKeys = nil
+	c.cdnKeysByDC = nil
+	c.cdnKeysSet = false
+	c.cdnKeysGen = 0
+	c.cdnKeysLoad = singleflight.Group{}
 	c.invoker = chainMiddlewares(InvokeFunc(c.invokeDirect), c.mw...)
 	c.tg = tg.NewClient(c.invoker)
 }

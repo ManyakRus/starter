@@ -1,21 +1,29 @@
 # Microsoft's official Go MSSQL driver
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/microsoft/go-mssqldb.svg)](https://pkg.go.dev/github.com/microsoft/go-mssqldb)
-[![Build status](https://ci.appveyor.com/api/projects/status/jrln8cs62wj9i0a2?svg=true)](https://ci.appveyor.com/project/microsoft/go-mssqldb)
-[![codecov](https://codecov.io/gh/microsoft/go-mssqldb/branch/master/graph/badge.svg)](https://codecov.io/gh/microsoft/go-mssqldb)
+[![Build Status](https://github.com/microsoft/go-mssqldb/actions/workflows/pr-validation.yml/badge.svg?branch=main)](https://github.com/microsoft/go-mssqldb/actions/workflows/pr-validation.yml)
+[![codecov](https://codecov.io/gh/microsoft/go-mssqldb/branch/main/graph/badge.svg)](https://codecov.io/gh/microsoft/go-mssqldb)
+[![Open in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/microsoft/go-mssqldb)
 
+A pure Go database/sql driver for Microsoft SQL Server and Azure SQL Database. This is the recommended Go SQL Server driver for connecting Go applications to SQL Server, Azure SQL Database, Azure SQL Managed Instance, and Azure Synapse Analytics.
+
+**Keywords:** golang sql server driver, go mssql, azure sql go, go-mssqldb, sql server golang, mssql go driver
 
 ## Install
 
-Requires Go 1.17 or above.
+Requires Go 1.25 or above.
 
-Install with `go install github.com/microsoft/go-mssqldb@latest`.
+Install with `go get github.com/microsoft/go-mssqldb@latest`.
 
 ## Connection Parameters and DSN
 
 The recommended connection string uses a URL format:
 `sqlserver://username:password@host/instance?param1=value&param2=value`
 Other supported formats are listed below.
+
+All connection string parameters are case-insensitive. Providing the same parameter more than once with different casing (e.g., `TrustServerCertificate` and `trustservercertificate`) will result in a parse error.
+
+Boolean parameters accept `1`, `t`, `T`, `TRUE`, `true`, `True`, `0`, `f`, `F`, `FALSE`, `false`, `False`, and additionally `yes` and `no` in any casing.
 
 ### Common parameters
 
@@ -43,6 +51,7 @@ Other supported formats are listed below.
 * `keepAlive` - in seconds; 0 to disable (default is 30)
 * `failoverpartner` - host or host\instance (default is no partner).
 * `failoverport` - used only when there is no instance in failoverpartner (default 1433)
+* `failoverpartnerspn` - The kerberos SPN (Service Principal Name) for the failover partner. Default is MSSQLSvc/host:(port|instance), matching how the driver generates `ServerSPN`.
 * `packet size` - in bytes; 512 to 32767 (default is 4096)
   * Encrypted connections have a maximum packet size of 16383 bytes
   * Further information on usage: <https://docs.microsoft.com/en-us/sql/database-engine/configure-windows/configure-the-network-packet-size-server-configuration-option>
@@ -58,8 +67,9 @@ Other supported formats are listed below.
 * `TrustServerCertificate`
   * false - Server certificate is checked. Default is false if encrypt is specified.
   * true - Server certificate is not checked. Default is true if encrypt is not specified. If trust server certificate is true, driver accepts any certificate presented by the server and any host name in that certificate. In this mode, TLS is susceptible to man-in-the-middle attacks. This should be used only for testing.
-* `certificate` - The file that contains the public key certificate of the CA that signed the SQL Server certificate. The specified certificate overrides the go platform specific CA certificates. Currently, certificates of PEM type are supported.
-* `hostNameInCertificate` - Specifies the Common Name (CN) in the server certificate. Default value is the server host.
+* `certificate` - The file path to a certificate authority (CA) certificate or server certificate for traditional X.509 chain validation. The specified certificate overrides the go platform specific CA certificates. The driver validates the certificate chain, expiry, and hostname. Supports PEM and DER formats.
+* `serverCertificate` - The file path to a server certificate for byte-for-byte comparison validation (new in v1.9.6). The driver validates that the server's certificate exactly matches this file, skipping chain validation, expiry checks, and hostname validation. This matches Microsoft.Data.SqlClient behavior. Cannot be used with `certificate` or `hostnameincertificate`. Supports PEM and DER formats.
+* `hostNameInCertificate` - Specifies the Common Name (CN) in the server certificate. Default value is the server host. Used with the `certificate` parameter, not applicable for `serverCertificate`.
 * `tlsmin` - Specifies the minimum TLS version for negotiating encryption with the server. Recognized values are `1.0`, `1.1`, `1.2`, `1.3`. If not set to a recognized value the default value for the `tls` package will be used. The default is currently `1.2`. 
 * `ServerSPN` - The kerberos SPN (Service Principal Name) for the server. Default is MSSQLSvc/host:port.
 * `Workstation ID` - The workstation name (default is the host name)
@@ -172,6 +182,8 @@ For further information on usage:
 * `sqlserver://username@host/instance?krb5-configfile=path/to/file&krb5-credcachefile=/path/to/cache`
     * `sqlserver://username@host/instance?krb5-configfile=path/to/file&krb5-realm=domain.com&krb5-keytabfile=/path/to/keytabfile`
 
+  For URL connection strings, percent-encode special characters in the username or password. Windows authentication usernames use `%5C` for the domain separator, for example `sqlserver://DOMAIN%5Cusername:password@host`. In ADO and ODBC connection strings, use the literal `DOMAIN\username` form.
+
 2. ADO: `key=value` pairs separated by `;`. Values can contain `;` and other special characters by enclosing them in double quotes. Leading and trailing whitespace is ignored.
      Examples:
 
@@ -183,11 +195,23 @@ For further information on usage:
     * `server=localhost;user id=sa;database=master;app name=MyAppName;krb5-configfile=path/to/file;krb5-realm=domain.com;krb5-keytabfile=path/to/keytabfile;authenticator=krb5`
 
 
-    ADO strings support synonyms for database, app name, user id, and server
+    ADO strings support synonyms for common connection parameters:
     * server <= addr, address, network address, data source
     * user id <= user, uid
+    * password <= pwd
     * database <= initial catalog
-    * app name <= application name
+    * app name <= application name, app
+    * connection timeout <= connect timeout, timeout
+    * failoverpartner <= failover partner
+    * failoverpartnerspn <= failover partner spn
+    * applicationintent <= application intent
+    * trustservercertificate <= trust server certificate
+    * multisubnetfailover <= multi subnet failover
+    * hostnameincertificate <= host name in certificate
+    * serverspn <= server spn
+    * servercertificate <= server certificate
+    * workstation id <= wsid
+    * columnencryption <= column encryption setting
 
 3. ODBC: Prefix with `odbc`, `key=value` pairs separated by `;`. Allow `;` by wrapping
     values in `{}`. Examples:
@@ -203,6 +227,66 @@ For further information on usage:
     * `odbc:server=localhost;user id=sa;password={foo}}bar}` // Escaped `} with`}}`, password is "foo}bar"
     * `odbc:server=localhost;user id=sa;database=master;app name=MyAppName;krb5-configfile=path/to/file;krb5-credcachefile=path/to/cache;authenticator=krb5`
     * `odbc:server=localhost;user id=sa;database=master;app name=MyAppName;krb5-configfile=path/to/file;krb5-realm=domain.com;krb5-keytabfile=path/to/keytabfile;authenticator=krb5`
+
+### Using server certificates with encryption
+
+The driver supports two ways to validate server certificates:
+
+#### 1. `serverCertificate` - Byte-for-byte certificate comparison (New in v1.9.6)
+
+When you provide a `serverCertificate` parameter, the driver validates the server by comparing the certificate bytes exactly with the provided file. This:
+- Skips hostname validation (allows mismatched hostnames)
+- Skips certificate chain validation and expiry checks
+- Only accepts connections where the server's certificate exactly matches the provided file
+- Matches the behavior of Microsoft.Data.SqlClient
+
+This is useful when:
+- The server's DNS name doesn't match the certificate CN/SAN
+- You want to validate against a specific certificate without hostname validation
+- You're connecting through proxies or load balancers with different hostnames
+
+**Restrictions**: `serverCertificate` cannot be used with `certificate` or `hostnameincertificate` parameters.
+
+#### 2. `certificate` - Traditional chain validation (Backward compatible)
+
+The `certificate` parameter performs standard X.509 certificate chain validation:
+- Validates the certificate chain against the provided CA certificate(s)
+- Checks certificate expiry and validity
+- Enforces hostname validation (unless `hostnameincertificate` is used)
+
+#### Obtaining the server certificate
+
+You can obtain a copy of the server's certificate using OpenSSL:
+
+```bash
+openssl s_client -connect server:1433 -showcerts </dev/null 2>/dev/null | openssl x509 -outform PEM > cert.pem
+```
+
+#### Example connection strings
+
+Using `serverCertificate` for byte-comparison (skips hostname validation):
+
+URL format:
+```
+sqlserver://username:password@host:1433?database=master&encrypt=true&serverCertificate=/path/to/cert.pem
+```
+
+ADO format:
+```
+server=myserver;user id=sa;password=mypass;database=master;encrypt=true;serverCertificate=/path/to/cert.pem
+```
+
+Using `certificate` for traditional chain validation:
+
+URL format:
+```
+sqlserver://username:password@host:1433?database=master&encrypt=true&certificate=/path/to/ca.pem
+```
+
+ADO format:
+```
+server=myserver;user id=sa;password=mypass;database=master;encrypt=true;certificate=/path/to/ca.pem
+```
 
 ### Azure Active Directory authentication
 
@@ -586,10 +670,42 @@ More information: <http://support.microsoft.com/kb/2653857>
 
 * Bulk copy does not yet support encrypting column values using Always Encrypted. Tracked in [#127](https://github.com/microsoft/go-mssqldb/issues/127)
 
+# Development
+
+## Quick Start with Dev Containers
+
+The easiest way to develop and test the driver is using the included [Dev Container](.devcontainer/README.md), which works with:
+
+- **VS Code**: Install the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers), open this repo, and click "Reopen in Container"
+- **GitHub Codespaces**: Click the "Code" button on GitHub and select "Create codespace"
+
+The dev container includes:
+- Go 1.25 with all development tools
+- SQL Server 2025 ready for integration tests
+- [go-sqlcmd](https://github.com/microsoft/go-sqlcmd) (uses this driver!)
+- Pre-configured environment variables for tests
+
+Once inside the container, run the full test suite:
+```bash
+go test ./...
+```
+
+## Manual Setup
+
+If you prefer to set up your environment manually, see [CONTRIBUTING.md](./CONTRIBUTING.md) for requirements. You'll need:
+- Go 1.25 or higher
+- Access to a SQL Server instance (2017 or later recommended)
+
 # Contributing
 This project is a fork of [https://github.com/denisenkom/go-mssqldb](https://github.com/denisenkom/go-mssqldb) and welcomes new and previous contributors. For more informaton on contributing to this project, please see [Contributing](./CONTRIBUTING.md).
 
 For more information on the roadmap for go-mssqldb, [project plans](https://github.com/microsoft/go-mssqldb/projects) are available for viewing and discussion.
+
+## Documentation
+
+- [Wiki](https://github.com/microsoft/go-mssqldb/wiki) - Additional guides and troubleshooting
+- [pkg.go.dev](https://pkg.go.dev/github.com/microsoft/go-mssqldb) - API reference documentation
+- [Examples](./examples) - Sample code for common scenarios
 
 
 # Microsoft Open Source Code of Conduct

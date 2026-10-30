@@ -7,7 +7,8 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/go-faster/errors"
 	"go.uber.org/multierr"
-	"go.uber.org/zap"
+
+	"github.com/gotd/log"
 
 	"github.com/gotd/td/exchange"
 	"github.com/gotd/td/tdsync"
@@ -16,8 +17,34 @@ import (
 )
 
 func (c *Client) runUntilRestart(ctx context.Context) error {
+	c.notifyConnectionState(ConnectionStateConnecting)
+
+	c.connMux.Lock()
+	conn := c.conn
+	c.connMux.Unlock()
+
 	g := tdsync.NewCancellableGroup(ctx)
-	g.Go(c.conn.Run)
+	g.Go(conn.Run)
+
+	// Report readiness of this primary connection only.
+	//
+	// We must not emit this from the shared OnSession handler, because it is
+	// also used by pool/sub connections (including same-DC ones), which would
+	// produce spurious ready events. Waiting on the connection's own Ready
+	// channel scopes the event strictly to the primary connection.
+	if c.onConnectionState != nil {
+		if ready, ok := conn.(interface{ Ready() <-chan struct{} }); ok {
+			g.Go(func(ctx context.Context) error {
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				case <-ready.Ready():
+					c.notifyConnectionState(ConnectionStateReady)
+					return nil
+				}
+			})
+		}
+	}
 
 	// If we don't need updates, so there is no reason to subscribe for it.
 	if !c.noUpdatesMode {
@@ -28,7 +55,7 @@ func (c *Client) runUntilRestart(ctx context.Context) error {
 			if err != nil {
 				// Ignore unauthorized errors.
 				if !auth.IsUnauthorized(err) {
-					c.log.Warn("Got error on self", zap.Error(err))
+					c.log.Warn(ctx, "Got error on self", log.Error(err))
 				}
 				if h := c.onSelfError; h != nil {
 					// Help with https://github.com/gotd/td/issues/1458.
@@ -39,7 +66,11 @@ func (c *Client) runUntilRestart(ctx context.Context) error {
 				return nil
 			}
 
-			c.log.Info("Got self", zap.String("username", self.Username))
+			if h := c.onSelfSuccess; h != nil {
+				h(self)
+			}
+
+			c.log.Info(ctx, "Got self", log.String("username", self.Username))
 			return nil
 		})
 	}
@@ -49,7 +80,7 @@ func (c *Client) runUntilRestart(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-c.restart:
-			c.log.Debug("Restart triggered")
+			c.log.Debug(ctx, "Restart triggered")
 			// Should call cancel() to cancel group.
 			g.Cancel()
 
@@ -83,6 +114,7 @@ func (c *Client) reconnectUntilClosed(ctx context.Context) error {
 	return backoff.RetryNotify(func() error {
 		if err := c.runUntilRestart(ctx); err != nil {
 			if c.isPermanentError(err) {
+				c.log.Warn(ctx, "Permanent connection error, will not reconnect", log.Error(err))
 				return backoff.Permanent(err)
 			}
 			return err
@@ -90,16 +122,20 @@ func (c *Client) reconnectUntilClosed(ctx context.Context) error {
 
 		return nil
 	}, b, func(err error, timeout time.Duration) {
-		c.log.Info("Restarting connection", zap.Error(err), zap.Duration("backoff", timeout))
+		c.log.Info(context.Background(), "Restarting connection", log.Error(err), log.Duration("backoff", timeout))
+		c.notifyConnectionState(ConnectionStateDisconnected)
 
 		c.connMux.Lock()
-		c.conn = c.createPrimaryConn(nil)
+		// Some PFS errors require dropping persisted keys before recreating conn.
+		c.handlePrimaryConnDead(err)
+		c.replaceConn(c.createPrimaryConn(nil))
 		c.connMux.Unlock()
+		c.log.Debug(context.Background(), "Primary connection replaced after restart")
 	})
 }
 
 func (c *Client) onReady() {
-	c.log.Debug("Ready")
+	c.log.Debug(context.Background(), "Ready")
 	c.ready.Signal()
 
 	if b := c.connBackoff.Load(); b != nil {
@@ -134,20 +170,34 @@ func (c *Client) Run(ctx context.Context, f func(ctx context.Context) error) (er
 	// handling or pool creation.
 	c.ctx, c.cancel = context.WithCancel(ctx)
 
-	c.log.Info("Starting")
-	defer c.log.Info("Closed")
-	// Cancel client on exit.
-	defer c.cancel()
+	c.log.Info(ctx, "Starting")
+	defer c.log.Info(context.Background(), "Closed")
 	defer func() {
 		c.subConnsMux.Lock()
-		defer c.subConnsMux.Unlock()
-
+		subConns := make([]CloseInvoker, 0, len(c.subConns))
 		for _, conn := range c.subConns {
+			subConns = append(subConns, conn)
+		}
+		c.subConns = map[int]CloseInvoker{}
+		c.subConnsMux.Unlock()
+
+		cdnConns := c.cdnPools.drain()
+
+		// Close outside locks to avoid lock inversion with pool callbacks.
+		for _, conn := range subConns {
+			if closeErr := conn.Close(); !errors.Is(closeErr, context.Canceled) {
+				multierr.AppendInto(&err, closeErr)
+			}
+		}
+		for _, conn := range cdnConns {
 			if closeErr := conn.Close(); !errors.Is(closeErr, context.Canceled) {
 				multierr.AppendInto(&err, closeErr)
 			}
 		}
 	}()
+	// Cancel client before deferred cleanup snapshot to block concurrent pool
+	// creations while we are draining cached connections.
+	defer c.cancel()
 
 	c.resetReady()
 	if err := c.restoreConnection(ctx); err != nil {
@@ -175,7 +225,7 @@ func (c *Client) Run(ctx context.Context, f func(ctx context.Context) error) (er
 			}
 			// Should call cancel() to cancel ctx.
 			// This will terminate c.conn.Run().
-			c.log.Debug("Callback returned, stopping")
+			c.log.Debug(ctx, "Callback returned, stopping")
 			g.Cancel()
 			return nil
 		}

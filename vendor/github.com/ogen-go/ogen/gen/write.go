@@ -66,6 +66,21 @@ func (t TemplateConfig) AnyInstrumentable() bool {
 	return t.OpenTelemetryEnabled && (t.AnyClientEnabled() || t.AnyServerEnabled())
 }
 
+// AnyClientSSEEnabled returns true if any generated client operation may return SSE.
+func (t TemplateConfig) AnyClientSSEEnabled() bool {
+	for _, op := range t.Operations {
+		if op.HasSSEStreamResponse() {
+			return true
+		}
+	}
+	for _, op := range t.Webhooks {
+		if op.HasSSEStreamResponse() {
+			return true
+		}
+	}
+	return false
+}
+
 // ErrorGoType returns Go type of error.
 func (t TemplateConfig) ErrorGoType() string {
 	typ := t.ErrorType
@@ -180,7 +195,7 @@ type writer struct {
 const generatorBufSize = 1024 * 1024
 
 var bufPool = sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		var b bytes.Buffer
 		b.Grow(generatorBufSize)
 		b.Reset()
@@ -251,9 +266,16 @@ func (g *Generator) WriteSource(fs FileSystem, pkgName string) error {
 		types[name] = t
 	}
 
-	features, err := g.opt.Features.Build()
-	if err != nil {
-		return errors.Wrap(err, "build feature set")
+	// NewGenerator resolves the feature set once and stores it on g. Fall back to
+	// building it here for Generators constructed directly (e.g. in tests), so
+	// g.opt.Features is still honored when g.features was never populated.
+	features := g.features
+	if features == nil {
+		var err error
+		features, err = g.opt.Features.Build()
+		if err != nil {
+			return errors.Wrap(err, "build feature set")
+		}
 	}
 	cfg := TemplateConfig{
 		Package:                   pkgName,
@@ -288,10 +310,13 @@ func (g *Generator) WriteSource(fs FileSystem, pkgName string) error {
 			panic(unreachable("error type must have exactly one content type"))
 		}
 		for _, media := range cfg.Error.Contents {
-			if media.Encoding.JSON() {
+			if isJSONLikeEncoding(media.Encoding) {
 				cfg.ErrorType = media.Type
 				break
 			}
+		}
+		if cfg.ErrorType == nil {
+			panic(unreachable("error type must have JSON-like content type"))
 		}
 	}
 
@@ -320,7 +345,7 @@ func (g *Generator) WriteSource(fs FileSystem, pkgName string) error {
 		{"schemas", true},
 		{"uri", g.hasURIObjectParams()},
 		{"json", g.hasJSON()},
-		{"interfaces", (genClient || genServer) && len(interfaces) > 0},
+		{"interfaces", len(interfaces) > 0},
 		{"parameters", g.hasParams()},
 		{"handlers", genServer},
 		{"request_encoders", genClient},
@@ -342,7 +367,6 @@ func (g *Generator) WriteSource(fs FileSystem, pkgName string) error {
 		{"labeler", features.Has(OgenOtel) && genServer},
 		{"operations", (genClient || genServer)},
 	} {
-		t := t
 		if !t.enabled {
 			continue
 		}

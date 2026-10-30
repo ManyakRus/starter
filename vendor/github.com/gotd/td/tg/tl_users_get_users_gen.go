@@ -190,6 +190,7 @@ func (g *UsersGetUsersRequest) MapID() (value InputUserClassArray) {
 // Possible errors:
 //
 //	400 CHANNEL_INVALID: The provided channel is invalid.
+//	400 CHANNEL_MONOFORUM_UNSUPPORTED: Monoforums do not support this feature.
 //	400 CHANNEL_PRIVATE: You haven't joined this channel/supergroup.
 //	400 FROM_MESSAGE_BOT_DISABLED: Bots can't use fromMessage min constructors.
 //	400 MSG_ID_INVALID: Invalid message ID provided.
@@ -197,7 +198,6 @@ func (g *UsersGetUsersRequest) MapID() (value InputUserClassArray) {
 //	400 USER_BANNED_IN_CHANNEL: You're banned from sending messages in supergroups/channels.
 //
 // See https://core.telegram.org/method/users.getUsers for reference.
-// Can be used by bots.
 func (c *Client) UsersGetUsers(ctx context.Context, id []InputUserClass) ([]UserClass, error) {
 	var result UserClassVector
 

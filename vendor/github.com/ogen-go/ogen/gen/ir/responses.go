@@ -2,8 +2,13 @@ package ir
 
 import (
 	"fmt"
+	"net/textproto"
 	"slices"
+	"strconv"
 	"strings"
+
+	"github.com/ogen-go/ogen/internal/xmaps"
+	"github.com/ogen-go/ogen/openapi"
 )
 
 type ResponseInfo struct {
@@ -16,6 +21,7 @@ type ResponseInfo struct {
 	WithHeaders    bool
 	JSONStreaming  bool
 	RawResponse    bool
+	SSEEventShape  openapi.SSEEventShape
 	OpenTelemetry  bool
 	Headers        map[string]*Parameter
 }
@@ -27,6 +33,34 @@ func (r ResponseInfo) ContentTypeHeader() string {
 	default:
 		return fmt.Sprintf(`%q`, r.ContentType)
 	}
+}
+
+var corsSimpleResponseHeaders = map[string]struct{}{
+	"Cache-Control":    {},
+	"Content-Language": {},
+	"Content-Length":   {},
+	"Content-Type":     {},
+	"Expires":          {},
+	"Last-Modified":    {},
+	"Pragma":           {},
+}
+
+func (r ResponseInfo) ExposeHeadersHeader() string {
+	var hdr strings.Builder
+	for _, header := range xmaps.SortedKeys(r.Headers) {
+		header := textproto.CanonicalMIMEHeaderKey(header)
+		if _, ok := corsSimpleResponseHeaders[header]; ok {
+			continue
+		}
+		if hdr.Len() != 0 {
+			hdr.WriteByte(',')
+		}
+		hdr.WriteString(header)
+	}
+	if hdr.Len() == 0 {
+		return ""
+	}
+	return strconv.Quote(hdr.String())
 }
 
 func sortResponseInfos(result []ResponseInfo) {
@@ -73,6 +107,7 @@ func (op *Operation) ListResponseTypes(otel bool) []ResponseInfo {
 				WithHeaders:    resp.WithHeaders,
 				JSONStreaming:  media.JSONStreaming,
 				RawResponse:    media.RawResponse,
+				SSEEventShape:  media.SSEEventShape,
 				OpenTelemetry:  otel,
 				Headers:        resp.Headers,
 			})
@@ -104,6 +139,7 @@ func (op *Operation) ListResponseTypes(otel bool) []ResponseInfo {
 				WithHeaders:    resp.WithHeaders,
 				JSONStreaming:  media.JSONStreaming,
 				RawResponse:    media.RawResponse,
+				SSEEventShape:  media.SSEEventShape,
 				OpenTelemetry:  otel,
 				Headers:        resp.Headers,
 			})
@@ -130,6 +166,7 @@ func (op *Operation) ListResponseTypes(otel bool) []ResponseInfo {
 				WithHeaders:    def.WithHeaders,
 				JSONStreaming:  media.JSONStreaming,
 				RawResponse:    media.RawResponse,
+				SSEEventShape:  media.SSEEventShape,
 				OpenTelemetry:  otel,
 				Headers:        def.Headers,
 			})

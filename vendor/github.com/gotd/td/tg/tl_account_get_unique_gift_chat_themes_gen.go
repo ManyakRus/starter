@@ -32,14 +32,33 @@ var (
 )
 
 // AccountGetUniqueGiftChatThemesRequest represents TL type `account.getUniqueGiftChatThemes#e42ce9c9`.
+// Obtain all chat themes »¹ associated to owned collectible gifts »².
+//
+// Links:
+//  1. https://core.telegram.org/api/themes#chat-themes
+//  2. https://core.telegram.org/api/gifts#collectible-gifts
 //
 // See https://core.telegram.org/method/account.getUniqueGiftChatThemes for reference.
 type AccountGetUniqueGiftChatThemesRequest struct {
-	// Offset field of AccountGetUniqueGiftChatThemesRequest.
+	// Offset for pagination¹, intially an empty string, then equal the value of the last
+	// returned account.chatThemes².next_offset (if set).
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/offsets
+	//  2) https://core.telegram.org/constructor/account.chatThemes
 	Offset string
-	// Limit field of AccountGetUniqueGiftChatThemesRequest.
+	// Maximum number of results to return, see pagination¹. Note that the server may return
+	// less than limit results, even if the actual number of remaining results is >= limit,
+	// paginate to fetch them all.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/offsets
 	Limit int
-	// Hash field of AccountGetUniqueGiftChatThemesRequest.
+	// Hash from a previously returned account.chatThemes¹ constructor, to avoid returning
+	// any result if the theme list hasn't changed.
+	//
+	// Links:
+	//  1) https://core.telegram.org/constructor/account.chatThemes
 	Hash int64
 }
 
@@ -215,6 +234,11 @@ func (g *AccountGetUniqueGiftChatThemesRequest) GetHash() (value int64) {
 }
 
 // AccountGetUniqueGiftChatThemes invokes method account.getUniqueGiftChatThemes#e42ce9c9 returning error if any.
+// Obtain all chat themes »¹ associated to owned collectible gifts »².
+//
+// Links:
+//  1. https://core.telegram.org/api/themes#chat-themes
+//  2. https://core.telegram.org/api/gifts#collectible-gifts
 //
 // See https://core.telegram.org/method/account.getUniqueGiftChatThemes for reference.
 func (c *Client) AccountGetUniqueGiftChatThemes(ctx context.Context, request *AccountGetUniqueGiftChatThemesRequest) (AccountChatThemesClass, error) {

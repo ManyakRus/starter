@@ -61,6 +61,8 @@ func (s *{{ if $op.WebhookInfo }}Webhook{{ end }}Server) handle{{ $op.Name }}Req
 		{{- else }}
 		var otelAttrs []attribute.KeyValue
 		{{- end }}
+		// Add attributes from config.
+		otelAttrs = append(otelAttrs, s.cfg.Attributes...)
 
 		// Start a span for this request.
 		ctx, span := s.cfg.Tracer.Start(r.Context(), {{ $op.Name }}Operation,
@@ -86,7 +88,7 @@ func (s *{{ if $op.WebhookInfo }}Webhook{{ end }}Server) handle{{ $op.Name }}Req
 			if code != 0 {
 				codeAttr := semconv.HTTPResponseStatusCode(code)
 				attrs = append(attrs, codeAttr)
-				span.SetAttributes(codeAttr)
+				span.SetAttributes(attrs...)
 			}
 			attrOpt := metric.WithAttributes(attrs...)
 
@@ -268,7 +270,11 @@ func (s *{{ if $op.WebhookInfo }}Webhook{{ end }}Server) handle{{ $op.Name }}Req
 			mreq,
 			{{ if $op.Params }}unpack{{ $op.Name }}Params{{ else }}nil{{ end }},
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
+				{{- if $op.OperationGroup }}
+				err = s.h.{{ $op.Name }}(ctx{{ if $op.Request }}, request{{ end }}{{ if $op.Params }}, params{{ end }}, w)
+				{{- else }}
 				err = s.rh.{{ $op.Name }}(ctx{{ if $op.Request }}, request{{ end }}{{ if $op.Params }}, params{{ end }}, w)
+				{{- end }}
 				return response, err
 			},
 		)
@@ -289,7 +295,11 @@ func (s *{{ if $op.WebhookInfo }}Webhook{{ end }}Server) handle{{ $op.Name }}Req
 		{{- end }}
 	} else {
 		{{- if $op.HasRawResponse }}
+		{{- if $op.OperationGroup }}
+		err = s.h.{{ $op.Name }}(ctx{{ if $op.Request }}, request{{ end }}{{ if $op.Params }}, params{{ end }}, w)
+		{{- else }}
 		err = s.rh.{{ $op.Name }}(ctx{{ if $op.Request }}, request{{ end }}{{ if $op.Params }}, params{{ end }}, w)
+		{{- end }}
 		{{- else }}
 		{{- if $op.Responses.DoPass }}response,{{ end }} err = s.h.{{ $op.Name }}(ctx{{ if $op.Request }}, request{{ end }}{{ if $op.Params }}, params{{ end }})
 		{{- end }}

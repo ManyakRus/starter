@@ -72,7 +72,7 @@ func (p *bboltIterator) Value() storage.Peer {
 func (s PeerStorage) Iterate(ctx context.Context) (storage.PeerIterator, error) {
 	tx, err := s.bbolt.Begin(false)
 	if err != nil {
-		return nil, errors.Errorf("create tx: %w", err)
+		return nil, errors.Wrap(err, "create tx")
 	}
 
 	bucket := tx.Bucket(s.bucket)
@@ -93,22 +93,22 @@ func (s PeerStorage) add(associated []string, value storage.Peer) (err error) {
 	err = s.bbolt.Batch(func(tx *bbolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists(s.bucket)
 		if err != nil {
-			return errors.Errorf("create bucket: %w", err)
+			return errors.Wrap(err, "create bucket")
 		}
 
 		data, err := json.Marshal(value)
 		if err != nil {
-			return errors.Errorf("marshal: %w", err)
+			return errors.Wrap(err, "marshal")
 		}
 		id := storage.KeyFromPeer(value).Bytes(nil)
 
 		if err := bucket.Put(id, data); err != nil {
-			return errors.Errorf("set id <-> data: %w", err)
+			return errors.Wrap(err, "set id <-> data")
 		}
 
 		for _, key := range associated {
 			if err := bucket.Put([]byte(key), id); err != nil {
-				return errors.Errorf("set key <-> id: %w", err)
+				return errors.Wrap(err, "set key <-> id")
 			}
 		}
 
@@ -139,7 +139,7 @@ func (s PeerStorage) Find(ctx context.Context, key storage.PeerKey) (p storage.P
 			if errors.Is(err, storage.ErrPeerUnmarshalMustInvalidate) {
 				return storage.ErrPeerNotFound
 			}
-			return errors.Errorf("unmarshal: %w", err)
+			return errors.Wrap(err, "unmarshal")
 		}
 		return nil
 	})
@@ -173,7 +173,7 @@ func (s PeerStorage) Resolve(ctx context.Context, key string) (p storage.Peer, r
 			if errors.Is(err, storage.ErrPeerUnmarshalMustInvalidate) {
 				return storage.ErrPeerNotFound
 			}
-			return errors.Errorf("unmarshal: %w", err)
+			return errors.Wrap(err, "unmarshal")
 		}
 		return nil
 	})

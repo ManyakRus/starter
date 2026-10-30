@@ -32,7 +32,8 @@ var (
 )
 
 // MessagesGetHistoryRequest represents TL type `messages.getHistory#4423e6c5`.
-// Returns the conversation history with one interlocutor / within a chat
+// Returns the message history in a peer.
+// Results are ordered by date (descending).
 //
 // See https://core.telegram.org/method/messages.getHistory for reference.
 type MessagesGetHistoryRequest struct {
@@ -361,16 +362,21 @@ func (g *MessagesGetHistoryRequest) GetHash() (value int64) {
 }
 
 // MessagesGetHistory invokes method messages.getHistory#4423e6c5 returning error if any.
-// Returns the conversation history with one interlocutor / within a chat
+// Returns the message history in a peer.
+// Results are ordered by date (descending).
 //
 // Possible errors:
 //
 //	400 CHANNEL_INVALID: The provided channel is invalid.
 //	406 CHANNEL_PRIVATE: You haven't joined this channel/supergroup.
 //	400 CHAT_ID_INVALID: The provided chat id is invalid.
+//	400 CHAT_NOT_MODIFIED: No changes were made to chat information because the new information you passed is identical to the current information.
+//	400 FROZEN_PARTICIPANT_MISSING: The current account is frozen, and cannot access the specified peer.
 //	400 MSG_ID_INVALID: Invalid message ID provided.
+//	500 NEED_DOC_INVALID:
 //	400 PEER_ID_INVALID: The provided peer id is invalid.
 //	400 TAKEOUT_INVALID: The specified takeout ID is invalid.
+//	500 VOLUME_MOVE_INVALID:
 //
 // See https://core.telegram.org/method/messages.getHistory for reference.
 func (c *Client) MessagesGetHistory(ctx context.Context, request *MessagesGetHistoryRequest) (MessagesMessagesClass, error) {

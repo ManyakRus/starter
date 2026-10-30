@@ -240,7 +240,7 @@ func (m *MessageEmpty) GetPeerID() (value PeerClass, ok bool) {
 	return m.PeerID, true
 }
 
-// Message represents TL type `message#9cb490e9`.
+// Message represents TL type `message#7600b9d3`.
 // A message
 //
 // See https://core.telegram.org/constructor/message for reference.
@@ -283,7 +283,7 @@ type Message struct {
 	// should be kept in RAM, et cetera).
 	//
 	// Links:
-	//  1) https://telegram.org/blog/protected-content-delete-by-date-and-more
+	//  1) https://telegram.org/blog/content-protection-delete-by-date-and-more
 	Noforwards bool
 	// If set, any eventual webpage preview will be shown on top of the message instead of at
 	// the bottom.
@@ -308,9 +308,16 @@ type Message struct {
 	//  2) https://core.telegram.org/api/scheduled-messages
 	//  3) https://core.telegram.org/api/files#video-qualities
 	VideoProcessingPending bool
-	// PaidSuggestedPostStars field of Message.
+	// Set if this is a suggested channel post »¹ that was paid using Telegram Stars².
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/suggested-posts
+	//  2) https://core.telegram.org/api/stars
 	PaidSuggestedPostStars bool
-	// PaidSuggestedPostTon field of Message.
+	// Set if this is a suggested channel post »¹ that was paid using Toncoins.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/suggested-posts
 	PaidSuggestedPostTon bool
 	// ID of the message
 	ID int
@@ -334,14 +341,26 @@ type Message struct {
 	//
 	// Use SetFromBoostsApplied and GetFromBoostsApplied helpers.
 	FromBoostsApplied int
+	// Only in supergroups »¹ (never basic groups, where this information is contained
+	// elsewhere »²), contains the sender's tag »³.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/channel#supergroups
+	//  2) https://core.telegram.org/api/rank
+	//  3) https://core.telegram.org/api/rank
+	//
+	// Use SetFromRank and GetFromRank helpers.
+	FromRank string
 	// Peer ID, the chat where this message was sent
 	PeerID PeerClass
-	// Messages fetched from a saved messages dialog »¹ will have peer=inputPeerSelf² and
-	// the saved_peer_id flag set to the ID of the saved dialog.
+	// Messages from a saved messages dialog »¹ will have peer=inputPeerSelf² and the
+	// saved_peer_id flag set to the ID of the saved dialog.Messages from a monoforum »³
+	// will have peer=ID of the monoforum and the saved_peer_id flag set to the ID of a topic.
 	//
 	// Links:
 	//  1) https://core.telegram.org/api/saved-messages
 	//  2) https://core.telegram.org/constructor/inputPeerSelf
+	//  3) https://core.telegram.org/api/monoforum
 	//
 	// Use SetSavedPeerID and GetSavedPeerID helpers.
 	SavedPeerID PeerClass
@@ -357,10 +376,14 @@ type Message struct {
 	// of the user.
 	//
 	// Links:
-	//  1) https://core.telegram.org/api/business#connected-bots
+	//  1) https://core.telegram.org/api/bots/connected-business-bots
 	//
 	// Use SetViaBusinessBotID and GetViaBusinessBotID helpers.
 	ViaBusinessBotID int64
+	// GuestchatViaFrom field of Message.
+	//
+	// Use SetGuestchatViaFrom and GetGuestchatViaFrom helpers.
+	GuestchatViaFrom PeerClass
 	// Reply information
 	//
 	// Use SetReplyTo and GetReplyTo helpers.
@@ -451,19 +474,38 @@ type Message struct {
 	//
 	// Use SetFactcheck and GetFactcheck helpers.
 	Factcheck FactCheck
-	// ReportDeliveryUntilDate field of Message.
+	// Used for Telegram Gateway verification messages¹: if set and the current unixtime is
+	// bigger than the specified unixtime, invoke messages.reportMessagesDelivery² passing
+	// the ID and the peer of this message as soon as it is received by the client
+	// (optionally batching requests for the same peer).
+	//
+	// Links:
+	//  1) https://telegram.org/blog/star-messages-gateway-2-0-and-more#save-even-more-on-user-verification
+	//  2) https://core.telegram.org/method/messages.reportMessagesDelivery
 	//
 	// Use SetReportDeliveryUntilDate and GetReportDeliveryUntilDate helpers.
 	ReportDeliveryUntilDate int
-	// PaidMessageStars field of Message.
+	// The amount of stars the sender has paid to send the message, see here »¹ for more
+	// info.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/paid-messages
 	//
 	// Use SetPaidMessageStars and GetPaidMessageStars helpers.
 	PaidMessageStars int64
-	// SuggestedPost field of Message.
+	// Used to suggest a post to a channel, see here »¹ for more info on the full flow.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/suggested-posts
 	//
 	// Use SetSuggestedPost and GetSuggestedPost helpers.
 	SuggestedPost SuggestedPost
-	// ScheduleRepeatPeriod field of Message.
+	// Once sent, this message will be automatically re-scheduled to be re-sent again this
+	// many seconds in the future, see here »¹ for more info on repeating scheduled
+	// messages.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/scheduled-messages#repeating-scheduled-messages
 	//
 	// Use SetScheduleRepeatPeriod and GetScheduleRepeatPeriod helpers.
 	ScheduleRepeatPeriod int
@@ -471,10 +513,14 @@ type Message struct {
 	//
 	// Use SetSummaryFromLanguage and GetSummaryFromLanguage helpers.
 	SummaryFromLanguage string
+	// RichMessage field of Message.
+	//
+	// Use SetRichMessage and GetRichMessage helpers.
+	RichMessage RichMessage
 }
 
 // MessageTypeID is TL type id of Message.
-const MessageTypeID = 0x9cb490e9
+const MessageTypeID = 0x7600b9d3
 
 // construct implements constructor of MessageClass.
 func (m Message) construct() MessageClass { return &m }
@@ -553,6 +599,9 @@ func (m *Message) Zero() bool {
 	if !(m.FromBoostsApplied == 0) {
 		return false
 	}
+	if !(m.FromRank == "") {
+		return false
+	}
 	if !(m.PeerID == nil) {
 		return false
 	}
@@ -566,6 +615,9 @@ func (m *Message) Zero() bool {
 		return false
 	}
 	if !(m.ViaBusinessBotID == 0) {
+		return false
+	}
+	if !(m.GuestchatViaFrom == nil) {
 		return false
 	}
 	if !(m.ReplyTo == nil) {
@@ -637,6 +689,9 @@ func (m *Message) Zero() bool {
 	if !(m.SummaryFromLanguage == "") {
 		return false
 	}
+	if !(m.RichMessage.Zero()) {
+		return false
+	}
 
 	return true
 }
@@ -670,11 +725,13 @@ func (m *Message) FillFrom(from interface {
 	GetID() (value int)
 	GetFromID() (value PeerClass, ok bool)
 	GetFromBoostsApplied() (value int, ok bool)
+	GetFromRank() (value string, ok bool)
 	GetPeerID() (value PeerClass)
 	GetSavedPeerID() (value PeerClass, ok bool)
 	GetFwdFrom() (value MessageFwdHeader, ok bool)
 	GetViaBotID() (value int64, ok bool)
 	GetViaBusinessBotID() (value int64, ok bool)
+	GetGuestchatViaFrom() (value PeerClass, ok bool)
 	GetReplyTo() (value MessageReplyHeaderClass, ok bool)
 	GetDate() (value int)
 	GetMessage() (value string)
@@ -698,6 +755,7 @@ func (m *Message) FillFrom(from interface {
 	GetSuggestedPost() (value SuggestedPost, ok bool)
 	GetScheduleRepeatPeriod() (value int, ok bool)
 	GetSummaryFromLanguage() (value string, ok bool)
+	GetRichMessage() (value RichMessage, ok bool)
 }) {
 	m.Out = from.GetOut()
 	m.Mentioned = from.GetMentioned()
@@ -723,6 +781,10 @@ func (m *Message) FillFrom(from interface {
 		m.FromBoostsApplied = val
 	}
 
+	if val, ok := from.GetFromRank(); ok {
+		m.FromRank = val
+	}
+
 	m.PeerID = from.GetPeerID()
 	if val, ok := from.GetSavedPeerID(); ok {
 		m.SavedPeerID = val
@@ -738,6 +800,10 @@ func (m *Message) FillFrom(from interface {
 
 	if val, ok := from.GetViaBusinessBotID(); ok {
 		m.ViaBusinessBotID = val
+	}
+
+	if val, ok := from.GetGuestchatViaFrom(); ok {
+		m.GuestchatViaFrom = val
 	}
 
 	if val, ok := from.GetReplyTo(); ok {
@@ -824,6 +890,10 @@ func (m *Message) FillFrom(from interface {
 
 	if val, ok := from.GetSummaryFromLanguage(); ok {
 		m.SummaryFromLanguage = val
+	}
+
+	if val, ok := from.GetRichMessage(); ok {
+		m.RichMessage = val
 	}
 
 }
@@ -941,6 +1011,11 @@ func (m *Message) TypeInfo() tdp.Type {
 			Null:       !m.Flags.Has(29),
 		},
 		{
+			Name:       "FromRank",
+			SchemaName: "from_rank",
+			Null:       !m.Flags2.Has(12),
+		},
+		{
 			Name:       "PeerID",
 			SchemaName: "peer_id",
 		},
@@ -963,6 +1038,11 @@ func (m *Message) TypeInfo() tdp.Type {
 			Name:       "ViaBusinessBotID",
 			SchemaName: "via_business_bot_id",
 			Null:       !m.Flags2.Has(0),
+		},
+		{
+			Name:       "GuestchatViaFrom",
+			SchemaName: "guestchat_via_from",
+			Null:       !m.Flags2.Has(19),
 		},
 		{
 			Name:       "ReplyTo",
@@ -1077,6 +1157,11 @@ func (m *Message) TypeInfo() tdp.Type {
 			SchemaName: "summary_from_language",
 			Null:       !m.Flags2.Has(11),
 		},
+		{
+			Name:       "RichMessage",
+			SchemaName: "rich_message",
+			Null:       !m.Flags2.Has(13),
+		},
 	}
 	return typ
 }
@@ -1134,6 +1219,9 @@ func (m *Message) SetFlags() {
 	if !(m.FromBoostsApplied == 0) {
 		m.Flags.Set(29)
 	}
+	if !(m.FromRank == "") {
+		m.Flags2.Set(12)
+	}
 	if !(m.SavedPeerID == nil) {
 		m.Flags.Set(28)
 	}
@@ -1145,6 +1233,9 @@ func (m *Message) SetFlags() {
 	}
 	if !(m.ViaBusinessBotID == 0) {
 		m.Flags2.Set(0)
+	}
+	if !(m.GuestchatViaFrom == nil) {
+		m.Flags2.Set(19)
 	}
 	if !(m.ReplyTo == nil) {
 		m.Flags.Set(3)
@@ -1209,12 +1300,15 @@ func (m *Message) SetFlags() {
 	if !(m.SummaryFromLanguage == "") {
 		m.Flags2.Set(11)
 	}
+	if !(m.RichMessage.Zero()) {
+		m.Flags2.Set(13)
+	}
 }
 
 // Encode implements bin.Encoder.
 func (m *Message) Encode(b *bin.Buffer) error {
 	if m == nil {
-		return fmt.Errorf("can't encode message#9cb490e9 as nil")
+		return fmt.Errorf("can't encode message#7600b9d3 as nil")
 	}
 	b.PutID(MessageTypeID)
 	return m.EncodeBare(b)
@@ -1223,44 +1317,47 @@ func (m *Message) Encode(b *bin.Buffer) error {
 // EncodeBare implements bin.BareEncoder.
 func (m *Message) EncodeBare(b *bin.Buffer) error {
 	if m == nil {
-		return fmt.Errorf("can't encode message#9cb490e9 as nil")
+		return fmt.Errorf("can't encode message#7600b9d3 as nil")
 	}
 	m.SetFlags()
 	if err := m.Flags.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode message#9cb490e9: field flags: %w", err)
+		return fmt.Errorf("unable to encode message#7600b9d3: field flags: %w", err)
 	}
 	if err := m.Flags2.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode message#9cb490e9: field flags2: %w", err)
+		return fmt.Errorf("unable to encode message#7600b9d3: field flags2: %w", err)
 	}
 	b.PutInt(m.ID)
 	if m.Flags.Has(8) {
 		if m.FromID == nil {
-			return fmt.Errorf("unable to encode message#9cb490e9: field from_id is nil")
+			return fmt.Errorf("unable to encode message#7600b9d3: field from_id is nil")
 		}
 		if err := m.FromID.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode message#9cb490e9: field from_id: %w", err)
+			return fmt.Errorf("unable to encode message#7600b9d3: field from_id: %w", err)
 		}
 	}
 	if m.Flags.Has(29) {
 		b.PutInt(m.FromBoostsApplied)
 	}
+	if m.Flags2.Has(12) {
+		b.PutString(m.FromRank)
+	}
 	if m.PeerID == nil {
-		return fmt.Errorf("unable to encode message#9cb490e9: field peer_id is nil")
+		return fmt.Errorf("unable to encode message#7600b9d3: field peer_id is nil")
 	}
 	if err := m.PeerID.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode message#9cb490e9: field peer_id: %w", err)
+		return fmt.Errorf("unable to encode message#7600b9d3: field peer_id: %w", err)
 	}
 	if m.Flags.Has(28) {
 		if m.SavedPeerID == nil {
-			return fmt.Errorf("unable to encode message#9cb490e9: field saved_peer_id is nil")
+			return fmt.Errorf("unable to encode message#7600b9d3: field saved_peer_id is nil")
 		}
 		if err := m.SavedPeerID.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode message#9cb490e9: field saved_peer_id: %w", err)
+			return fmt.Errorf("unable to encode message#7600b9d3: field saved_peer_id: %w", err)
 		}
 	}
 	if m.Flags.Has(2) {
 		if err := m.FwdFrom.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode message#9cb490e9: field fwd_from: %w", err)
+			return fmt.Errorf("unable to encode message#7600b9d3: field fwd_from: %w", err)
 		}
 	}
 	if m.Flags.Has(11) {
@@ -1269,40 +1366,48 @@ func (m *Message) EncodeBare(b *bin.Buffer) error {
 	if m.Flags2.Has(0) {
 		b.PutLong(m.ViaBusinessBotID)
 	}
+	if m.Flags2.Has(19) {
+		if m.GuestchatViaFrom == nil {
+			return fmt.Errorf("unable to encode message#7600b9d3: field guestchat_via_from is nil")
+		}
+		if err := m.GuestchatViaFrom.Encode(b); err != nil {
+			return fmt.Errorf("unable to encode message#7600b9d3: field guestchat_via_from: %w", err)
+		}
+	}
 	if m.Flags.Has(3) {
 		if m.ReplyTo == nil {
-			return fmt.Errorf("unable to encode message#9cb490e9: field reply_to is nil")
+			return fmt.Errorf("unable to encode message#7600b9d3: field reply_to is nil")
 		}
 		if err := m.ReplyTo.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode message#9cb490e9: field reply_to: %w", err)
+			return fmt.Errorf("unable to encode message#7600b9d3: field reply_to: %w", err)
 		}
 	}
 	b.PutInt(m.Date)
 	b.PutString(m.Message)
 	if m.Flags.Has(9) {
 		if m.Media == nil {
-			return fmt.Errorf("unable to encode message#9cb490e9: field media is nil")
+			return fmt.Errorf("unable to encode message#7600b9d3: field media is nil")
 		}
 		if err := m.Media.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode message#9cb490e9: field media: %w", err)
+			return fmt.Errorf("unable to encode message#7600b9d3: field media: %w", err)
 		}
 	}
 	if m.Flags.Has(6) {
 		if m.ReplyMarkup == nil {
-			return fmt.Errorf("unable to encode message#9cb490e9: field reply_markup is nil")
+			return fmt.Errorf("unable to encode message#7600b9d3: field reply_markup is nil")
 		}
 		if err := m.ReplyMarkup.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode message#9cb490e9: field reply_markup: %w", err)
+			return fmt.Errorf("unable to encode message#7600b9d3: field reply_markup: %w", err)
 		}
 	}
 	if m.Flags.Has(7) {
 		b.PutVectorHeader(len(m.Entities))
 		for idx, v := range m.Entities {
 			if v == nil {
-				return fmt.Errorf("unable to encode message#9cb490e9: field entities element with index %d is nil", idx)
+				return fmt.Errorf("unable to encode message#7600b9d3: field entities element with index %d is nil", idx)
 			}
 			if err := v.Encode(b); err != nil {
-				return fmt.Errorf("unable to encode message#9cb490e9: field entities element with index %d: %w", idx, err)
+				return fmt.Errorf("unable to encode message#7600b9d3: field entities element with index %d: %w", idx, err)
 			}
 		}
 	}
@@ -1314,7 +1419,7 @@ func (m *Message) EncodeBare(b *bin.Buffer) error {
 	}
 	if m.Flags.Has(23) {
 		if err := m.Replies.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode message#9cb490e9: field replies: %w", err)
+			return fmt.Errorf("unable to encode message#7600b9d3: field replies: %w", err)
 		}
 	}
 	if m.Flags.Has(15) {
@@ -1328,14 +1433,14 @@ func (m *Message) EncodeBare(b *bin.Buffer) error {
 	}
 	if m.Flags.Has(20) {
 		if err := m.Reactions.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode message#9cb490e9: field reactions: %w", err)
+			return fmt.Errorf("unable to encode message#7600b9d3: field reactions: %w", err)
 		}
 	}
 	if m.Flags.Has(22) {
 		b.PutVectorHeader(len(m.RestrictionReason))
 		for idx, v := range m.RestrictionReason {
 			if err := v.Encode(b); err != nil {
-				return fmt.Errorf("unable to encode message#9cb490e9: field restriction_reason element with index %d: %w", idx, err)
+				return fmt.Errorf("unable to encode message#7600b9d3: field restriction_reason element with index %d: %w", idx, err)
 			}
 		}
 	}
@@ -1350,7 +1455,7 @@ func (m *Message) EncodeBare(b *bin.Buffer) error {
 	}
 	if m.Flags2.Has(3) {
 		if err := m.Factcheck.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode message#9cb490e9: field factcheck: %w", err)
+			return fmt.Errorf("unable to encode message#7600b9d3: field factcheck: %w", err)
 		}
 	}
 	if m.Flags2.Has(5) {
@@ -1361,7 +1466,7 @@ func (m *Message) EncodeBare(b *bin.Buffer) error {
 	}
 	if m.Flags2.Has(7) {
 		if err := m.SuggestedPost.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode message#9cb490e9: field suggested_post: %w", err)
+			return fmt.Errorf("unable to encode message#7600b9d3: field suggested_post: %w", err)
 		}
 	}
 	if m.Flags2.Has(10) {
@@ -1370,16 +1475,21 @@ func (m *Message) EncodeBare(b *bin.Buffer) error {
 	if m.Flags2.Has(11) {
 		b.PutString(m.SummaryFromLanguage)
 	}
+	if m.Flags2.Has(13) {
+		if err := m.RichMessage.Encode(b); err != nil {
+			return fmt.Errorf("unable to encode message#7600b9d3: field rich_message: %w", err)
+		}
+	}
 	return nil
 }
 
 // Decode implements bin.Decoder.
 func (m *Message) Decode(b *bin.Buffer) error {
 	if m == nil {
-		return fmt.Errorf("can't decode message#9cb490e9 to nil")
+		return fmt.Errorf("can't decode message#7600b9d3 to nil")
 	}
 	if err := b.ConsumeID(MessageTypeID); err != nil {
-		return fmt.Errorf("unable to decode message#9cb490e9: %w", err)
+		return fmt.Errorf("unable to decode message#7600b9d3: %w", err)
 	}
 	return m.DecodeBare(b)
 }
@@ -1387,11 +1497,11 @@ func (m *Message) Decode(b *bin.Buffer) error {
 // DecodeBare implements bin.BareDecoder.
 func (m *Message) DecodeBare(b *bin.Buffer) error {
 	if m == nil {
-		return fmt.Errorf("can't decode message#9cb490e9 to nil")
+		return fmt.Errorf("can't decode message#7600b9d3 to nil")
 	}
 	{
 		if err := m.Flags.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field flags: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field flags: %w", err)
 		}
 	}
 	m.Out = m.Flags.Has(1)
@@ -1407,7 +1517,7 @@ func (m *Message) DecodeBare(b *bin.Buffer) error {
 	m.InvertMedia = m.Flags.Has(27)
 	{
 		if err := m.Flags2.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field flags2: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field flags2: %w", err)
 		}
 	}
 	m.Offline = m.Flags2.Has(1)
@@ -1417,96 +1527,110 @@ func (m *Message) DecodeBare(b *bin.Buffer) error {
 	{
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field id: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field id: %w", err)
 		}
 		m.ID = value
 	}
 	if m.Flags.Has(8) {
 		value, err := DecodePeer(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field from_id: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field from_id: %w", err)
 		}
 		m.FromID = value
 	}
 	if m.Flags.Has(29) {
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field from_boosts_applied: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field from_boosts_applied: %w", err)
 		}
 		m.FromBoostsApplied = value
+	}
+	if m.Flags2.Has(12) {
+		value, err := b.String()
+		if err != nil {
+			return fmt.Errorf("unable to decode message#7600b9d3: field from_rank: %w", err)
+		}
+		m.FromRank = value
 	}
 	{
 		value, err := DecodePeer(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field peer_id: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field peer_id: %w", err)
 		}
 		m.PeerID = value
 	}
 	if m.Flags.Has(28) {
 		value, err := DecodePeer(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field saved_peer_id: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field saved_peer_id: %w", err)
 		}
 		m.SavedPeerID = value
 	}
 	if m.Flags.Has(2) {
 		if err := m.FwdFrom.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field fwd_from: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field fwd_from: %w", err)
 		}
 	}
 	if m.Flags.Has(11) {
 		value, err := b.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field via_bot_id: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field via_bot_id: %w", err)
 		}
 		m.ViaBotID = value
 	}
 	if m.Flags2.Has(0) {
 		value, err := b.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field via_business_bot_id: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field via_business_bot_id: %w", err)
 		}
 		m.ViaBusinessBotID = value
+	}
+	if m.Flags2.Has(19) {
+		value, err := DecodePeer(b)
+		if err != nil {
+			return fmt.Errorf("unable to decode message#7600b9d3: field guestchat_via_from: %w", err)
+		}
+		m.GuestchatViaFrom = value
 	}
 	if m.Flags.Has(3) {
 		value, err := DecodeMessageReplyHeader(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field reply_to: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field reply_to: %w", err)
 		}
 		m.ReplyTo = value
 	}
 	{
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field date: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field date: %w", err)
 		}
 		m.Date = value
 	}
 	{
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field message: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field message: %w", err)
 		}
 		m.Message = value
 	}
 	if m.Flags.Has(9) {
 		value, err := DecodeMessageMedia(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field media: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field media: %w", err)
 		}
 		m.Media = value
 	}
 	if m.Flags.Has(6) {
 		value, err := DecodeReplyMarkup(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field reply_markup: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field reply_markup: %w", err)
 		}
 		m.ReplyMarkup = value
 	}
 	if m.Flags.Has(7) {
 		headerLen, err := b.VectorHeader()
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field entities: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field entities: %w", err)
 		}
 
 		if headerLen > 0 {
@@ -1515,7 +1639,7 @@ func (m *Message) DecodeBare(b *bin.Buffer) error {
 		for idx := 0; idx < headerLen; idx++ {
 			value, err := DecodeMessageEntity(b)
 			if err != nil {
-				return fmt.Errorf("unable to decode message#9cb490e9: field entities: %w", err)
+				return fmt.Errorf("unable to decode message#7600b9d3: field entities: %w", err)
 			}
 			m.Entities = append(m.Entities, value)
 		}
@@ -1523,52 +1647,52 @@ func (m *Message) DecodeBare(b *bin.Buffer) error {
 	if m.Flags.Has(10) {
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field views: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field views: %w", err)
 		}
 		m.Views = value
 	}
 	if m.Flags.Has(10) {
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field forwards: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field forwards: %w", err)
 		}
 		m.Forwards = value
 	}
 	if m.Flags.Has(23) {
 		if err := m.Replies.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field replies: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field replies: %w", err)
 		}
 	}
 	if m.Flags.Has(15) {
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field edit_date: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field edit_date: %w", err)
 		}
 		m.EditDate = value
 	}
 	if m.Flags.Has(16) {
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field post_author: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field post_author: %w", err)
 		}
 		m.PostAuthor = value
 	}
 	if m.Flags.Has(17) {
 		value, err := b.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field grouped_id: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field grouped_id: %w", err)
 		}
 		m.GroupedID = value
 	}
 	if m.Flags.Has(20) {
 		if err := m.Reactions.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field reactions: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field reactions: %w", err)
 		}
 	}
 	if m.Flags.Has(22) {
 		headerLen, err := b.VectorHeader()
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field restriction_reason: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field restriction_reason: %w", err)
 		}
 
 		if headerLen > 0 {
@@ -1577,7 +1701,7 @@ func (m *Message) DecodeBare(b *bin.Buffer) error {
 		for idx := 0; idx < headerLen; idx++ {
 			var value RestrictionReason
 			if err := value.Decode(b); err != nil {
-				return fmt.Errorf("unable to decode message#9cb490e9: field restriction_reason: %w", err)
+				return fmt.Errorf("unable to decode message#7600b9d3: field restriction_reason: %w", err)
 			}
 			m.RestrictionReason = append(m.RestrictionReason, value)
 		}
@@ -1585,61 +1709,66 @@ func (m *Message) DecodeBare(b *bin.Buffer) error {
 	if m.Flags.Has(25) {
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field ttl_period: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field ttl_period: %w", err)
 		}
 		m.TTLPeriod = value
 	}
 	if m.Flags.Has(30) {
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field quick_reply_shortcut_id: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field quick_reply_shortcut_id: %w", err)
 		}
 		m.QuickReplyShortcutID = value
 	}
 	if m.Flags2.Has(2) {
 		value, err := b.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field effect: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field effect: %w", err)
 		}
 		m.Effect = value
 	}
 	if m.Flags2.Has(3) {
 		if err := m.Factcheck.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field factcheck: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field factcheck: %w", err)
 		}
 	}
 	if m.Flags2.Has(5) {
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field report_delivery_until_date: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field report_delivery_until_date: %w", err)
 		}
 		m.ReportDeliveryUntilDate = value
 	}
 	if m.Flags2.Has(6) {
 		value, err := b.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field paid_message_stars: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field paid_message_stars: %w", err)
 		}
 		m.PaidMessageStars = value
 	}
 	if m.Flags2.Has(7) {
 		if err := m.SuggestedPost.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field suggested_post: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field suggested_post: %w", err)
 		}
 	}
 	if m.Flags2.Has(10) {
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field schedule_repeat_period: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field schedule_repeat_period: %w", err)
 		}
 		m.ScheduleRepeatPeriod = value
 	}
 	if m.Flags2.Has(11) {
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode message#9cb490e9: field summary_from_language: %w", err)
+			return fmt.Errorf("unable to decode message#7600b9d3: field summary_from_language: %w", err)
 		}
 		m.SummaryFromLanguage = value
+	}
+	if m.Flags2.Has(13) {
+		if err := m.RichMessage.Decode(b); err != nil {
+			return fmt.Errorf("unable to decode message#7600b9d3: field rich_message: %w", err)
+		}
 	}
 	return nil
 }
@@ -1973,6 +2102,24 @@ func (m *Message) GetFromBoostsApplied() (value int, ok bool) {
 	return m.FromBoostsApplied, true
 }
 
+// SetFromRank sets value of FromRank conditional field.
+func (m *Message) SetFromRank(value string) {
+	m.Flags2.Set(12)
+	m.FromRank = value
+}
+
+// GetFromRank returns value of FromRank conditional field and
+// boolean which is true if field was set.
+func (m *Message) GetFromRank() (value string, ok bool) {
+	if m == nil {
+		return
+	}
+	if !m.Flags2.Has(12) {
+		return value, false
+	}
+	return m.FromRank, true
+}
+
 // GetPeerID returns value of PeerID field.
 func (m *Message) GetPeerID() (value PeerClass) {
 	if m == nil {
@@ -2051,6 +2198,24 @@ func (m *Message) GetViaBusinessBotID() (value int64, ok bool) {
 		return value, false
 	}
 	return m.ViaBusinessBotID, true
+}
+
+// SetGuestchatViaFrom sets value of GuestchatViaFrom conditional field.
+func (m *Message) SetGuestchatViaFrom(value PeerClass) {
+	m.Flags2.Set(19)
+	m.GuestchatViaFrom = value
+}
+
+// GetGuestchatViaFrom returns value of GuestchatViaFrom conditional field and
+// boolean which is true if field was set.
+func (m *Message) GetGuestchatViaFrom() (value PeerClass, ok bool) {
+	if m == nil {
+		return
+	}
+	if !m.Flags2.Has(19) {
+		return value, false
+	}
+	return m.GuestchatViaFrom, true
 }
 
 // SetReplyTo sets value of ReplyTo conditional field.
@@ -2447,6 +2612,24 @@ func (m *Message) GetSummaryFromLanguage() (value string, ok bool) {
 	return m.SummaryFromLanguage, true
 }
 
+// SetRichMessage sets value of RichMessage conditional field.
+func (m *Message) SetRichMessage(value RichMessage) {
+	m.Flags2.Set(13)
+	m.RichMessage = value
+}
+
+// GetRichMessage returns value of RichMessage conditional field and
+// boolean which is true if field was set.
+func (m *Message) GetRichMessage() (value RichMessage, ok bool) {
+	if m == nil {
+		return
+	}
+	if !m.Flags2.Has(13) {
+		return value, false
+	}
+	return m.RichMessage, true
+}
+
 // MapEntities returns field Entities wrapped in MessageEntityClassArray helper.
 func (m *Message) MapEntities() (value MessageEntityClassArray, ok bool) {
 	if !m.Flags.Has(7) {
@@ -2471,7 +2654,10 @@ type MessageService struct {
 	Mentioned bool
 	// Whether the message contains unread media
 	MediaUnread bool
-	// ReactionsArePossible field of MessageService.
+	// Whether you can react to this message »¹.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/reactions
 	ReactionsArePossible bool
 	// Whether the message is silent
 	Silent bool
@@ -2487,7 +2673,12 @@ type MessageService struct {
 	FromID PeerClass
 	// Sender of service message
 	PeerID PeerClass
-	// SavedPeerID field of MessageService.
+	// Will only be set for service messages within a monoforum topic »¹: peer will be
+	// equal to the ID of the monoforum and the saved_peer_id flag will be set to the ID of a
+	// topic.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/monoforum
 	//
 	// Use SetSavedPeerID and GetSavedPeerID helpers.
 	SavedPeerID PeerClass
@@ -2499,7 +2690,10 @@ type MessageService struct {
 	Date int
 	// Event connected with the service message
 	Action MessageActionClass
-	// Reactions field of MessageService.
+	// Reactions »¹.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/reactions
 	//
 	// Use SetReactions and GetReactions helpers.
 	Reactions MessageReactions
@@ -3223,7 +3417,7 @@ const MessageClassName = "Message"
 //	}
 //	switch v := g.(type) {
 //	case *tg.MessageEmpty: // messageEmpty#90a6ca84
-//	case *tg.Message: // message#9cb490e9
+//	case *tg.Message: // message#7600b9d3
 //	case *tg.MessageService: // messageService#7a800e0a
 //	default: panic(v)
 //	}
@@ -3272,6 +3466,14 @@ func (m *Message) AsInputMessageReplyTo() *InputMessageReplyTo {
 func (m *Message) AsInputGroupCallInvite() *InputGroupCallInviteMessage {
 	value := new(InputGroupCallInviteMessage)
 	value.MsgID = m.GetID()
+
+	return value
+}
+
+// AsInputReplyToEphemeral tries to map Message to InputReplyToEphemeralMessage.
+func (m *Message) AsInputReplyToEphemeral() *InputReplyToEphemeralMessage {
+	value := new(InputReplyToEphemeralMessage)
+	value.ID = m.GetID()
 
 	return value
 }
@@ -3325,12 +3527,14 @@ type NotEmptyMessage interface {
 	// Peer ID, the chat where this message was sent
 	GetPeerID() (value PeerClass)
 
-	// Messages fetched from a saved messages dialog »¹ will have peer=inputPeerSelf² and
-	// the saved_peer_id flag set to the ID of the saved dialog.
+	// Messages from a saved messages dialog »¹ will have peer=inputPeerSelf² and the
+	// saved_peer_id flag set to the ID of the saved dialog.Messages from a monoforum »³
+	// will have peer=ID of the monoforum and the saved_peer_id flag set to the ID of a topic.
 	//
 	// Links:
 	//  1) https://core.telegram.org/api/saved-messages
 	//  2) https://core.telegram.org/constructor/inputPeerSelf
+	//  3) https://core.telegram.org/api/monoforum
 	GetSavedPeerID() (value PeerClass, ok bool)
 
 	// Reply information
@@ -3380,7 +3584,7 @@ func DecodeMessage(buf *bin.Buffer) (MessageClass, error) {
 		}
 		return &v, nil
 	case MessageTypeID:
-		// Decoding message#9cb490e9.
+		// Decoding message#7600b9d3.
 		v := Message{}
 		if err := v.Decode(buf); err != nil {
 			return nil, fmt.Errorf("unable to decode MessageClass: %w", err)

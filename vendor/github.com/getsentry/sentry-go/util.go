@@ -41,7 +41,8 @@ func defaultRelease() (release string) {
 	// Return first non-empty environment variable known to hold release info, if any.
 	envs := []string{
 		"SENTRY_RELEASE",
-		"HEROKU_SLUG_COMMIT",
+		"HEROKU_BUILD_COMMIT",
+		"HEROKU_SLUG_COMMIT", // Deprecated, kept for backwards compatibility
 		"SOURCE_VERSION",
 		"CODEBUILD_RESOLVED_SOURCE_VERSION",
 		"CIRCLE_SHA1",
@@ -108,4 +109,25 @@ func revisionFromBuildInfo(info *debug.BuildInfo) string {
 
 func Pointer[T any](v T) *T {
 	return &v
+}
+
+// eventIdentifier returns a human-readable identifier for the event to be used in log messages.
+// Format: "<description> [<event-id>]".
+func eventIdentifier(event *Event) string {
+	var description string
+	switch event.Type {
+	case errorType:
+		description = "error"
+	case transactionType:
+		description = "transaction"
+	case checkInType:
+		description = "check-in"
+	case logEvent.Type:
+		description = fmt.Sprintf("%d log events", len(event.Logs))
+	case traceMetricEvent.Type:
+		description = fmt.Sprintf("%d metric events", len(event.Metrics))
+	default:
+		description = fmt.Sprintf("%s event", event.Type)
+	}
+	return fmt.Sprintf("%s [%s]", description, event.EventID)
 }

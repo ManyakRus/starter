@@ -1358,7 +1358,10 @@ func (i *InputStorePaymentPremiumGiveaway) MapAdditionalPeers() (value InputPeer
 //
 // See https://core.telegram.org/constructor/inputStorePaymentStarsTopup for reference.
 type InputStorePaymentStarsTopup struct {
-	// Flags field of InputStorePaymentStarsTopup.
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
 	// Amount of stars to topup
 	Stars int64
@@ -1375,7 +1378,10 @@ type InputStorePaymentStarsTopup struct {
 	// Links:
 	//  1) https://core.telegram.org/bots/payments/currencies.json
 	Amount int64
-	// SpendPurposePeer field of InputStorePaymentStarsTopup.
+	// Should be populated with the peer where the topup process was initiated due to low
+	// funds (i.e. a bot for bot payments, a channel for paid media/reactions, etc); leave
+	// this flag unpopulated if the topup flow was not initated when attempting to spend more
+	// Stars than currently available on the account's balance.
 	//
 	// Use SetSpendPurposePeer and GetSpendPurposePeer helpers.
 	SpendPurposePeer InputPeerClass
@@ -2466,7 +2472,8 @@ func (i *InputStorePaymentStarsGiveaway) MapAdditionalPeers() (value InputPeerCl
 	return InputPeerClassArray(i.AdditionalPeers), true
 }
 
-// InputStorePaymentAuthCode represents TL type `inputStorePaymentAuthCode#9bb2636d`.
+// InputStorePaymentAuthCode represents TL type `inputStorePaymentAuthCode#3fc18057`.
+// Indicates payment for a login code.
 //
 // See https://core.telegram.org/constructor/inputStorePaymentAuthCode for reference.
 type InputStorePaymentAuthCode struct {
@@ -2475,20 +2482,34 @@ type InputStorePaymentAuthCode struct {
 	// Links:
 	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// Restore field of InputStorePaymentAuthCode.
+	// Set this flag to restore a previously made purchase.
 	Restore bool
-	// PhoneNumber field of InputStorePaymentAuthCode.
+	// Phone number.
 	PhoneNumber string
-	// PhoneCodeHash field of InputStorePaymentAuthCode.
+	// phone_code_hash returned by auth.sendCode¹.
+	//
+	// Links:
+	//  1) https://core.telegram.org/method/auth.sendCode
 	PhoneCodeHash string
-	// Currency field of InputStorePaymentAuthCode.
+	// PremiumDays field of InputStorePaymentAuthCode.
+	PremiumDays int
+	// Three-letter ISO 4217 currency¹ code
+	//
+	// Links:
+	//  1) https://core.telegram.org/bots/payments#supported-currencies
 	Currency string
-	// Amount field of InputStorePaymentAuthCode.
+	// Price of the product in the smallest units of the currency (integer, not float/double)
+	// For example, for a price of US$ 1.45 pass amount = 145. See the exp parameter in
+	// currencies.json¹, it shows the number of digits past the decimal point for each
+	// currency (2 for the majority of currencies).
+	//
+	// Links:
+	//  1) https://core.telegram.org/bots/payments/currencies.json
 	Amount int64
 }
 
 // InputStorePaymentAuthCodeTypeID is TL type id of InputStorePaymentAuthCode.
-const InputStorePaymentAuthCodeTypeID = 0x9bb2636d
+const InputStorePaymentAuthCodeTypeID = 0x3fc18057
 
 // construct implements constructor of InputStorePaymentPurposeClass.
 func (i InputStorePaymentAuthCode) construct() InputStorePaymentPurposeClass { return &i }
@@ -2519,6 +2540,9 @@ func (i *InputStorePaymentAuthCode) Zero() bool {
 	if !(i.PhoneCodeHash == "") {
 		return false
 	}
+	if !(i.PremiumDays == 0) {
+		return false
+	}
 	if !(i.Currency == "") {
 		return false
 	}
@@ -2543,12 +2567,14 @@ func (i *InputStorePaymentAuthCode) FillFrom(from interface {
 	GetRestore() (value bool)
 	GetPhoneNumber() (value string)
 	GetPhoneCodeHash() (value string)
+	GetPremiumDays() (value int)
 	GetCurrency() (value string)
 	GetAmount() (value int64)
 }) {
 	i.Restore = from.GetRestore()
 	i.PhoneNumber = from.GetPhoneNumber()
 	i.PhoneCodeHash = from.GetPhoneCodeHash()
+	i.PremiumDays = from.GetPremiumDays()
 	i.Currency = from.GetCurrency()
 	i.Amount = from.GetAmount()
 }
@@ -2590,6 +2616,10 @@ func (i *InputStorePaymentAuthCode) TypeInfo() tdp.Type {
 			SchemaName: "phone_code_hash",
 		},
 		{
+			Name:       "PremiumDays",
+			SchemaName: "premium_days",
+		},
+		{
 			Name:       "Currency",
 			SchemaName: "currency",
 		},
@@ -2611,7 +2641,7 @@ func (i *InputStorePaymentAuthCode) SetFlags() {
 // Encode implements bin.Encoder.
 func (i *InputStorePaymentAuthCode) Encode(b *bin.Buffer) error {
 	if i == nil {
-		return fmt.Errorf("can't encode inputStorePaymentAuthCode#9bb2636d as nil")
+		return fmt.Errorf("can't encode inputStorePaymentAuthCode#3fc18057 as nil")
 	}
 	b.PutID(InputStorePaymentAuthCodeTypeID)
 	return i.EncodeBare(b)
@@ -2620,14 +2650,15 @@ func (i *InputStorePaymentAuthCode) Encode(b *bin.Buffer) error {
 // EncodeBare implements bin.BareEncoder.
 func (i *InputStorePaymentAuthCode) EncodeBare(b *bin.Buffer) error {
 	if i == nil {
-		return fmt.Errorf("can't encode inputStorePaymentAuthCode#9bb2636d as nil")
+		return fmt.Errorf("can't encode inputStorePaymentAuthCode#3fc18057 as nil")
 	}
 	i.SetFlags()
 	if err := i.Flags.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode inputStorePaymentAuthCode#9bb2636d: field flags: %w", err)
+		return fmt.Errorf("unable to encode inputStorePaymentAuthCode#3fc18057: field flags: %w", err)
 	}
 	b.PutString(i.PhoneNumber)
 	b.PutString(i.PhoneCodeHash)
+	b.PutInt(i.PremiumDays)
 	b.PutString(i.Currency)
 	b.PutLong(i.Amount)
 	return nil
@@ -2636,10 +2667,10 @@ func (i *InputStorePaymentAuthCode) EncodeBare(b *bin.Buffer) error {
 // Decode implements bin.Decoder.
 func (i *InputStorePaymentAuthCode) Decode(b *bin.Buffer) error {
 	if i == nil {
-		return fmt.Errorf("can't decode inputStorePaymentAuthCode#9bb2636d to nil")
+		return fmt.Errorf("can't decode inputStorePaymentAuthCode#3fc18057 to nil")
 	}
 	if err := b.ConsumeID(InputStorePaymentAuthCodeTypeID); err != nil {
-		return fmt.Errorf("unable to decode inputStorePaymentAuthCode#9bb2636d: %w", err)
+		return fmt.Errorf("unable to decode inputStorePaymentAuthCode#3fc18057: %w", err)
 	}
 	return i.DecodeBare(b)
 }
@@ -2647,39 +2678,46 @@ func (i *InputStorePaymentAuthCode) Decode(b *bin.Buffer) error {
 // DecodeBare implements bin.BareDecoder.
 func (i *InputStorePaymentAuthCode) DecodeBare(b *bin.Buffer) error {
 	if i == nil {
-		return fmt.Errorf("can't decode inputStorePaymentAuthCode#9bb2636d to nil")
+		return fmt.Errorf("can't decode inputStorePaymentAuthCode#3fc18057 to nil")
 	}
 	{
 		if err := i.Flags.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode inputStorePaymentAuthCode#9bb2636d: field flags: %w", err)
+			return fmt.Errorf("unable to decode inputStorePaymentAuthCode#3fc18057: field flags: %w", err)
 		}
 	}
 	i.Restore = i.Flags.Has(0)
 	{
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode inputStorePaymentAuthCode#9bb2636d: field phone_number: %w", err)
+			return fmt.Errorf("unable to decode inputStorePaymentAuthCode#3fc18057: field phone_number: %w", err)
 		}
 		i.PhoneNumber = value
 	}
 	{
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode inputStorePaymentAuthCode#9bb2636d: field phone_code_hash: %w", err)
+			return fmt.Errorf("unable to decode inputStorePaymentAuthCode#3fc18057: field phone_code_hash: %w", err)
 		}
 		i.PhoneCodeHash = value
 	}
 	{
+		value, err := b.Int()
+		if err != nil {
+			return fmt.Errorf("unable to decode inputStorePaymentAuthCode#3fc18057: field premium_days: %w", err)
+		}
+		i.PremiumDays = value
+	}
+	{
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode inputStorePaymentAuthCode#9bb2636d: field currency: %w", err)
+			return fmt.Errorf("unable to decode inputStorePaymentAuthCode#3fc18057: field currency: %w", err)
 		}
 		i.Currency = value
 	}
 	{
 		value, err := b.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode inputStorePaymentAuthCode#9bb2636d: field amount: %w", err)
+			return fmt.Errorf("unable to decode inputStorePaymentAuthCode#3fc18057: field amount: %w", err)
 		}
 		i.Amount = value
 	}
@@ -2719,6 +2757,14 @@ func (i *InputStorePaymentAuthCode) GetPhoneCodeHash() (value string) {
 		return
 	}
 	return i.PhoneCodeHash
+}
+
+// GetPremiumDays returns value of PremiumDays field.
+func (i *InputStorePaymentAuthCode) GetPremiumDays() (value int) {
+	if i == nil {
+		return
+	}
+	return i.PremiumDays
 }
 
 // GetCurrency returns value of Currency field.
@@ -2768,7 +2814,7 @@ const InputStorePaymentPurposeClassName = "InputStorePaymentPurpose"
 //	case *tg.InputStorePaymentStarsTopup: // inputStorePaymentStarsTopup#f9a2a6cb
 //	case *tg.InputStorePaymentStarsGift: // inputStorePaymentStarsGift#1d741ef7
 //	case *tg.InputStorePaymentStarsGiveaway: // inputStorePaymentStarsGiveaway#751f08fa
-//	case *tg.InputStorePaymentAuthCode: // inputStorePaymentAuthCode#9bb2636d
+//	case *tg.InputStorePaymentAuthCode: // inputStorePaymentAuthCode#3fc18057
 //	default: panic(v)
 //	}
 type InputStorePaymentPurposeClass interface {
@@ -2847,7 +2893,7 @@ func DecodeInputStorePaymentPurpose(buf *bin.Buffer) (InputStorePaymentPurposeCl
 		}
 		return &v, nil
 	case InputStorePaymentAuthCodeTypeID:
-		// Decoding inputStorePaymentAuthCode#9bb2636d.
+		// Decoding inputStorePaymentAuthCode#3fc18057.
 		v := InputStorePaymentAuthCode{}
 		if err := v.Decode(buf); err != nil {
 			return nil, fmt.Errorf("unable to decode InputStorePaymentPurposeClass: %w", err)

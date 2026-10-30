@@ -9,6 +9,7 @@ package store
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -61,6 +62,7 @@ type AppStateSyncKeyStore interface {
 	PutAppStateSyncKey(ctx context.Context, id []byte, key AppStateSyncKey) error
 	GetAppStateSyncKey(ctx context.Context, id []byte) (*AppStateSyncKey, error)
 	GetLatestAppStateSyncKeyID(ctx context.Context) ([]byte, error)
+	GetAllAppStateSyncKeys(ctx context.Context) ([]*AppStateSyncKey, error)
 }
 
 type AppStateMutationMAC struct {
@@ -113,6 +115,8 @@ type ChatSettingsStore interface {
 	PutMutedUntil(ctx context.Context, chat types.JID, mutedUntil time.Time) error
 	PutPinned(ctx context.Context, chat types.JID, pinned bool) error
 	PutArchived(ctx context.Context, chat types.JID, archived bool) error
+	PutWASARootSecretID(ctx context.Context, chat types.JID, id types.MessageID) error
+	GetWASARootSecretID(ctx context.Context, chat types.JID) (types.MessageID, error)
 	GetChatSettings(ctx context.Context, chat types.JID) (types.LocalChatSettings, error)
 }
 
@@ -135,14 +139,22 @@ type MsgSecretStore interface {
 }
 
 type PrivacyToken struct {
-	User      types.JID
-	Token     []byte
-	Timestamp time.Time
+	User            types.JID
+	Token           []byte
+	Timestamp       time.Time
+	SenderTimestamp time.Time
 }
 
 type PrivacyTokenStore interface {
 	PutPrivacyTokens(ctx context.Context, tokens ...PrivacyToken) error
 	GetPrivacyToken(ctx context.Context, user types.JID) (*PrivacyToken, error)
+	DeleteExpiredPrivacyTokens(ctx context.Context, cutoff time.Time) (int64, error)
+}
+
+type NCTSaltStore interface {
+	PutNCTSalt(ctx context.Context, salt []byte) error
+	GetNCTSalt(ctx context.Context) ([]byte, error)
+	DeleteNCTSalt(ctx context.Context) error
 }
 
 type BufferedEvent struct {
@@ -157,6 +169,10 @@ type EventBuffer interface {
 	DoDecryptionTxn(ctx context.Context, fn func(context.Context) error) error
 	ClearBufferedEventPlaintext(ctx context.Context, ciphertextHash [32]byte) error
 	DeleteOldBufferedHashes(ctx context.Context) error
+
+	GetOutgoingEvent(ctx context.Context, chatJID, altChatJID types.JID, id types.MessageID) (string, []byte, error)
+	AddOutgoingEvent(ctx context.Context, chatJID types.JID, id types.MessageID, format string, plaintext []byte) error
+	DeleteOldOutgoingEvents(ctx context.Context) error
 }
 
 type LIDMapping struct {
@@ -187,6 +203,7 @@ type AllSessionSpecificStores interface {
 	ChatSettingsStore
 	MsgSecretStore
 	PrivacyTokenStore
+	NCTSaltStore
 	EventBuffer
 }
 
@@ -217,10 +234,12 @@ type Device struct {
 	PushName     string
 
 	LIDMigrationTimestamp int64
+	CompanionMetaNonce    string
 
 	FacebookUUID uuid.UUID
 
 	Initialized   bool
+	Deleted       bool
 	Identities    IdentityStore
 	Sessions      SessionStore
 	PreKeys       PreKeyStore
@@ -231,6 +250,7 @@ type Device struct {
 	ChatSettings  ChatSettingsStore
 	MsgSecrets    MsgSecretStore
 	PrivacyTokens PrivacyTokenStore
+	NCTSalt       NCTSaltStore
 	EventBuffer   EventBuffer
 	LIDs          LIDStore
 	Container     DeviceContainer
@@ -254,18 +274,43 @@ func (device *Device) GetLID() types.JID {
 	return device.LID
 }
 
+var ErrDeviceDeleted = errors.New("invalid use of deleted device")
+
 func (device *Device) Save(ctx context.Context) error {
+	if device.Deleted {
+		return ErrDeviceDeleted
+	}
 	return device.Container.PutDevice(ctx, device)
 }
 
 func (device *Device) Delete(ctx context.Context) error {
+	if device.Deleted {
+		return nil
+	}
 	err := device.Container.DeleteDevice(ctx, device)
 	if err != nil {
 		return err
 	}
 	device.ID = nil
 	device.LID = types.EmptyJID
+	device.Deleted = true
+	device.SetAllStores(&NoopStore{ErrDeviceDeleted})
 	return nil
+}
+
+func (device *Device) SetAllStores(store AllSessionSpecificStores) {
+	device.Identities = store
+	device.Sessions = store
+	device.PreKeys = store
+	device.SenderKeys = store
+	device.AppStateKeys = store
+	device.AppState = store
+	device.Contacts = store
+	device.ChatSettings = store
+	device.MsgSecrets = store
+	device.PrivacyTokens = store
+	device.NCTSalt = store
+	device.EventBuffer = store
 }
 
 func (device *Device) GetAltJID(ctx context.Context, jid types.JID) (types.JID, error) {

@@ -3,7 +3,7 @@ package telegram
 import (
 	"context"
 
-	"go.uber.org/zap"
+	"github.com/gotd/log"
 
 	"github.com/gotd/td/bin"
 	"github.com/gotd/td/mtproto"
@@ -28,6 +28,26 @@ func (c clientHandler) OnMessage(b *bin.Buffer) error {
 
 func (c *Client) asHandler() manager.Handler {
 	return clientHandler{
+		client: c,
+	}
+}
+
+type cdnClientHandler struct {
+	client *Client
+}
+
+func (c cdnClientHandler) OnSession(cfg tg.Config, s mtproto.Session) error {
+	// CDN sessions are stored separately from regular DC sessions.
+	return c.client.onCDNSession(cfg, s)
+}
+
+func (cdnClientHandler) OnMessage(*bin.Buffer) error {
+	// CDN connections never deliver updates.
+	return nil
+}
+
+func (c *Client) asCDNHandler() manager.Handler {
+	return cdnClientHandler{
 		client: c,
 	}
 }
@@ -75,19 +95,20 @@ func (c *Client) createConn(
 	id int64,
 	mode manager.ConnMode,
 	setup manager.SetupCallback,
-	onDead func(),
+	onDead func(error),
 ) pool.Conn {
 	opts, s := c.session.Options(c.opts)
 	opts.Logger = c.log.Named("conn").With(
-		zap.Int64("conn_id", id),
-		zap.Int("dc_id", s.DC),
-	)
+		log.Int64("conn_id", id),
+		log.Int("dc_id", s.DC),
+	).Logger()
 
 	return c.create(
 		c.primaryDC(s.DC), mode, c.appID,
 		opts, manager.ConnOptions{
 			DC:      s.DC,
 			Test:    c.testDC,
+			Layer:   c.layer,
 			Device:  c.device,
 			Handler: c.asHandler(),
 			Setup:   setup,

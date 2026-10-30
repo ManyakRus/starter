@@ -31,7 +31,7 @@ var (
 	_ = tdjson.Encoder{}
 )
 
-// MessagesSendMessageRequest represents TL type `messages.sendMessage#545cd15a`.
+// MessagesSendMessageRequest represents TL type `messages.sendMessage#fef48f62`.
 // Sends a message to a chat
 //
 // See https://core.telegram.org/method/messages.sendMessage for reference.
@@ -53,7 +53,7 @@ type MessagesSendMessageRequest struct {
 	// destination chat doesn't have content protection¹ enabled
 	//
 	// Links:
-	//  1) https://telegram.org/blog/protected-content-delete-by-date-and-more
+	//  1) https://telegram.org/blog/content-protection-delete-by-date-and-more
 	Noforwards bool
 	// Whether to move used stickersets to top, see here for more info on this flag »¹
 	//
@@ -99,7 +99,12 @@ type MessagesSendMessageRequest struct {
 	//
 	// Use SetScheduleDate and GetScheduleDate helpers.
 	ScheduleDate int
-	// ScheduleRepeatPeriod field of MessagesSendMessageRequest.
+	// Once sent, this message will be automatically re-scheduled to be re-sent again this
+	// many seconds in the future, see here »¹ for more info on repeating scheduled
+	// messages.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/scheduled-messages#repeating-scheduled-messages
 	//
 	// Use SetScheduleRepeatPeriod and GetScheduleRepeatPeriod helpers.
 	ScheduleRepeatPeriod int
@@ -121,18 +126,30 @@ type MessagesSendMessageRequest struct {
 	//
 	// Use SetEffect and GetEffect helpers.
 	Effect int64
-	// AllowPaidStars field of MessagesSendMessageRequest.
+	// For paid messages »¹, specifies the amount of Telegram Stars² the user has agreed
+	// to pay in order to send the message.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/paid-messages
+	//  2) https://core.telegram.org/api/stars
 	//
 	// Use SetAllowPaidStars and GetAllowPaidStars helpers.
 	AllowPaidStars int64
-	// SuggestedPost field of MessagesSendMessageRequest.
+	// Used to suggest a post to a channel, see here »¹ for more info on the full flow.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/suggested-posts
 	//
 	// Use SetSuggestedPost and GetSuggestedPost helpers.
 	SuggestedPost SuggestedPost
+	// RichMessage field of MessagesSendMessageRequest.
+	//
+	// Use SetRichMessage and GetRichMessage helpers.
+	RichMessage InputRichMessageClass
 }
 
 // MessagesSendMessageRequestTypeID is TL type id of MessagesSendMessageRequest.
-const MessagesSendMessageRequestTypeID = 0x545cd15a
+const MessagesSendMessageRequestTypeID = 0xfef48f62
 
 // Ensuring interfaces in compile-time for MessagesSendMessageRequest.
 var (
@@ -212,6 +229,9 @@ func (s *MessagesSendMessageRequest) Zero() bool {
 	if !(s.SuggestedPost.Zero()) {
 		return false
 	}
+	if !(s.RichMessage == nil) {
+		return false
+	}
 
 	return true
 }
@@ -248,6 +268,7 @@ func (s *MessagesSendMessageRequest) FillFrom(from interface {
 	GetEffect() (value int64, ok bool)
 	GetAllowPaidStars() (value int64, ok bool)
 	GetSuggestedPost() (value SuggestedPost, ok bool)
+	GetRichMessage() (value InputRichMessageClass, ok bool)
 }) {
 	s.NoWebpage = from.GetNoWebpage()
 	s.Silent = from.GetSilent()
@@ -298,6 +319,10 @@ func (s *MessagesSendMessageRequest) FillFrom(from interface {
 
 	if val, ok := from.GetSuggestedPost(); ok {
 		s.SuggestedPost = val
+	}
+
+	if val, ok := from.GetRichMessage(); ok {
+		s.RichMessage = val
 	}
 
 }
@@ -427,6 +452,11 @@ func (s *MessagesSendMessageRequest) TypeInfo() tdp.Type {
 			SchemaName: "suggested_post",
 			Null:       !s.Flags.Has(22),
 		},
+		{
+			Name:       "RichMessage",
+			SchemaName: "rich_message",
+			Null:       !s.Flags.Has(23),
+		},
 	}
 	return typ
 }
@@ -487,12 +517,15 @@ func (s *MessagesSendMessageRequest) SetFlags() {
 	if !(s.SuggestedPost.Zero()) {
 		s.Flags.Set(22)
 	}
+	if !(s.RichMessage == nil) {
+		s.Flags.Set(23)
+	}
 }
 
 // Encode implements bin.Encoder.
 func (s *MessagesSendMessageRequest) Encode(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't encode messages.sendMessage#545cd15a as nil")
+		return fmt.Errorf("can't encode messages.sendMessage#fef48f62 as nil")
 	}
 	b.PutID(MessagesSendMessageRequestTypeID)
 	return s.EncodeBare(b)
@@ -501,44 +534,44 @@ func (s *MessagesSendMessageRequest) Encode(b *bin.Buffer) error {
 // EncodeBare implements bin.BareEncoder.
 func (s *MessagesSendMessageRequest) EncodeBare(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't encode messages.sendMessage#545cd15a as nil")
+		return fmt.Errorf("can't encode messages.sendMessage#fef48f62 as nil")
 	}
 	s.SetFlags()
 	if err := s.Flags.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode messages.sendMessage#545cd15a: field flags: %w", err)
+		return fmt.Errorf("unable to encode messages.sendMessage#fef48f62: field flags: %w", err)
 	}
 	if s.Peer == nil {
-		return fmt.Errorf("unable to encode messages.sendMessage#545cd15a: field peer is nil")
+		return fmt.Errorf("unable to encode messages.sendMessage#fef48f62: field peer is nil")
 	}
 	if err := s.Peer.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode messages.sendMessage#545cd15a: field peer: %w", err)
+		return fmt.Errorf("unable to encode messages.sendMessage#fef48f62: field peer: %w", err)
 	}
 	if s.Flags.Has(0) {
 		if s.ReplyTo == nil {
-			return fmt.Errorf("unable to encode messages.sendMessage#545cd15a: field reply_to is nil")
+			return fmt.Errorf("unable to encode messages.sendMessage#fef48f62: field reply_to is nil")
 		}
 		if err := s.ReplyTo.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode messages.sendMessage#545cd15a: field reply_to: %w", err)
+			return fmt.Errorf("unable to encode messages.sendMessage#fef48f62: field reply_to: %w", err)
 		}
 	}
 	b.PutString(s.Message)
 	b.PutLong(s.RandomID)
 	if s.Flags.Has(2) {
 		if s.ReplyMarkup == nil {
-			return fmt.Errorf("unable to encode messages.sendMessage#545cd15a: field reply_markup is nil")
+			return fmt.Errorf("unable to encode messages.sendMessage#fef48f62: field reply_markup is nil")
 		}
 		if err := s.ReplyMarkup.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode messages.sendMessage#545cd15a: field reply_markup: %w", err)
+			return fmt.Errorf("unable to encode messages.sendMessage#fef48f62: field reply_markup: %w", err)
 		}
 	}
 	if s.Flags.Has(3) {
 		b.PutVectorHeader(len(s.Entities))
 		for idx, v := range s.Entities {
 			if v == nil {
-				return fmt.Errorf("unable to encode messages.sendMessage#545cd15a: field entities element with index %d is nil", idx)
+				return fmt.Errorf("unable to encode messages.sendMessage#fef48f62: field entities element with index %d is nil", idx)
 			}
 			if err := v.Encode(b); err != nil {
-				return fmt.Errorf("unable to encode messages.sendMessage#545cd15a: field entities element with index %d: %w", idx, err)
+				return fmt.Errorf("unable to encode messages.sendMessage#fef48f62: field entities element with index %d: %w", idx, err)
 			}
 		}
 	}
@@ -550,18 +583,18 @@ func (s *MessagesSendMessageRequest) EncodeBare(b *bin.Buffer) error {
 	}
 	if s.Flags.Has(13) {
 		if s.SendAs == nil {
-			return fmt.Errorf("unable to encode messages.sendMessage#545cd15a: field send_as is nil")
+			return fmt.Errorf("unable to encode messages.sendMessage#fef48f62: field send_as is nil")
 		}
 		if err := s.SendAs.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode messages.sendMessage#545cd15a: field send_as: %w", err)
+			return fmt.Errorf("unable to encode messages.sendMessage#fef48f62: field send_as: %w", err)
 		}
 	}
 	if s.Flags.Has(17) {
 		if s.QuickReplyShortcut == nil {
-			return fmt.Errorf("unable to encode messages.sendMessage#545cd15a: field quick_reply_shortcut is nil")
+			return fmt.Errorf("unable to encode messages.sendMessage#fef48f62: field quick_reply_shortcut is nil")
 		}
 		if err := s.QuickReplyShortcut.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode messages.sendMessage#545cd15a: field quick_reply_shortcut: %w", err)
+			return fmt.Errorf("unable to encode messages.sendMessage#fef48f62: field quick_reply_shortcut: %w", err)
 		}
 	}
 	if s.Flags.Has(18) {
@@ -572,7 +605,15 @@ func (s *MessagesSendMessageRequest) EncodeBare(b *bin.Buffer) error {
 	}
 	if s.Flags.Has(22) {
 		if err := s.SuggestedPost.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode messages.sendMessage#545cd15a: field suggested_post: %w", err)
+			return fmt.Errorf("unable to encode messages.sendMessage#fef48f62: field suggested_post: %w", err)
+		}
+	}
+	if s.Flags.Has(23) {
+		if s.RichMessage == nil {
+			return fmt.Errorf("unable to encode messages.sendMessage#fef48f62: field rich_message is nil")
+		}
+		if err := s.RichMessage.Encode(b); err != nil {
+			return fmt.Errorf("unable to encode messages.sendMessage#fef48f62: field rich_message: %w", err)
 		}
 	}
 	return nil
@@ -581,10 +622,10 @@ func (s *MessagesSendMessageRequest) EncodeBare(b *bin.Buffer) error {
 // Decode implements bin.Decoder.
 func (s *MessagesSendMessageRequest) Decode(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't decode messages.sendMessage#545cd15a to nil")
+		return fmt.Errorf("can't decode messages.sendMessage#fef48f62 to nil")
 	}
 	if err := b.ConsumeID(MessagesSendMessageRequestTypeID); err != nil {
-		return fmt.Errorf("unable to decode messages.sendMessage#545cd15a: %w", err)
+		return fmt.Errorf("unable to decode messages.sendMessage#fef48f62: %w", err)
 	}
 	return s.DecodeBare(b)
 }
@@ -592,11 +633,11 @@ func (s *MessagesSendMessageRequest) Decode(b *bin.Buffer) error {
 // DecodeBare implements bin.BareDecoder.
 func (s *MessagesSendMessageRequest) DecodeBare(b *bin.Buffer) error {
 	if s == nil {
-		return fmt.Errorf("can't decode messages.sendMessage#545cd15a to nil")
+		return fmt.Errorf("can't decode messages.sendMessage#fef48f62 to nil")
 	}
 	{
 		if err := s.Flags.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode messages.sendMessage#545cd15a: field flags: %w", err)
+			return fmt.Errorf("unable to decode messages.sendMessage#fef48f62: field flags: %w", err)
 		}
 	}
 	s.NoWebpage = s.Flags.Has(1)
@@ -610,42 +651,42 @@ func (s *MessagesSendMessageRequest) DecodeBare(b *bin.Buffer) error {
 	{
 		value, err := DecodeInputPeer(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.sendMessage#545cd15a: field peer: %w", err)
+			return fmt.Errorf("unable to decode messages.sendMessage#fef48f62: field peer: %w", err)
 		}
 		s.Peer = value
 	}
 	if s.Flags.Has(0) {
 		value, err := DecodeInputReplyTo(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.sendMessage#545cd15a: field reply_to: %w", err)
+			return fmt.Errorf("unable to decode messages.sendMessage#fef48f62: field reply_to: %w", err)
 		}
 		s.ReplyTo = value
 	}
 	{
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.sendMessage#545cd15a: field message: %w", err)
+			return fmt.Errorf("unable to decode messages.sendMessage#fef48f62: field message: %w", err)
 		}
 		s.Message = value
 	}
 	{
 		value, err := b.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.sendMessage#545cd15a: field random_id: %w", err)
+			return fmt.Errorf("unable to decode messages.sendMessage#fef48f62: field random_id: %w", err)
 		}
 		s.RandomID = value
 	}
 	if s.Flags.Has(2) {
 		value, err := DecodeReplyMarkup(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.sendMessage#545cd15a: field reply_markup: %w", err)
+			return fmt.Errorf("unable to decode messages.sendMessage#fef48f62: field reply_markup: %w", err)
 		}
 		s.ReplyMarkup = value
 	}
 	if s.Flags.Has(3) {
 		headerLen, err := b.VectorHeader()
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.sendMessage#545cd15a: field entities: %w", err)
+			return fmt.Errorf("unable to decode messages.sendMessage#fef48f62: field entities: %w", err)
 		}
 
 		if headerLen > 0 {
@@ -654,7 +695,7 @@ func (s *MessagesSendMessageRequest) DecodeBare(b *bin.Buffer) error {
 		for idx := 0; idx < headerLen; idx++ {
 			value, err := DecodeMessageEntity(b)
 			if err != nil {
-				return fmt.Errorf("unable to decode messages.sendMessage#545cd15a: field entities: %w", err)
+				return fmt.Errorf("unable to decode messages.sendMessage#fef48f62: field entities: %w", err)
 			}
 			s.Entities = append(s.Entities, value)
 		}
@@ -662,49 +703,56 @@ func (s *MessagesSendMessageRequest) DecodeBare(b *bin.Buffer) error {
 	if s.Flags.Has(10) {
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.sendMessage#545cd15a: field schedule_date: %w", err)
+			return fmt.Errorf("unable to decode messages.sendMessage#fef48f62: field schedule_date: %w", err)
 		}
 		s.ScheduleDate = value
 	}
 	if s.Flags.Has(24) {
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.sendMessage#545cd15a: field schedule_repeat_period: %w", err)
+			return fmt.Errorf("unable to decode messages.sendMessage#fef48f62: field schedule_repeat_period: %w", err)
 		}
 		s.ScheduleRepeatPeriod = value
 	}
 	if s.Flags.Has(13) {
 		value, err := DecodeInputPeer(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.sendMessage#545cd15a: field send_as: %w", err)
+			return fmt.Errorf("unable to decode messages.sendMessage#fef48f62: field send_as: %w", err)
 		}
 		s.SendAs = value
 	}
 	if s.Flags.Has(17) {
 		value, err := DecodeInputQuickReplyShortcut(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.sendMessage#545cd15a: field quick_reply_shortcut: %w", err)
+			return fmt.Errorf("unable to decode messages.sendMessage#fef48f62: field quick_reply_shortcut: %w", err)
 		}
 		s.QuickReplyShortcut = value
 	}
 	if s.Flags.Has(18) {
 		value, err := b.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.sendMessage#545cd15a: field effect: %w", err)
+			return fmt.Errorf("unable to decode messages.sendMessage#fef48f62: field effect: %w", err)
 		}
 		s.Effect = value
 	}
 	if s.Flags.Has(21) {
 		value, err := b.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.sendMessage#545cd15a: field allow_paid_stars: %w", err)
+			return fmt.Errorf("unable to decode messages.sendMessage#fef48f62: field allow_paid_stars: %w", err)
 		}
 		s.AllowPaidStars = value
 	}
 	if s.Flags.Has(22) {
 		if err := s.SuggestedPost.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode messages.sendMessage#545cd15a: field suggested_post: %w", err)
+			return fmt.Errorf("unable to decode messages.sendMessage#fef48f62: field suggested_post: %w", err)
 		}
+	}
+	if s.Flags.Has(23) {
+		value, err := DecodeInputRichMessage(b)
+		if err != nil {
+			return fmt.Errorf("unable to decode messages.sendMessage#fef48f62: field rich_message: %w", err)
+		}
+		s.RichMessage = value
 	}
 	return nil
 }
@@ -1065,6 +1113,24 @@ func (s *MessagesSendMessageRequest) GetSuggestedPost() (value SuggestedPost, ok
 	return s.SuggestedPost, true
 }
 
+// SetRichMessage sets value of RichMessage conditional field.
+func (s *MessagesSendMessageRequest) SetRichMessage(value InputRichMessageClass) {
+	s.Flags.Set(23)
+	s.RichMessage = value
+}
+
+// GetRichMessage returns value of RichMessage conditional field and
+// boolean which is true if field was set.
+func (s *MessagesSendMessageRequest) GetRichMessage() (value InputRichMessageClass, ok bool) {
+	if s == nil {
+		return
+	}
+	if !s.Flags.Has(23) {
+		return value, false
+	}
+	return s.RichMessage, true
+}
+
 // MapEntities returns field Entities wrapped in MessageEntityClassArray helper.
 func (s *MessagesSendMessageRequest) MapEntities() (value MessageEntityClassArray, ok bool) {
 	if !s.Flags.Has(3) {
@@ -1073,14 +1139,18 @@ func (s *MessagesSendMessageRequest) MapEntities() (value MessageEntityClassArra
 	return MessageEntityClassArray(s.Entities), true
 }
 
-// MessagesSendMessage invokes method messages.sendMessage#545cd15a returning error if any.
+// MessagesSendMessage invokes method messages.sendMessage#fef48f62 returning error if any.
 // Sends a message to a chat
 //
 // Possible errors:
 //
 //	400 ADMIN_RIGHTS_EMPTY: The chatAdminRights constructor passed in keyboardButtonRequestPeer.peer_type.user_admin_rights has no rights set (i.e. flags is 0).
+//	406 ALLOW_PAYMENT_REQUIRED: This peer only accepts paid messages »: this error is only emitted for older layers without paid messages support, so the client must be updated in order to use paid messages.  .
+//	403 ALLOW_PAYMENT_REQUIRED_%d: This peer charges %d Telegram Stars per message, but the allow_paid_stars was not set or its value is smaller than %d.
+//	400 BALANCE_TOO_LOW: The transaction cannot be completed because the current Telegram Stars balance is too low.
 //	400 BOT_DOMAIN_INVALID: Bot domain invalid.
 //	400 BOT_INVALID: This is not a valid bot.
+//	400 BUSINESS_CONNECTION_INVALID: The connection_id passed to the wrapping invokeWithBusinessConnection call is invalid.
 //	400 BUSINESS_PEER_INVALID: Messages can't be set to the specified peer through the current business connection.
 //	400 BUSINESS_PEER_USAGE_MISSING: You cannot send a message to a user through a business connection if the user hasn't recently contacted us.
 //	400 BUTTON_COPY_TEXT_INVALID: The specified keyboardButtonCopy.copy_text is invalid.
@@ -1091,14 +1161,17 @@ func (s *MessagesSendMessageRequest) MapEntities() (value MessageEntityClassArra
 //	400 BUTTON_USER_INVALID: The user_id passed to inputKeyboardButtonUserProfile is invalid!
 //	400 BUTTON_USER_PRIVACY_RESTRICTED: The privacy setting of the user specified in a inputKeyboardButtonUserProfile button do not allow creating such a button.
 //	400 CHANNEL_INVALID: The provided channel is invalid.
+//	400 CHANNEL_MONOFORUM_UNSUPPORTED: Monoforums do not support this feature.
 //	406 CHANNEL_PRIVATE: You haven't joined this channel/supergroup.
 //	403 CHAT_ADMIN_REQUIRED: You must be an admin in this chat to do this.
+//	400 CHAT_FORWARDS_RESTRICTED: You can't forward messages from a protected chat.
 //	403 CHAT_GUEST_SEND_FORBIDDEN: You join the discussion group before commenting, see here » for more info.
 //	400 CHAT_ID_INVALID: The provided chat id is invalid.
 //	400 CHAT_RESTRICTED: You can't send messages in this chat, you were restricted.
 //	403 CHAT_SEND_PLAIN_FORBIDDEN: You can't send non-media (text) messages in this chat.
 //	403 CHAT_WRITE_FORBIDDEN: You can't write in this chat.
 //	400 DOCUMENT_INVALID: The specified document is invalid.
+//	400 EFFECT_CHAT_INVALID:
 //	400 ENCRYPTION_DECLINED: The secret chat was declined.
 //	400 ENTITIES_TOO_LONG: You provided too many styled message entities.
 //	400 ENTITY_BOUNDS_INVALID: A specified entity offset or length is invalid, see here » for info on how to properly compute the entity offset/length.
@@ -1111,10 +1184,12 @@ func (s *MessagesSendMessageRequest) MapEntities() (value MessageEntityClassArra
 //	500 MSG_WAIT_FAILED: A waiting call returned an error.
 //	406 PAYMENT_UNSUPPORTED: A detailed description of the error will be received separately as described here ».
 //	404 PEER_ID_INVALID: The provided peer id is invalid.
+//	400 PEER_TYPES_INVALID: The passed keyboardButtonSwitchInline.peer_types field is invalid.
 //	400 PINNED_DIALOGS_TOO_MUCH: Too many pinned dialogs.
 //	400 POLL_OPTION_INVALID: Invalid poll option provided.
 //	403 PREMIUM_ACCOUNT_REQUIRED: A premium account is required to execute this action.
 //	406 PRIVACY_PREMIUM_REQUIRED: You need a Telegram Premium subscription to send a message to this user.
+//	400 QUICK_REPLIES_BOT_NOT_ALLOWED: Quick replies cannot be used by bots.
 //	400 QUICK_REPLIES_TOO_MUCH: A maximum of appConfig.quick_replies_limit shortcuts may be created, the limit was reached.
 //	400 QUOTE_TEXT_INVALID: The specified reply_to.quote_text field is invalid.
 //	500 RANDOM_ID_DUPLICATE: You provided a random ID that was already used.
@@ -1123,6 +1198,7 @@ func (s *MessagesSendMessageRequest) MapEntities() (value MessageEntityClassArra
 //	400 REPLY_MESSAGES_TOO_MUCH: Each shortcut can contain a maximum of appConfig.quick_reply_messages_limit messages, the limit was reached.
 //	400 REPLY_MESSAGE_ID_INVALID: The specified reply-to message ID is invalid.
 //	400 REPLY_TO_INVALID: The specified reply_to field is invalid.
+//	400 REPLY_TO_MONOFORUM_PEER_INVALID: The specified inputReplyToMonoForum.monoforum_peer_id is invalid.
 //	400 REPLY_TO_USER_INVALID: The replied-to user is invalid.
 //	400 SCHEDULE_BOT_NOT_ALLOWED: Bots cannot schedule messages.
 //	400 SCHEDULE_DATE_TOO_LATE: You can't schedule a message this far in the future.
@@ -1130,7 +1206,10 @@ func (s *MessagesSendMessageRequest) MapEntities() (value MessageEntityClassArra
 //	400 SCHEDULE_TOO_MUCH: There are too many scheduled messages.
 //	400 SEND_AS_PEER_INVALID: You can't send messages as the specified peer.
 //	420 SLOWMODE_WAIT_%d: Slowmode is enabled in this chat: wait %d seconds before sending another message to this chat.
+//	400 STORIES_NEVER_CREATED: This peer hasn't ever posted any stories.
 //	400 STORY_ID_INVALID: The specified story ID is invalid.
+//	400 SUGGESTED_POST_AMOUNT_INVALID: The specified price for the suggested post is invalid.
+//	400 SUGGESTED_POST_PEER_INVALID: You cannot send suggested posts to non-monoforum peers.
 //	406 TOPIC_CLOSED: This topic was closed, you can't send messages to it anymore.
 //	406 TOPIC_DELETED: The specified topic was deleted.
 //	400 USER_BANNED_IN_CHANNEL: You're banned from sending messages in supergroups/channels.
@@ -1140,7 +1219,6 @@ func (s *MessagesSendMessageRequest) MapEntities() (value MessageEntityClassArra
 //	400 YOU_BLOCKED_USER: You blocked this user.
 //
 // See https://core.telegram.org/method/messages.sendMessage for reference.
-// Can be used by bots.
 func (c *Client) MessagesSendMessage(ctx context.Context, request *MessagesSendMessageRequest) (UpdatesClass, error) {
 	var result UpdatesBox
 

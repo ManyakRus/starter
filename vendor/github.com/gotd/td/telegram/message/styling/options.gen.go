@@ -211,3 +211,53 @@ func Blockquote(s string, collapsed bool) StyledTextOption {
 		return nil
 	})
 }
+
+// FormattedDate formats text as FormattedDate entity.
+//
+// See https://core.telegram.org/constructor/messageEntityFormattedDate.
+func FormattedDate(s string, relative bool, shortTime bool, longTime bool, shortDate bool, longDate bool, dayOfWeek bool, date int) StyledTextOption {
+	return styledTextOption(s, func(b *textBuilder) error {
+		b.FormattedDate(s, relative, shortTime, longTime, shortDate, longDate, dayOfWeek, date)
+		return nil
+	})
+}
+
+// DiffInsert formats text as DiffInsert entity.
+//
+// See https://core.telegram.org/constructor/messageEntityDiffInsert.
+func DiffInsert(s string) StyledTextOption {
+	return styledTextOption(s, func(b *textBuilder) error {
+		b.DiffInsert(s)
+		return nil
+	})
+}
+
+// DiffReplace formats text as DiffReplace entity.
+//
+// See https://core.telegram.org/constructor/messageEntityDiffReplace.
+func DiffReplace(s string, oldText string) StyledTextOption {
+	return styledTextOption(s, func(b *textBuilder) error {
+		b.DiffReplace(s, oldText)
+		return nil
+	})
+}
+
+// DiffDelete formats text as DiffDelete entity.
+//
+// See https://core.telegram.org/constructor/messageEntityDiffDelete.
+func DiffDelete(s string) StyledTextOption {
+	return styledTextOption(s, func(b *textBuilder) error {
+		b.DiffDelete(s)
+		return nil
+	})
+}
+
+// TonAddress formats text as TonAddress entity.
+//
+// See https://core.telegram.org/constructor/messageEntityTonAddress.
+func TonAddress(s string) StyledTextOption {
+	return styledTextOption(s, func(b *textBuilder) error {
+		b.TonAddress(s)
+		return nil
+	})
+}

@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"fmt"
 	"path"
+	"slices"
 	"sort"
 	"strings"
 
@@ -32,22 +33,22 @@ type schemaGen struct {
 	depthLimit int
 	depthCount int
 
-	request bool // true if generating for request body
+	request     bool            // true if generating for request body
+	initialisms bool            // NamingCamelInitialisms feature: apply initialism rules to camelCase identifiers
+	rules       *naming.Ruleset // custom initialism ruleset, nil means package default
 
 	log *zap.Logger
 }
 
+// namer returns an identifier generator configured for this schemaGen.
+func (g *schemaGen) namer() namer {
+	return namer{initialisms: g.initialisms, rules: g.rules}
+}
+
 func newSchemaGen(lookupRef func(ref jsonschema.Ref) (*ir.Type, bool)) *schemaGen {
-	return &schemaGen{
+	g := &schemaGen{
 		localRefs: map[jsonschema.Ref]*ir.Type{},
 		lookupRef: lookupRef,
-		nameRef: func(ref jsonschema.Ref) (string, error) {
-			name, err := pascal(cleanRef(ref))
-			if err != nil {
-				return "", err
-			}
-			return name, nil
-		},
 		fail: func(err error) error {
 			return err
 		},
@@ -55,10 +56,25 @@ func newSchemaGen(lookupRef func(ref jsonschema.Ref) (*ir.Type, bool)) *schemaGe
 		depthLimit: defaultSchemaDepthLimit,
 		log:        zap.NewNop(),
 	}
+	g.nameRef = func(ref jsonschema.Ref) (string, error) {
+		name, err := g.namer().pascal(cleanRef(ref))
+		if err != nil {
+			return "", err
+		}
+		return name, nil
+	}
+	return g
 }
 
 func variantFieldName(t *ir.Type) string {
-	return naming.Capitalize(t.NamePostfix())
+	name := naming.Capitalize(t.NamePostfix())
+	if name == "Type" {
+		// Sum structs reserve Type for the discriminator field.
+		// TypeValue field is used in generated struct in such
+		// situation.
+		return "TypeValue"
+	}
+	return name
 }
 
 type schemaDepthError struct {
@@ -110,6 +126,10 @@ func (g *schemaGen) generate(name string, schema *jsonschema.Schema, optional bo
 	}()
 
 	schema = transformSchema(schema)
+	schema, err := flattenAllOfSchema(schema)
+	if err != nil {
+		return nil, errors.Wrap(err, "flatten allOf")
+	}
 
 	t, err := g.generate2(name, schema)
 	if err != nil {
@@ -160,6 +180,15 @@ func (g *schemaGen) generate2(name string, schema *jsonschema.Schema) (ret *ir.T
 		}
 	}
 
+	// Resolve the final type name before any branch that may return early
+	// (e.g. external types via x-ogen-type), so x-ogen-name is always honored.
+	// The DefaultSet and UniqueItems checks below do not depend on name.
+	if n := schema.XOgenName; n != "" {
+		name = n
+	} else if len(name) > 0 && name[0] >= '0' && name[0] <= '9' {
+		name = "R" + name
+	}
+
 	if schema.XOgenType != "" {
 		t, err := ir.External(schema)
 		if err != nil {
@@ -197,7 +226,9 @@ func (g *schemaGen) generate2(name string, schema *jsonschema.Schema) (ret *ir.T
 		case schema.Type == jsonschema.Object:
 			implErr = &ErrNotImplemented{Name: "object defaults"}
 		case schema.Type == jsonschema.Array:
-			implErr = &ErrNotImplemented{Name: "array defaults"}
+			if name := arrayDefaultUnsupported(schema); name != "" {
+				implErr = &ErrNotImplemented{Name: name}
+			}
 		case schema.Type == jsonschema.Empty ||
 			len(schema.AnyOf)+len(schema.OneOf) > 0:
 			implErr = &ErrNotImplemented{Name: "complex defaults"}
@@ -222,12 +253,6 @@ func (g *schemaGen) generate2(name string, schema *jsonschema.Schema) (ret *ir.T
 		if item == nil || item.Type == "" {
 			return nil, &ErrNotImplemented{Name: "empty uniqueItems"}
 		}
-	}
-
-	if n := schema.XOgenName; n != "" {
-		name = n
-	} else if len(name) > 0 && name[0] >= '0' && name[0] <= '9' {
-		name = "R" + name
 	}
 
 	var (
@@ -392,7 +417,7 @@ func (g *schemaGen) generate2(name string, schema *jsonschema.Schema) (ret *ir.T
 
 		for i := range schema.Properties {
 			prop := schema.Properties[i]
-			propTypeName, err := pascalSpecial(name, prop.Name)
+			propTypeName, err := g.namer().pascalSpecial(name, prop.Name)
 			if err != nil {
 				return nil, errors.Wrapf(err, "property type name: %q", prop.Name)
 			}
@@ -419,7 +444,7 @@ func (g *schemaGen) generate2(name string, schema *jsonschema.Schema) (ret *ir.T
 					propertyName = fmt.Sprintf("Field%d", i)
 				}
 
-				generated, err := pascalSpecial(propertyName)
+				generated, err := g.namer().pascalSpecial(propertyName)
 				if err != nil {
 					return nil, errors.Wrapf(err, "property name: %q", propertyName)
 				}
@@ -679,12 +704,53 @@ func (g *schemaGen) checkDefaultType(s *jsonschema.Schema, val any) error {
 		return nil
 	}
 
+	// Sum types (oneOf/anyOf) carry no single Go type. Their default is rendered
+	// by decoding the value at runtime (the template emits elem.Decode), and the
+	// spec parser already guaranteed the value is well-formed, so accept it here.
+	if len(s.OneOf)+len(s.AnyOf) > 0 {
+		return nil
+	}
+
 	var ok bool
 	switch s.Type {
 	case jsonschema.Object:
-		_, ok = val.(map[string]any)
+		var m map[string]any
+		m, ok = val.(map[string]any)
+		if ok {
+			for _, p := range s.Properties {
+				pv, has := m[p.Name]
+				if !has {
+					continue
+				}
+				if err := g.checkDefaultType(p.Schema, pv); err != nil {
+					return err
+				}
+			}
+			if s.Item != nil {
+				named := make(map[string]struct{}, len(s.Properties))
+				for _, p := range s.Properties {
+					named[p.Name] = struct{}{}
+				}
+				for k, v := range m {
+					if _, isNamed := named[k]; isNamed {
+						continue
+					}
+					if err := g.checkDefaultType(s.Item, v); err != nil {
+						return err
+					}
+				}
+			}
+		}
 	case jsonschema.Array:
-		_, ok = val.([]any)
+		var arr []any
+		arr, ok = val.([]any)
+		if ok && s.Item != nil {
+			for _, e := range arr {
+				if err := g.checkDefaultType(s.Item, e); err != nil {
+					return err
+				}
+			}
+		}
 	case jsonschema.Integer:
 		_, ok = val.(int64)
 	case jsonschema.Number:
@@ -717,6 +783,30 @@ func (g *schemaGen) checkDefaultType(s *jsonschema.Schema, val any) error {
 	}
 
 	return nil
+}
+
+// arrayDefaultUnsupported returns a non-empty ErrNotImplemented feature name when
+// the array schema's default value cannot be rendered as Go code, or "" otherwise.
+//
+// Renderable element kinds: primitives, enums, objects, maps, nested arrays, and
+// sum types (oneOf/anyOf, rendered via the variant's own Decode). Unsupported:
+// tuple/prefixItems arrays (which generate a struct, not a slice) and free-form
+// (typeless) items.
+func arrayDefaultUnsupported(s *jsonschema.Schema) string {
+	if len(s.Items) > 0 {
+		return "tuple array defaults"
+	}
+	item := s.Item
+	if item == nil {
+		return "array defaults with free-form items"
+	}
+	if item.Type == jsonschema.Array {
+		return arrayDefaultUnsupported(item)
+	}
+	if item.Type == jsonschema.Empty && len(item.OneOf)+len(item.AnyOf) == 0 {
+		return "array defaults with free-form items"
+	}
+	return ""
 }
 
 // nonPrimitiveObjectEnum generates a sum type for object enums.
@@ -784,6 +874,10 @@ func (g *schemaGen) nonPrimitiveObjectEnum(name string, schema *jsonschema.Schem
 			}
 			variantType.Fields = append(variantType.Fields, field)
 		}
+
+		slices.SortFunc(variantType.Fields, func(a, b *ir.Field) int {
+			return strings.Compare(a.Name, b.Name)
+		})
 
 		// Register and add to variants
 		g.regtype(variantName, variantType)

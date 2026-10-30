@@ -5,7 +5,8 @@ import (
 	"time"
 
 	"go.opentelemetry.io/otel/trace"
-	"go.uber.org/zap"
+
+	"github.com/gotd/log"
 
 	"github.com/gotd/td/bin"
 	"github.com/gotd/td/clock"
@@ -29,8 +30,8 @@ type Options struct {
 
 	// Random is random source. Defaults to crypto.
 	Random io.Reader
-	// Logger is instance of zap.Logger. No logs by default.
-	Logger *zap.Logger
+	// Logger is the structured logger. No logs by default.
+	Logger log.Logger
 	// Handler will be called on received message.
 	Handler Handler
 
@@ -71,8 +72,16 @@ type Options struct {
 	Types *tmap.Map
 	// Key that can be used to restore previous connection.
 	Key crypto.AuthKey
+	// PermKey is permanent auth key for PFS mode.
+	PermKey crypto.AuthKey
 	// Salt from server that can be used to restore previous connection.
 	Salt int64
+
+	// EnablePFS enables Perfect Forward Secrecy using temporary auth keys.
+	EnablePFS bool
+	// TempKeyTTL is temporary auth key lifetime in seconds.
+	// Default: 86400 (24h). Minimum: 60.
+	TempKeyTTL int
 
 	// Tracer for OTEL.
 	Tracer trace.Tracer
@@ -84,6 +93,14 @@ type Options struct {
 	// engine for replacing RPC engine.
 	engine *rpc.Engine
 }
+
+const (
+	// Telegram recommends short-lived temp keys; we keep 24h as practical
+	// default to balance reconnect frequency and security.
+	defaultTempKeyTTL = 24 * 60 * 60
+	// Prevent obviously invalid ttl values that can break renewal math.
+	minTempKeyTTL = 60
+)
 
 type nopHandler struct{}
 
@@ -107,7 +124,7 @@ func (opt *Options) setDefaults() {
 		opt.Random = crypto.DefaultRand()
 	}
 	if opt.Logger == nil {
-		opt.Logger = zap.NewNop()
+		opt.Logger = log.Nop
 	}
 	if opt.AckBatchSize == 0 {
 		opt.AckBatchSize = 20
@@ -149,6 +166,16 @@ func (opt *Options) setDefaults() {
 	}
 	if opt.MessageID == nil {
 		opt.MessageID = proto.NewMessageIDGen(opt.Clock.Now)
+	}
+	if opt.TempKeyTTL == 0 {
+		opt.TempKeyTTL = defaultTempKeyTTL
+	}
+	if opt.TempKeyTTL < minTempKeyTTL {
+		opt.TempKeyTTL = minTempKeyTTL
+	}
+	// Fallback for callers that still pass restored key via Key.
+	if opt.EnablePFS && opt.PermKey.Zero() && !opt.Key.Zero() {
+		opt.PermKey = opt.Key
 	}
 	if len(opt.PublicKeys) == 0 {
 		opt.setDefaultPublicKeys()

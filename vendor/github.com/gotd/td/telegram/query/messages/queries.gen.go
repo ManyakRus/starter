@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-faster/errors"
 
+	"github.com/gotd/td/telegram/message/peer"
 	"github.com/gotd/td/tg"
 )
 
@@ -39,12 +40,22 @@ func (q QueryFunc) Query(ctx context.Context, req Request) (tg.MessagesMessagesC
 
 // QueryBuilder is a helper to create message queries.
 type QueryBuilder struct {
-	raw *tg.Client
+	raw      *tg.Client
+	resolver peer.Resolver
 }
 
 // NewQueryBuilder creates new QueryBuilder.
 func NewQueryBuilder(raw *tg.Client) *QueryBuilder {
-	return &QueryBuilder{raw: raw}
+	return &QueryBuilder{
+		raw:      raw,
+		resolver: peer.DefaultResolver(raw),
+	}
+}
+
+// WithResolver sets peer resolver to use in Resolve helpers.
+func (q *QueryBuilder) WithResolver(resolver peer.Resolver) *QueryBuilder {
+	q.resolver = resolver
+	return q
 }
 
 // ChannelsSearchPostsQueryBuilder is query builder of ChannelsSearchPosts.
@@ -164,22 +175,36 @@ type GetHistoryQueryBuilder struct {
 	raw        *tg.Client
 	req        tg.MessagesGetHistoryRequest
 	batchSize  int
+	resolver   peer.Resolver
+	peerInput  peer.InputPeer
 	addOffset  int
 	offsetDate int
 	offsetID   int
 }
 
 // GetHistory creates query builder of MessagesGetHistory.
-func (q *QueryBuilder) GetHistory(paramPeer tg.InputPeerClass) *GetHistoryQueryBuilder {
+//
+// The peer may be a concrete tg.InputPeerClass or a lazy reference created with
+// peer.Resolve, e.g.
+//
+//	GetHistory(peer.Resolve("telegram"))
+//
+// resolved lazily using the QueryBuilder's resolver.
+func (q *QueryBuilder) GetHistory(paramPeer peer.InputPeer) *GetHistoryQueryBuilder {
 	b := &GetHistoryQueryBuilder{
 		raw:       q.raw,
+		resolver:  q.resolver,
 		batchSize: 1,
 		req: tg.MessagesGetHistoryRequest{
 			Peer: &tg.InputPeerEmpty{},
 		},
 	}
 
-	b.req.Peer = paramPeer
+	if p, ok := paramPeer.(tg.InputPeerClass); ok {
+		b.req.Peer = p
+	} else {
+		b.peerInput = paramPeer
+	}
 	return b
 }
 
@@ -211,6 +236,14 @@ func (b *GetHistoryQueryBuilder) Peer(paramPeer tg.InputPeerClass) *GetHistoryQu
 
 // Query implements Query interface.
 func (b *GetHistoryQueryBuilder) Query(ctx context.Context, req Request) (tg.MessagesMessagesClass, error) {
+	if b.peerInput != nil {
+		p, err := peer.ResolveInputPeer(ctx, b.resolver, b.peerInput)
+		if err != nil {
+			return nil, errors.Wrap(err, "resolve peer")
+		}
+		b.req.Peer = p
+		b.peerInput = nil
+	}
 	r := &tg.MessagesGetHistoryRequest{
 		Limit: req.Limit,
 	}
@@ -267,24 +300,124 @@ func (b *GetHistoryQueryBuilder) Collect(ctx context.Context) ([]Elem, error) {
 	return r, iter.Err()
 }
 
+// GetPersonalChannelHistoryQueryBuilder is query builder of MessagesGetPersonalChannelHistory.
+type GetPersonalChannelHistoryQueryBuilder struct {
+	raw       *tg.Client
+	req       tg.MessagesGetPersonalChannelHistoryRequest
+	batchSize int
+}
+
+// GetPersonalChannelHistory creates query builder of MessagesGetPersonalChannelHistory.
+func (q *QueryBuilder) GetPersonalChannelHistory(paramUserID tg.InputUserClass) *GetPersonalChannelHistoryQueryBuilder {
+	b := &GetPersonalChannelHistoryQueryBuilder{
+		raw:       q.raw,
+		batchSize: 1,
+		req:       tg.MessagesGetPersonalChannelHistoryRequest{},
+	}
+
+	b.req.UserID = paramUserID
+	return b
+}
+
+// BatchSize sets buffer of message loaded from one request.
+// Be carefully, when set this limit, because Telegram does not return error if limit is too big,
+// so results can be incorrect.
+func (b *GetPersonalChannelHistoryQueryBuilder) BatchSize(batchSize int) *GetPersonalChannelHistoryQueryBuilder {
+	b.batchSize = batchSize
+	return b
+}
+
+// UserID sets UserID field of GetPersonalChannelHistory query.
+func (b *GetPersonalChannelHistoryQueryBuilder) UserID(paramUserID tg.InputUserClass) *GetPersonalChannelHistoryQueryBuilder {
+	b.req.UserID = paramUserID
+	return b
+}
+
+// Query implements Query interface.
+func (b *GetPersonalChannelHistoryQueryBuilder) Query(ctx context.Context, req Request) (tg.MessagesMessagesClass, error) {
+	r := &tg.MessagesGetPersonalChannelHistoryRequest{
+		Limit: req.Limit,
+	}
+
+	r.UserID = b.req.UserID
+	return b.raw.MessagesGetPersonalChannelHistory(ctx, r)
+}
+
+// Iter returns iterator using built query.
+func (b *GetPersonalChannelHistoryQueryBuilder) Iter() *Iterator {
+	iter := NewIterator(b, b.batchSize)
+	return iter
+}
+
+// ForEach calls given callback on each iterator element.
+func (b *GetPersonalChannelHistoryQueryBuilder) ForEach(ctx context.Context, cb func(context.Context, Elem) error) error {
+	iter := b.Iter()
+	for iter.Next(ctx) {
+		if err := cb(ctx, iter.Value()); err != nil {
+			return err
+		}
+	}
+	return iter.Err()
+}
+
+// Count fetches remote state to get number of elements.
+func (b *GetPersonalChannelHistoryQueryBuilder) Count(ctx context.Context) (int, error) {
+	iter := b.Iter()
+	c, err := iter.Total(ctx)
+	if err != nil {
+		return 0, errors.Wrap(err, "get total")
+	}
+	return c, nil
+}
+
+// Collect creates iterator and collects all elements to slice.
+func (b *GetPersonalChannelHistoryQueryBuilder) Collect(ctx context.Context) ([]Elem, error) {
+	iter := b.Iter()
+	c, err := iter.Total(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "get total")
+	}
+
+	r := make([]Elem, 0, c)
+	for iter.Next(ctx) {
+		r = append(r, iter.Value())
+	}
+
+	return r, iter.Err()
+}
+
 // GetRecentLocationsQueryBuilder is query builder of MessagesGetRecentLocations.
 type GetRecentLocationsQueryBuilder struct {
 	raw       *tg.Client
 	req       tg.MessagesGetRecentLocationsRequest
 	batchSize int
+	resolver  peer.Resolver
+	peerInput peer.InputPeer
 }
 
 // GetRecentLocations creates query builder of MessagesGetRecentLocations.
-func (q *QueryBuilder) GetRecentLocations(paramPeer tg.InputPeerClass) *GetRecentLocationsQueryBuilder {
+//
+// The peer may be a concrete tg.InputPeerClass or a lazy reference created with
+// peer.Resolve, e.g.
+//
+//	GetRecentLocations(peer.Resolve("telegram"))
+//
+// resolved lazily using the QueryBuilder's resolver.
+func (q *QueryBuilder) GetRecentLocations(paramPeer peer.InputPeer) *GetRecentLocationsQueryBuilder {
 	b := &GetRecentLocationsQueryBuilder{
 		raw:       q.raw,
+		resolver:  q.resolver,
 		batchSize: 1,
 		req: tg.MessagesGetRecentLocationsRequest{
 			Peer: &tg.InputPeerEmpty{},
 		},
 	}
 
-	b.req.Peer = paramPeer
+	if p, ok := paramPeer.(tg.InputPeerClass); ok {
+		b.req.Peer = p
+	} else {
+		b.peerInput = paramPeer
+	}
 	return b
 }
 
@@ -304,6 +437,14 @@ func (b *GetRecentLocationsQueryBuilder) Peer(paramPeer tg.InputPeerClass) *GetR
 
 // Query implements Query interface.
 func (b *GetRecentLocationsQueryBuilder) Query(ctx context.Context, req Request) (tg.MessagesMessagesClass, error) {
+	if b.peerInput != nil {
+		p, err := peer.ResolveInputPeer(ctx, b.resolver, b.peerInput)
+		if err != nil {
+			return nil, errors.Wrap(err, "resolve peer")
+		}
+		b.req.Peer = p
+		b.peerInput = nil
+	}
 	r := &tg.MessagesGetRecentLocationsRequest{
 		Limit: req.Limit,
 	}
@@ -360,22 +501,36 @@ type GetRepliesQueryBuilder struct {
 	raw        *tg.Client
 	req        tg.MessagesGetRepliesRequest
 	batchSize  int
+	resolver   peer.Resolver
+	peerInput  peer.InputPeer
 	addOffset  int
 	offsetDate int
 	offsetID   int
 }
 
 // GetReplies creates query builder of MessagesGetReplies.
-func (q *QueryBuilder) GetReplies(paramPeer tg.InputPeerClass) *GetRepliesQueryBuilder {
+//
+// The peer may be a concrete tg.InputPeerClass or a lazy reference created with
+// peer.Resolve, e.g.
+//
+//	GetReplies(peer.Resolve("telegram"))
+//
+// resolved lazily using the QueryBuilder's resolver.
+func (q *QueryBuilder) GetReplies(paramPeer peer.InputPeer) *GetRepliesQueryBuilder {
 	b := &GetRepliesQueryBuilder{
 		raw:       q.raw,
+		resolver:  q.resolver,
 		batchSize: 1,
 		req: tg.MessagesGetRepliesRequest{
 			Peer: &tg.InputPeerEmpty{},
 		},
 	}
 
-	b.req.Peer = paramPeer
+	if p, ok := paramPeer.(tg.InputPeerClass); ok {
+		b.req.Peer = p
+	} else {
+		b.peerInput = paramPeer
+	}
 	return b
 }
 
@@ -413,6 +568,14 @@ func (b *GetRepliesQueryBuilder) Peer(paramPeer tg.InputPeerClass) *GetRepliesQu
 
 // Query implements Query interface.
 func (b *GetRepliesQueryBuilder) Query(ctx context.Context, req Request) (tg.MessagesMessagesClass, error) {
+	if b.peerInput != nil {
+		p, err := peer.ResolveInputPeer(ctx, b.resolver, b.peerInput)
+		if err != nil {
+			return nil, errors.Wrap(err, "resolve peer")
+		}
+		b.req.Peer = p
+		b.peerInput = nil
+	}
 	r := &tg.MessagesGetRepliesRequest{
 		Limit: req.Limit,
 	}
@@ -475,15 +638,25 @@ type GetSavedHistoryQueryBuilder struct {
 	raw        *tg.Client
 	req        tg.MessagesGetSavedHistoryRequest
 	batchSize  int
+	resolver   peer.Resolver
+	peerInput  peer.InputPeer
 	addOffset  int
 	offsetDate int
 	offsetID   int
 }
 
 // GetSavedHistory creates query builder of MessagesGetSavedHistory.
-func (q *QueryBuilder) GetSavedHistory(paramPeer tg.InputPeerClass) *GetSavedHistoryQueryBuilder {
+//
+// The peer may be a concrete tg.InputPeerClass or a lazy reference created with
+// peer.Resolve, e.g.
+//
+//	GetSavedHistory(peer.Resolve("telegram"))
+//
+// resolved lazily using the QueryBuilder's resolver.
+func (q *QueryBuilder) GetSavedHistory(paramPeer peer.InputPeer) *GetSavedHistoryQueryBuilder {
 	b := &GetSavedHistoryQueryBuilder{
 		raw:       q.raw,
+		resolver:  q.resolver,
 		batchSize: 1,
 		req: tg.MessagesGetSavedHistoryRequest{
 			ParentPeer: &tg.InputPeerEmpty{},
@@ -491,7 +664,11 @@ func (q *QueryBuilder) GetSavedHistory(paramPeer tg.InputPeerClass) *GetSavedHis
 		},
 	}
 
-	b.req.Peer = paramPeer
+	if p, ok := paramPeer.(tg.InputPeerClass); ok {
+		b.req.Peer = p
+	} else {
+		b.peerInput = paramPeer
+	}
 	return b
 }
 
@@ -529,6 +706,14 @@ func (b *GetSavedHistoryQueryBuilder) Peer(paramPeer tg.InputPeerClass) *GetSave
 
 // Query implements Query interface.
 func (b *GetSavedHistoryQueryBuilder) Query(ctx context.Context, req Request) (tg.MessagesMessagesClass, error) {
+	if b.peerInput != nil {
+		p, err := peer.ResolveInputPeer(ctx, b.resolver, b.peerInput)
+		if err != nil {
+			return nil, errors.Wrap(err, "resolve peer")
+		}
+		b.req.Peer = p
+		b.peerInput = nil
+	}
 	r := &tg.MessagesGetSavedHistoryRequest{
 		Limit: req.Limit,
 	}
@@ -591,21 +776,35 @@ type GetUnreadMentionsQueryBuilder struct {
 	raw       *tg.Client
 	req       tg.MessagesGetUnreadMentionsRequest
 	batchSize int
+	resolver  peer.Resolver
+	peerInput peer.InputPeer
 	addOffset int
 	offsetID  int
 }
 
 // GetUnreadMentions creates query builder of MessagesGetUnreadMentions.
-func (q *QueryBuilder) GetUnreadMentions(paramPeer tg.InputPeerClass) *GetUnreadMentionsQueryBuilder {
+//
+// The peer may be a concrete tg.InputPeerClass or a lazy reference created with
+// peer.Resolve, e.g.
+//
+//	GetUnreadMentions(peer.Resolve("telegram"))
+//
+// resolved lazily using the QueryBuilder's resolver.
+func (q *QueryBuilder) GetUnreadMentions(paramPeer peer.InputPeer) *GetUnreadMentionsQueryBuilder {
 	b := &GetUnreadMentionsQueryBuilder{
 		raw:       q.raw,
+		resolver:  q.resolver,
 		batchSize: 1,
 		req: tg.MessagesGetUnreadMentionsRequest{
 			Peer: &tg.InputPeerEmpty{},
 		},
 	}
 
-	b.req.Peer = paramPeer
+	if p, ok := paramPeer.(tg.InputPeerClass); ok {
+		b.req.Peer = p
+	} else {
+		b.peerInput = paramPeer
+	}
 	return b
 }
 
@@ -637,6 +836,14 @@ func (b *GetUnreadMentionsQueryBuilder) TopMsgID(paramTopMsgID int) *GetUnreadMe
 
 // Query implements Query interface.
 func (b *GetUnreadMentionsQueryBuilder) Query(ctx context.Context, req Request) (tg.MessagesMessagesClass, error) {
+	if b.peerInput != nil {
+		p, err := peer.ResolveInputPeer(ctx, b.resolver, b.peerInput)
+		if err != nil {
+			return nil, errors.Wrap(err, "resolve peer")
+		}
+		b.req.Peer = p
+		b.peerInput = nil
+	}
 	r := &tg.MessagesGetUnreadMentionsRequest{
 		Limit: req.Limit,
 	}
@@ -692,19 +899,157 @@ func (b *GetUnreadMentionsQueryBuilder) Collect(ctx context.Context) ([]Elem, er
 	return r, iter.Err()
 }
 
+// GetUnreadPollVotesQueryBuilder is query builder of MessagesGetUnreadPollVotes.
+type GetUnreadPollVotesQueryBuilder struct {
+	raw       *tg.Client
+	req       tg.MessagesGetUnreadPollVotesRequest
+	batchSize int
+	resolver  peer.Resolver
+	peerInput peer.InputPeer
+	addOffset int
+	offsetID  int
+}
+
+// GetUnreadPollVotes creates query builder of MessagesGetUnreadPollVotes.
+//
+// The peer may be a concrete tg.InputPeerClass or a lazy reference created with
+// peer.Resolve, e.g.
+//
+//	GetUnreadPollVotes(peer.Resolve("telegram"))
+//
+// resolved lazily using the QueryBuilder's resolver.
+func (q *QueryBuilder) GetUnreadPollVotes(paramPeer peer.InputPeer) *GetUnreadPollVotesQueryBuilder {
+	b := &GetUnreadPollVotesQueryBuilder{
+		raw:       q.raw,
+		resolver:  q.resolver,
+		batchSize: 1,
+		req: tg.MessagesGetUnreadPollVotesRequest{
+			Peer: &tg.InputPeerEmpty{},
+		},
+	}
+
+	if p, ok := paramPeer.(tg.InputPeerClass); ok {
+		b.req.Peer = p
+	} else {
+		b.peerInput = paramPeer
+	}
+	return b
+}
+
+// BatchSize sets buffer of message loaded from one request.
+// Be carefully, when set this limit, because Telegram does not return error if limit is too big,
+// so results can be incorrect.
+func (b *GetUnreadPollVotesQueryBuilder) BatchSize(batchSize int) *GetUnreadPollVotesQueryBuilder {
+	b.batchSize = batchSize
+	return b
+}
+
+// OffsetID sets offsetID from which iterate start.
+func (b *GetUnreadPollVotesQueryBuilder) OffsetID(offsetID int) *GetUnreadPollVotesQueryBuilder {
+	b.offsetID = offsetID
+	return b
+}
+
+// Peer sets Peer field of GetUnreadPollVotes query.
+func (b *GetUnreadPollVotesQueryBuilder) Peer(paramPeer tg.InputPeerClass) *GetUnreadPollVotesQueryBuilder {
+	b.req.Peer = paramPeer
+	return b
+}
+
+// TopMsgID sets TopMsgID field of GetUnreadPollVotes query.
+func (b *GetUnreadPollVotesQueryBuilder) TopMsgID(paramTopMsgID int) *GetUnreadPollVotesQueryBuilder {
+	b.req.TopMsgID = paramTopMsgID
+	return b
+}
+
+// Query implements Query interface.
+func (b *GetUnreadPollVotesQueryBuilder) Query(ctx context.Context, req Request) (tg.MessagesMessagesClass, error) {
+	if b.peerInput != nil {
+		p, err := peer.ResolveInputPeer(ctx, b.resolver, b.peerInput)
+		if err != nil {
+			return nil, errors.Wrap(err, "resolve peer")
+		}
+		b.req.Peer = p
+		b.peerInput = nil
+	}
+	r := &tg.MessagesGetUnreadPollVotesRequest{
+		Limit: req.Limit,
+	}
+
+	r.Peer = b.req.Peer
+	r.TopMsgID = b.req.TopMsgID
+	r.AddOffset = req.AddOffset
+	r.OffsetID = req.OffsetID
+	return b.raw.MessagesGetUnreadPollVotes(ctx, r)
+}
+
+// Iter returns iterator using built query.
+func (b *GetUnreadPollVotesQueryBuilder) Iter() *Iterator {
+	iter := NewIterator(b, b.batchSize)
+	iter = iter.OffsetID(b.offsetID)
+	return iter
+}
+
+// ForEach calls given callback on each iterator element.
+func (b *GetUnreadPollVotesQueryBuilder) ForEach(ctx context.Context, cb func(context.Context, Elem) error) error {
+	iter := b.Iter()
+	for iter.Next(ctx) {
+		if err := cb(ctx, iter.Value()); err != nil {
+			return err
+		}
+	}
+	return iter.Err()
+}
+
+// Count fetches remote state to get number of elements.
+func (b *GetUnreadPollVotesQueryBuilder) Count(ctx context.Context) (int, error) {
+	iter := b.Iter()
+	c, err := iter.Total(ctx)
+	if err != nil {
+		return 0, errors.Wrap(err, "get total")
+	}
+	return c, nil
+}
+
+// Collect creates iterator and collects all elements to slice.
+func (b *GetUnreadPollVotesQueryBuilder) Collect(ctx context.Context) ([]Elem, error) {
+	iter := b.Iter()
+	c, err := iter.Total(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "get total")
+	}
+
+	r := make([]Elem, 0, c)
+	for iter.Next(ctx) {
+		r = append(r, iter.Value())
+	}
+
+	return r, iter.Err()
+}
+
 // GetUnreadReactionsQueryBuilder is query builder of MessagesGetUnreadReactions.
 type GetUnreadReactionsQueryBuilder struct {
 	raw       *tg.Client
 	req       tg.MessagesGetUnreadReactionsRequest
 	batchSize int
+	resolver  peer.Resolver
+	peerInput peer.InputPeer
 	addOffset int
 	offsetID  int
 }
 
 // GetUnreadReactions creates query builder of MessagesGetUnreadReactions.
-func (q *QueryBuilder) GetUnreadReactions(paramPeer tg.InputPeerClass) *GetUnreadReactionsQueryBuilder {
+//
+// The peer may be a concrete tg.InputPeerClass or a lazy reference created with
+// peer.Resolve, e.g.
+//
+//	GetUnreadReactions(peer.Resolve("telegram"))
+//
+// resolved lazily using the QueryBuilder's resolver.
+func (q *QueryBuilder) GetUnreadReactions(paramPeer peer.InputPeer) *GetUnreadReactionsQueryBuilder {
 	b := &GetUnreadReactionsQueryBuilder{
 		raw:       q.raw,
+		resolver:  q.resolver,
 		batchSize: 1,
 		req: tg.MessagesGetUnreadReactionsRequest{
 			Peer:        &tg.InputPeerEmpty{},
@@ -712,7 +1057,11 @@ func (q *QueryBuilder) GetUnreadReactions(paramPeer tg.InputPeerClass) *GetUnrea
 		},
 	}
 
-	b.req.Peer = paramPeer
+	if p, ok := paramPeer.(tg.InputPeerClass); ok {
+		b.req.Peer = p
+	} else {
+		b.peerInput = paramPeer
+	}
 	return b
 }
 
@@ -750,6 +1099,14 @@ func (b *GetUnreadReactionsQueryBuilder) TopMsgID(paramTopMsgID int) *GetUnreadR
 
 // Query implements Query interface.
 func (b *GetUnreadReactionsQueryBuilder) Query(ctx context.Context, req Request) (tg.MessagesMessagesClass, error) {
+	if b.peerInput != nil {
+		p, err := peer.ResolveInputPeer(ctx, b.resolver, b.peerInput)
+		if err != nil {
+			return nil, errors.Wrap(err, "resolve peer")
+		}
+		b.req.Peer = p
+		b.peerInput = nil
+	}
 	r := &tg.MessagesGetUnreadReactionsRequest{
 		Limit: req.Limit,
 	}
@@ -811,14 +1168,24 @@ type SearchQueryBuilder struct {
 	raw       *tg.Client
 	req       tg.MessagesSearchRequest
 	batchSize int
+	resolver  peer.Resolver
+	peerInput peer.InputPeer
 	addOffset int
 	offsetID  int
 }
 
 // Search creates query builder of MessagesSearch.
-func (q *QueryBuilder) Search(paramPeer tg.InputPeerClass) *SearchQueryBuilder {
+//
+// The peer may be a concrete tg.InputPeerClass or a lazy reference created with
+// peer.Resolve, e.g.
+//
+//	Search(peer.Resolve("telegram"))
+//
+// resolved lazily using the QueryBuilder's resolver.
+func (q *QueryBuilder) Search(paramPeer peer.InputPeer) *SearchQueryBuilder {
 	b := &SearchQueryBuilder{
 		raw:       q.raw,
+		resolver:  q.resolver,
 		batchSize: 1,
 		req: tg.MessagesSearchRequest{
 			Filter:      &tg.InputMessagesFilterEmpty{},
@@ -828,7 +1195,11 @@ func (q *QueryBuilder) Search(paramPeer tg.InputPeerClass) *SearchQueryBuilder {
 		},
 	}
 
-	b.req.Peer = paramPeer
+	if p, ok := paramPeer.(tg.InputPeerClass); ok {
+		b.req.Peer = p
+	} else {
+		b.peerInput = paramPeer
+	}
 	return b
 }
 
@@ -968,6 +1339,12 @@ func (b *SearchQueryBuilder) Pinned() *SearchQueryBuilder {
 	return b
 }
 
+// Poll sets Filter field of Search query.
+func (b *SearchQueryBuilder) Poll() *SearchQueryBuilder {
+	b.req.Filter = &tg.InputMessagesFilterPoll{}
+	return b
+}
+
 // RoundVideo sets Filter field of Search query.
 func (b *SearchQueryBuilder) RoundVideo() *SearchQueryBuilder {
 	b.req.Filter = &tg.InputMessagesFilterRoundVideo{}
@@ -1000,6 +1377,14 @@ func (b *SearchQueryBuilder) Voice() *SearchQueryBuilder {
 
 // Query implements Query interface.
 func (b *SearchQueryBuilder) Query(ctx context.Context, req Request) (tg.MessagesMessagesClass, error) {
+	if b.peerInput != nil {
+		p, err := peer.ResolveInputPeer(ctx, b.resolver, b.peerInput)
+		if err != nil {
+			return nil, errors.Wrap(err, "resolve peer")
+		}
+		b.req.Peer = p
+		b.peerInput = nil
+	}
 	r := &tg.MessagesSearchRequest{
 		Limit: req.Limit,
 	}
@@ -1102,6 +1487,12 @@ func (b *SearchGlobalQueryBuilder) OffsetID(offsetID int) *SearchGlobalQueryBuil
 // BroadcastsOnly sets BroadcastsOnly field of SearchGlobal query.
 func (b *SearchGlobalQueryBuilder) BroadcastsOnly(paramBroadcastsOnly bool) *SearchGlobalQueryBuilder {
 	b.req.BroadcastsOnly = paramBroadcastsOnly
+	return b
+}
+
+// Community sets Community field of SearchGlobal query.
+func (b *SearchGlobalQueryBuilder) Community(paramCommunity tg.InputChannelClass) *SearchGlobalQueryBuilder {
+	b.req.Community = paramCommunity
 	return b
 }
 
@@ -1215,6 +1606,12 @@ func (b *SearchGlobalQueryBuilder) Pinned() *SearchGlobalQueryBuilder {
 	return b
 }
 
+// Poll sets Filter field of SearchGlobal query.
+func (b *SearchGlobalQueryBuilder) Poll() *SearchGlobalQueryBuilder {
+	b.req.Filter = &tg.InputMessagesFilterPoll{}
+	return b
+}
+
 // RoundVideo sets Filter field of SearchGlobal query.
 func (b *SearchGlobalQueryBuilder) RoundVideo() *SearchGlobalQueryBuilder {
 	b.req.Filter = &tg.InputMessagesFilterRoundVideo{}
@@ -1252,6 +1649,7 @@ func (b *SearchGlobalQueryBuilder) Query(ctx context.Context, req Request) (tg.M
 	}
 
 	r.BroadcastsOnly = b.req.BroadcastsOnly
+	r.Community = b.req.Community
 	r.Filter = b.req.Filter
 	r.FolderID = b.req.FolderID
 	r.GroupsOnly = b.req.GroupsOnly
@@ -1414,6 +1812,12 @@ func (b *SearchSentMediaQueryBuilder) Photos() *SearchSentMediaQueryBuilder {
 // Pinned sets Filter field of SearchSentMedia query.
 func (b *SearchSentMediaQueryBuilder) Pinned() *SearchSentMediaQueryBuilder {
 	b.req.Filter = &tg.InputMessagesFilterPinned{}
+	return b
+}
+
+// Poll sets Filter field of SearchSentMedia query.
+func (b *SearchSentMediaQueryBuilder) Poll() *SearchSentMediaQueryBuilder {
+	b.req.Filter = &tg.InputMessagesFilterPoll{}
 	return b
 }
 

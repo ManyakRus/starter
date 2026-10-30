@@ -396,3 +396,106 @@ func Blockquote(collapsed bool) Formatter {
 func (b *Builder) Blockquote(s string, collapsed bool) *Builder {
 	return b.Format(s, Blockquote(collapsed))
 }
+
+// FormattedDate creates Formatter of FormattedDate message entity.
+//
+// See https://core.telegram.org/constructor/messageEntityFormattedDate.
+func FormattedDate(relative bool, shortTime bool, longTime bool, shortDate bool, longDate bool, dayOfWeek bool, date int) Formatter {
+	return func(offset, length int) tg.MessageEntityClass {
+		return &tg.MessageEntityFormattedDate{
+			Offset:    offset,
+			Length:    length,
+			Relative:  relative,
+			ShortTime: shortTime,
+			LongTime:  longTime,
+			ShortDate: shortDate,
+			LongDate:  longDate,
+			DayOfWeek: dayOfWeek,
+			Date:      date,
+		}
+	}
+}
+
+// FormattedDate adds and formats message as FormattedDate message entity.
+//
+// See https://core.telegram.org/constructor/messageEntityFormattedDate.
+func (b *Builder) FormattedDate(s string, relative bool, shortTime bool, longTime bool, shortDate bool, longDate bool, dayOfWeek bool, date int) *Builder {
+	return b.Format(s, FormattedDate(relative, shortTime, longTime, shortDate, longDate, dayOfWeek, date))
+}
+
+// DiffInsert creates Formatter of DiffInsert message entity.
+//
+// See https://core.telegram.org/constructor/messageEntityDiffInsert.
+func DiffInsert() Formatter {
+	return func(offset, length int) tg.MessageEntityClass {
+		return &tg.MessageEntityDiffInsert{
+			Offset: offset,
+			Length: length,
+		}
+	}
+}
+
+// DiffInsert adds and formats message as DiffInsert message entity.
+//
+// See https://core.telegram.org/constructor/messageEntityDiffInsert.
+func (b *Builder) DiffInsert(s string) *Builder {
+	return b.Format(s, DiffInsert())
+}
+
+// DiffReplace creates Formatter of DiffReplace message entity.
+//
+// See https://core.telegram.org/constructor/messageEntityDiffReplace.
+func DiffReplace(oldText string) Formatter {
+	return func(offset, length int) tg.MessageEntityClass {
+		return &tg.MessageEntityDiffReplace{
+			Offset:  offset,
+			Length:  length,
+			OldText: oldText,
+		}
+	}
+}
+
+// DiffReplace adds and formats message as DiffReplace message entity.
+//
+// See https://core.telegram.org/constructor/messageEntityDiffReplace.
+func (b *Builder) DiffReplace(s string, oldText string) *Builder {
+	return b.Format(s, DiffReplace(oldText))
+}
+
+// DiffDelete creates Formatter of DiffDelete message entity.
+//
+// See https://core.telegram.org/constructor/messageEntityDiffDelete.
+func DiffDelete() Formatter {
+	return func(offset, length int) tg.MessageEntityClass {
+		return &tg.MessageEntityDiffDelete{
+			Offset: offset,
+			Length: length,
+		}
+	}
+}
+
+// DiffDelete adds and formats message as DiffDelete message entity.
+//
+// See https://core.telegram.org/constructor/messageEntityDiffDelete.
+func (b *Builder) DiffDelete(s string) *Builder {
+	return b.Format(s, DiffDelete())
+}
+
+// TonAddress creates Formatter of TonAddress message entity.
+//
+// See https://core.telegram.org/constructor/messageEntityTonAddress.
+func TonAddress() Formatter {
+	return func(offset, length int) tg.MessageEntityClass {
+		return &tg.MessageEntityTonAddress{
+			Offset: offset,
+			Length: length,
+		}
+	}
+}
+
+// TonAddress adds and formats message as TonAddress message entity.
+//
+// See https://core.telegram.org/constructor/messageEntityTonAddress.
+func (b *Builder) TonAddress(s string) *Builder {
+	return b.Format(s, TonAddress())
+}

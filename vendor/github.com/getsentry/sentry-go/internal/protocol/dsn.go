@@ -3,6 +3,7 @@ package protocol
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/url"
 	"strconv"
 	"strings"
@@ -49,6 +50,7 @@ type Dsn struct {
 	port      int
 	path      string
 	projectID string
+	orgID     uint64
 }
 
 // NewDsn creates a Dsn by parsing rawURL. Most users will never call this
@@ -90,6 +92,17 @@ func NewDsn(rawURL string) (*Dsn, error) {
 		return nil, &DsnParseError{"empty host"}
 	}
 
+	// OrgID (optional)
+	var orgID uint64
+	parts := strings.Split(host, ".")
+	orgPart := parts[0]
+	if len(orgPart) >= 2 && orgPart[0] == 'o' {
+		parsedOrgID, err := strconv.ParseUint(orgPart[1:], 10, 64)
+		if err == nil {
+			orgID = parsedOrgID
+		}
+	}
+
 	// Port
 	var port int
 	if p := parsedURL.Port(); p != "" {
@@ -126,6 +139,7 @@ func NewDsn(rawURL string) (*Dsn, error) {
 		port:      port,
 		path:      path,
 		projectID: projectID,
+		orgID:     orgID,
 	}, nil
 }
 
@@ -182,20 +196,35 @@ func (dsn Dsn) GetProjectID() string {
 	return dsn.projectID
 }
 
+// GetOrgID returns the orgID that was parsed from the DSN.
+func (dsn Dsn) GetOrgID() uint64 {
+	return dsn.orgID
+}
+
+// SetOrgID sets the orgID used for trace continuation.
+//
+// This function is used for overriding the orgID parsed from the DSN.
+func (dsn *Dsn) SetOrgID(orgID uint64) {
+	dsn.orgID = orgID
+}
+
 // GetAPIURL returns the URL of the envelope endpoint of the project
 // associated with the DSN.
 func (dsn Dsn) GetAPIURL() *url.URL {
-	var rawURL string
-	rawURL += fmt.Sprintf("%s://%s", dsn.scheme, dsn.host)
+	host := dsn.host
+	port := ""
 	if dsn.port != dsn.scheme.defaultPort() {
-		rawURL += fmt.Sprintf(":%d", dsn.port)
+		port = strconv.Itoa(dsn.port)
 	}
-	if dsn.path != "" {
-		rawURL += dsn.path
+	// JoinHostPort correctly adds brackets for IPv6 hosts. However with an
+	// empty port it leaves a trailing ":", which we trim to omit the default port.
+	host = net.JoinHostPort(host, port)
+	host = strings.TrimSuffix(host, ":")
+	return &url.URL{
+		Scheme: string(dsn.scheme),
+		Host:   host,
+		Path:   dsn.path + "/api/" + dsn.projectID + "/envelope/",
 	}
-	rawURL += fmt.Sprintf("/api/%s/%s/", dsn.projectID, "envelope")
-	parsedURL, _ := url.Parse(rawURL)
-	return parsedURL
 }
 
 // RequestHeaders returns all the necessary headers that have to be used in the transport when sending events

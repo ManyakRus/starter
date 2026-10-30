@@ -3,8 +3,8 @@ package updates
 import (
 	"context"
 
+	"github.com/gotd/log"
 	"go.opentelemetry.io/otel/trace"
-	"go.uber.org/zap"
 
 	"github.com/gotd/td/tg"
 )
@@ -23,11 +23,11 @@ func (s *internalState) applySeq(ctx context.Context, state int, updates []updat
 	}
 
 	if err := s.storage.SetSeq(ctx, s.selfID, state); err != nil {
-		s.log.Error("SetSeq error", zap.Error(err))
+		s.log.Error(ctx, "SetSeq error", log.Error(err))
 	}
 
 	if recoverState {
-		return s.getDifference(ctx)
+		return s.getDifference(ctx, "seq-combined-pts-changed")
 	}
 
 	return nil
@@ -54,7 +54,7 @@ func (s *internalState) applyCombined(ctx context.Context, comb *tg.UpdatesCombi
 		case *tg.UpdateChannelTooLong:
 			st, ok := s.channels[u.ChannelID]
 			if !ok {
-				s.log.Debug("ChannelTooLong for channel that is not in the internalState, update ignored", zap.Int64("channel_id", u.ChannelID))
+				s.log.Debug(ctx, "ChannelTooLong for channel that is not in the internalState, update ignored", log.Int64("channel_id", u.ChannelID))
 				continue
 			}
 			if err := st.Push(ctx, channelUpdate{
@@ -62,7 +62,7 @@ func (s *internalState) applyCombined(ctx context.Context, comb *tg.UpdatesCombi
 				entities: ents,
 				span:     trace.SpanContextFromContext(ctx),
 			}); err != nil {
-				s.log.Error("Push channel update error", zap.Error(err))
+				s.log.Error(ctx, "Push channel update error", log.Error(err))
 			}
 			continue
 		}
@@ -77,7 +77,7 @@ func (s *internalState) applyCombined(ctx context.Context, comb *tg.UpdatesCombi
 
 		if channelID, pts, ptsCount, ok, err := tg.IsChannelPtsUpdate(u); ok {
 			if err != nil {
-				s.log.Debug("Invalid channel update", zap.Error(err), zap.Any("update", u))
+				s.log.Debug(ctx, "Invalid channel update", log.Error(err), log.Any("update", u))
 				continue
 			}
 			if err := s.handleChannel(ctx, channelID, comb.Date, pts, ptsCount, channelUpdate{
@@ -85,7 +85,7 @@ func (s *internalState) applyCombined(ctx context.Context, comb *tg.UpdatesCombi
 				entities: ents,
 				span:     trace.SpanContextFromContext(ctx),
 			}); err != nil {
-				s.log.Error("Handle channel update error", zap.Error(err))
+				s.log.Error(ctx, "Handle channel update error", log.Error(err))
 			}
 
 			continue
@@ -103,12 +103,12 @@ func (s *internalState) applyCombined(ctx context.Context, comb *tg.UpdatesCombi
 	}
 
 	if len(others) > 0 {
-		if err := s.handler.Handle(ctx, &tg.Updates{
+		if err := s.dispatch(ctx, &tg.Updates{
 			Updates: others,
 			Users:   ents.Users,
 			Chats:   ents.Chats,
 		}); err != nil {
-			s.log.Error("Handle updates error", zap.Error(err))
+			s.log.Error(ctx, "Handle updates error", log.Error(err))
 		}
 	}
 
@@ -116,19 +116,19 @@ func (s *internalState) applyCombined(ctx context.Context, comb *tg.UpdatesCombi
 	switch {
 	case setDate && setSeq:
 		if err := s.storage.SetDateSeq(ctx, s.selfID, comb.Date, comb.Seq); err != nil {
-			s.log.Error("SetDateSeq error", zap.Error(err))
+			s.log.Error(ctx, "SetDateSeq error", log.Error(err))
 		}
 
 		s.date = comb.Date
 		s.seq.SetState(comb.Seq, "seq update")
 	case setDate:
 		if err := s.storage.SetDate(ctx, s.selfID, comb.Date); err != nil {
-			s.log.Error("SetDate error", zap.Error(err))
+			s.log.Error(ctx, "SetDate error", log.Error(err))
 		}
 		s.date = comb.Date
 	case setSeq:
 		if err := s.storage.SetSeq(ctx, s.selfID, comb.Seq); err != nil {
-			s.log.Error("SetSeq error", zap.Error(err))
+			s.log.Error(ctx, "SetSeq error", log.Error(err))
 		}
 		s.seq.SetState(comb.Seq, "seq update")
 	}
@@ -146,20 +146,27 @@ func (s *internalState) applyPts(ctx context.Context, state int, updates []updat
 	)
 
 	for _, update := range updates {
+		// affectedPts is a pts-only marker (see Manager.HandleAffected): it
+		// advances the sequence but has nothing to dispatch.
+		if _, ok := update.Value.(affectedPts); ok {
+			continue
+		}
 		converted = append(converted, update.Value.(tg.UpdateClass))
 		ents.Merge(update.Entities)
 	}
 
-	if err := s.handler.Handle(ctx, &tg.Updates{
-		Updates: converted,
-		Users:   ents.Users,
-		Chats:   ents.Chats,
-	}); err != nil {
-		s.log.Error("Handle updates error", zap.Error(err))
+	if len(converted) > 0 {
+		if err := s.dispatch(ctx, &tg.Updates{
+			Updates: converted,
+			Users:   ents.Users,
+			Chats:   ents.Chats,
+		}); err != nil {
+			s.log.Error(ctx, "Handle updates error", log.Error(err))
+		}
 	}
 
 	if err := s.storage.SetPts(ctx, s.selfID, state); err != nil {
-		s.log.Error("SetPts error", zap.Error(err))
+		s.log.Error(ctx, "SetPts error", log.Error(err))
 	}
 
 	return nil
@@ -179,12 +186,12 @@ func (s *internalState) applyQts(ctx context.Context, state int, updates []updat
 		ents.Merge(update.Entities)
 	}
 
-	if err := s.handler.Handle(ctx, &tg.Updates{
+	if err := s.dispatch(ctx, &tg.Updates{
 		Updates: converted,
 		Users:   ents.Users,
 		Chats:   ents.Chats,
 	}); err != nil {
-		s.log.Error("Handle updates error", zap.Error(err))
+		s.log.Error(ctx, "Handle updates error", log.Error(err))
 	}
 
 	// Don't set qts if it's 0, because it means that we are apllying gaps updates
@@ -193,7 +200,7 @@ func (s *internalState) applyQts(ctx context.Context, state int, updates []updat
 	}
 
 	if err := s.storage.SetQts(ctx, s.selfID, state); err != nil {
-		s.log.Error("SetQts error", zap.Error(err))
+		s.log.Error(ctx, "SetQts error", log.Error(err))
 	}
 
 	return nil

@@ -6,7 +6,7 @@ import (
 	"math/big"
 
 	"github.com/go-faster/errors"
-	"go.uber.org/zap"
+	"github.com/gotd/log"
 
 	"github.com/gotd/td/bin"
 	"github.com/gotd/td/crypto"
@@ -23,7 +23,7 @@ func (c ClientExchange) Run(ctx context.Context) (ClientExchangeResult, error) {
 	}
 	b := new(bin.Buffer)
 
-	c.log.Debug("Sending ReqPqMultiRequest")
+	c.log.Debug(ctx, "Sending ReqPqMultiRequest")
 	if err := c.writeUnencrypted(ctx, b, &mt.ReqPqMultiRequest{Nonce: nonce}); err != nil {
 		return ClientExchangeResult{}, errors.Wrap(err, "write ReqPqMultiRequest")
 	}
@@ -34,7 +34,7 @@ func (c ClientExchange) Run(ctx context.Context) (ClientExchangeResult, error) {
 	if err := c.readUnencrypted(ctx, b, &res); err != nil {
 		return ClientExchangeResult{}, errors.Wrap(err, "read ResPQ response")
 	}
-	c.log.Debug("Received server ResPQ")
+	c.log.Debug(ctx, "Received server ResPQ")
 	if res.Nonce != nonce {
 		return ClientExchangeResult{}, errors.New("ResPQ nonce mismatch")
 	}
@@ -73,7 +73,7 @@ Loop:
 	if err != nil {
 		return ClientExchangeResult{}, errors.Wrap(err, "decompose pq")
 	}
-	c.log.Debug("PQ decomposing complete", zap.Duration("took", c.clock.Now().Sub(start)))
+	c.log.Debug(ctx, "PQ decomposing complete", log.Duration("took", c.clock.Now().Sub(start)))
 	// Make a copy of p and q values to reduce allocations.
 	pBytes := p.Bytes()
 	qBytes := q.Bytes()
@@ -86,15 +86,35 @@ Loop:
 		return ClientExchangeResult{}, errors.Wrap(err, "generate new nonce")
 	}
 
-	var encryptedData []byte
-	pqInnerData := &mt.PQInnerDataDC{
-		Pq:          res.Pq,
-		Nonce:       nonce,
-		NewNonce:    newNonce,
-		ServerNonce: serverNonce,
-		P:           pBytes,
-		Q:           qBytes,
-		DC:          c.dc,
+	var (
+		encryptedData []byte
+		pqInnerData   bin.Encoder
+	)
+	switch c.mode {
+	case ExchangeModeTemporary:
+		// Temporary auth key exchange uses p_q_inner_data_temp_dc so Telegram
+		// associates ttl with the generated auth_key.
+		pqInnerData = &mt.PQInnerDataTempDC{
+			Pq:          res.Pq,
+			Nonce:       nonce,
+			NewNonce:    newNonce,
+			ServerNonce: serverNonce,
+			P:           pBytes,
+			Q:           qBytes,
+			DC:          c.dc,
+			ExpiresIn:   c.expiresIn,
+		}
+	default:
+		// Permanent key exchange keeps legacy p_q_inner_data_dc payload.
+		pqInnerData = &mt.PQInnerDataDC{
+			Pq:          res.Pq,
+			Nonce:       nonce,
+			NewNonce:    newNonce,
+			ServerNonce: serverNonce,
+			P:           pBytes,
+			Q:           qBytes,
+			DC:          c.dc,
+		}
 	}
 	b.Reset()
 	if err := pqInnerData.Encode(b); err != nil {
@@ -117,7 +137,7 @@ Loop:
 		PublicKeyFingerprint: selectedPubKey.Fingerprint(),
 		EncryptedData:        encryptedData,
 	}
-	c.log.Debug("Sending ReqDHParamsRequest")
+	c.log.Debug(ctx, "Sending ReqDHParamsRequest")
 	if err := c.writeUnencrypted(ctx, b, reqDHParams); err != nil {
 		return ClientExchangeResult{}, errors.Wrap(err, "write ReqDHParamsRequest")
 	}
@@ -126,7 +146,7 @@ Loop:
 	if err := c.conn.Recv(ctx, b); err != nil {
 		return ClientExchangeResult{}, errors.Wrap(err, "read ServerDHParams message")
 	}
-	c.log.Debug("Received server ServerDHParams")
+	c.log.Debug(ctx, "Received server ServerDHParams")
 
 	var plaintextMsg proto.UnencryptedMessage
 	if err := plaintextMsg.Decode(b); err != nil {
@@ -209,7 +229,7 @@ Loop:
 			ServerNonce:   reqDHParams.ServerNonce,
 			EncryptedData: clientEncrypted,
 		}
-		c.log.Debug("Sending SetClientDHParamsRequest")
+		c.log.Debug(ctx, "Sending SetClientDHParamsRequest")
 		if err := c.writeUnencrypted(ctx, b, setParamsReq); err != nil {
 			return ClientExchangeResult{}, errors.Wrap(err, "write SetClientDHParamsRequest")
 		}
@@ -221,7 +241,7 @@ Loop:
 		if err := c.conn.Recv(ctx, b); err != nil {
 			return ClientExchangeResult{}, errors.Wrap(err, "read DhGen message")
 		}
-		c.log.Debug("Received server DhGen")
+		c.log.Debug(ctx, "Received server DhGen")
 
 		if err := plaintextMsg.Decode(b); err != nil {
 			return ClientExchangeResult{}, errors.Wrap(err, "decode DhGen message")
@@ -258,11 +278,17 @@ Loop:
 				return ClientExchangeResult{}, err
 			}
 
-			return ClientExchangeResult{
+			result := ClientExchangeResult{
 				AuthKey:    crypto.AuthKey{Value: key, ID: authKeyID},
 				SessionID:  sessionID,
 				ServerSalt: serverSalt,
-			}, nil
+			}
+			if c.mode == ExchangeModeTemporary {
+				// Telegram does not return absolute expiry timestamp here, so we
+				// keep a local estimate to schedule renewal/bind in upper layers.
+				result.ExpiresAt = c.clock.Now().Unix() + int64(c.expiresIn)
+			}
+			return result, nil
 		case *mt.DhGenRetry: // dh_gen_retry#46dc1fb9
 			return ClientExchangeResult{}, errors.Errorf("retry required: %x", v.NewNonceHash2)
 		case *mt.DhGenFail: // dh_gen_fail#a69dae02

@@ -8,14 +8,16 @@ import (
 	"github.com/getsentry/sentry-go/internal/debuglog"
 	"github.com/getsentry/sentry-go/internal/protocol"
 	"github.com/getsentry/sentry-go/internal/ratelimit"
+	"github.com/getsentry/sentry-go/report"
 )
 
 // Scheduler implements a weighted round-robin scheduler for processing buffered events.
 type Scheduler struct {
-	buffers   map[ratelimit.Category]Storage[protocol.EnvelopeItemConvertible]
+	buffers   map[ratelimit.Category]Buffer[protocol.TelemetryItem]
 	transport protocol.TelemetryTransport
 	dsn       *protocol.Dsn
-	sdkInfo   *protocol.SdkInfo
+	sdkInfo   func() *protocol.SdkInfo
+	recorder  report.ClientReportRecorder
 
 	currentCycle []ratelimit.Priority
 	cyclePos     int
@@ -24,6 +26,9 @@ type Scheduler struct {
 	cancel       context.CancelFunc
 	processingWg sync.WaitGroup
 
+	// processing serializes buffer-to-transport handoffs and allows cancelable waits.
+	processing chan struct{}
+
 	mu         sync.Mutex
 	cond       *sync.Cond
 	startOnce  sync.Once
@@ -31,12 +36,17 @@ type Scheduler struct {
 }
 
 func NewScheduler(
-	buffers map[ratelimit.Category]Storage[protocol.EnvelopeItemConvertible],
+	buffers map[ratelimit.Category]Buffer[protocol.TelemetryItem],
 	transport protocol.TelemetryTransport,
 	dsn *protocol.Dsn,
-	sdkInfo *protocol.SdkInfo,
+	sdkInfo func() *protocol.SdkInfo,
+	recorder report.ClientReportRecorder,
 ) *Scheduler {
-	ctx, cancel := context.WithCancel(context.Background())
+	if recorder == nil {
+		recorder = report.NoopRecorder()
+	}
+
+	ctx, cancel := context.WithCancel(context.Background()) //nolint:gosec // G118: cancel is stored in s.cancel and called in Shutdown()
 
 	priorityWeights := map[ratelimit.Priority]int{
 		ratelimit.PriorityCritical: 5,
@@ -68,13 +78,22 @@ func NewScheduler(
 		transport:    transport,
 		dsn:          dsn,
 		sdkInfo:      sdkInfo,
+		recorder:     recorder,
 		currentCycle: currentCycle,
 		ctx:          ctx,
 		cancel:       cancel,
+		processing:   make(chan struct{}, 1),
 	}
 	s.cond = sync.NewCond(&s.mu)
 
 	return s
+}
+
+func (s *Scheduler) resolveSdkInfo() *protocol.SdkInfo {
+	if s.sdkInfo == nil {
+		return &protocol.SdkInfo{}
+	}
+	return s.sdkInfo()
 }
 
 func (s *Scheduler) Start() {
@@ -109,7 +128,7 @@ func (s *Scheduler) Signal() {
 	s.cond.Signal()
 }
 
-func (s *Scheduler) Add(item protocol.EnvelopeItemConvertible) bool {
+func (s *Scheduler) Add(item protocol.TelemetryItem) bool {
 	category := item.GetCategory()
 	buffer, exists := s.buffers[category]
 	if !exists {
@@ -130,7 +149,9 @@ func (s *Scheduler) Flush(timeout time.Duration) bool {
 }
 
 func (s *Scheduler) FlushWithContext(ctx context.Context) bool {
-	s.flushBuffers()
+	if !s.flushBuffers(ctx) {
+		return false
+	}
 	return s.transport.FlushWithContext(ctx)
 }
 
@@ -178,6 +199,13 @@ func (s *Scheduler) hasWork() bool {
 }
 
 func (s *Scheduler) processNextBatch() {
+	select {
+	case s.processing <- struct{}{}:
+		defer func() { <-s.processing }()
+	case <-s.ctx.Done():
+		return
+	}
+
 	if len(s.currentCycle) == 0 {
 		return
 	}
@@ -185,7 +213,7 @@ func (s *Scheduler) processNextBatch() {
 	priority := s.currentCycle[s.cyclePos]
 	s.cyclePos = (s.cyclePos + 1) % len(s.currentCycle)
 
-	var bufferToProcess Storage[protocol.EnvelopeItemConvertible]
+	var bufferToProcess Buffer[protocol.TelemetryItem]
 	var categoryToProcess ratelimit.Category
 	for category, buffer := range s.buffers {
 		if buffer.Priority() == priority && buffer.IsReadyToFlush() {
@@ -200,8 +228,8 @@ func (s *Scheduler) processNextBatch() {
 	}
 }
 
-func (s *Scheduler) processItems(buffer Storage[protocol.EnvelopeItemConvertible], category ratelimit.Category, force bool) {
-	var items []protocol.EnvelopeItemConvertible
+func (s *Scheduler) processItems(buffer Buffer[protocol.TelemetryItem], category ratelimit.Category, force bool) {
+	var items []protocol.TelemetryItem
 
 	if force {
 		items = buffer.Drain()
@@ -209,69 +237,89 @@ func (s *Scheduler) processItems(buffer Storage[protocol.EnvelopeItemConvertible
 		items = buffer.PollIfReady()
 	}
 
-	// drop the current batch if rate-limited or if transport is full
-	if len(items) == 0 || s.isRateLimited(category) || !s.transport.HasCapacity() {
+	if len(items) == 0 {
 		return
 	}
 
-	switch category {
-	case ratelimit.CategoryLog:
-		logs := protocol.Logs(items)
-		header := &protocol.EnvelopeHeader{EventID: protocol.GenerateEventID(), SentAt: time.Now(), Sdk: s.sdkInfo}
-		if s.dsn != nil {
-			header.Dsn = s.dsn.String()
-		}
-		envelope := protocol.NewEnvelope(header)
-		item, err := logs.ToEnvelopeItem()
-		if err != nil {
-			debuglog.Printf("error creating log batch envelope item: %v", err)
-			return
-		}
-		envelope.AddItem(item)
-		if err := s.transport.SendEnvelope(envelope); err != nil {
-			debuglog.Printf("error sending envelope: %v", err)
+	if s.isRateLimited(category) {
+		for _, item := range items {
+			s.recorder.RecordItem(report.ReasonRateLimitBackoff, item)
 		}
 		return
-	default:
-		// if the buffers are properly configured, buffer.PollIfReady should return a single item for every category
-		// other than logs. We still iterate over the items just in case, because we don't want to send broken envelopes.
-		for _, it := range items {
-			s.sendItem(it)
+	}
+	if !s.transport.HasCapacity() {
+		for _, item := range items {
+			s.recorder.RecordItem(report.ReasonQueueOverflow, item)
 		}
+		return
+	}
+
+	for _, item := range s.envelopeConvertibles(category, items) {
+		s.sendItem(item)
 	}
 }
 
-func (s *Scheduler) sendItem(item protocol.EnvelopeItemConvertible) {
+// envelopeConvertibles converts single items or batches to satisfy the EnvelopeConvertible interface.
+func (s *Scheduler) envelopeConvertibles(category ratelimit.Category, items []protocol.TelemetryItem) []protocol.EnvelopeConvertible {
+	switch category {
+	case ratelimit.CategoryLog, ratelimit.CategoryTraceMetric:
+		return []protocol.EnvelopeConvertible{protocol.NewItemContainer(category, items)}
+	default:
+		convertibles := make([]protocol.EnvelopeConvertible, 0, len(items))
+		for _, item := range items {
+			if convertible, ok := item.(protocol.EnvelopeConvertible); ok {
+				convertibles = append(convertibles, convertible)
+				continue
+			}
+			debuglog.Printf("item does not implement envelope conversion: %T", item)
+		}
+		return convertibles
+	}
+}
+
+func (s *Scheduler) sendItem(item protocol.EnvelopeConvertible) {
 	header := &protocol.EnvelopeHeader{
 		EventID: item.GetEventID(),
 		SentAt:  time.Now(),
+		Dsn:     s.dsn,
 		Trace:   item.GetDynamicSamplingContext(),
-		Sdk:     s.sdkInfo,
+		Sdk:     item.GetSdkInfo(),
 	}
 	if header.EventID == "" {
 		header.EventID = protocol.GenerateEventID()
 	}
-	if s.dsn != nil {
-		header.Dsn = s.dsn.String()
+	if header.Sdk == nil {
+		header.Sdk = s.resolveSdkInfo()
 	}
-	envelope := protocol.NewEnvelope(header)
-	envItem, err := item.ToEnvelopeItem()
+
+	envelope, err := item.ToEnvelope(header)
 	if err != nil {
-		debuglog.Printf("error while converting to envelope item: %v", err)
+		debuglog.Printf("error while converting to envelope: %v", err)
+		s.recorder.RecordItem(report.ReasonInternalError, item)
 		return
 	}
-	envelope.AddItem(envItem)
 	if err := s.transport.SendEnvelope(envelope); err != nil {
 		debuglog.Printf("error sending envelope: %v", err)
 	}
 }
 
-func (s *Scheduler) flushBuffers() {
+func (s *Scheduler) flushBuffers(ctx context.Context) bool {
+	select {
+	case s.processing <- struct{}{}:
+		defer func() { <-s.processing }()
+	case <-ctx.Done():
+		return false
+	}
+
 	for category, buffer := range s.buffers {
+		if ctx.Err() != nil {
+			return false
+		}
 		if !buffer.IsEmpty() {
 			s.processItems(buffer, category, true)
 		}
 	}
+	return ctx.Err() == nil
 }
 
 func (s *Scheduler) isRateLimited(category ratelimit.Category) bool {

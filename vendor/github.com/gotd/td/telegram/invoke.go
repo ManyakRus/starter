@@ -5,11 +5,15 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/go-faster/errors"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
-	"go.uber.org/zap"
+
+	"github.com/gotd/log"
 
 	"github.com/gotd/td/bin"
+	"github.com/gotd/td/pool"
+	"github.com/gotd/td/rpc"
 	"github.com/gotd/td/tg"
 	"github.com/gotd/td/tgerr"
 )
@@ -56,20 +60,20 @@ func (c *Client) invokeDirect(ctx context.Context, input bin.Encoder, output bin
 		// Handling datacenter migration request.
 		if rpcErr, ok := tgerr.As(err); ok && strings.HasSuffix(rpcErr.Type, "_MIGRATE") {
 			targetDC := rpcErr.Argument
-			log := c.log.With(
-				zap.String("error_type", rpcErr.Type),
-				zap.Int("target_dc", targetDC),
+			logger := c.log.With(
+				log.String("error_type", rpcErr.Type),
+				log.Int("target_dc", targetDC),
 			)
 			// If migration error is FILE_MIGRATE or STATS_MIGRATE, then the method
 			// called by authorized client, so we should try to transfer auth to new DC
 			// and create new connection.
 			if rpcErr.IsOneOf("FILE_MIGRATE", "STATS_MIGRATE") {
-				log.Debug("Invoking on target DC")
+				logger.Debug(ctx, "Invoking on target DC")
 				return c.invokeSub(ctx, targetDC, input, output)
 			}
 
 			// Otherwise we should change primary DC.
-			log.Info("Migrating to target DC")
+			logger.Info(ctx, "Migrating to target DC")
 			return c.invokeMigrate(ctx, targetDC, input, output)
 		}
 
@@ -81,10 +85,48 @@ func (c *Client) invokeDirect(ctx context.Context, input bin.Encoder, output bin
 
 // invokeConn directly invokes RPC call on primary connection without any
 // additional handling.
+//
+// If the connection dies before the request is processed by the server,
+// invokeConn waits until the reconnection loop replaces the connection and
+// retries the request on it, see https://github.com/gotd/td/issues/1030.
 func (c *Client) invokeConn(ctx context.Context, input bin.Encoder, output bin.Decoder) error {
-	c.connMux.Lock()
-	conn := c.conn
-	c.connMux.Unlock()
+	attempt := 0
+	for {
+		c.connMux.Lock()
+		conn := c.conn
+		connChanged := c.connChanged
+		c.connMux.Unlock()
 
-	return conn.Invoke(ctx, input, output)
+		err := conn.Invoke(ctx, input, output)
+		if err == nil || !errRetryableOnNewConn(err) {
+			return err
+		}
+
+		var clientDone <-chan struct{}
+		if c.ctx != nil {
+			clientDone = c.ctx.Done()
+		}
+		attempt++
+		c.log.Debug(ctx, "Primary connection is dead, waiting for new connection to retry",
+			log.Error(err),
+			log.Int("attempt", attempt),
+		)
+		select {
+		case <-ctx.Done():
+			return errors.Wrap(ctx.Err(), "wait for reconnect")
+		case <-clientDone:
+			// Client is closed, no reconnection will happen.
+			return errors.Wrap(c.ctx.Err(), "client closed")
+		case <-connChanged:
+			c.log.Debug(ctx, "Primary connection replaced, retrying request", log.Int("attempt", attempt))
+		}
+	}
+}
+
+// errRetryableOnNewConn reports whether request failed because connection
+// died before the request was processed by the server (request was not sent,
+// or sent but not acknowledged), so it is safe to retry the request on a new
+// connection.
+func errRetryableOnNewConn(err error) bool {
+	return errors.Is(err, pool.ErrConnDead) || errors.Is(err, rpc.ErrEngineClosed)
 }

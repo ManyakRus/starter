@@ -13,6 +13,7 @@ import (
 
 	"github.com/ogen-go/ogen"
 	"github.com/ogen-go/ogen/gen/ir"
+	"github.com/ogen-go/ogen/internal/naming"
 	"github.com/ogen-go/ogen/internal/xmaps"
 	"github.com/ogen-go/ogen/internal/xslices"
 	"github.com/ogen-go/ogen/jsonschema"
@@ -38,7 +39,16 @@ type Generator struct {
 	imports           map[string]string
 	equalitySpecs     []*ir.EqualityMethodSpec // Types requiring Equal() methods for uniqueItems validation
 
+	features    FeatureSet      // resolved feature set, built once in NewGenerator
+	initialisms bool            // NamingCamelInitialisms feature: apply initialism rules to camelCase identifiers
+	rules       *naming.Ruleset // custom initialism ruleset, nil means package default
+
 	log *zap.Logger
+}
+
+// namer returns an identifier generator configured for this Generator.
+func (g *Generator) namer() namer {
+	return namer{initialisms: g.initialisms, rules: g.rules}
 }
 
 func expandSpec(api *openapi.API, p string) (err error) {
@@ -116,6 +126,20 @@ func NewGenerator(spec *ogen.Spec, opts Options) (*Generator, error) {
 		router:        Router{},
 		imports:       defaultImports(),
 		log:           opts.Logger,
+	}
+
+	// Resolve features once, here, because identifier generation during makeIR
+	// already depends on them (NamingCamelInitialisms); the write stage reuses the
+	// same set via g.features instead of rebuilding it.
+	g.features, err = g.opt.Features.Build()
+	if err != nil {
+		return nil, errors.Wrap(err, "build features")
+	}
+	g.initialisms = g.features.Has(NamingCamelInitialisms)
+
+	g.rules, err = g.opt.Initialisms.build()
+	if err != nil {
+		return nil, errors.Wrap(err, "build initialisms")
 	}
 
 	if err := g.makeIR(api); err != nil {

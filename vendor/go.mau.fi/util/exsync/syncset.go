@@ -50,6 +50,20 @@ func NewSetWithItems[T comparable](items []T) *Set[T] {
 	return s
 }
 
+func NewSetWithSeq[T comparable](items iter.Seq[T]) *Set[T] {
+	s := NewSet[T]()
+	s.AddSeq(items)
+	return s
+}
+
+func NewSetWithKeys[T comparable, V any](items map[T]V) *Set[T] {
+	s := NewSetWithSize[T](len(items))
+	for item := range items {
+		s.m[item] = emptyVal
+	}
+	return s
+}
+
 // Add adds an item to the set. The return value is true if the item was added to the set, or false otherwise.
 func (s *Set[T]) Add(item T) bool {
 	if s == nil {
@@ -64,6 +78,17 @@ func (s *Set[T]) Add(item T) bool {
 	s.m[item] = emptyVal
 	s.l.Unlock()
 	return true
+}
+
+func (s *Set[T]) AddSeq(seq iter.Seq[T]) {
+	if s == nil {
+		return
+	}
+	s.l.Lock()
+	defer s.l.Unlock()
+	for item := range seq {
+		s.m[item] = emptyVal
+	}
 }
 
 // Has checks if the given item is in the set.
@@ -112,6 +137,15 @@ func (s *Set[T]) ReplaceAll(newSet *Set[T]) {
 	} else {
 		s.m = newSet.m
 	}
+	s.l.Unlock()
+}
+
+func (s *Set[T]) Clear() {
+	if s == nil {
+		return
+	}
+	s.l.Lock()
+	clear(s.m)
 	s.l.Unlock()
 }
 

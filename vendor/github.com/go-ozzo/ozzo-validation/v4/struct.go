@@ -47,16 +47,16 @@ func (e ErrFieldNotFound) Error() string {
 // should be specified as a pointer to the field. A field can be associated with multiple rules.
 // For example,
 //
-//    value := struct {
-//        Name  string
-//        Value string
-//    }{"name", "demo"}
-//    err := validation.ValidateStruct(&value,
-//        validation.Field(&a.Name, validation.Required),
-//        validation.Field(&a.Value, validation.Required, validation.Length(5, 10)),
-//    )
-//    fmt.Println(err)
-//    // Value: the length must be between 5 and 10.
+//	value := struct {
+//	    Name  string
+//	    Value string
+//	}{"name", "demo"}
+//	err := validation.ValidateStruct(&value,
+//	    validation.Field(&a.Name, validation.Required),
+//	    validation.Field(&a.Value, validation.Required, validation.Length(5, 10)),
+//	)
+//	fmt.Println(err)
+//	// Value: the length must be between 5 and 10.
 //
 // An error will be returned if validation fails.
 func ValidateStruct(structPtr interface{}, fields ...*FieldRules) error {
@@ -86,7 +86,10 @@ func ValidateStructWithContext(ctx context.Context, structPtr interface{}, field
 		if fv.Kind() != reflect.Ptr {
 			return NewInternalError(ErrFieldPointer(i))
 		}
-		ft := findStructField(value, fv)
+		ft := findStructFieldCached(value, fv)
+		if ft == nil {
+			ft = findStructField(value, fv)
+		}
 		if ft == nil {
 			return NewInternalError(ErrFieldNotFound(i))
 		}

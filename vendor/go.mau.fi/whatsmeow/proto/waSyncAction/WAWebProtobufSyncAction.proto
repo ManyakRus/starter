@@ -88,9 +88,52 @@ enum MutationProps {
 	AI_THREAD_RENAME_ACTION = 76;
 	INTERACTIVE_MESSAGE_ACTION = 77;
 	SETTINGS_SYNC_ACTION = 78;
+	OUT_CONTACT_ACTION = 79;
+	NCT_SALT_SYNC_ACTION = 80;
+	BUSINESS_BROADCAST_CAMPAIGN_ACTION = 81;
+	BUSINESS_BROADCAST_INSIGHTS_ACTION = 82;
+	CUSTOMER_DATA_ACTION = 83;
+	SUBSCRIPTIONS_SYNC_V2_ACTION = 84;
+	THREAD_PIN_ACTION = 85;
+	AUTO_ORGANIZE_BUSINESS_CHAT_SETTING = 86;
+	BIZ_AI_SETTINGS_NUDGE_ACTION = 87;
+	COEX_V2_VERSION_ACTION = 88;
+	WASA_ROOT_SECRET_ACTION = 89;
+	BUBBLE_LOCK_MESSAGE_ACTION = 90;
+	LABEL_SUBLIST_ACTION = 91;
+	DEVICE_CAPABILITIES_V2 = 92;
+	CTWA_MESSAGE_RECEIVED_ACTION = 93;
+	SHARED_DEVICE_ALLOWLIST_ACTION = 94;
+	CONTACT_MANAGER_METADATA_ACTION = 95;
+	BUSINESS_FOLDER_ACTIVATION_ACTION = 96;
+	GROUP_HISTORY_TOGGLE_ACTION = 97;
+	BB_PRO_PENDING_CUSTOMER_BASE_ACTION = 98;
+	COMMUNITY_NESTING_STATE_ACTION = 99;
+	SHARED_DEVICE_SECRET_ACTION = 100;
 	SHARE_OWN_PN = 10001;
 	BUSINESS_BROADCAST_ACTION = 10002;
 	AI_THREAD_DELETE_ACTION = 10003;
+}
+
+enum BusinessBroadcastCampaignBBProStatus {
+	BB_PRO_ACTIVE = 1;
+	BB_PRO_COMPLETED = 2;
+	BB_PRO_IN_DRAFT = 3;
+	BB_PRO_IN_REVIEW = 4;
+	BB_PRO_NOT_SENDING = 5;
+	BB_PRO_OFF = 6;
+	BB_PRO_REJECTED = 7;
+	BB_PRO_SCHEDULED = 8;
+	BB_PRO_SENDING_LIMITED = 9;
+	BB_PRO_PROCESSING = 10;
+}
+
+enum BusinessBroadcastCampaignStatus {
+	DRAFT = 1;
+	SCHEDULED = 2;
+	PROCESSING = 3;
+	FAILED = 4;
+	SENT = 5;
 }
 
 message CallLogRecord {
@@ -124,6 +167,11 @@ message CallLogRecord {
 	message ParticipantInfo {
 		optional string userJID = 1;
 		optional CallResult callResult = 2;
+		optional GuestInfo guestInfo = 3;
+	}
+
+	message GuestInfo {
+		optional string pushName = 1;
 	}
 
 	optional CallResult callResult = 1;
@@ -143,7 +191,49 @@ message CallLogRecord {
 	optional CallType callType = 15;
 }
 
+message CommunityNestingStateAction {
+	enum NestingState {
+		NESTING_STATE_UNKNOWN = 0;
+		NESTING_STATE_NESTED = 1;
+		NESTING_STATE_UNNESTED = 2;
+	}
+
+	optional NestingState nestingState = 1;
+}
+
+message GroupHistoryToggleAction {
+	enum GroupHistoryToggleMode {
+		GROUP_HISTORY_TOGGLE_MODE_UNKNOWN = 0;
+		GROUP_HISTORY_TOGGLE_MODE_ON = 1;
+		GROUP_HISTORY_TOGGLE_MODE_OFF = 2;
+	}
+
+	optional GroupHistoryToggleMode groupHistoryToggleMode = 1;
+}
+
+message WASARootSecretAction {
+	message RootSecretEntry {
+		enum Status {
+			INACTIVE = 0;
+			ACTIVE = 1;
+		}
+
+		optional string ID = 1;
+		optional bytes rootSecret = 2;
+		optional int64 epoch = 3;
+		optional Status status = 4;
+	}
+
+	repeated RootSecretEntry secrets = 1;
+}
+
 message SettingsSyncAction {
+	enum MediaQualitySetting {
+		MEDIA_QUALITY_UNKNOWN = 0;
+		STANDARD = 1;
+		HD = 2;
+	}
+
 	enum DisplayMode {
 		DISPLAY_MODE_UNKNOWN = 0;
 		ALWAYS = 1;
@@ -176,6 +266,17 @@ message SettingsSyncAction {
 		IS_DOCUMENTS_AUTODOWNLOAD_ENABLED = 21;
 		DISABLE_LINK_PREVIEWS = 22;
 		NOTIFICATION_TONE_ID = 23;
+		MEDIA_UPLOAD_QUALITY = 24;
+		IS_SPELL_CHECK_ENABLED = 25;
+		IS_ENTER_TO_SEND_ENABLED = 26;
+		IS_GROUP_MESSAGE_NOTIFICATION_ENABLED = 27;
+		IS_GROUP_REACTIONS_NOTIFICATION_ENABLED = 28;
+		IS_STATUS_NOTIFICATION_ENABLED = 29;
+		STATUS_NOTIFICATION_TONE_ID = 30;
+		SHOULD_PLAY_SOUND_FOR_CALL_NOTIFICATION = 31;
+		CHAT_THEME_ID = 32;
+		COLOR_SCHEME_ID = 33;
+		STOCK_WALLPAPER_IMAGE_ID = 34;
 	}
 
 	enum SettingPlatform {
@@ -209,6 +310,17 @@ message SettingsSyncAction {
 	optional bool isDocumentsAutodownloadEnabled = 21;
 	optional bool disableLinkPreviews = 22;
 	optional int32 notificationToneID = 23;
+	optional MediaQualitySetting mediaUploadQuality = 24;
+	optional bool isSpellCheckEnabled = 25;
+	optional bool isEnterToSendEnabled = 26;
+	optional bool isGroupMessageNotificationEnabled = 27;
+	optional bool isGroupReactionsNotificationEnabled = 28;
+	optional bool isStatusNotificationEnabled = 29;
+	optional int32 statusNotificationToneID = 30;
+	optional bool shouldPlaySoundForCallNotification = 31;
+	optional string chatThemeID = 32;
+	optional string colorSchemeID = 33;
+	optional string stockWallpaperImageID = 34;
 }
 
 message InteractiveMessageAction {
@@ -217,6 +329,7 @@ message InteractiveMessageAction {
 	}
 
 	required InteractiveMessageActionMode type = 1;
+	optional string agmID = 2;
 }
 
 message PrivateProcessingSettingAction {
@@ -240,7 +353,29 @@ message AvatarUpdatedAction {
 	repeated StickerAction recentAvatarStickers = 2;
 }
 
+message BizAISettingsNudgeAction {
+	enum BizAISettingsCategory {
+		UNKNOWN = 0;
+		INSTRUCTIONS = 1;
+		RESPONSE_SETTINGS = 2;
+		EXAMPLE_RESPONSES = 3;
+		KNOWLEDGE = 4;
+		LEAD_GEN = 5;
+		HANDOFF_REMOVAL_TIMING = 6;
+	}
+
+	optional BizAISettingsCategory category = 1;
+	optional int64 version = 2;
+	optional int64 updatedAtMS = 3;
+}
+
 message MaibaAIFeaturesControlAction {
+	enum MaibaAIReplyMode {
+		MUTED = 0;
+		AI_AGENT = 1;
+		SUGGESTIONS = 2;
+	}
+
 	enum MaibaAIFeatureStatus {
 		ENABLED = 0;
 		ENABLED_HAS_LEARNING = 1;
@@ -248,6 +383,7 @@ message MaibaAIFeaturesControlAction {
 	}
 
 	optional MaibaAIFeatureStatus aiFeatureStatus = 1;
+	optional MaibaAIReplyMode aiReplyMode = 2;
 }
 
 message PaymentTosAction {
@@ -311,10 +447,23 @@ message StatusPrivacyAction {
 		DENY_LIST = 1;
 		CONTACTS = 2;
 		CLOSE_FRIENDS = 3;
+		CUSTOM_LIST = 4;
+	}
+
+	message CustomList {
+		optional string listID = 1;
+		optional string name = 2;
+		optional string emoji = 3;
+		optional bool isSelected = 4;
+		repeated string userJID = 5;
 	}
 
 	optional StatusDistributionMode mode = 1;
 	repeated string userJID = 2;
+	optional bool shareToFb = 3;
+	optional bool shareToIg = 4;
+	repeated CustomList customLists = 5;
+	repeated StatusDistributionMode modes = 6;
 }
 
 message MarketingMessageAction {
@@ -352,6 +501,17 @@ message LabelEditAction {
 		SERVER_ASSIGNED = 7;
 		DRAFTED = 8;
 		AI_HANDOFF = 9;
+		CHANNELS = 10;
+		AI_RESPONDING = 11;
+		ARCHIVED = 12;
+		LOCKED = 13;
+		INVITES = 14;
+		THIRD_PARTY = 15;
+		LEAD = 16;
+		MENTIONS_AND_REPLIES = 17;
+		REQUESTS = 18;
+		BUSINESS = 19;
+		ONE_ON_ONE = 20;
 	}
 
 	optional string name = 1;
@@ -468,6 +628,28 @@ enum MutationName {
 	AI_THREAD_RENAME_ACTION = ai_thread_rename;
 	INTERACTIVE_MESSAGE_ACTION = interactive_message_action;
 	SETTINGS_SYNC_ACTION = settings_sync;
+	OUT_CONTACT_ACTION = out_contact;
+	NCT_SALT_SYNC_ACTION = nct_salt_sync;
+	BUSINESS_BROADCAST_CAMPAIGN_ACTION = business_broadcast_campaign;
+	BUSINESS_BROADCAST_INSIGHTS_ACTION = business_broadcast_insights_sync;
+	CUSTOMER_DATA_ACTION = customer_data;
+	SUBSCRIPTIONS_SYNC_V2_ACTION = subscriptions_sync_v2;
+	THREAD_PIN_ACTION = thread_pin;
+	AUTO_ORGANIZE_BUSINESS_CHAT_SETTING = setting_autoOrganizeBusinessChat;
+	BIZ_AI_SETTINGS_NUDGE_ACTION = biz_ai_settings_nudge;
+	COEX_V2_VERSION_ACTION = coexV2Version;
+	WASA_ROOT_SECRET_ACTION = wasa_root_secret;
+	BUBBLE_LOCK_MESSAGE_ACTION = lock_message;
+	LABEL_SUBLIST_ACTION = label_sublist;
+	DEVICE_CAPABILITIES_V2 = device_capabilities_v2;
+	CTWA_MESSAGE_RECEIVED_ACTION = ctwa_message_received;
+	SHARED_DEVICE_ALLOWLIST_ACTION = shared_device_allowlist;
+	CONTACT_MANAGER_METADATA_ACTION = contact_manager_metadata;
+	BUSINESS_FOLDER_ACTIVATION_ACTION = business_folder_activation;
+	GROUP_HISTORY_TOGGLE_ACTION = group_history_toggle;
+	BB_PRO_PENDING_CUSTOMER_BASE_ACTION = bb_pro_pending_customer_base_action;
+	COMMUNITY_NESTING_STATE_ACTION = community_nesting_state;
+	SHARED_DEVICE_SECRET_ACTION = shared_device_secret;
 	SHARE_OWN_PN = shareOwnPn;
 	BUSINESS_BROADCAST_ACTION = broadcast;
 	AI_THREAD_DELETE_ACTION = ai_thread_delete;
@@ -564,6 +746,105 @@ message SyncActionValue {
 	optional AiThreadRenameAction aiThreadRenameAction = 76;
 	optional InteractiveMessageAction interactiveMessageAction = 77;
 	optional SettingsSyncAction settingsSyncAction = 78;
+	optional OutContactAction outContactAction = 79;
+	optional NctSaltSyncAction nctSaltSyncAction = 80;
+	optional BusinessBroadcastCampaignAction businessBroadcastCampaignAction = 81;
+	optional BusinessBroadcastInsightsAction businessBroadcastInsightsAction = 82;
+	optional CustomerDataAction customerDataAction = 83;
+	optional SubscriptionsSyncV2Action subscriptionsSyncV2Action = 84;
+	optional ThreadPinAction threadPinAction = 85;
+	optional AutoOrganizeBusinessChatSetting autoOrganizeBusinessChatSetting = 86;
+	optional BizAISettingsNudgeAction bizAiSettingsNudgeAction = 87;
+	optional CoexV2VersionAction coexV2VersionAction = 88;
+	optional WASARootSecretAction wasaRootSecretAction = 89;
+	optional BubbleLockMessageAction bubbleLockMessageAction = 90;
+	optional LabelSublistAction labelSublistAction = 91;
+	optional WAWebProtobufsDeviceCapabilities.DeviceCapabilities deviceCapabilitiesV2 = 92;
+	optional CtwaMessageReceivedAction ctwaMessageReceivedAction = 93;
+	optional SharedDeviceAllowlistAction sharedDeviceAllowlistAction = 94;
+	optional ContactManagerMetadataAction contactManagerMetadataAction = 95;
+	optional BusinessFolderActivationAction businessFolderActivationAction = 96;
+	optional GroupHistoryToggleAction groupHistoryToggleAction = 97;
+	optional BBProPendingCustomerBaseAction bbProPendingCustomerBaseAction = 98;
+	optional CommunityNestingStateAction communityNestingStateAction = 99;
+	optional SharedDeviceSecretAction sharedDeviceSecretAction = 100;
+}
+
+message BBProPendingCustomerBaseAction {
+	optional bool pending = 1;
+}
+
+message BusinessFolderActivationAction {
+	optional bool activated = 1;
+}
+
+message CtwaMessageReceivedAction {
+	optional bool isCtwaMessageReceived = 1;
+}
+
+message CoexV2VersionAction {
+	optional uint64 version = 1;
+}
+
+message SubscriptionsSyncV2Action {
+	message PaidFeature {
+		optional string name = 1;
+		optional bool enabled = 2;
+		optional int32 limit = 3;
+		optional int64 expirationTime = 4;
+	}
+
+	message SubscriptionInfo {
+		optional string ID = 1;
+		optional int32 tier = 2;
+		optional string status = 3;
+		optional int64 startTime = 4;
+		optional int64 endTime = 5;
+		optional bool isPlatformChanged = 6;
+		optional string source = 7;
+		optional int64 creationTime = 8;
+	}
+
+	repeated SubscriptionInfo subscriptions = 1;
+	repeated PaidFeature paidFeature = 2;
+}
+
+message ContactManagerMetadataAction {
+	optional bool isHidden = 1;
+}
+
+message CustomerDataAction {
+	optional string chatJID = 1;
+	optional int32 contactType = 2;
+	optional string email = 3;
+	optional string altPhoneNumbers = 4;
+	optional int64 birthday = 5;
+	optional string address = 6;
+	optional int32 acquisitionSource = 7;
+	optional int32 leadStage = 8;
+	optional int64 lastOrder = 9;
+	optional int64 createdAt = 10;
+	optional int64 modifiedAt = 11;
+}
+
+message BusinessBroadcastInsightsAction {
+	optional int32 recipientCount = 1;
+	optional int32 deliveredCount = 2;
+	optional int32 readCount = 3;
+	optional int32 repliedCount = 4;
+	optional int32 quickReplyCount = 5;
+}
+
+message AutoOrganizeBusinessChatSetting {
+	optional bool autoOrganize = 1;
+}
+
+message NctSaltSyncAction {
+	optional bytes salt = 1;
+}
+
+message ThreadPinAction {
+	optional bool pinned = 1;
 }
 
 message AiThreadRenameAction {
@@ -579,11 +860,27 @@ message BroadcastListParticipant {
 	optional string pnJID = 2;
 }
 
+message BusinessBroadcastCampaignAction {
+	optional int32 deviceID = 1;
+	optional string adID = 2;
+	optional string name = 3;
+	optional string msgID = 4;
+	optional string broadcastJID = 5;
+	optional int32 reservedQuota = 6;
+	optional int64 scheduledTimestamp = 7;
+	optional int64 createTimestamp = 8;
+	optional BusinessBroadcastCampaignStatus status = 9;
+	optional BusinessBroadcastCampaignBBProStatus bbProStatus = 10;
+	optional string customAudienceFbid = 11;
+}
+
 message BusinessBroadcastListAction {
 	optional bool deleted = 1;
 	repeated BroadcastListParticipant participants = 2;
 	optional string listName = 3;
 	repeated string labelIDs = 4;
+	optional string audienceExpression = 5;
+	optional string customAudienceFbid = 6;
 }
 
 message BusinessBroadcastAssociationAction {
@@ -594,10 +891,16 @@ message CtwaPerCustomerDataSharingAction {
 	optional bool isCtwaPerCustomerDataSharingEnabled = 1;
 }
 
+message OutContactAction {
+	optional string fullName = 1;
+	optional string firstName = 2;
+}
+
 message LidContactAction {
 	optional string fullName = 1;
 	optional string firstName = 2;
 	optional string username = 3;
+	optional string birthday = 4;
 }
 
 message FavoritesAction {
@@ -618,6 +921,10 @@ message PrivacySettingDisableLinkPreviewsAction {
 
 message WamoUserIdentifierAction {
 	optional string identifier = 1;
+}
+
+message BubbleLockMessageAction {
+	optional bool locked = 1;
 }
 
 message LockChatAction {
@@ -805,8 +1112,13 @@ message RecentEmojiWeightsAction {
 	repeated RecentEmojiWeight weights = 1;
 }
 
+message LabelSublistAction {
+	optional int32 subListID = 1;
+}
+
 message LabelAssociationAction {
 	optional bool labeled = 1;
+	optional string modelMetaData = 2;
 }
 
 message QuickReplyAction {
@@ -815,6 +1127,7 @@ message QuickReplyAction {
 	repeated string keywords = 3;
 	optional int32 count = 4;
 	optional bool deleted = 5;
+	repeated string associatedLabelIDs = 6;
 }
 
 message LocaleSetting {
@@ -833,6 +1146,16 @@ message MuteAction {
 	optional bool muted = 1;
 	optional int64 muteEndTimestamp = 2;
 	optional bool autoMuted = 3;
+	optional int64 muteEveryoneMentionEndTimestamp = 4;
+}
+
+message SharedDeviceSecretAction {
+	optional bytes secret = 1;
+	optional int64 ttlMS = 2;
+}
+
+message SharedDeviceAllowlistAction {
+	optional bool allowed = 1;
 }
 
 message ContactAction {
@@ -842,6 +1165,7 @@ message ContactAction {
 	optional bool saveOnPrimaryAddressbook = 4;
 	optional string pnJID = 5;
 	optional string username = 6;
+	optional string birthday = 7;
 }
 
 message StarAction {

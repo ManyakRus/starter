@@ -10,11 +10,14 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/rs/zerolog"
 	"go.mau.fi/util/random"
 	"google.golang.org/protobuf/proto"
 
+	"go.mau.fi/whatsmeow/proto/waAICommon"
 	"go.mau.fi/whatsmeow/proto/waCommon"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
@@ -32,11 +35,73 @@ const (
 	EncSecretReportToken   MsgSecretType = "Report Token"
 	EncSecretEventResponse MsgSecretType = "Event Response"
 	EncSecretEventEdit     MsgSecretType = "Event Edit"
+	EncSecretMessageEdit   MsgSecretType = "Message Edit"
+	EncSecretPollEdit      MsgSecretType = "Poll Edit"
+	EncSecretPollAddOption MsgSecretType = "Poll Add Option"
 	EncSecretBotMsg        MsgSecretType = "Bot Message"
 )
 
 func applyBotMessageHKDF(messageSecret []byte) []byte {
 	return hkdfutil.SHA256(messageSecret, nil, []byte(EncSecretBotMsg), 32)
+}
+
+func (cli *Client) encryptWASAMessage(ctx context.Context, bot types.JID, id types.MessageID, msg *waE2E.Message) ([]byte, error) {
+	if msg.GetProtocolMessage().GetType() == waE2E.ProtocolMessage_REQUEST_WELCOME_MESSAGE {
+		return proto.Marshal(msg)
+	}
+	if cli.Store.ChatSettings == nil {
+		return nil, fmt.Errorf("chat settings store is required for WASA messages")
+	}
+	rootID, err := cli.Store.ChatSettings.GetWASARootSecretID(ctx, bot)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get WASA root secret ID: %w", err)
+	}
+	if rootID == "" {
+		return nil, fmt.Errorf("no active WASA root secret for %s", bot)
+	}
+	ownLID := cli.getOwnLID().ToNonAD()
+	if ownLID.IsEmpty() {
+		return nil, fmt.Errorf("own LID not available for WASA message")
+	}
+	secret, _, err := cli.Store.MsgSecrets.GetMessageSecret(ctx, bot, ownLID, rootID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get WASA root secret: %w", err)
+	}
+	if len(secret) != 32 {
+		return nil, fmt.Errorf("invalid WASA root secret for %s", bot)
+	}
+	msg = proto.Clone(msg).(*waE2E.Message)
+	if document := msg.GetDocumentWithCaptionMessage().GetMessage().GetDocumentMessage(); document != nil {
+		msg.DocumentMessage = document
+		msg.DocumentWithCaptionMessage = nil
+	}
+	if msg.MessageContextInfo == nil {
+		msg.MessageContextInfo = &waE2E.MessageContextInfo{}
+	}
+	if msg.MessageContextInfo.BotMetadata == nil {
+		msg.MessageContextInfo.BotMetadata = &waAICommon.BotMetadata{}
+	}
+	msg.MessageContextInfo.BotMetadata.CapabilityMetadata = &waAICommon.BotCapabilityMetadata{}
+	plaintext, err := proto.Marshal(msg)
+	if err != nil {
+		return nil, err
+	}
+	key := hkdfutil.SHA256(applyBotMessageHKDF(secret), nil, []byte(string(id)+ownLID.String()+bot.String()), 32)
+	iv := random.Bytes(12)
+	additionalData := append(append([]byte(id), 0), []byte(ownLID.String())...)
+	ciphertext, err := gcmutil.Encrypt(key, iv, plaintext, additionalData)
+	if err != nil {
+		return nil, err
+	}
+	return proto.Marshal(&waE2E.Message{SecretEncryptedMessage: &waE2E.SecretEncryptedMessage{
+		TargetMessageKey: &waCommon.MessageKey{
+			RemoteJID: new(bot.String()),
+			FromMe:    new(true),
+			ID:        new(rootID),
+		},
+		EncPayload: ciphertext,
+		EncIV:      iv,
+	}})
 }
 
 func generateMsgSecretKey(
@@ -98,7 +163,7 @@ func (cli *Client) decryptMsgSecret(ctx context.Context, msg *events.Message, us
 	if err != nil {
 		return nil, err
 	}
-	baseEncKey, origSender, err := cli.Store.MsgSecrets.GetMessageSecret(ctx, msg.Info.Chat, origSender, origMsgKey.GetID())
+	baseEncKey, storedOrigSender, err := cli.Store.MsgSecrets.GetMessageSecret(ctx, msg.Info.Chat, origSender, origMsgKey.GetID())
 	if err != nil {
 		return nil, fmt.Errorf("failed to get original message secret key: %w", err)
 	}
@@ -108,7 +173,30 @@ func (cli *Client) decryptMsgSecret(ctx context.Context, msg *events.Message, us
 	secretKey, additionalData := generateMsgSecretKey(useCase, msg.Info.Sender, origMsgKey.GetID(), origSender, baseEncKey)
 	plaintext, err := gcmutil.Decrypt(secretKey, encrypted.GetEncIV(), encrypted.GetEncPayload(), additionalData)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decrypt secret message: %w", err)
+		// Hack for trying both the original sender in the new message and the one who we received the secret key from.
+		// This will hopefully become unnecessary when WhatsApp fully finishes their migration to LIDs.
+		if origSender != storedOrigSender && strings.Contains(err.Error(), "message authentication failed") {
+			secretKey, additionalData = generateMsgSecretKey(useCase, msg.Info.Sender, origMsgKey.GetID(), storedOrigSender, baseEncKey)
+			plaintext, err = gcmutil.Decrypt(secretKey, encrypted.GetEncIV(), encrypted.GetEncPayload(), additionalData)
+			if err == nil {
+				zerolog.Ctx(ctx).Debug().
+					Str("orig_message_id", origMsgKey.GetID()).
+					Str("secret_message_id", msg.Info.ID).
+					Stringer("stored_orig_sender", storedOrigSender).
+					Stringer("key_orig_sender", origSender).
+					Msg("Decrypted message secret with orig sender hack")
+			}
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to decrypt secret message: %w (sender: %s, orig sender: %s and %s)", err, msg.Info.Sender, origSender, storedOrigSender)
+		}
+	} else {
+		zerolog.Ctx(ctx).Debug().
+			Str("orig_message_id", origMsgKey.GetID()).
+			Str("secret_message_id", msg.Info.ID).
+			Stringer("stored_orig_sender", storedOrigSender).
+			Stringer("key_orig_sender", origSender).
+			Msg("Decrypted message secret without hack")
 	}
 	return plaintext, nil
 }
@@ -236,12 +324,22 @@ func (cli *Client) DecryptSecretEncryptedMessage(ctx context.Context, evt *event
 	if encMessage == nil {
 		return nil, ErrNotSecretEncryptedMessage
 	}
-	if encMessage.GetSecretEncType() != waE2E.SecretEncryptedMessage_EVENT_EDIT {
+	var secretType MsgSecretType
+	switch encMessage.GetSecretEncType() {
+	case waE2E.SecretEncryptedMessage_EVENT_EDIT:
+		secretType = EncSecretEventEdit
+	case waE2E.SecretEncryptedMessage_POLL_EDIT:
+		secretType = EncSecretPollEdit
+	case waE2E.SecretEncryptedMessage_POLL_ADD_OPTION:
+		secretType = EncSecretPollEdit
+	case waE2E.SecretEncryptedMessage_MESSAGE_EDIT:
+		secretType = EncSecretMessageEdit
+	default:
 		return nil, fmt.Errorf("unsupported secret enc type: %s", encMessage.SecretEncType.String())
 	}
-	plaintext, err := cli.decryptMsgSecret(ctx, evt, EncSecretEventEdit, encMessage, encMessage.GetTargetMessageKey())
+	plaintext, err := cli.decryptMsgSecret(ctx, evt, secretType, encMessage, encMessage.GetTargetMessageKey())
 	if err != nil {
-		return nil, fmt.Errorf("failed to decrypt message: %w", err)
+		return nil, err
 	}
 	var msg waE2E.Message
 	err = proto.Unmarshal(plaintext, &msg)
@@ -256,12 +354,12 @@ func (cli *Client) DecryptSecretEncryptedMessage(ctx context.Context, evt *event
 
 func getKeyFromInfo(msgInfo *types.MessageInfo) *waCommon.MessageKey {
 	creationKey := &waCommon.MessageKey{
-		RemoteJID: proto.String(msgInfo.Chat.String()),
-		FromMe:    proto.Bool(msgInfo.IsFromMe),
-		ID:        proto.String(msgInfo.ID),
+		RemoteJID: new(msgInfo.Chat.String()),
+		FromMe:    new(msgInfo.IsFromMe),
+		ID:        new(msgInfo.ID),
 	}
 	if msgInfo.IsGroup {
-		creationKey.Participant = proto.String(msgInfo.Sender.String())
+		creationKey.Participant = new(msgInfo.Sender.String())
 	}
 	return creationKey
 }
@@ -308,13 +406,13 @@ func (cli *Client) BuildPollCreation(name string, optionNames []string, selectab
 	}
 	options := make([]*waE2E.PollCreationMessage_Option, len(optionNames))
 	for i, option := range optionNames {
-		options[i] = &waE2E.PollCreationMessage_Option{OptionName: proto.String(option)}
+		options[i] = &waE2E.PollCreationMessage_Option{OptionName: new(option)}
 	}
 	return &waE2E.Message{
 		PollCreationMessage: &waE2E.PollCreationMessage{
-			Name:                   proto.String(name),
+			Name:                   new(name),
 			Options:                options,
-			SelectableOptionsCount: proto.Uint32(uint32(selectableOptionCount)),
+			SelectableOptionsCount: new(uint32(selectableOptionCount)),
 		},
 		MessageContextInfo: &waE2E.MessageContextInfo{
 			MessageSecret: msgSecret,
@@ -328,7 +426,11 @@ func (cli *Client) EncryptPollVote(ctx context.Context, pollInfo *types.MessageI
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal poll vote protobuf: %w", err)
 	}
-	ciphertext, iv, err := cli.encryptMsgSecret(ctx, cli.getOwnID(), pollInfo.Chat, pollInfo.Sender, pollInfo.ID, EncSecretPollVote, plaintext)
+	ownID := cli.getOwnLID()
+	if pollInfo.Sender.Server == types.DefaultUserServer {
+		ownID = cli.getOwnID()
+	}
+	ciphertext, iv, err := cli.encryptMsgSecret(ctx, ownID, pollInfo.Chat, pollInfo.Sender, pollInfo.ID, EncSecretPollVote, plaintext)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encrypt poll vote: %w", err)
 	}
@@ -338,7 +440,7 @@ func (cli *Client) EncryptPollVote(ctx context.Context, pollInfo *types.MessageI
 			EncPayload: ciphertext,
 			EncIV:      iv,
 		},
-		SenderTimestampMS: proto.Int64(time.Now().UnixMilli()),
+		SenderTimestampMS: new(time.Now().UnixMilli()),
 	}, nil
 }
 
@@ -347,7 +449,6 @@ func (cli *Client) EncryptComment(ctx context.Context, rootMsgInfo *types.Messag
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal comment protobuf: %w", err)
 	}
-	// TODO is hardcoding LID here correct? What about polls?
 	ciphertext, iv, err := cli.encryptMsgSecret(ctx, cli.getOwnLID(), rootMsgInfo.Chat, rootMsgInfo.Sender, rootMsgInfo.ID, EncSecretComment, plaintext)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encrypt comment: %w", err)
@@ -355,10 +456,10 @@ func (cli *Client) EncryptComment(ctx context.Context, rootMsgInfo *types.Messag
 	return &waE2E.Message{
 		EncCommentMessage: &waE2E.EncCommentMessage{
 			TargetMessageKey: &waCommon.MessageKey{
-				RemoteJID:   proto.String(rootMsgInfo.Chat.String()),
-				Participant: proto.String(rootMsgInfo.Sender.ToNonAD().String()),
-				FromMe:      proto.Bool(rootMsgInfo.IsFromMe),
-				ID:          proto.String(rootMsgInfo.ID),
+				RemoteJID:   new(rootMsgInfo.Chat.String()),
+				Participant: new(rootMsgInfo.Sender.ToNonAD().String()),
+				FromMe:      new(rootMsgInfo.IsFromMe),
+				ID:          new(rootMsgInfo.ID),
 			},
 			EncPayload: ciphertext,
 			EncIV:      iv,

@@ -32,18 +32,39 @@ var (
 )
 
 // AuthFinishPasskeyLoginRequest represents TL type `auth.finishPasskeyLogin#9857ad07`.
+// Complete login with a passkey over an unauthenticated connection, see here »¹ for
+// more info.
+// Must be sent to the user's native DC, as specified by the user_handle (dcId:userId)
+// returned in the passkey assertion, see here »¹ for the full flow.
+//
+// Links:
+//  1. https://core.telegram.org/api/passkeys#logging-in-with-a-passkey
+//  2. https://core.telegram.org/api/passkeys#logging-in-with-a-passkey
 //
 // See https://core.telegram.org/method/auth.finishPasskeyLogin for reference.
 type AuthFinishPasskeyLoginRequest struct {
-	// Flags field of AuthFinishPasskeyLoginRequest.
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// Credential field of AuthFinishPasskeyLoginRequest.
-	Credential InputPasskeyCredentialClass
-	// FromDCID field of AuthFinishPasskeyLoginRequest.
+	// Passkey assertion result.
+	Credential InputPasskeyCredentialPublicKey
+	// DC ID used for the initial auth.initPasskeyLogin¹ request; set only if the user's DC
+	// is different from the DC used for the initial auth.initPasskeyLogin².
+	//
+	// Links:
+	//  1) https://core.telegram.org/method/auth.initPasskeyLogin
+	//  2) https://core.telegram.org/method/auth.initPasskeyLogin
 	//
 	// Use SetFromDCID and GetFromDCID helpers.
 	FromDCID int
-	// FromAuthKeyID field of AuthFinishPasskeyLoginRequest.
+	// Auth key ID for the connection to from_dc_id (use the permanent auth key ID if PFS is
+	// enabled); set only if the user's DC is different from the DC used for the initial auth
+	// initPasskeyLogin¹.
+	//
+	// Links:
+	//  1) https://core.telegram.org/method/auth.initPasskeyLogin
 	//
 	// Use SetFromAuthKeyID and GetFromAuthKeyID helpers.
 	FromAuthKeyID int64
@@ -67,7 +88,7 @@ func (f *AuthFinishPasskeyLoginRequest) Zero() bool {
 	if !(f.Flags.Zero()) {
 		return false
 	}
-	if !(f.Credential == nil) {
+	if !(f.Credential.Zero()) {
 		return false
 	}
 	if !(f.FromDCID == 0) {
@@ -91,7 +112,7 @@ func (f *AuthFinishPasskeyLoginRequest) String() string {
 
 // FillFrom fills AuthFinishPasskeyLoginRequest from given interface.
 func (f *AuthFinishPasskeyLoginRequest) FillFrom(from interface {
-	GetCredential() (value InputPasskeyCredentialClass)
+	GetCredential() (value InputPasskeyCredentialPublicKey)
 	GetFromDCID() (value int, ok bool)
 	GetFromAuthKeyID() (value int64, ok bool)
 }) {
@@ -175,9 +196,6 @@ func (f *AuthFinishPasskeyLoginRequest) EncodeBare(b *bin.Buffer) error {
 	if err := f.Flags.Encode(b); err != nil {
 		return fmt.Errorf("unable to encode auth.finishPasskeyLogin#9857ad07: field flags: %w", err)
 	}
-	if f.Credential == nil {
-		return fmt.Errorf("unable to encode auth.finishPasskeyLogin#9857ad07: field credential is nil")
-	}
 	if err := f.Credential.Encode(b); err != nil {
 		return fmt.Errorf("unable to encode auth.finishPasskeyLogin#9857ad07: field credential: %w", err)
 	}
@@ -212,11 +230,9 @@ func (f *AuthFinishPasskeyLoginRequest) DecodeBare(b *bin.Buffer) error {
 		}
 	}
 	{
-		value, err := DecodeInputPasskeyCredential(b)
-		if err != nil {
+		if err := f.Credential.Decode(b); err != nil {
 			return fmt.Errorf("unable to decode auth.finishPasskeyLogin#9857ad07: field credential: %w", err)
 		}
-		f.Credential = value
 	}
 	if f.Flags.Has(0) {
 		value, err := b.Int()
@@ -236,7 +252,7 @@ func (f *AuthFinishPasskeyLoginRequest) DecodeBare(b *bin.Buffer) error {
 }
 
 // GetCredential returns value of Credential field.
-func (f *AuthFinishPasskeyLoginRequest) GetCredential() (value InputPasskeyCredentialClass) {
+func (f *AuthFinishPasskeyLoginRequest) GetCredential() (value InputPasskeyCredentialPublicKey) {
 	if f == nil {
 		return
 	}
@@ -280,6 +296,20 @@ func (f *AuthFinishPasskeyLoginRequest) GetFromAuthKeyID() (value int64, ok bool
 }
 
 // AuthFinishPasskeyLogin invokes method auth.finishPasskeyLogin#9857ad07 returning error if any.
+// Complete login with a passkey over an unauthenticated connection, see here »¹ for
+// more info.
+// Must be sent to the user's native DC, as specified by the user_handle (dcId:userId)
+// returned in the passkey assertion, see here »¹ for the full flow.
+//
+// Links:
+//  1. https://core.telegram.org/api/passkeys#logging-in-with-a-passkey
+//  2. https://core.telegram.org/api/passkeys#logging-in-with-a-passkey
+//
+// Possible errors:
+//
+//	500 AUTH_RESTART: Restart the authorization process.
+//	400 CREDENTIAL_INVALID:
+//	500 PASSKEY_AUTH_RESTART:
 //
 // See https://core.telegram.org/method/auth.finishPasskeyLogin for reference.
 func (c *Client) AuthFinishPasskeyLogin(ctx context.Context, request *AuthFinishPasskeyLoginRequest) (AuthAuthorizationClass, error) {

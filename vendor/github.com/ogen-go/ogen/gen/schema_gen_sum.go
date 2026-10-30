@@ -46,14 +46,20 @@ const (
 
 // jxTypeForFieldType returns the jx.Type constant name for runtime type checking.
 // Returns empty string if the type is not distinguishable at JSON level.
-func jxTypeForFieldType(typeID string) string {
+func jxTypeForFieldType(ft *ir.Type) string {
+	typeID := getFieldTypeID(ft)
+	const strType = "jx.String"
 	switch {
 	case typeID == typeIDBoolean:
 		return "jx.Bool"
 	case typeID == typeIDInteger, typeID == typeIDNumber:
+		if s := ft.Schema; s != nil && s.Type == jsonschema.String {
+			// TODO(tdakkota): properly figure out JSON type.
+			return strType
+		}
 		return "jx.Number"
 	case typeID == typeIDString:
-		return "jx.String"
+		return strType
 	case typeID == typeIDNull:
 		return "jx.Null"
 	case typeID == typeIDObject:
@@ -64,7 +70,7 @@ func jxTypeForFieldType(typeID string) string {
 		return "jx.Object"
 	case strings.HasPrefix(typeID, "enum_"):
 		// Enums serialize as strings in JSON
-		return "jx.String"
+		return strType
 	default:
 		return ""
 	}
@@ -73,8 +79,9 @@ func jxTypeForFieldType(typeID string) string {
 // getArrayElementTypeInfo extracts element type information from an array type ID.
 // Returns the element type ID and its corresponding jx.Type.
 // For non-array types, returns empty strings.
-func getArrayElementTypeInfo(typeID string) (elementTypeID, elementJxType string) {
-	if !strings.HasPrefix(typeID, "array[") {
+func getArrayElementTypeInfo(t *ir.Type) (elementTypeID, elementJxType string) {
+	typeID := getFieldTypeID(t)
+	if !strings.HasPrefix(typeID, "array[") || t.Item == nil {
 		return "", ""
 	}
 
@@ -83,7 +90,7 @@ func getArrayElementTypeInfo(typeID string) (elementTypeID, elementJxType string
 	elementTypeID = strings.TrimSuffix(elementTypeID, "]")
 
 	// Get the jx.Type for the element
-	elementJxType = jxTypeForFieldType(elementTypeID)
+	elementJxType = jxTypeForFieldType(t.Item)
 
 	return elementTypeID, elementJxType
 }
@@ -338,11 +345,19 @@ func (g *schemaGen) handleExplicitDiscriminator(sum *ir.Type, schema *jsonschema
 				vschema = variants[i]
 			}
 
+			var discriminatorType *ir.Type
+			for _, field := range s.Fields {
+				if field.Spec != nil && field.Spec.Name == propName {
+					discriminatorType = field.Type
+				}
+			}
+
 			if vschema.Ref == v.Ref {
 				found = true
 				sum.SumSpec.Mapping = append(sum.SumSpec.Mapping, ir.SumSpecMap{
-					Key:  k,
-					Type: s,
+					Key:               k,
+					Type:              s,
+					DiscriminatorType: discriminatorType,
 				})
 				mappingKeys = append(mappingKeys, k)
 				break
@@ -366,8 +381,7 @@ func (g *schemaGen) handleExplicitDiscriminator(sum *ir.Type, schema *jsonschema
 		// Find the discriminator field in this variant
 		for _, f := range variant.JSON().Fields() {
 			if f.Tag.JSON == propName {
-				typeID := getFieldTypeID(f.Type)
-				jxType := jxTypeForFieldType(typeID)
+				jxType := jxTypeForFieldType(f.Type)
 				discriminatorFieldTypes[variant.Name] = jxType
 				break
 			}
@@ -407,7 +421,7 @@ func (g *schemaGen) handleExplicitDiscriminator(sum *ir.Type, schema *jsonschema
 	sum.SumSpec.Discriminator = propName
 
 	// Generate names using the helper
-	nameGen, err := discriminatorMappingNameGen(sum.Name, mappingKeys)
+	nameGen, err := g.namer().discriminatorMappingNameGen(sum.Name, mappingKeys)
 	if err != nil {
 		return true, err
 	}
@@ -425,6 +439,28 @@ func (g *schemaGen) handleExplicitDiscriminator(sum *ir.Type, schema *jsonschema
 		return strings.Compare(a.Key, b.Key)
 	})
 	return true, nil
+}
+
+// implicitDiscriminatorKey returns the implicit discriminator value for a variant
+// when that value is statically known from the discriminator field.
+func implicitDiscriminatorKey(variant *ir.Type, propName string) (string, bool) {
+	for _, field := range variant.Fields {
+		if field.Spec == nil || field.Spec.Name != propName {
+			continue
+		}
+		if c := field.Const(); c.Set {
+			if v, ok := c.Value.(string); ok {
+				return v, true
+			}
+		}
+		if t := field.Type; t != nil && t.Kind == ir.KindEnum && len(t.EnumVariants) == 1 {
+			if v, ok := t.EnumVariants[0].Value.(string); ok {
+				return v, true
+			}
+		}
+		return "", false
+	}
+	return "", false
 }
 
 func (g *schemaGen) anyOf(name string, schema *jsonschema.Schema, side bool) (*ir.Type, error) {
@@ -525,8 +561,7 @@ func (g *schemaGen) oneOf(name string, schema *jsonschema.Schema, side bool) (*i
 			for _, variant := range variants {
 				for _, f := range variant.JSON().Fields() {
 					if f.Tag.JSON == propName {
-						typeID := getFieldTypeID(f.Type)
-						jxType := jxTypeForFieldType(typeID)
+						jxType := jxTypeForFieldType(f.Type)
 						discriminatorFieldTypes[variant.Name] = jxType
 						break
 					}
@@ -594,6 +629,18 @@ func (g *schemaGen) oneOf(name string, schema *jsonschema.Schema, side bool) (*i
 			}
 
 			key, err := func() (string, error) {
+				// Prefer the actual wire discriminator value of the field.
+				if key, ok := implicitDiscriminatorKey(s, schema.Discriminator.PropertyName); ok {
+					if _, ok := keys[key]; ok {
+						return "", errors.Wrapf(
+							&ErrNotImplemented{"duplicate mapping key"},
+							"key %q", key,
+						)
+					}
+					keys[key] = struct{}{}
+					return key, nil
+				}
+
 				// Spec says (https://spec.openapis.org/oas/v3.1.0#discriminator-object):
 				//
 				// 	The expectation now is that a property with name petType MUST be present in the response payload,
@@ -637,7 +684,7 @@ func (g *schemaGen) oneOf(name string, schema *jsonschema.Schema, side bool) (*i
 			// Set discriminator only if we have mappings
 			sum.SumSpec.Discriminator = schema.Discriminator.PropertyName
 
-			nameGen, err := discriminatorMappingNameGen(sum.Name, mappingKeys)
+			nameGen, err := g.namer().discriminatorMappingNameGen(sum.Name, mappingKeys)
 			if err != nil {
 				return nil, err
 			}
@@ -858,7 +905,7 @@ func (g *schemaGen) oneOf(name string, schema *jsonschema.Schema, side bool) (*i
 				}
 
 				// Store expected jx.Type for runtime type checking
-				jxType := jxTypeForFieldType(sig.typeID)
+				jxType := jxTypeForFieldType(f.Type)
 				if jxType != "" {
 					s.SumSpec.UniqueFieldTypes[sig.name] = jxType
 				}
@@ -871,7 +918,7 @@ func (g *schemaGen) oneOf(name string, schema *jsonschema.Schema, side bool) (*i
 					(f.Type.IsPointer() && f.Type.NilSemantic.Null())
 
 				// Get array element type info for array element discrimination
-				elemTypeID, elemJxType := getArrayElementTypeInfo(sig.typeID)
+				elemTypeID, elemJxType := getArrayElementTypeInfo(f.Type)
 
 				// Add to UniqueFields map for template iteration
 				// Include entries even when jxType is empty (simple field-name discrimination)
@@ -1190,27 +1237,11 @@ func (g *schemaGen) oneOf(name string, schema *jsonschema.Schema, side bool) (*i
 }
 
 func (g *schemaGen) allOf(name string, schema *jsonschema.Schema) (*ir.Type, error) {
-	if err := ensureNoInfiniteRecursion(schema); err != nil {
-		return nil, err
-	}
-
-	// If there is only one schema in allOf, avoid merging to keep the reference.
-	if len(schema.AllOf) == 1 {
-		s := schema.AllOf[0]
-		if s != nil {
-			return g.generate(name, s, false)
-		}
-	}
-
-	mergedSchema, err := mergeNSchemes(schema.AllOf)
+	mergedSchema, err := flattenAllOfSchema(schema)
 	if err != nil {
 		return nil, err
 	}
-
-	// The reference field must not change
-	mergedSchema.Ref = schema.Ref
-
-	return g.generate(name, mergedSchema, false)
+	return g.generate2(name, mergedSchema)
 }
 
 // shallowSchemaCopy returns a shallow copy of the given schema.
@@ -1224,6 +1255,153 @@ func shallowSchemaCopy(s *jsonschema.Schema) *jsonschema.Schema {
 	}
 	cpy := *s
 	return &cpy
+}
+
+// hasSiblingConstraints reports whether s carries keywords to apply alongside
+// allOf. Type/Nullable/Ref/Pointer are excluded: flattenAllOfSchema propagates
+// them separately. Mostly mirrors mergeSchemes' containsValidators; keep in sync.
+func hasSiblingConstraints(s *jsonschema.Schema) bool {
+	if s == nil {
+		return false
+	}
+	switch {
+	case len(s.Properties) > 0,
+		len(s.Required) > 0,
+		s.AdditionalProperties != nil,
+		len(s.PatternProperties) > 0,
+		s.MaxProperties != nil,
+		s.MinProperties != nil:
+		return true
+	case s.Format != "",
+		len(s.Enum) > 0,
+		s.DefaultSet,
+		s.ConstSet,
+		s.Discriminator != nil:
+		return true
+	case len(s.OneOf) > 0,
+		len(s.AnyOf) > 0:
+		return true
+	case s.Item != nil,
+		len(s.Items) > 0,
+		s.MaxItems != nil,
+		s.MinItems != nil,
+		s.UniqueItems:
+		return true
+	case len(s.Maximum) > 0,
+		len(s.Minimum) > 0,
+		len(s.MultipleOf) > 0,
+		s.ExclusiveMinimum,
+		s.ExclusiveMaximum:
+		return true
+	case s.MaxLength != nil,
+		s.MinLength != nil,
+		len(s.Pattern) > 0:
+		return true
+	case s.XML != nil,
+		len(s.ExtraTags) > 0,
+		len(s.OgenValidate) > 0,
+		s.XOgenTimeFormat != "",
+		s.XOgenName != "",
+		s.XOgenType != "":
+		return true
+	}
+	// Deprecated is carried by flattenAllOfSchema instead, to avoid forcing a
+	// merge for just a flag. Summary, Examples and Content* stay unhandled.
+	return false
+}
+
+// propagateParentExtensions copies parent keywords that mergeSchemes drops when
+// it builds a fresh merged schema (the ogen extensions and Deprecated). dst is
+// kept if already set, which only matters when mergeSchemes early-returns a
+// shallow copy of a subschema that has its own value.
+func propagateParentExtensions(dst, parent *jsonschema.Schema) {
+	if dst.XML == nil {
+		dst.XML = parent.XML
+	}
+	if len(dst.ExtraTags) == 0 {
+		dst.ExtraTags = parent.ExtraTags
+	}
+	if len(dst.OgenValidate) == 0 {
+		dst.OgenValidate = parent.OgenValidate
+	}
+	if dst.XOgenTimeFormat == "" {
+		dst.XOgenTimeFormat = parent.XOgenTimeFormat
+	}
+	if dst.XOgenName == "" {
+		dst.XOgenName = parent.XOgenName
+	}
+	if dst.XOgenType == "" {
+		dst.XOgenType = parent.XOgenType
+	}
+	dst.Deprecated = dst.Deprecated || parent.Deprecated
+}
+
+func flattenAllOfSchema(schema *jsonschema.Schema) (*jsonschema.Schema, error) {
+	if schema == nil || len(schema.AllOf) == 0 {
+		return schema, nil
+	}
+
+	if err := ensureNoInfiniteRecursion(schema); err != nil {
+		return nil, err
+	}
+
+	parent := shallowSchemaCopy(schema)
+	parent.AllOf = nil
+
+	// A schema may specify keywords (properties, required, validators, ...)
+	// alongside allOf. Per JSON Schema, allOf and its sibling keywords are all
+	// applied (logical AND), so the sibling constraints must be merged in too.
+	hasSiblings := hasSiblingConstraints(parent)
+
+	// If there is only one schema in allOf and there are no sibling constraints,
+	// avoid merging and keep the inner schema while still applying wrapper-level
+	// metadata from the parent.
+	if len(schema.AllOf) == 1 && !hasSiblings {
+		child := shallowSchemaCopy(schema.AllOf[0])
+		if child == nil {
+			return parent, nil
+		}
+
+		child.Nullable = child.Nullable || parent.Nullable
+		child.Deprecated = child.Deprecated || parent.Deprecated
+		if child.Type == jsonschema.Empty {
+			child.Type = parent.Type
+		}
+		if child.Ref.IsZero() {
+			child.Ref = parent.Ref
+		}
+		if _, ok := child.Position(); !ok {
+			child.Pointer = parent.Pointer
+		}
+		return child, nil
+	}
+
+	// Merge the parent in as an extra subschema. Append it last for field order
+	// only; allOf is a commutative AND.
+	toMerge := schema.AllOf
+	if hasSiblings {
+		toMerge = make([]*jsonschema.Schema, 0, len(schema.AllOf)+1)
+		toMerge = append(toMerge, schema.AllOf...)
+		toMerge = append(toMerge, parent)
+	}
+
+	mergedSchema, err := mergeNSchemes(toMerge)
+	if err != nil {
+		return nil, err
+	}
+
+	mergedSchema.Nullable = mergedSchema.Nullable || parent.Nullable
+	if mergedSchema.Type == jsonschema.Empty {
+		mergedSchema.Type = parent.Type
+	}
+	// The reference field must not change.
+	mergedSchema.Ref = parent.Ref
+	if _, ok := mergedSchema.Position(); !ok {
+		mergedSchema.Pointer = parent.Pointer
+	}
+	propagateParentExtensions(mergedSchema, parent)
+
+	return mergedSchema, nil
 }
 
 func mergeNSchemes(ss []*jsonschema.Schema) (_ *jsonschema.Schema, err error) {
@@ -1358,11 +1536,15 @@ func mergeSchemes(s1, s2 *jsonschema.Schema) (_ *jsonschema.Schema, err error) {
 		}
 	}
 
+	// The switch below drops the other side when only one side has validators,
+	// so keep this in sync with hasSiblingConstraints (minus the ogen keywords,
+	// which propagateParentExtensions restores).
 	containsValidators := func(s *jsonschema.Schema) bool {
-		if s.Type != "" || s.Format != "" || s.Nullable || len(s.Enum) > 0 || s.DefaultSet {
+		if s.Type != "" || s.Format != "" || s.Nullable || len(s.Enum) > 0 || s.DefaultSet || s.ConstSet {
 			return true
 		}
 		if s.Item != nil ||
+			len(s.Items) > 0 ||
 			s.AdditionalProperties != nil ||
 			len(s.PatternProperties) > 0 ||
 			len(s.Properties) > 0 ||
@@ -1458,6 +1640,23 @@ func mergeSchemes(s1, s2 *jsonschema.Schema) (_ *jsonschema.Schema, err error) {
 
 		r.Default = s1.Default
 		r.DefaultSet = true
+	}
+
+	// Const
+	switch {
+	case s1.ConstSet && !s2.ConstSet:
+		r.Const = s1.Const
+		r.ConstSet = true
+	case !s1.ConstSet && s2.ConstSet:
+		r.Const = s2.Const
+		r.ConstSet = true
+	case s1.ConstSet && s2.ConstSet:
+		if !reflect.DeepEqual(s1.Const, s2.Const) {
+			return nil, errors.New("schemes have different const values")
+		}
+
+		r.Const = s1.Const
+		r.ConstSet = true
 	}
 
 	// Discriminator

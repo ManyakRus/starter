@@ -32,6 +32,10 @@ var (
 )
 
 // PhoneInviteConferenceCallParticipantRequest represents TL type `phone.inviteConferenceCallParticipant#bcf22685`.
+// Invite a user to a conference call¹.
+//
+// Links:
+//  1. https://core.telegram.org/api/group-calls#conference-calls
 //
 // See https://core.telegram.org/method/phone.inviteConferenceCallParticipant for reference.
 type PhoneInviteConferenceCallParticipantRequest struct {
@@ -40,11 +44,11 @@ type PhoneInviteConferenceCallParticipantRequest struct {
 	// Links:
 	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// Video field of PhoneInviteConferenceCallParticipantRequest.
+	// Invite the user to also turn on their video feed.
 	Video bool
-	// Call field of PhoneInviteConferenceCallParticipantRequest.
+	// The conference call.
 	Call InputGroupCallClass
-	// UserID field of PhoneInviteConferenceCallParticipantRequest.
+	// The user to invite.
 	UserID InputUserClass
 }
 
@@ -254,9 +258,16 @@ func (i *PhoneInviteConferenceCallParticipantRequest) GetUserID() (value InputUs
 }
 
 // PhoneInviteConferenceCallParticipant invokes method phone.inviteConferenceCallParticipant#bcf22685 returning error if any.
+// Invite a user to a conference call¹.
+//
+// Links:
+//  1. https://core.telegram.org/api/group-calls#conference-calls
+//
+// Possible errors:
+//
+//	400 GROUPCALL_INVALID: The specified group call is invalid.
 //
 // See https://core.telegram.org/method/phone.inviteConferenceCallParticipant for reference.
-// Can be used by bots.
 func (c *Client) PhoneInviteConferenceCallParticipant(ctx context.Context, request *PhoneInviteConferenceCallParticipantRequest) (UpdatesClass, error) {
 	var result UpdatesBox
 

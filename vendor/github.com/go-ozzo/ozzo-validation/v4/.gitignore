@@ -26,3 +26,18 @@ _testmain.go
 *.test
 *.prof
 .DS_Store
+
+# AI settings
+.claude/
+.goco/
+
+# Dev docs (private)
+docs/dev/
+tmp/
+
+# Test and build outputs
+*.out
+coverage.*
+
+# Private project state (pm skill)
+/.pm/

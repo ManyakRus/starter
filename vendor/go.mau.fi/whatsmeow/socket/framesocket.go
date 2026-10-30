@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"sync/atomic"
 
 	"github.com/coder/websocket"
 
@@ -22,7 +23,7 @@ type FrameSocket struct {
 	parentCtx context.Context
 	cancelCtx context.Context
 	cancel    context.CancelFunc
-	conn      *websocket.Conn
+	conn      atomic.Pointer[websocket.Conn]
 	log       waLog.Logger
 	lock      sync.Mutex
 
@@ -35,7 +36,7 @@ type FrameSocket struct {
 
 	Header []byte
 
-	closed bool
+	closed atomic.Bool
 
 	incomingLength int
 	receivedLength int
@@ -49,37 +50,41 @@ func NewFrameSocket(log waLog.Logger, client *http.Client) *FrameSocket {
 		Header: WAConnHeader,
 		Frames: make(chan []byte),
 
-		URL:         URL,
-		HTTPHeaders: http.Header{"Origin": {Origin}},
-		HTTPClient:  client,
+		URL: URL,
+		HTTPHeaders: http.Header{
+			"Origin":        {Origin},
+			"Cache-Control": {"no-cache"},
+			"Pragma":        {"no-cache"},
+		},
+		HTTPClient: client,
 	}
 }
 
 func (fs *FrameSocket) IsConnected() bool {
-	return fs.conn != nil
+	return fs.conn.Load() != nil
 }
 
 func (fs *FrameSocket) Close(code websocket.StatusCode) {
 	fs.lock.Lock()
 	defer fs.lock.Unlock()
 
-	if fs.conn == nil {
+	conn := fs.conn.Swap(nil)
+	if conn == nil {
 		return
 	}
 
-	fs.closed = true
+	fs.closed.Store(true)
 	if code > 0 {
-		err := fs.conn.Close(code, "")
+		err := conn.Close(code, "")
 		if err != nil {
 			fs.log.Warnf("Error sending close to websocket: %v", err)
 		}
 	} else {
-		err := fs.conn.CloseNow()
+		err := conn.CloseNow()
 		if err != nil {
 			fs.log.Debugf("Error force closing websocket: %v", err)
 		}
 	}
-	fs.conn = nil
 	fs.cancel()
 	fs.cancel = nil
 	if fs.OnDisconnect != nil {
@@ -90,27 +95,24 @@ func (fs *FrameSocket) Close(code websocket.StatusCode) {
 func (fs *FrameSocket) Connect(ctx context.Context) error {
 	fs.lock.Lock()
 	defer fs.lock.Unlock()
-	if fs.conn != nil {
+	if fs.conn.Load() != nil {
 		return ErrSocketAlreadyOpen
 	}
 	fs.parentCtx = ctx
 	fs.cancelCtx, fs.cancel = context.WithCancel(ctx)
 
 	fs.log.Debugf("Dialing %s", fs.URL)
-	conn, resp, err := websocket.Dial(ctx, fs.URL, &websocket.DialOptions{
-		HTTPClient: fs.HTTPClient,
-		HTTPHeader: fs.HTTPHeaders,
-	})
+	conn, resp, err := websocket.Dial(ctx, fs.URL, fs.makeDialOptions())
 	if err != nil {
 		if resp != nil {
 			err = ErrWithStatusCode{err, resp.StatusCode}
 		}
 		fs.cancel()
-		return fmt.Errorf("failed to dial whatsapp web websocket: %w", err)
+		return fmt.Errorf("%w: %w", ErrDialFailed, err)
 	}
 	conn.SetReadLimit(FrameMaxSize)
 
-	fs.conn = conn
+	fs.conn.Store(conn)
 
 	go fs.readPump(conn, ctx)
 	return nil
@@ -121,7 +123,7 @@ func (fs *FrameSocket) Context() context.Context {
 }
 
 func (fs *FrameSocket) SendFrame(data []byte) error {
-	conn := fs.conn
+	conn := fs.conn.Load()
 	if conn == nil {
 		return ErrSocketClosed
 	}
@@ -172,8 +174,8 @@ func (fs *FrameSocket) processData(msg []byte) {
 			if len(msg) >= FrameLengthSize {
 				length := (int(msg[0]) << 16) + (int(msg[1]) << 8) + int(msg[2])
 				fs.incomingLength = length
-				fs.receivedLength = len(msg)
 				msg = msg[FrameLengthSize:]
+				fs.receivedLength = len(msg)
 				if len(msg) >= length {
 					fs.incoming = msg[:length]
 					msg = msg[length:]
@@ -212,7 +214,7 @@ func (fs *FrameSocket) readPump(conn *websocket.Conn, ctx context.Context) {
 		msgType, data, err := conn.Read(ctx)
 		if err != nil {
 			// Ignore the error if the context has been closed
-			if !fs.closed && !errors.Is(ctx.Err(), context.Canceled) {
+			if !fs.closed.Load() && !errors.Is(ctx.Err(), context.Canceled) {
 				fs.log.Errorf("Error reading from websocket: %v", err)
 			}
 			return

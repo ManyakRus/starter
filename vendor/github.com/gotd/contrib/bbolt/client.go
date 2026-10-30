@@ -18,11 +18,11 @@ func (p bboltStorage) Set(ctx context.Context, k, v string) (rerr error) {
 	return p.db.Batch(func(tx *bbolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists(p.bucket)
 		if err != nil {
-			return errors.Errorf("create bucket: %w", err)
+			return errors.Wrap(err, "create bucket")
 		}
 
 		if err := bucket.Put([]byte(k), []byte(v)); err != nil {
-			return errors.Errorf("put: %w", err)
+			return errors.Wrap(err, "put")
 		}
 		return nil
 	})

@@ -2,35 +2,24 @@ package sentry
 
 import (
 	"crypto/rand"
-	"encoding/json"
+)
+
+const (
+	traceIDContextKey = "trace_id"
+	spanIDContextKey  = "span_id"
 )
 
 type PropagationContext struct {
 	TraceID                TraceID                `json:"trace_id"`
 	SpanID                 SpanID                 `json:"span_id"`
-	ParentSpanID           SpanID                 `json:"parent_span_id"`
+	ParentSpanID           SpanID                 `json:"parent_span_id,omitzero"`
 	DynamicSamplingContext DynamicSamplingContext `json:"-"`
-}
-
-func (p PropagationContext) MarshalJSON() ([]byte, error) {
-	type propagationContext PropagationContext
-	var parentSpanID string
-	if p.ParentSpanID != zeroSpanID {
-		parentSpanID = p.ParentSpanID.String()
-	}
-	return json.Marshal(struct {
-		*propagationContext
-		ParentSpanID string `json:"parent_span_id,omitempty"`
-	}{
-		propagationContext: (*propagationContext)(&p),
-		ParentSpanID:       parentSpanID,
-	})
 }
 
 func (p PropagationContext) Map() map[string]interface{} {
 	m := map[string]interface{}{
-		"trace_id": p.TraceID,
-		"span_id":  p.SpanID,
+		traceIDContextKey: p.TraceID,
+		spanIDContextKey:  p.SpanID,
 	}
 
 	if p.ParentSpanID != zeroSpanID {

@@ -33,7 +33,7 @@ var (
 
 // PaymentsGetStarsStatusRequest represents TL type `payments.getStarsStatus#4ea9b3bf`.
 // Get the current Telegram Stars balance¹ of the current account (with
-// peer=inputPeerSelf²), or the stars balance of the bot specified in peer.
+// peer=inputPeerSelf²), or the stars balance of the bot or channel specified in peer.
 //
 // Links:
 //  1. https://core.telegram.org/api/stars
@@ -46,7 +46,7 @@ type PaymentsGetStarsStatusRequest struct {
 	// Links:
 	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// Ton field of PaymentsGetStarsStatusRequest.
+	// If set, returns the channel/ad revenue balance in nanotons.
 	Ton bool
 	// Peer of which to get the balance.
 	Peer InputPeerClass
@@ -229,7 +229,7 @@ func (g *PaymentsGetStarsStatusRequest) GetPeer() (value InputPeerClass) {
 
 // PaymentsGetStarsStatus invokes method payments.getStarsStatus#4ea9b3bf returning error if any.
 // Get the current Telegram Stars balance¹ of the current account (with
-// peer=inputPeerSelf²), or the stars balance of the bot specified in peer.
+// peer=inputPeerSelf²), or the stars balance of the bot or channel specified in peer.
 //
 // Links:
 //  1. https://core.telegram.org/api/stars
@@ -237,6 +237,8 @@ func (g *PaymentsGetStarsStatusRequest) GetPeer() (value InputPeerClass) {
 //
 // Possible errors:
 //
+//	403 BOT_ACCESS_FORBIDDEN: The specified method can be used over a business connection for some operations, but the specified query attempted an operation that is not allowed over a business connection.
+//	400 BUSINESS_CONNECTION_INVALID: The connection_id passed to the wrapping invokeWithBusinessConnection call is invalid.
 //	400 PEER_ID_INVALID: The provided peer id is invalid.
 //
 // See https://core.telegram.org/method/payments.getStarsStatus for reference.

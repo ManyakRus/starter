@@ -83,6 +83,13 @@ func (b *Bulk) sendBulkCommand(ctx context.Context) (err error) {
 			}
 		}
 		if bulkCol != nil {
+			// Note that for INSERT BULK operations, XMLTYPE is to be sent as NVARCHAR(N) or NVARCHAR(MAX) data type.
+			// An error is produced if XMLTYPE is specified.
+			//
+			// https://learn.microsoft.com/openspecs/windows_protocols/ms-tds/ab4a7d62-cd1f-4db1-b67d-ecae58f493e3
+			if bulkCol.ti.TypeId == typeXml {
+				bulkCol.ti.TypeId = typeNVarChar
+			}
 
 			if bulkCol.ti.TypeId == typeUdt {
 				//send udt as binary
@@ -99,11 +106,12 @@ func (b *Bulk) sendBulkCommand(ctx context.Context) (err error) {
 
 	//columns definitions
 	var col_defs bytes.Buffer
+	q := TSQLQuoter{}
 	for i, col := range b.bulkColumns {
 		if i != 0 {
 			col_defs.WriteString(", ")
 		}
-		col_defs.WriteString("[" + col.ColName + "] " + makeDecl(col.ti))
+		col_defs.WriteString(q.ID(col.ColName) + " " + makeDecl(col.ti))
 	}
 
 	//options
@@ -125,7 +133,11 @@ func (b *Bulk) sendBulkCommand(ctx context.Context) (err error) {
 		with_opts = append(with_opts, fmt.Sprintf("ROWS_PER_BATCH = %d", b.Options.RowsPerBatch))
 	}
 	if len(b.Options.Order) > 0 {
-		with_opts = append(with_opts, fmt.Sprintf("ORDER(%s)", strings.Join(b.Options.Order, ",")))
+		order := make([]string, len(b.Options.Order))
+		for i, entry := range b.Options.Order {
+			order[i] = quoteBulkOrder(entry)
+		}
+		with_opts = append(with_opts, fmt.Sprintf("ORDER(%s)", strings.Join(order, ",")))
 	}
 	if b.Options.Tablock {
 		with_opts = append(with_opts, "TABLOCK")
@@ -135,13 +147,17 @@ func (b *Bulk) sendBulkCommand(ctx context.Context) (err error) {
 		with_part = fmt.Sprintf("WITH (%s)", strings.Join(with_opts, ","))
 	}
 
-	query := fmt.Sprintf("INSERT BULK %s (%s) %s", b.tablename, col_defs.String(), with_part)
+	quotedTable, err := quoteObjectName(b.tablename)
+	if err != nil {
+		return err
+	}
+	query := fmt.Sprintf("INSERT BULK %s (%s) %s", quotedTable, col_defs.String(), with_part)
 
 	stmt, err := b.cn.PrepareContext(ctx, query)
 	if err != nil {
 		return fmt.Errorf("Prepare failed: %s", err.Error())
 	}
-	b.dlogf(ctx, query)
+	b.dlogf(ctx, "%s", query)
 
 	_, err = stmt.(*Stmt).ExecContext(ctx, nil)
 	if err != nil {
@@ -284,6 +300,12 @@ func (b *Bulk) createColMetadata() []byte {
 }
 
 func (b *Bulk) getMetadata(ctx context.Context) (err error) {
+	// Check the destination before touching the session's FMTONLY setting.
+	quotedTable, err := quoteObjectName(b.tablename)
+	if err != nil {
+		return err
+	}
+
 	stmt, err := b.cn.prepareContext(ctx, "SET FMTONLY ON")
 	if err != nil {
 		return
@@ -319,13 +341,13 @@ func (b *Bulk) getMetadata(ctx context.Context) (err error) {
 	}()
 
 	// Get columns info.
-	stmt, err = b.cn.prepareContext(ctx, fmt.Sprintf("select * from %s SET FMTONLY OFF", b.tablename))
+	stmt, err = b.cn.prepareContext(ctx, fmt.Sprintf("select * from %s SET FMTONLY OFF", quotedTable))
 	if err != nil {
 		return
 	}
 	rows, err := stmt.QueryContext(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("get columns info failed: %v", err)
+		return fmt.Errorf("get columns info failed: %w", err)
 	}
 	resetFmtonly = false
 	b.metadata = rows.(*Rows).cols
@@ -660,7 +682,7 @@ func (b *Bulk) makeParam(val DataValue, col columnStruct) (res param, err error)
 			buf[i] = ub[j]
 		}
 		res.buffer = buf
-	case typeBigVarBin, typeBigBinary:
+	case typeBigVarBin, typeBigBinary, typeImage:
 		switch val := val.(type) {
 		case []byte:
 			res.ti.Size = len(val)
@@ -678,7 +700,6 @@ func (b *Bulk) makeParam(val DataValue, col columnStruct) (res param, err error)
 			err = fmt.Errorf("mssql: invalid type for Guid column: %T %s", val, val)
 			return
 		}
-
 	default:
 		err = fmt.Errorf("mssql: type %x not implemented", col.ti.TypeId)
 	}

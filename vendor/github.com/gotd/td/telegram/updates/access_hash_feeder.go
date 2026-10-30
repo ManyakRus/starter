@@ -1,7 +1,7 @@
 package updates
 
 import (
-	"go.uber.org/zap"
+	"github.com/gotd/log"
 	"golang.org/x/net/context"
 
 	"github.com/gotd/td/tg"
@@ -22,25 +22,51 @@ func (s *internalState) saveChannelHashes(ctx context.Context, chats []tg.ChatCl
 				if _, ok = s.channels[c.ID]; ok {
 					continue
 				}
-				s.log.Debug("New channel access hash",
-					zap.Int64("channel_id", c.ID),
-					zap.String("title", c.Title),
+				s.log.Debug(ctx, "New channel access hash",
+					log.Int64("channel_id", c.ID),
+					log.String("title", c.Title),
 				)
 				if err := s.hasher.SetChannelAccessHash(ctx, s.selfID, c.ID, hash); err != nil {
-					s.log.Error("SetChannelState error", zap.Error(err))
+					s.log.Error(ctx, "SetChannelState error", log.Error(err))
 				}
 			}
 		case *tg.ChannelForbidden:
 			if _, ok := s.channels[c.ID]; ok {
 				continue
 			}
-			s.log.Debug("New channel access hash",
-				zap.Int64("channel_id", c.ID),
-				zap.String("title", c.Title),
+			s.log.Debug(ctx, "New channel access hash",
+				log.Int64("channel_id", c.ID),
+				log.String("title", c.Title),
 			)
 			if err := s.hasher.SetChannelAccessHash(ctx, s.selfID, c.ID, c.AccessHash); err != nil {
-				s.log.Error("SetChannelState error", zap.Error(err))
+				s.log.Error(ctx, "SetChannelState error", log.Error(err))
 			}
+		}
+	}
+}
+
+// saveUserHashes records user IDs that carry a full (non-min, non-zero) access
+// hash into the UserAccessHasher. A min user or a user with a zero access hash is
+// NOT recorded: per TDLib / Telegram-Android, such an entity does not count as a
+// known peer. Runs on the internalState goroutine.
+func (s *internalState) saveUserHashes(ctx context.Context, users []tg.UserClass) {
+	ctx, span := s.tracer.Start(ctx, "updates.saveUserHashes")
+	defer span.End()
+
+	for _, u := range users {
+		u, ok := u.(*tg.User)
+		if !ok {
+			continue
+		}
+		if u.Min || u.AccessHash == 0 {
+			continue
+		}
+		if _, found, err := s.userHasher.GetUserAccessHash(ctx, s.selfID, u.ID); err == nil && found {
+			continue
+		}
+		s.log.Debug(ctx, "New user access hash", log.Int64("user_id", u.ID))
+		if err := s.userHasher.SetUserAccessHash(ctx, s.selfID, u.ID, u.AccessHash); err != nil {
+			s.log.Error(ctx, "SetUserAccessHash error", log.Error(err))
 		}
 	}
 }
@@ -55,7 +81,7 @@ func (s *internalState) restoreAccessHash(ctx context.Context, channelID int64, 
 		Date: date,
 	})
 	if err != nil {
-		s.log.Error("UpdatesGetDifference error", zap.Error(err))
+		s.log.Error(ctx, "UpdatesGetDifference error", log.Error(err))
 		return 0, false
 	}
 

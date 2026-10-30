@@ -5,12 +5,11 @@
 package validation
 
 import (
-	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
-	"text/template"
 )
 
 type (
@@ -57,6 +56,11 @@ func (e internalError) InternalError() error {
 	return e.error
 }
 
+// Unwrap returns the wrapped error, so that errors.Is and errors.As reach it.
+func (e internalError) Unwrap() error {
+	return e.error
+}
+
 // SetCode set the error's translation code.
 func (e ErrorObject) SetCode(code string) Error {
 	e.code = code
@@ -100,16 +104,23 @@ func (e ErrorObject) Message() string {
 	return e.message
 }
 
-// Error returns the error message.
-func (e ErrorObject) Error() string {
-	if len(e.params) == 0 {
-		return e.message
+// Is reports whether target is a validation Error with the same non-empty code. It makes
+// errors.Is(err, ErrRequired) and the like work: an ErrorObject holds a params map, so it
+// cannot be compared with ==, and a rule with a custom message (Required.Error("...")) keeps
+// the code of the error it was built from. Params are not compared.
+//
+// An error with an empty code never matches, not even itself, so give the sentinel errors
+// of your own rules a code: NewError("my_code", "...").
+func (e ErrorObject) Is(target error) bool {
+	if e.code == "" {
+		return false
 	}
-
-	res := bytes.Buffer{}
-	_ = template.Must(template.New("err").Parse(e.message)).Execute(&res, e.params)
-
-	return res.String()
+	if p, ok := target.(*ErrorObject); ok && p == nil {
+		// Code() on a nil *ErrorObject would panic.
+		return false
+	}
+	t, ok := target.(Error)
+	return ok && e.code == t.Code()
 }
 
 // Error returns the error string of Errors.
@@ -118,17 +129,16 @@ func (es Errors) Error() string {
 		return ""
 	}
 
-	keys := make([]string, len(es))
-	i := 0
-	for key := range es {
-		keys[i] = key
-		i++
-	}
-	sort.Strings(keys)
+	keys := es.sortedKeys()
 
 	var s strings.Builder
-	for i, key := range keys {
-		if i > 0 {
+	for _, key := range keys {
+		if es[key] == nil {
+			continue
+		}
+		// Decide the separator by what was written, not by the key index: skipped nil entries
+		// must not leave a leading "; ".
+		if s.Len() > 0 {
 			s.WriteString("; ")
 		}
 		if errs, ok := es[key].(Errors); ok {
@@ -137,8 +147,52 @@ func (es Errors) Error() string {
 			_, _ = fmt.Fprintf(&s, "%v: %v", key, es[key].Error())
 		}
 	}
+	if s.Len() == 0 {
+		// Only nil entries: report the same as an empty Errors.
+		return ""
+	}
 	s.WriteString(".")
 	return s.String()
+}
+
+// Is implements the interface relied upon by the standard library's errors.Is.
+// It reports whether any entry of es matches target according to errors.Is,
+// including entries of the Errors nested for maps, slices and nested structs.
+// What an entry matches is up to the entry: an error returned by a By rule
+// matches its sentinel, and an ErrorObject matches a validation Error with the
+// same code (see ErrorObject.Is), so errors.Is(err, ErrRequired) reports whether
+// any field failed Required.
+//
+// Nil field errors are skipped. An Errors is not comparable, so errors.Is(es, es) is false.
+// Errors that contain themselves are not supported, as in Error().
+func (es Errors) Is(target error) bool {
+	if target == nil {
+		return false
+	}
+	// A plain range: the result does not depend on the order, and sorting the keys
+	// costs an allocation per call.
+	for _, err := range es {
+		if err != nil && errors.Is(err, target) {
+			return true
+		}
+	}
+	return false
+}
+
+// Errors deliberately has no As method (and no Unwrap() []error). Code that tells
+// a single-value error from a field map relies on errors.As(err, &validation.Error)
+// reporting false for an Errors; an As that looks inside the map would make it
+// return the first field's error and lose the field names.
+
+// sortedKeys returns the keys of es sorted in increasing order. It gives Error a
+// deterministic iteration order over the fields.
+func (es Errors) sortedKeys() []string {
+	keys := make([]string, 0, len(es))
+	for key := range es {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 // MarshalJSON converts the Errors into a valid JSON.
@@ -176,5 +230,11 @@ func NewError(code, message string) Error {
 	}
 }
 
-// Assert that our ErrorObject implements the Error interface.
-var _ Error = ErrorObject{}
+// Assert that our ErrorObject implements the Error interface and the hook used by errors.Is.
+var (
+	_ Error                       = ErrorObject{}
+	_ interface{ Is(error) bool } = ErrorObject{}
+)
+
+// Assert that Errors implements the hook interface used by errors.Is.
+var _ interface{ Is(error) bool } = Errors{}

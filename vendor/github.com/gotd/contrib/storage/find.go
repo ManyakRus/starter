@@ -27,7 +27,7 @@ func FindPeer(ctx context.Context, s PeerStorage, p tg.PeerClass) (Peer, error) 
 func ForEach(ctx context.Context, iterator PeerIterator, cb func(Peer) error) error {
 	for iterator.Next(ctx) {
 		if err := cb(iterator.Value()); err != nil {
-			return errors.Errorf("callback: %w", err)
+			return errors.Wrap(err, "callback")
 		}
 	}
 	return iterator.Err()

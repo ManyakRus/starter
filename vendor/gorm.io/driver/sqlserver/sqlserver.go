@@ -182,6 +182,18 @@ func (dialector Dialector) Explain(sql string, vars ...interface{}) string {
 }
 
 func (dialector Dialector) DataTypeOf(field *schema.Field) string {
+	// Computed (generated) column. SQL Server uses `AS (expr) PERSISTED` (the
+	// column type is inferred from the expression, so it is omitted). The
+	// expression is carried by the `generated` tag, separate from the type.
+	// https://learn.microsoft.com/en-us/sql/relational-databases/tables/specify-computed-columns-in-a-table
+	if expr, ok := generatedColumnExpr(field); ok {
+		return "AS (" + expr + ") PERSISTED"
+	}
+
+	return dialector.dataTypeOf(field)
+}
+
+func (dialector Dialector) dataTypeOf(field *schema.Field) string {
 	switch field.DataType {
 	case schema.Bool:
 		return "bit"
@@ -242,4 +254,41 @@ func (dialectopr Dialector) SavePoint(tx *gorm.DB, name string) error {
 func (dialectopr Dialector) RollbackTo(tx *gorm.DB, name string) error {
 	tx.Exec("ROLLBACK TRANSACTION " + name)
 	return nil
+}
+
+// generatedColumnExpr returns the expression of a computed (generated) column
+// declared via the `generated` tag, if any. The `identity` keyword is reserved
+// for identity columns (rendered through the dialect's native IDENTITY) and is
+// not a computed-column expression.
+func generatedColumnExpr(field *schema.Field) (string, bool) {
+	value, ok := field.TagSettings["GENERATED"]
+	if !ok {
+		return "", false
+	}
+	// Ignore an empty value or a bare `generated` tag, which the tag parser
+	// stores as the upper-cased key, rather than treating it as an expression.
+	if value = strings.TrimSpace(value); value == "" || value == "GENERATED" {
+		return "", false
+	}
+	if isIdentityKeyword(value) {
+		return "", false
+	}
+	return value, true
+}
+
+// isIdentityKeyword reports whether value is the `identity` keyword, optionally
+// combined with the generation mode `always` / `by default`. Any other token
+// means value is a computed-column expression.
+func isIdentityKeyword(value string) bool {
+	identity := false
+	for _, token := range strings.Fields(strings.ToLower(value)) {
+		switch token {
+		case "identity":
+			identity = true
+		case "always", "by", "default":
+		default:
+			return false
+		}
+	}
+	return identity
 }

@@ -7,7 +7,8 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"go.opentelemetry.io/otel/trace"
-	"go.uber.org/zap"
+
+	"github.com/gotd/log"
 
 	"github.com/gotd/td/clock"
 	"github.com/gotd/td/crypto"
@@ -46,17 +47,44 @@ type Options struct {
 	// Enabled by default if no UpdateHandler is provided.
 	NoUpdates bool
 
+	// AllowCDN enables downloader CDN redirect flow for clients that support
+	// downloader integration.
+	//
+	// If false, downloader will stay on the master DC path (legacy behavior).
+	// If true and server does not return redirect, requests still go through the
+	// same master path (no extra CDN round-trips).
+	// Default is false.
+	AllowCDN bool
 	// ReconnectionBackoff configures and returns reconnection backoff object.
 	ReconnectionBackoff func() backoff.BackOff
 	// OnDead will be called on connection dead.
-	OnDead func()
+	OnDead func(error)
+	// OnConnectionState is called when the primary connection state changes:
+	// on every (re)connect start, on successful initialization and on
+	// connection loss. Connection death details are reported via OnDead.
+	//
+	// Called synchronously from connection lifecycle, so the callback must
+	// not block.
+	OnConnectionState func(ConnectionState)
 	// MigrationTimeout configures migration timeout.
 	MigrationTimeout time.Duration
 
 	// Random is random source. Defaults to crypto.
 	Random io.Reader
-	// Logger is instance of zap.Logger. No logs by default.
-	Logger *zap.Logger
+	// Logger is the structured logger. No logs by default.
+	//
+	// Use github.com/gotd/log/logzap to bridge a *zap.Logger:
+	//
+	//	import (
+	//		"go.uber.org/zap"
+	//		"github.com/gotd/log/logzap"
+	//	)
+	//
+	//	zapLog, _ := zap.NewProduction()
+	//	opts := telegram.Options{
+	//		Logger: logzap.New(zapLog),
+	//	}
+	Logger log.Logger
 	// SessionStorage will be used to load and save session data.
 	// NB: Very sensitive data, save with care.
 	SessionStorage SessionStorage
@@ -80,6 +108,12 @@ type Options struct {
 	ExchangeTimeout time.Duration
 	// DialTimeout is timeout of creating connection.
 	DialTimeout time.Duration
+	// EnablePFS enables Perfect Forward Secrecy with temporary auth keys.
+	EnablePFS bool
+	// TempKeyTTL controls temporary key lifetime in seconds.
+	// Default: 86400 (24h).
+	// The value is clamped in mtproto layer to keep protocol-safe bounds.
+	TempKeyTTL int
 
 	// CompressThreshold is a threshold in bytes to determine that message
 	// is large enough to be compressed using GZIP.
@@ -90,6 +124,14 @@ type Options struct {
 	// Device is device config.
 	// Will be sent with session creation request.
 	Device DeviceConfig
+
+	// Layer is the schema layer to request via invokeWithLayer.
+	//
+	// If not provided, tg.Layer will be used, i.e. the layer of the schema
+	// this package is generated from. Override it only if the server must be
+	// asked for an older layer; requests are still encoded using tg.Layer
+	// schema, so a mismatch may cause decoding errors.
+	Layer int
 
 	MessageID mtproto.MessageIDSource
 	Clock     clock.Clock
@@ -108,6 +150,9 @@ type Options struct {
 	// non-nil error on first connection before auth, so it's safe to return nil until
 	// first successful auth.
 	OnSelfError func(ctx context.Context, err error) error
+
+	// OnSelfSuccess is called when client get self calling Self() on connect.
+	OnSelfSuccess func(self *tg.User)
 }
 
 func (opt *Options) setDefaults() {
@@ -118,13 +163,16 @@ func (opt *Options) setDefaults() {
 		opt.Random = crypto.DefaultRand()
 	}
 	if opt.Logger == nil {
-		opt.Logger = zap.NewNop()
+		opt.Logger = log.Nop
 	}
 	if opt.DC == 0 {
 		opt.DC = 2
 	}
 	if opt.DCList.Zero() {
 		opt.DCList = dcs.Prod()
+	}
+	if opt.Layer == 0 {
+		opt.Layer = tg.Layer
 	}
 	// It's okay to use zero value AckBatchSize, mtproto.Options will set defaults.
 	// It's okay to use zero value AckInterval, mtproto.Options will set defaults.

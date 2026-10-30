@@ -148,7 +148,7 @@ type InputPhoto struct {
 	// File reference¹
 	//
 	// Links:
-	//  1) https://core.telegram.org/api/file_reference
+	//  1) https://core.telegram.org/api/file-references
 	FileReference []byte
 }
 
@@ -370,6 +370,17 @@ type InputPhotoClass interface {
 
 	// AsNotEmpty tries to map InputPhotoClass to InputPhoto.
 	AsNotEmpty() (*InputPhoto, bool)
+}
+
+// AsInputPhotoFileLocation tries to map InputPhoto to InputPhotoFileLocation.
+func (i *InputPhoto) AsInputPhotoFileLocation(thumbSize string) *InputPhotoFileLocation {
+	value := new(InputPhotoFileLocation)
+	value.ID = i.GetID()
+	value.AccessHash = i.GetAccessHash()
+	value.FileReference = i.GetFileReference()
+	value.ThumbSize = thumbSize
+
+	return value
 }
 
 // AsNotEmpty tries to map InputPhotoEmpty to InputPhoto.

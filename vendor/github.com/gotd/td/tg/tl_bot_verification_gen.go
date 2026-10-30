@@ -31,20 +31,24 @@ var (
 	_ = tdjson.Encoder{}
 )
 
-// BotVerification represents TL type `botVerification#f93cd45c`.
+// BotVerification represents TL type `botVerification#f72e0ed9`.
+// Describes a bot verification icon »¹.
+//
+// Links:
+//  1. https://core.telegram.org/api/bots/verification
 //
 // See https://core.telegram.org/constructor/botVerification for reference.
 type BotVerification struct {
-	// BotID field of BotVerification.
+	// ID of the bot that verified this peer
 	BotID int64
-	// Icon field of BotVerification.
+	// Verification icon
 	Icon int64
-	// Description field of BotVerification.
-	Description string
+	// Verification description
+	Description TextWithEntities
 }
 
 // BotVerificationTypeID is TL type id of BotVerification.
-const BotVerificationTypeID = 0xf93cd45c
+const BotVerificationTypeID = 0xf72e0ed9
 
 // Ensuring interfaces in compile-time for BotVerification.
 var (
@@ -64,7 +68,7 @@ func (b *BotVerification) Zero() bool {
 	if !(b.Icon == 0) {
 		return false
 	}
-	if !(b.Description == "") {
+	if !(b.Description.Zero()) {
 		return false
 	}
 
@@ -84,7 +88,7 @@ func (b *BotVerification) String() string {
 func (b *BotVerification) FillFrom(from interface {
 	GetBotID() (value int64)
 	GetIcon() (value int64)
-	GetDescription() (value string)
+	GetDescription() (value TextWithEntities)
 }) {
 	b.BotID = from.GetBotID()
 	b.Icon = from.GetIcon()
@@ -133,7 +137,7 @@ func (b *BotVerification) TypeInfo() tdp.Type {
 // Encode implements bin.Encoder.
 func (b *BotVerification) Encode(buf *bin.Buffer) error {
 	if b == nil {
-		return fmt.Errorf("can't encode botVerification#f93cd45c as nil")
+		return fmt.Errorf("can't encode botVerification#f72e0ed9 as nil")
 	}
 	buf.PutID(BotVerificationTypeID)
 	return b.EncodeBare(buf)
@@ -142,21 +146,23 @@ func (b *BotVerification) Encode(buf *bin.Buffer) error {
 // EncodeBare implements bin.BareEncoder.
 func (b *BotVerification) EncodeBare(buf *bin.Buffer) error {
 	if b == nil {
-		return fmt.Errorf("can't encode botVerification#f93cd45c as nil")
+		return fmt.Errorf("can't encode botVerification#f72e0ed9 as nil")
 	}
 	buf.PutLong(b.BotID)
 	buf.PutLong(b.Icon)
-	buf.PutString(b.Description)
+	if err := b.Description.Encode(buf); err != nil {
+		return fmt.Errorf("unable to encode botVerification#f72e0ed9: field description: %w", err)
+	}
 	return nil
 }
 
 // Decode implements bin.Decoder.
 func (b *BotVerification) Decode(buf *bin.Buffer) error {
 	if b == nil {
-		return fmt.Errorf("can't decode botVerification#f93cd45c to nil")
+		return fmt.Errorf("can't decode botVerification#f72e0ed9 to nil")
 	}
 	if err := buf.ConsumeID(BotVerificationTypeID); err != nil {
-		return fmt.Errorf("unable to decode botVerification#f93cd45c: %w", err)
+		return fmt.Errorf("unable to decode botVerification#f72e0ed9: %w", err)
 	}
 	return b.DecodeBare(buf)
 }
@@ -164,28 +170,26 @@ func (b *BotVerification) Decode(buf *bin.Buffer) error {
 // DecodeBare implements bin.BareDecoder.
 func (b *BotVerification) DecodeBare(buf *bin.Buffer) error {
 	if b == nil {
-		return fmt.Errorf("can't decode botVerification#f93cd45c to nil")
+		return fmt.Errorf("can't decode botVerification#f72e0ed9 to nil")
 	}
 	{
 		value, err := buf.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode botVerification#f93cd45c: field bot_id: %w", err)
+			return fmt.Errorf("unable to decode botVerification#f72e0ed9: field bot_id: %w", err)
 		}
 		b.BotID = value
 	}
 	{
 		value, err := buf.Long()
 		if err != nil {
-			return fmt.Errorf("unable to decode botVerification#f93cd45c: field icon: %w", err)
+			return fmt.Errorf("unable to decode botVerification#f72e0ed9: field icon: %w", err)
 		}
 		b.Icon = value
 	}
 	{
-		value, err := buf.String()
-		if err != nil {
-			return fmt.Errorf("unable to decode botVerification#f93cd45c: field description: %w", err)
+		if err := b.Description.Decode(buf); err != nil {
+			return fmt.Errorf("unable to decode botVerification#f72e0ed9: field description: %w", err)
 		}
-		b.Description = value
 	}
 	return nil
 }
@@ -207,7 +211,7 @@ func (b *BotVerification) GetIcon() (value int64) {
 }
 
 // GetDescription returns value of Description field.
-func (b *BotVerification) GetDescription() (value string) {
+func (b *BotVerification) GetDescription() (value TextWithEntities) {
 	if b == nil {
 		return
 	}

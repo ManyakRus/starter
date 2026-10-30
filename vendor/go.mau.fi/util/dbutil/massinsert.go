@@ -80,7 +80,7 @@ func NewMassInsertBuilder[Item MassInsertable[DynamicParams], StaticParams Array
 	var stat StaticParams
 	totalParams := len(dyn) + len(stat)
 	mainQueryVariablePlaceholderParts := make([]string, totalParams)
-	for i := 0; i < totalParams; i++ {
+	for i := range totalParams {
 		mainQueryVariablePlaceholderParts[i] = fmt.Sprintf(`\$%d`, i+1)
 	}
 	mainQueryVariablePlaceholderRegex := regexp.MustCompile(fmt.Sprintf(`\(\s*%s\s*\)`, strings.Join(mainQueryVariablePlaceholderParts, `\s*,\s*`)))

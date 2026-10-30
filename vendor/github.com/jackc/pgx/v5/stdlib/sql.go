@@ -9,7 +9,7 @@
 //
 // Or from a keyword/value string.
 //
-//	db, err := sql.Open("pgx", "user=postgres password=secret host=localhost port=5432 database=pgx_test sslmode=disable")
+//	db, err := sql.Open("pgx", "user=postgres password=secret host=localhost port=5432 dbname=pgx_test sslmode=disable")
 //	if err != nil {
 //	  return err
 //	}
@@ -57,12 +57,25 @@
 //
 // # PostgreSQL Specific Data Types
 //
-// The pgtype package provides support for PostgreSQL specific types. *pgtype.Map.SQLScanner is an adapter that makes
-// these types usable as a sql.Scanner.
+// As of Go 1.27, database/sql allows drivers to implement their own scanning logic by implementing the
+// driver.RowsColumnScanner interface. This allows PostgreSQL types such as arrays to be scanned directly into Go
+// values such as slices.
+//
+//	var a []int64
+//	err := db.QueryRow("select '{1,2,3}'::bigint[]").Scan(&a)
+//
+// In older versions of Go, *pgtype.Map.SQLScanner can be used as an adapter that makes these types usable as a
+// sql.Scanner.
 //
 //	m := pgtype.NewMap()
 //	var a []int64
 //	err := db.QueryRow("select '{1,2,3}'::bigint[]").Scan(m.SQLScanner(&a))
+//
+// The pgtype package provides support for PostgreSQL specific types. These types can be used directly in Go 1.27 and
+// with *pgtype.Map.SQLScanner in older Go versions.
+//
+//	var r pgtype.Range[pgtype.Int4]
+//	err := db.QueryRow("select int4range(1, 5)").Scan(&r)
 package stdlib
 
 import (
@@ -555,6 +568,12 @@ func (c *Conn) ResetSession(ctx context.Context) error {
 		return driver.ErrBadConn
 	}
 
+	// Discard connection if it has an open transaction. This can happen if the
+	// application did not properly commit or rollback a transaction.
+	if c.conn.PgConn().TxStatus() != 'I' {
+		return driver.ErrBadConn
+	}
+
 	now := time.Now()
 	idle := now.Sub(c.lastResetSessionTime)
 
@@ -635,7 +654,7 @@ func (r *Rows) Columns() []string {
 		fields := r.rows.FieldDescriptions()
 		r.columnNames = make([]string, len(fields))
 		for i, fd := range fields {
-			r.columnNames[i] = string(fd.Name)
+			r.columnNames[i] = fd.Name
 		}
 	}
 
@@ -662,7 +681,7 @@ func (r *Rows) ColumnTypeLength(index int) (int64, bool) {
 	switch fd.DataTypeOID {
 	case pgtype.TextOID, pgtype.ByteaOID:
 		return math.MaxInt64, true
-	case pgtype.VarcharOID, pgtype.BPCharArrayOID:
+	case pgtype.VarcharOID, pgtype.BPCharOID:
 		return int64(fd.TypeModifier - varHeaderSize), true
 	case pgtype.VarbitOID:
 		return int64(fd.TypeModifier), true
@@ -693,25 +712,25 @@ func (r *Rows) ColumnTypeScanType(index int) reflect.Type {
 
 	switch fd.DataTypeOID {
 	case pgtype.Float8OID:
-		return reflect.TypeOf(float64(0))
+		return reflect.TypeFor[float64]()
 	case pgtype.Float4OID:
-		return reflect.TypeOf(float32(0))
+		return reflect.TypeFor[float32]()
 	case pgtype.Int8OID:
-		return reflect.TypeOf(int64(0))
+		return reflect.TypeFor[int64]()
 	case pgtype.Int4OID:
-		return reflect.TypeOf(int32(0))
+		return reflect.TypeFor[int32]()
 	case pgtype.Int2OID:
-		return reflect.TypeOf(int16(0))
+		return reflect.TypeFor[int16]()
 	case pgtype.BoolOID:
-		return reflect.TypeOf(false)
+		return reflect.TypeFor[bool]()
 	case pgtype.NumericOID:
-		return reflect.TypeOf(float64(0))
+		return reflect.TypeFor[float64]()
 	case pgtype.DateOID, pgtype.TimestampOID, pgtype.TimestamptzOID:
-		return reflect.TypeOf(time.Time{})
+		return reflect.TypeFor[time.Time]()
 	case pgtype.ByteaOID:
-		return reflect.TypeOf([]byte(nil))
+		return reflect.TypeFor[[]byte]()
 	default:
-		return reflect.TypeOf("")
+		return reflect.TypeFor[string]()
 	}
 }
 
@@ -720,7 +739,9 @@ func (r *Rows) Close() error {
 	return r.rows.Err()
 }
 
-func (r *Rows) Next(dest []driver.Value) error {
+// initValueFuncs prepares the database/sql representation of each column. Both
+// Next and ScanColumn use these conversions so their driver.Values agree.
+func (r *Rows) initValueFuncs() {
 	m := r.conn.conn.TypeMap()
 	fieldDescriptions := r.rows.FieldDescriptions()
 
@@ -851,6 +872,10 @@ func (r *Rows) Next(dest []driver.Value) error {
 			}
 		}
 	}
+}
+
+func (r *Rows) Next(dest []driver.Value) error {
+	r.initValueFuncs()
 
 	var more bool
 	if r.skipNext {

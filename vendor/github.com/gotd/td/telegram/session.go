@@ -5,7 +5,8 @@ import (
 	"fmt"
 
 	"github.com/go-faster/errors"
-	"go.uber.org/zap"
+
+	"github.com/gotd/log"
 
 	"github.com/gotd/td/crypto"
 	"github.com/gotd/td/mtproto"
@@ -43,9 +44,9 @@ func (c *Client) restoreConnection(ctx context.Context) error {
 	}
 
 	// Re-initializing connection from persisted state.
-	c.log.Info("Connection restored from state",
-		zap.String("addr", data.Addr),
-		zap.String("key_id", fmt.Sprintf("%x", data.AuthKeyID)),
+	c.log.Info(ctx, "Connection restored from state",
+		log.String("addr", data.Addr),
+		log.String("key_id", fmt.Sprintf("%x", data.AuthKeyID)),
 	)
 
 	c.connMux.Lock()
@@ -54,7 +55,7 @@ func (c *Client) restoreConnection(ctx context.Context) error {
 		AuthKey: key,
 		Salt:    data.Salt,
 	})
-	c.conn = c.createPrimaryConn(nil)
+	c.replaceConn(c.createPrimaryConn(nil))
 	c.connMux.Unlock()
 
 	return nil
@@ -77,8 +78,13 @@ func (c *Client) saveSession(cfg tg.Config, s mtproto.Session) error {
 
 	// Updating previous data.
 	data.Config = session.ConfigFromTG(cfg)
-	data.AuthKey = s.Key.Value[:]
-	data.AuthKeyID = s.Key.ID[:]
+	keyToSave := s.Key
+	if !s.PermKey.Zero() {
+		// Persist permanent key in PFS mode: temporary key is expected to rotate.
+		keyToSave = s.PermKey
+	}
+	data.AuthKey = keyToSave.Value[:]
+	data.AuthKeyID = keyToSave.ID[:]
 	data.DC = cfg.ThisDC
 	data.Salt = s.Salt
 
@@ -86,20 +92,16 @@ func (c *Client) saveSession(cfg tg.Config, s mtproto.Session) error {
 		return errors.Wrap(err, "save")
 	}
 
-	c.log.Debug("Data saved",
-		zap.String("key_id", fmt.Sprintf("%x", data.AuthKeyID)),
+	c.log.Debug(c.ctx, "Data saved",
+		log.String("key_id", fmt.Sprintf("%x", data.AuthKeyID)),
 	)
 	return nil
 }
 
 func (c *Client) onSession(cfg tg.Config, s mtproto.Session) error {
-	c.sessionsMux.Lock()
-	c.sessions[cfg.ThisDC] = pool.NewSyncSession(pool.Session{
-		DC:      cfg.ThisDC,
-		Salt:    s.Salt,
-		AuthKey: s.Key,
-	})
-	c.sessionsMux.Unlock()
+	sessionData := dcSessionFromMTProto(cfg.ThisDC, s)
+	// Track per-DC session in memory for pool reconnections/migrations.
+	c.storeDCSess(c.sessions, sessionData)
 
 	primaryDC := c.session.Load().DC
 	// Do not save session for non-primary DC.
@@ -108,11 +110,7 @@ func (c *Client) onSession(cfg tg.Config, s mtproto.Session) error {
 	}
 
 	c.connMux.Lock()
-	c.session.Store(pool.Session{
-		DC:      cfg.ThisDC,
-		Salt:    s.Salt,
-		AuthKey: s.Key,
-	})
+	c.session.Store(sessionData)
 	c.cfg.Store(cfg)
 	c.onReady()
 	c.connMux.Unlock()
@@ -122,4 +120,37 @@ func (c *Client) onSession(cfg tg.Config, s mtproto.Session) error {
 	}
 
 	return nil
+}
+
+func (c *Client) onCDNSession(cfg tg.Config, s mtproto.Session) error {
+	// CDN sessions are isolated from regular DC map because lifecycle and reset
+	// triggers differ (fingerprint misses, CDN-specific reconnects).
+	c.storeDCSess(c.cdnSessions, dcSessionFromMTProto(cfg.ThisDC, s))
+	return nil
+}
+
+func (c *Client) storeDCSess(target map[int]*pool.SyncSession, data pool.Session) {
+	c.sessionsMux.Lock()
+	if existing, ok := target[data.DC]; ok {
+		existing.Store(data)
+		c.sessionsMux.Unlock()
+		return
+	}
+	target[data.DC] = pool.NewSyncSession(data)
+	c.sessionsMux.Unlock()
+}
+
+func dcSessionFromMTProto(dc int, s mtproto.Session) pool.Session {
+	keyToStore := s.Key
+	if !s.PermKey.Zero() {
+		// Keep in-memory/persisted key format backward-compatible: one key slot.
+		// In PFS mode temp key rotates, so we pin permanent key.
+		keyToStore = s.PermKey
+	}
+
+	return pool.Session{
+		DC:      dc,
+		Salt:    s.Salt,
+		AuthKey: keyToStore,
+	}
 }

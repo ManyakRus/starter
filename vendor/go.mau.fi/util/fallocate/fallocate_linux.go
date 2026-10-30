@@ -20,5 +20,5 @@ func Fallocate(file *os.File, size int) error {
 	if size <= 0 {
 		return nil
 	}
-	return unix.Fallocate(int(file.Fd()), 0, 0, int64(size))
+	return unix.Fallocate(int(file.Fd()), unix.FALLOC_FL_KEEP_SIZE, 0, int64(size))
 }

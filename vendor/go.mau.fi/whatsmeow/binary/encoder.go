@@ -30,7 +30,7 @@ func (w *binaryEncoder) pushBytes(bytes []byte) {
 }
 
 func (w *binaryEncoder) pushIntN(value, n int, littleEndian bool) {
-	for i := 0; i < n; i++ {
+	for i := range n {
 		var curShift int
 		if littleEndian {
 			curShift = i
@@ -98,7 +98,7 @@ func (w *binaryEncoder) writeNode(n Node) {
 	}
 }
 
-func (w *binaryEncoder) write(data interface{}) {
+func (w *binaryEncoder) write(data any) {
 	switch typedData := data.(type) {
 	case nil:
 		w.pushByte(token.ListEmpty)

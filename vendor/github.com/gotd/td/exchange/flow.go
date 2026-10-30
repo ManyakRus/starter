@@ -6,7 +6,7 @@ import (
 	"io"
 	"time"
 
-	"go.uber.org/zap"
+	"github.com/gotd/log"
 
 	"github.com/gotd/td/clock"
 	"github.com/gotd/td/crypto"
@@ -17,15 +17,28 @@ import (
 // DefaultTimeout is default WithTimeout parameter value.
 const DefaultTimeout = 1 * time.Minute
 
+// ExchangeMode controls type of generated auth key.
+type ExchangeMode int
+
+const (
+	// ExchangeModePermanent creates permanent authorization key.
+	ExchangeModePermanent ExchangeMode = iota
+	// ExchangeModeTemporary creates temporary authorization key.
+	ExchangeModeTemporary
+)
+
 // Exchanger is builder for key exchangers.
 type Exchanger struct {
 	conn transport.Conn
 
 	clock   clock.Clock
 	rand    io.Reader
-	log     *zap.Logger
+	log     log.Helper
 	timeout time.Duration
 	dc      int
+	// mode/expires define auth key type produced by client exchange.
+	mode    ExchangeMode
+	expires int
 }
 
 // WithClock sets exchange flow clock.
@@ -41,14 +54,25 @@ func (e Exchanger) WithRand(reader io.Reader) Exchanger {
 }
 
 // WithLogger sets exchange flow logger.
-func (e Exchanger) WithLogger(log *zap.Logger) Exchanger {
-	e.log = log
+func (e Exchanger) WithLogger(logger log.Logger) Exchanger {
+	e.log = log.For(logger)
 	return e
 }
 
 // WithTimeout sets write/read deadline of every exchange request.
 func (e Exchanger) WithTimeout(timeout time.Duration) Exchanger {
 	e.timeout = timeout
+	return e
+}
+
+// WithTempMode configures temporary authorization key exchange.
+//
+// expiresIn is temporary key lifetime in seconds.
+func (e Exchanger) WithTempMode(expiresIn int) Exchanger {
+	// Switching mode changes only client flow payload type; server flow remains
+	// backward-compatible and accepts both variants.
+	e.mode = ExchangeModeTemporary
+	e.expires = expiresIn
 	return e
 }
 
@@ -59,9 +83,12 @@ func NewExchanger(conn transport.Conn, dc int) Exchanger {
 
 		clock:   clock.System,
 		rand:    crypto.DefaultRand(),
-		log:     zap.NewNop(),
+		log:     log.For(nil),
 		timeout: DefaultTimeout,
 		dc:      dc,
+		// Preserve old behavior by default: generate permanent key unless
+		// caller explicitly requests temporary mode.
+		mode: ExchangeModePermanent,
 	}
 }
 
@@ -86,6 +113,9 @@ func (e Exchanger) Client(keys []PublicKey) ClientExchange {
 		log:  e.log,
 		keys: keys,
 		dc:   e.dc,
+		mode: e.mode,
+
+		expiresIn: e.expires,
 	}
 }
 

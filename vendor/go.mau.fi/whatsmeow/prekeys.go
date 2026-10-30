@@ -92,7 +92,7 @@ func (cli *Client) uploadPreKeys(ctx context.Context, initialUpload bool) {
 		return
 	}
 	cli.lastPreKeyUpload = time.Now()
-	return
+	cli.PreKeysUploaded.Set()
 }
 
 func (cli *Client) fetchPreKeysNoError(ctx context.Context, retryDevices []types.JID) map[types.JID]*prekey.Bundle {
@@ -180,7 +180,7 @@ func preKeyToNode(key *keys.PreKey) waBinary.Node {
 func nodeToPreKeyBundle(deviceID uint32, node waBinary.Node) (*prekey.Bundle, error) {
 	errorNode, ok := node.GetOptionalChildByTag("error")
 	if ok && errorNode.Tag == "error" {
-		return nil, fmt.Errorf("got error getting prekeys: %s", errorNode.XMLString())
+		return nil, fmt.Errorf("got error getting prekeys: %s", &errorNode)
 	}
 
 	registrationBytes, ok := node.GetChildByTag("registration").Content.([]byte)

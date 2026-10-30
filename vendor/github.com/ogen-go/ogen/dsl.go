@@ -2,6 +2,7 @@ package ogen
 
 import (
 	"encoding/json"
+	"maps"
 	"slices"
 	"strings"
 
@@ -441,6 +442,31 @@ func (p *PathItem) SetPatch(o *Operation) *PathItem {
 func (p *PathItem) SetTrace(o *Operation) *PathItem {
 	p.Trace = o
 	return p
+}
+
+// SetQuery sets the Query of the PathItem.
+func (p *PathItem) SetQuery(o *Operation) *PathItem {
+	p.Query = o
+	return p
+}
+
+// SetAdditionalOperations sets the AdditionalOperations of the PathItem.
+func (p *PathItem) SetAdditionalOperations(ops map[string]*Operation) *PathItem {
+	p.AdditionalOperations = maps.Clone(ops)
+	return p
+}
+
+// SetAdditionalOperation sets a single operation in the AdditionalOperations of the PathItem.
+func (p *PathItem) SetAdditionalOperation(method string, o *Operation) *PathItem {
+	p.initAdditionalOperations()
+	p.AdditionalOperations[method] = o
+	return p
+}
+
+func (p *PathItem) initAdditionalOperations() {
+	if p.AdditionalOperations == nil {
+		p.AdditionalOperations = make(map[string]*Operation)
+	}
 }
 
 // SetServers sets the Servers of the PathItem.
@@ -1025,6 +1051,9 @@ func Date() *Schema { return schema("string", "date") }
 
 // DateTime returns a date as defined by date-time - RFC3339 OAS data type (Schema).
 func DateTime() *Schema { return schema("string", "date-time") }
+
+// HTTPDate returns a date as defined by HTTP-date - RFC7231 OAS data type (Schema).
+func HTTPDate() *Schema { return schema("string", "http-date") }
 
 // Password returns an obscured OAS data type (Schema).
 func Password() *Schema { return schema("string", "password") }

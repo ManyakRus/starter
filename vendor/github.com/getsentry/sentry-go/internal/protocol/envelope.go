@@ -17,16 +17,16 @@ type Envelope struct {
 // EnvelopeHeader represents the header of a Sentry envelope.
 type EnvelopeHeader struct {
 	// EventID is the unique identifier for this event
-	EventID string `json:"event_id"`
+	EventID string `json:"event_id,omitempty"`
 
 	// SentAt is the timestamp when the event was sent from the SDK as string in RFC 3339 format.
 	// Used for clock drift correction of the event timestamp. The time zone must be UTC.
-	SentAt time.Time `json:"sent_at,omitempty"`
+	SentAt time.Time `json:"sent_at,omitzero"`
 
 	// Dsn can be used for self-authenticated envelopes.
 	// This means that the envelope has all the information necessary to be sent to sentry.
 	// In this case the full DSN must be stored in this key.
-	Dsn string `json:"dsn,omitempty"`
+	Dsn *Dsn `json:"dsn,omitempty"`
 
 	// Sdk carries the same payload as the sdk interface in the event payload but can be carried for all events.
 	// This means that SDK information can be carried for minidumps, session data and other submissions.
@@ -41,11 +41,13 @@ type EnvelopeItemType string
 
 // Constants for envelope item types as defined in the Sentry documentation.
 const (
-	EnvelopeItemTypeEvent       EnvelopeItemType = "event"
-	EnvelopeItemTypeTransaction EnvelopeItemType = "transaction"
-	EnvelopeItemTypeCheckIn     EnvelopeItemType = "check_in"
-	EnvelopeItemTypeAttachment  EnvelopeItemType = "attachment"
-	EnvelopeItemTypeLog         EnvelopeItemType = "log"
+	EnvelopeItemTypeEvent        EnvelopeItemType = "event"
+	EnvelopeItemTypeTransaction  EnvelopeItemType = "transaction"
+	EnvelopeItemTypeCheckIn      EnvelopeItemType = "check_in"
+	EnvelopeItemTypeAttachment   EnvelopeItemType = "attachment"
+	EnvelopeItemTypeLog          EnvelopeItemType = "log"
+	EnvelopeItemTypeTraceMetric  EnvelopeItemType = "trace_metric"
+	EnvelopeItemTypeClientReport EnvelopeItemType = "client_report"
 )
 
 // EnvelopeItemHeader represents the header of an envelope item.
@@ -67,24 +69,34 @@ type EnvelopeItemHeader struct {
 
 	// ItemCount is the number of items in a batch (used for logs)
 	ItemCount *int `json:"item_count,omitempty"`
+
+	// SpanCount is the number of spans in a transaction (used for client reports)
+	SpanCount int `json:"-"`
 }
 
-// EnvelopeItem represents a single item within an envelope.
+// EnvelopeItem represents a single item or batch within an envelope.
 type EnvelopeItem struct {
 	Header  *EnvelopeItemHeader `json:"-"`
 	Payload []byte              `json:"-"`
 }
 
-// NewEnvelope creates a new envelope with the given header.
-func NewEnvelope(header *EnvelopeHeader) *Envelope {
-	return &Envelope{
+// NewEnvelope creates a new envelope with the given header and items.
+func NewEnvelope(header *EnvelopeHeader, items ...*EnvelopeItem) *Envelope {
+	envelope := &Envelope{
 		Header: header,
-		Items:  make([]*EnvelopeItem, 0),
+		Items:  make([]*EnvelopeItem, 0, len(items)),
 	}
+	for _, item := range items {
+		envelope.AddItem(item)
+	}
+	return envelope
 }
 
 // AddItem adds an item to the envelope.
 func (e *Envelope) AddItem(item *EnvelopeItem) {
+	if item == nil {
+		return
+	}
 	e.Items = append(e.Items, item)
 }
 
@@ -165,12 +177,6 @@ func (e *Envelope) Size() (int, error) {
 	return len(data), nil
 }
 
-// MarshalJSON converts the EnvelopeHeader to JSON.
-func (h *EnvelopeHeader) MarshalJSON() ([]byte, error) {
-	type header EnvelopeHeader
-	return json.Marshal((*header)(h))
-}
-
 // NewEnvelopeItem creates a new envelope item with the specified type and payload.
 func NewEnvelopeItem(itemType EnvelopeItemType, payload []byte) *EnvelopeItem {
 	length := len(payload)
@@ -178,6 +184,19 @@ func NewEnvelopeItem(itemType EnvelopeItemType, payload []byte) *EnvelopeItem {
 		Header: &EnvelopeItemHeader{
 			Type:   itemType,
 			Length: &length,
+		},
+		Payload: payload,
+	}
+}
+
+// NewTransactionItem creates a new envelope item including the span count of the transaction.
+func NewTransactionItem(spanCount int, payload []byte) *EnvelopeItem {
+	length := len(payload)
+	return &EnvelopeItem{
+		Header: &EnvelopeItemHeader{
+			Type:      EnvelopeItemTypeTransaction,
+			Length:    &length,
+			SpanCount: spanCount,
 		},
 		Payload: payload,
 	}
@@ -207,6 +226,32 @@ func NewLogItem(itemCount int, payload []byte) *EnvelopeItem {
 			Length:      &length,
 			ItemCount:   &itemCount,
 			ContentType: "application/vnd.sentry.items.log+json",
+		},
+		Payload: payload,
+	}
+}
+
+// NewTraceMetricItem creates a new envelope item for trace metrics.
+func NewTraceMetricItem(itemCount int, payload []byte) *EnvelopeItem {
+	length := len(payload)
+	return &EnvelopeItem{
+		Header: &EnvelopeItemHeader{
+			Type:        EnvelopeItemTypeTraceMetric,
+			Length:      &length,
+			ItemCount:   &itemCount,
+			ContentType: "application/vnd.sentry.items.trace-metric+json",
+		},
+		Payload: payload,
+	}
+}
+
+// NewClientReportItem creates a new envelope item for client reports.
+func NewClientReportItem(payload []byte) *EnvelopeItem {
+	length := len(payload)
+	return &EnvelopeItem{
+		Header: &EnvelopeItemHeader{
+			Type:   EnvelopeItemTypeClientReport,
+			Length: &length,
 		},
 		Payload: payload,
 	}

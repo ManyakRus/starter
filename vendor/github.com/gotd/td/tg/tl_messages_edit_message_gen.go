@@ -31,7 +31,7 @@ var (
 	_ = tdjson.Encoder{}
 )
 
-// MessagesEditMessageRequest represents TL type `messages.editMessage#51e842e1`.
+// MessagesEditMessageRequest represents TL type `messages.editMessage#b106e66c`.
 // Edit message
 //
 // See https://core.telegram.org/method/messages.editMessage for reference.
@@ -76,7 +76,12 @@ type MessagesEditMessageRequest struct {
 	//
 	// Use SetScheduleDate and GetScheduleDate helpers.
 	ScheduleDate int
-	// ScheduleRepeatPeriod field of MessagesEditMessageRequest.
+	// Once sent, this message will be automatically re-scheduled to be re-sent again this
+	// many seconds in the future, see here »¹ for more info on repeating scheduled
+	// messages.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/scheduled-messages#repeating-scheduled-messages
 	//
 	// Use SetScheduleRepeatPeriod and GetScheduleRepeatPeriod helpers.
 	ScheduleRepeatPeriod int
@@ -87,10 +92,14 @@ type MessagesEditMessageRequest struct {
 	//
 	// Use SetQuickReplyShortcutID and GetQuickReplyShortcutID helpers.
 	QuickReplyShortcutID int
+	// RichMessage field of MessagesEditMessageRequest.
+	//
+	// Use SetRichMessage and GetRichMessage helpers.
+	RichMessage InputRichMessageClass
 }
 
 // MessagesEditMessageRequestTypeID is TL type id of MessagesEditMessageRequest.
-const MessagesEditMessageRequestTypeID = 0x51e842e1
+const MessagesEditMessageRequestTypeID = 0xb106e66c
 
 // Ensuring interfaces in compile-time for MessagesEditMessageRequest.
 var (
@@ -140,6 +149,9 @@ func (e *MessagesEditMessageRequest) Zero() bool {
 	if !(e.QuickReplyShortcutID == 0) {
 		return false
 	}
+	if !(e.RichMessage == nil) {
+		return false
+	}
 
 	return true
 }
@@ -166,6 +178,7 @@ func (e *MessagesEditMessageRequest) FillFrom(from interface {
 	GetScheduleDate() (value int, ok bool)
 	GetScheduleRepeatPeriod() (value int, ok bool)
 	GetQuickReplyShortcutID() (value int, ok bool)
+	GetRichMessage() (value InputRichMessageClass, ok bool)
 }) {
 	e.NoWebpage = from.GetNoWebpage()
 	e.InvertMedia = from.GetInvertMedia()
@@ -197,6 +210,10 @@ func (e *MessagesEditMessageRequest) FillFrom(from interface {
 
 	if val, ok := from.GetQuickReplyShortcutID(); ok {
 		e.QuickReplyShortcutID = val
+	}
+
+	if val, ok := from.GetRichMessage(); ok {
+		e.RichMessage = val
 	}
 
 }
@@ -277,6 +294,11 @@ func (e *MessagesEditMessageRequest) TypeInfo() tdp.Type {
 			SchemaName: "quick_reply_shortcut_id",
 			Null:       !e.Flags.Has(17),
 		},
+		{
+			Name:       "RichMessage",
+			SchemaName: "rich_message",
+			Null:       !e.Flags.Has(23),
+		},
 	}
 	return typ
 }
@@ -310,12 +332,15 @@ func (e *MessagesEditMessageRequest) SetFlags() {
 	if !(e.QuickReplyShortcutID == 0) {
 		e.Flags.Set(17)
 	}
+	if !(e.RichMessage == nil) {
+		e.Flags.Set(23)
+	}
 }
 
 // Encode implements bin.Encoder.
 func (e *MessagesEditMessageRequest) Encode(b *bin.Buffer) error {
 	if e == nil {
-		return fmt.Errorf("can't encode messages.editMessage#51e842e1 as nil")
+		return fmt.Errorf("can't encode messages.editMessage#b106e66c as nil")
 	}
 	b.PutID(MessagesEditMessageRequestTypeID)
 	return e.EncodeBare(b)
@@ -324,17 +349,17 @@ func (e *MessagesEditMessageRequest) Encode(b *bin.Buffer) error {
 // EncodeBare implements bin.BareEncoder.
 func (e *MessagesEditMessageRequest) EncodeBare(b *bin.Buffer) error {
 	if e == nil {
-		return fmt.Errorf("can't encode messages.editMessage#51e842e1 as nil")
+		return fmt.Errorf("can't encode messages.editMessage#b106e66c as nil")
 	}
 	e.SetFlags()
 	if err := e.Flags.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode messages.editMessage#51e842e1: field flags: %w", err)
+		return fmt.Errorf("unable to encode messages.editMessage#b106e66c: field flags: %w", err)
 	}
 	if e.Peer == nil {
-		return fmt.Errorf("unable to encode messages.editMessage#51e842e1: field peer is nil")
+		return fmt.Errorf("unable to encode messages.editMessage#b106e66c: field peer is nil")
 	}
 	if err := e.Peer.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode messages.editMessage#51e842e1: field peer: %w", err)
+		return fmt.Errorf("unable to encode messages.editMessage#b106e66c: field peer: %w", err)
 	}
 	b.PutInt(e.ID)
 	if e.Flags.Has(11) {
@@ -342,28 +367,28 @@ func (e *MessagesEditMessageRequest) EncodeBare(b *bin.Buffer) error {
 	}
 	if e.Flags.Has(14) {
 		if e.Media == nil {
-			return fmt.Errorf("unable to encode messages.editMessage#51e842e1: field media is nil")
+			return fmt.Errorf("unable to encode messages.editMessage#b106e66c: field media is nil")
 		}
 		if err := e.Media.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode messages.editMessage#51e842e1: field media: %w", err)
+			return fmt.Errorf("unable to encode messages.editMessage#b106e66c: field media: %w", err)
 		}
 	}
 	if e.Flags.Has(2) {
 		if e.ReplyMarkup == nil {
-			return fmt.Errorf("unable to encode messages.editMessage#51e842e1: field reply_markup is nil")
+			return fmt.Errorf("unable to encode messages.editMessage#b106e66c: field reply_markup is nil")
 		}
 		if err := e.ReplyMarkup.Encode(b); err != nil {
-			return fmt.Errorf("unable to encode messages.editMessage#51e842e1: field reply_markup: %w", err)
+			return fmt.Errorf("unable to encode messages.editMessage#b106e66c: field reply_markup: %w", err)
 		}
 	}
 	if e.Flags.Has(3) {
 		b.PutVectorHeader(len(e.Entities))
 		for idx, v := range e.Entities {
 			if v == nil {
-				return fmt.Errorf("unable to encode messages.editMessage#51e842e1: field entities element with index %d is nil", idx)
+				return fmt.Errorf("unable to encode messages.editMessage#b106e66c: field entities element with index %d is nil", idx)
 			}
 			if err := v.Encode(b); err != nil {
-				return fmt.Errorf("unable to encode messages.editMessage#51e842e1: field entities element with index %d: %w", idx, err)
+				return fmt.Errorf("unable to encode messages.editMessage#b106e66c: field entities element with index %d: %w", idx, err)
 			}
 		}
 	}
@@ -376,16 +401,24 @@ func (e *MessagesEditMessageRequest) EncodeBare(b *bin.Buffer) error {
 	if e.Flags.Has(17) {
 		b.PutInt(e.QuickReplyShortcutID)
 	}
+	if e.Flags.Has(23) {
+		if e.RichMessage == nil {
+			return fmt.Errorf("unable to encode messages.editMessage#b106e66c: field rich_message is nil")
+		}
+		if err := e.RichMessage.Encode(b); err != nil {
+			return fmt.Errorf("unable to encode messages.editMessage#b106e66c: field rich_message: %w", err)
+		}
+	}
 	return nil
 }
 
 // Decode implements bin.Decoder.
 func (e *MessagesEditMessageRequest) Decode(b *bin.Buffer) error {
 	if e == nil {
-		return fmt.Errorf("can't decode messages.editMessage#51e842e1 to nil")
+		return fmt.Errorf("can't decode messages.editMessage#b106e66c to nil")
 	}
 	if err := b.ConsumeID(MessagesEditMessageRequestTypeID); err != nil {
-		return fmt.Errorf("unable to decode messages.editMessage#51e842e1: %w", err)
+		return fmt.Errorf("unable to decode messages.editMessage#b106e66c: %w", err)
 	}
 	return e.DecodeBare(b)
 }
@@ -393,11 +426,11 @@ func (e *MessagesEditMessageRequest) Decode(b *bin.Buffer) error {
 // DecodeBare implements bin.BareDecoder.
 func (e *MessagesEditMessageRequest) DecodeBare(b *bin.Buffer) error {
 	if e == nil {
-		return fmt.Errorf("can't decode messages.editMessage#51e842e1 to nil")
+		return fmt.Errorf("can't decode messages.editMessage#b106e66c to nil")
 	}
 	{
 		if err := e.Flags.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode messages.editMessage#51e842e1: field flags: %w", err)
+			return fmt.Errorf("unable to decode messages.editMessage#b106e66c: field flags: %w", err)
 		}
 	}
 	e.NoWebpage = e.Flags.Has(1)
@@ -405,42 +438,42 @@ func (e *MessagesEditMessageRequest) DecodeBare(b *bin.Buffer) error {
 	{
 		value, err := DecodeInputPeer(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.editMessage#51e842e1: field peer: %w", err)
+			return fmt.Errorf("unable to decode messages.editMessage#b106e66c: field peer: %w", err)
 		}
 		e.Peer = value
 	}
 	{
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.editMessage#51e842e1: field id: %w", err)
+			return fmt.Errorf("unable to decode messages.editMessage#b106e66c: field id: %w", err)
 		}
 		e.ID = value
 	}
 	if e.Flags.Has(11) {
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.editMessage#51e842e1: field message: %w", err)
+			return fmt.Errorf("unable to decode messages.editMessage#b106e66c: field message: %w", err)
 		}
 		e.Message = value
 	}
 	if e.Flags.Has(14) {
 		value, err := DecodeInputMedia(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.editMessage#51e842e1: field media: %w", err)
+			return fmt.Errorf("unable to decode messages.editMessage#b106e66c: field media: %w", err)
 		}
 		e.Media = value
 	}
 	if e.Flags.Has(2) {
 		value, err := DecodeReplyMarkup(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.editMessage#51e842e1: field reply_markup: %w", err)
+			return fmt.Errorf("unable to decode messages.editMessage#b106e66c: field reply_markup: %w", err)
 		}
 		e.ReplyMarkup = value
 	}
 	if e.Flags.Has(3) {
 		headerLen, err := b.VectorHeader()
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.editMessage#51e842e1: field entities: %w", err)
+			return fmt.Errorf("unable to decode messages.editMessage#b106e66c: field entities: %w", err)
 		}
 
 		if headerLen > 0 {
@@ -449,7 +482,7 @@ func (e *MessagesEditMessageRequest) DecodeBare(b *bin.Buffer) error {
 		for idx := 0; idx < headerLen; idx++ {
 			value, err := DecodeMessageEntity(b)
 			if err != nil {
-				return fmt.Errorf("unable to decode messages.editMessage#51e842e1: field entities: %w", err)
+				return fmt.Errorf("unable to decode messages.editMessage#b106e66c: field entities: %w", err)
 			}
 			e.Entities = append(e.Entities, value)
 		}
@@ -457,23 +490,30 @@ func (e *MessagesEditMessageRequest) DecodeBare(b *bin.Buffer) error {
 	if e.Flags.Has(15) {
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.editMessage#51e842e1: field schedule_date: %w", err)
+			return fmt.Errorf("unable to decode messages.editMessage#b106e66c: field schedule_date: %w", err)
 		}
 		e.ScheduleDate = value
 	}
 	if e.Flags.Has(18) {
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.editMessage#51e842e1: field schedule_repeat_period: %w", err)
+			return fmt.Errorf("unable to decode messages.editMessage#b106e66c: field schedule_repeat_period: %w", err)
 		}
 		e.ScheduleRepeatPeriod = value
 	}
 	if e.Flags.Has(17) {
 		value, err := b.Int()
 		if err != nil {
-			return fmt.Errorf("unable to decode messages.editMessage#51e842e1: field quick_reply_shortcut_id: %w", err)
+			return fmt.Errorf("unable to decode messages.editMessage#b106e66c: field quick_reply_shortcut_id: %w", err)
 		}
 		e.QuickReplyShortcutID = value
+	}
+	if e.Flags.Has(23) {
+		value, err := DecodeInputRichMessage(b)
+		if err != nil {
+			return fmt.Errorf("unable to decode messages.editMessage#b106e66c: field rich_message: %w", err)
+		}
+		e.RichMessage = value
 	}
 	return nil
 }
@@ -658,6 +698,24 @@ func (e *MessagesEditMessageRequest) GetQuickReplyShortcutID() (value int, ok bo
 	return e.QuickReplyShortcutID, true
 }
 
+// SetRichMessage sets value of RichMessage conditional field.
+func (e *MessagesEditMessageRequest) SetRichMessage(value InputRichMessageClass) {
+	e.Flags.Set(23)
+	e.RichMessage = value
+}
+
+// GetRichMessage returns value of RichMessage conditional field and
+// boolean which is true if field was set.
+func (e *MessagesEditMessageRequest) GetRichMessage() (value InputRichMessageClass, ok bool) {
+	if e == nil {
+		return
+	}
+	if !e.Flags.Has(23) {
+		return value, false
+	}
+	return e.RichMessage, true
+}
+
 // MapEntities returns field Entities wrapped in MessageEntityClassArray helper.
 func (e *MessagesEditMessageRequest) MapEntities() (value MessageEntityClassArray, ok bool) {
 	if !e.Flags.Has(3) {
@@ -666,13 +724,15 @@ func (e *MessagesEditMessageRequest) MapEntities() (value MessageEntityClassArra
 	return MessageEntityClassArray(e.Entities), true
 }
 
-// MessagesEditMessage invokes method messages.editMessage#51e842e1 returning error if any.
+// MessagesEditMessage invokes method messages.editMessage#b106e66c returning error if any.
 // Edit message
 //
 // Possible errors:
 //
 //	400 BOT_DOMAIN_INVALID: Bot domain invalid.
 //	400 BOT_INVALID: This is not a valid bot.
+//	400 BUSINESS_CONNECTION_INVALID: The connection_id passed to the wrapping invokeWithBusinessConnection call is invalid.
+//	400 BUSINESS_PEER_INVALID: Messages can't be set to the specified peer through the current business connection.
 //	400 BUTTON_COPY_TEXT_INVALID: The specified keyboardButtonCopy.copy_text is invalid.
 //	400 BUTTON_DATA_INVALID: The data of one or more of the buttons you provided is invalid.
 //	400 BUTTON_TYPE_INVALID: The type of one or more of the buttons you provided is invalid.
@@ -707,14 +767,18 @@ func (e *MessagesEditMessageRequest) MapEntities() (value MessageEntityClassArra
 //	500 MSG_WAIT_FAILED: A waiting call returned an error.
 //	400 PEER_ID_INVALID: The provided peer id is invalid.
 //	400 PEER_TYPES_INVALID: The passed keyboardButtonSwitchInline.peer_types field is invalid.
+//	400 PHOTO_EXT_INVALID: The extension of the photo is invalid.
+//	400 PHOTO_INVALID_DIMENSIONS: The photo dimensions are invalid.
+//	400 PHOTO_SAVE_FILE_INVALID: Internal issues, try again later.
 //	400 REPLY_MARKUP_INVALID: The provided reply markup is invalid.
 //	400 REPLY_MARKUP_TOO_LONG: The specified reply_markup is too long.
 //	400 SCHEDULE_DATE_INVALID: Invalid schedule date provided.
+//	400 TODO_ITEMS_EMPTY: A checklist was specified, but no checklist items were passed.
+//	400 TODO_ITEM_DUPLICATE: Duplicate checklist items detected.
 //	400 USER_BANNED_IN_CHANNEL: You're banned from sending messages in supergroups/channels.
 //	400 WEBPAGE_NOT_FOUND: A preview for the specified webpage url could not be generated.
 //
 // See https://core.telegram.org/method/messages.editMessage for reference.
-// Can be used by bots.
 func (c *Client) MessagesEditMessage(ctx context.Context, request *MessagesEditMessageRequest) (UpdatesClass, error) {
 	var result UpdatesBox
 

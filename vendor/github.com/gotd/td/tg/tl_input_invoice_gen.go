@@ -835,9 +835,12 @@ type InputInvoiceStarGift struct {
 	// If set, your name will be hidden if the destination user decides to display the gift
 	// on their profile (they will still see that you sent the gift)
 	HideName bool
-	// IncludeUpgrade field of InputInvoiceStarGift.
+	// Also pay for an eventual upgrade of the gift to a collectible gift »¹.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/gifts#collectible-gifts
 	IncludeUpgrade bool
-	// Peer field of InputInvoiceStarGift.
+	// Receiver of the gift.
 	Peer InputPeerClass
 	// Identifier of the gift, from starGift¹.id
 	//
@@ -1137,6 +1140,12 @@ func (i *InputInvoiceStarGift) GetMessage() (value TextWithEntities, ok bool) {
 }
 
 // InputInvoiceStarGiftUpgrade represents TL type `inputInvoiceStarGiftUpgrade#4d818d5d`.
+// Used to pay to upgrade a Gift to a collectible gift¹, see the collectible gifts »²
+// documentation for more info on the full flow.
+//
+// Links:
+//  1. https://core.telegram.org/api/gifts#upgrade-a-gift-to-a-collectible-gift
+//  2. https://core.telegram.org/api/gifts#collectible-gifts
 //
 // See https://core.telegram.org/constructor/inputInvoiceStarGiftUpgrade for reference.
 type InputInvoiceStarGiftUpgrade struct {
@@ -1145,9 +1154,13 @@ type InputInvoiceStarGiftUpgrade struct {
 	// Links:
 	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// KeepOriginalDetails field of InputInvoiceStarGiftUpgrade.
+	// Set this flag to keep the original gift text, sender and receiver in the upgraded gift
+	// as a starGiftAttributeOriginalDetails¹ attribute.
+	//
+	// Links:
+	//  1) https://core.telegram.org/constructor/starGiftAttributeOriginalDetails
 	KeepOriginalDetails bool
-	// Stargift field of InputInvoiceStarGiftUpgrade.
+	// The identifier of the received gift to upgrade.
 	Stargift InputSavedStarGiftClass
 }
 
@@ -1332,12 +1345,18 @@ func (i *InputInvoiceStarGiftUpgrade) GetStargift() (value InputSavedStarGiftCla
 }
 
 // InputInvoiceStarGiftTransfer represents TL type `inputInvoiceStarGiftTransfer#4a5f5bd9`.
+// Used to pay to transfer a collectible gift to another peer¹, see the gifts »²
+// documentation for more info.
+//
+// Links:
+//  1. https://core.telegram.org/api/gifts#transferring-collectible-gifts
+//  2. https://core.telegram.org/api/gifts#transferring-collectible-gifts
 //
 // See https://core.telegram.org/constructor/inputInvoiceStarGiftTransfer for reference.
 type InputInvoiceStarGiftTransfer struct {
-	// Stargift field of InputInvoiceStarGiftTransfer.
+	// The identifier of the received gift
 	Stargift InputSavedStarGiftClass
-	// ToID field of InputInvoiceStarGiftTransfer.
+	// The destination peer
 	ToID InputPeerClass
 }
 
@@ -1503,6 +1522,12 @@ func (i *InputInvoiceStarGiftTransfer) GetToID() (value InputPeerClass) {
 }
 
 // InputInvoicePremiumGiftStars represents TL type `inputInvoicePremiumGiftStars#dabab2ef`.
+// Used to gift a Telegram Premium¹ subscription to another user, paying with Telegram
+// Stars².
+//
+// Links:
+//  1. https://core.telegram.org/api/premium
+//  2. https://core.telegram.org/api/stars
 //
 // See https://core.telegram.org/constructor/inputInvoicePremiumGiftStars for reference.
 type InputInvoicePremiumGiftStars struct {
@@ -1511,11 +1536,15 @@ type InputInvoicePremiumGiftStars struct {
 	// Links:
 	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// UserID field of InputInvoicePremiumGiftStars.
+	// Who will receive the gifted subscription.
 	UserID InputUserClass
-	// Months field of InputInvoicePremiumGiftStars.
+	// Duration of the subscription in months, must be one of the options with currency ==
+	// "XTR" returned by payments.getPremiumGiftCodeOptions¹.
+	//
+	// Links:
+	//  1) https://core.telegram.org/method/payments.getPremiumGiftCodeOptions
 	Months int
-	// Message field of InputInvoicePremiumGiftStars.
+	// Message attached with the gift.
 	//
 	// Use SetMessage and GetMessage helpers.
 	Message TextWithEntities
@@ -1738,12 +1767,22 @@ func (i *InputInvoicePremiumGiftStars) GetMessage() (value TextWithEntities, ok 
 }
 
 // InputInvoiceBusinessBotTransferStars represents TL type `inputInvoiceBusinessBotTransferStars#f4997e42`.
+// Transfer stars from the balance of a user account connected to a business bot¹, to
+// the balance of the business bot², see here »³ for more info on the full flow.
+//
+// Links:
+//  1. https://core.telegram.org/api/bots/connected-business-bots
+//  2. https://core.telegram.org/api/bots/connected-business-bots
+//  3. https://core.telegram.org/api/stars#transferring-stars-from-a-business-account-to-the-business-bot
 //
 // See https://core.telegram.org/constructor/inputInvoiceBusinessBotTransferStars for reference.
 type InputInvoiceBusinessBotTransferStars struct {
-	// Bot field of InputInvoiceBusinessBotTransferStars.
+	// Always inputUserSelf¹.
+	//
+	// Links:
+	//  1) https://core.telegram.org/constructor/inputUserSelf
 	Bot InputUserClass
-	// Stars field of InputInvoiceBusinessBotTransferStars.
+	// The number of stars to transfer.
 	Stars int64
 }
 
@@ -1903,22 +1942,37 @@ func (i *InputInvoiceBusinessBotTransferStars) GetStars() (value int64) {
 	return i.Stars
 }
 
-// InputInvoiceStarGiftResale represents TL type `inputInvoiceStarGiftResale#c39f5324`.
+// InputInvoiceStarGiftResale represents TL type `inputInvoiceStarGiftResale#e9b0c658`.
+// Used to buy a collectible gift¹ currently up on resale, see here² for more info on
+// the full flow.
+//
+// Links:
+//  1. https://core.telegram.org/api/gifts#collectible-gifts
+//  2. https://core.telegram.org/api/gifts#reselling-collectible-gifts
 //
 // See https://core.telegram.org/constructor/inputInvoiceStarGiftResale for reference.
 type InputInvoiceStarGiftResale struct {
-	// Flags field of InputInvoiceStarGiftResale.
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// Ton field of InputInvoiceStarGiftResale.
+	// Buy the gift using TON.
 	Ton bool
-	// Slug field of InputInvoiceStarGiftResale.
+	// ShowName field of InputInvoiceStarGiftResale.
+	ShowName bool
+	// Slug of the gift to buy.
 	Slug string
-	// ToID field of InputInvoiceStarGiftResale.
+	// The receiver of the gift.
 	ToID InputPeerClass
+	// Message field of InputInvoiceStarGiftResale.
+	//
+	// Use SetMessage and GetMessage helpers.
+	Message TextWithEntities
 }
 
 // InputInvoiceStarGiftResaleTypeID is TL type id of InputInvoiceStarGiftResale.
-const InputInvoiceStarGiftResaleTypeID = 0xc39f5324
+const InputInvoiceStarGiftResaleTypeID = 0xe9b0c658
 
 // construct implements constructor of InputInvoiceClass.
 func (i InputInvoiceStarGiftResale) construct() InputInvoiceClass { return &i }
@@ -1943,10 +1997,16 @@ func (i *InputInvoiceStarGiftResale) Zero() bool {
 	if !(i.Ton == false) {
 		return false
 	}
+	if !(i.ShowName == false) {
+		return false
+	}
 	if !(i.Slug == "") {
 		return false
 	}
 	if !(i.ToID == nil) {
+		return false
+	}
+	if !(i.Message.Zero()) {
 		return false
 	}
 
@@ -1965,12 +2025,19 @@ func (i *InputInvoiceStarGiftResale) String() string {
 // FillFrom fills InputInvoiceStarGiftResale from given interface.
 func (i *InputInvoiceStarGiftResale) FillFrom(from interface {
 	GetTon() (value bool)
+	GetShowName() (value bool)
 	GetSlug() (value string)
 	GetToID() (value InputPeerClass)
+	GetMessage() (value TextWithEntities, ok bool)
 }) {
 	i.Ton = from.GetTon()
+	i.ShowName = from.GetShowName()
 	i.Slug = from.GetSlug()
 	i.ToID = from.GetToID()
+	if val, ok := from.GetMessage(); ok {
+		i.Message = val
+	}
+
 }
 
 // TypeID returns type id in TL schema.
@@ -2002,12 +2069,22 @@ func (i *InputInvoiceStarGiftResale) TypeInfo() tdp.Type {
 			Null:       !i.Flags.Has(0),
 		},
 		{
+			Name:       "ShowName",
+			SchemaName: "show_name",
+			Null:       !i.Flags.Has(2),
+		},
+		{
 			Name:       "Slug",
 			SchemaName: "slug",
 		},
 		{
 			Name:       "ToID",
 			SchemaName: "to_id",
+		},
+		{
+			Name:       "Message",
+			SchemaName: "message",
+			Null:       !i.Flags.Has(1),
 		},
 	}
 	return typ
@@ -2018,12 +2095,18 @@ func (i *InputInvoiceStarGiftResale) SetFlags() {
 	if !(i.Ton == false) {
 		i.Flags.Set(0)
 	}
+	if !(i.ShowName == false) {
+		i.Flags.Set(2)
+	}
+	if !(i.Message.Zero()) {
+		i.Flags.Set(1)
+	}
 }
 
 // Encode implements bin.Encoder.
 func (i *InputInvoiceStarGiftResale) Encode(b *bin.Buffer) error {
 	if i == nil {
-		return fmt.Errorf("can't encode inputInvoiceStarGiftResale#c39f5324 as nil")
+		return fmt.Errorf("can't encode inputInvoiceStarGiftResale#e9b0c658 as nil")
 	}
 	b.PutID(InputInvoiceStarGiftResaleTypeID)
 	return i.EncodeBare(b)
@@ -2032,18 +2115,23 @@ func (i *InputInvoiceStarGiftResale) Encode(b *bin.Buffer) error {
 // EncodeBare implements bin.BareEncoder.
 func (i *InputInvoiceStarGiftResale) EncodeBare(b *bin.Buffer) error {
 	if i == nil {
-		return fmt.Errorf("can't encode inputInvoiceStarGiftResale#c39f5324 as nil")
+		return fmt.Errorf("can't encode inputInvoiceStarGiftResale#e9b0c658 as nil")
 	}
 	i.SetFlags()
 	if err := i.Flags.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode inputInvoiceStarGiftResale#c39f5324: field flags: %w", err)
+		return fmt.Errorf("unable to encode inputInvoiceStarGiftResale#e9b0c658: field flags: %w", err)
 	}
 	b.PutString(i.Slug)
 	if i.ToID == nil {
-		return fmt.Errorf("unable to encode inputInvoiceStarGiftResale#c39f5324: field to_id is nil")
+		return fmt.Errorf("unable to encode inputInvoiceStarGiftResale#e9b0c658: field to_id is nil")
 	}
 	if err := i.ToID.Encode(b); err != nil {
-		return fmt.Errorf("unable to encode inputInvoiceStarGiftResale#c39f5324: field to_id: %w", err)
+		return fmt.Errorf("unable to encode inputInvoiceStarGiftResale#e9b0c658: field to_id: %w", err)
+	}
+	if i.Flags.Has(1) {
+		if err := i.Message.Encode(b); err != nil {
+			return fmt.Errorf("unable to encode inputInvoiceStarGiftResale#e9b0c658: field message: %w", err)
+		}
 	}
 	return nil
 }
@@ -2051,10 +2139,10 @@ func (i *InputInvoiceStarGiftResale) EncodeBare(b *bin.Buffer) error {
 // Decode implements bin.Decoder.
 func (i *InputInvoiceStarGiftResale) Decode(b *bin.Buffer) error {
 	if i == nil {
-		return fmt.Errorf("can't decode inputInvoiceStarGiftResale#c39f5324 to nil")
+		return fmt.Errorf("can't decode inputInvoiceStarGiftResale#e9b0c658 to nil")
 	}
 	if err := b.ConsumeID(InputInvoiceStarGiftResaleTypeID); err != nil {
-		return fmt.Errorf("unable to decode inputInvoiceStarGiftResale#c39f5324: %w", err)
+		return fmt.Errorf("unable to decode inputInvoiceStarGiftResale#e9b0c658: %w", err)
 	}
 	return i.DecodeBare(b)
 }
@@ -2062,27 +2150,33 @@ func (i *InputInvoiceStarGiftResale) Decode(b *bin.Buffer) error {
 // DecodeBare implements bin.BareDecoder.
 func (i *InputInvoiceStarGiftResale) DecodeBare(b *bin.Buffer) error {
 	if i == nil {
-		return fmt.Errorf("can't decode inputInvoiceStarGiftResale#c39f5324 to nil")
+		return fmt.Errorf("can't decode inputInvoiceStarGiftResale#e9b0c658 to nil")
 	}
 	{
 		if err := i.Flags.Decode(b); err != nil {
-			return fmt.Errorf("unable to decode inputInvoiceStarGiftResale#c39f5324: field flags: %w", err)
+			return fmt.Errorf("unable to decode inputInvoiceStarGiftResale#e9b0c658: field flags: %w", err)
 		}
 	}
 	i.Ton = i.Flags.Has(0)
+	i.ShowName = i.Flags.Has(2)
 	{
 		value, err := b.String()
 		if err != nil {
-			return fmt.Errorf("unable to decode inputInvoiceStarGiftResale#c39f5324: field slug: %w", err)
+			return fmt.Errorf("unable to decode inputInvoiceStarGiftResale#e9b0c658: field slug: %w", err)
 		}
 		i.Slug = value
 	}
 	{
 		value, err := DecodeInputPeer(b)
 		if err != nil {
-			return fmt.Errorf("unable to decode inputInvoiceStarGiftResale#c39f5324: field to_id: %w", err)
+			return fmt.Errorf("unable to decode inputInvoiceStarGiftResale#e9b0c658: field to_id: %w", err)
 		}
 		i.ToID = value
+	}
+	if i.Flags.Has(1) {
+		if err := i.Message.Decode(b); err != nil {
+			return fmt.Errorf("unable to decode inputInvoiceStarGiftResale#e9b0c658: field message: %w", err)
+		}
 	}
 	return nil
 }
@@ -2106,6 +2200,25 @@ func (i *InputInvoiceStarGiftResale) GetTon() (value bool) {
 	return i.Flags.Has(0)
 }
 
+// SetShowName sets value of ShowName conditional field.
+func (i *InputInvoiceStarGiftResale) SetShowName(value bool) {
+	if value {
+		i.Flags.Set(2)
+		i.ShowName = true
+	} else {
+		i.Flags.Unset(2)
+		i.ShowName = false
+	}
+}
+
+// GetShowName returns value of ShowName conditional field.
+func (i *InputInvoiceStarGiftResale) GetShowName() (value bool) {
+	if i == nil {
+		return
+	}
+	return i.Flags.Has(2)
+}
+
 // GetSlug returns value of Slug field.
 func (i *InputInvoiceStarGiftResale) GetSlug() (value string) {
 	if i == nil {
@@ -2122,13 +2235,40 @@ func (i *InputInvoiceStarGiftResale) GetToID() (value InputPeerClass) {
 	return i.ToID
 }
 
+// SetMessage sets value of Message conditional field.
+func (i *InputInvoiceStarGiftResale) SetMessage(value TextWithEntities) {
+	i.Flags.Set(1)
+	i.Message = value
+}
+
+// GetMessage returns value of Message conditional field and
+// boolean which is true if field was set.
+func (i *InputInvoiceStarGiftResale) GetMessage() (value TextWithEntities, ok bool) {
+	if i == nil {
+		return
+	}
+	if !i.Flags.Has(1) {
+		return value, false
+	}
+	return i.Message, true
+}
+
 // InputInvoiceStarGiftPrepaidUpgrade represents TL type `inputInvoiceStarGiftPrepaidUpgrade#9a0b48b8`.
+// Separately prepay for the upgrade of a gift »¹.
+//
+// Links:
+//  1. https://core.telegram.org/api/gifts#prepaying-for-someone-elses-upgrade
 //
 // See https://core.telegram.org/constructor/inputInvoiceStarGiftPrepaidUpgrade for reference.
 type InputInvoiceStarGiftPrepaidUpgrade struct {
-	// Peer field of InputInvoiceStarGiftPrepaidUpgrade.
+	// The peer that owns the gift.
 	Peer InputPeerClass
-	// Hash field of InputInvoiceStarGiftPrepaidUpgrade.
+	// The upgrade hash from messageActionStarGift¹.prepaid_upgrade_hash or savedStarGift²
+	// prepaid_upgrade_hash.
+	//
+	// Links:
+	//  1) https://core.telegram.org/constructor/messageActionStarGift
+	//  2) https://core.telegram.org/constructor/savedStarGift
 	Hash string
 }
 
@@ -2289,10 +2429,18 @@ func (i *InputInvoiceStarGiftPrepaidUpgrade) GetHash() (value string) {
 }
 
 // InputInvoicePremiumAuthCode represents TL type `inputInvoicePremiumAuthCode#3e77f614`.
+// Used to pay for login codes, in case of high cost of SMS verification codes for the
+// user's country/provider, see here »¹ for more info.
+//
+// Links:
+//  1. https://core.telegram.org/api/auth#paid-auth
 //
 // See https://core.telegram.org/constructor/inputInvoicePremiumAuthCode for reference.
 type InputInvoicePremiumAuthCode struct {
-	// Purpose field of InputInvoicePremiumAuthCode.
+	// Must contain an inputStorePaymentAuthCode¹.
+	//
+	// Links:
+	//  1) https://core.telegram.org/constructor/inputStorePaymentAuthCode
 	Purpose InputStorePaymentPurposeClass
 }
 
@@ -2428,10 +2576,20 @@ func (i *InputInvoicePremiumAuthCode) GetPurpose() (value InputStorePaymentPurpo
 }
 
 // InputInvoiceStarGiftDropOriginalDetails represents TL type `inputInvoiceStarGiftDropOriginalDetails#923d8d1`.
+// Used to pay for for the removal of the starGiftAttributeOriginalDetails¹ attribute
+// from a collectible gift, see here »² for the full flow.
+//
+// Links:
+//  1. https://core.telegram.org/constructor/starGiftAttributeOriginalDetails
+//  2. https://core.telegram.org/api/gifts#dropping-the-original-details-of-an-upgraded-gift
 //
 // See https://core.telegram.org/constructor/inputInvoiceStarGiftDropOriginalDetails for reference.
 type InputInvoiceStarGiftDropOriginalDetails struct {
-	// Stargift field of InputInvoiceStarGiftDropOriginalDetails.
+	// The collectible gift whose starGiftAttributeOriginalDetails¹ attribute should be
+	// removed.
+	//
+	// Links:
+	//  1) https://core.telegram.org/constructor/starGiftAttributeOriginalDetails
 	Stargift InputSavedStarGiftClass
 }
 
@@ -2567,24 +2725,49 @@ func (i *InputInvoiceStarGiftDropOriginalDetails) GetStargift() (value InputSave
 }
 
 // InputInvoiceStarGiftAuctionBid represents TL type `inputInvoiceStarGiftAuctionBid#1ecafa10`.
+// Used to place a bid in a collectible gift auction »¹.
+//
+// Links:
+//  1. https://core.telegram.org/api/auctions
 //
 // See https://core.telegram.org/constructor/inputInvoiceStarGiftAuctionBid for reference.
 type InputInvoiceStarGiftAuctionBid struct {
-	// Flags field of InputInvoiceStarGiftAuctionBid.
+	// Flags, see TL conditional fields¹
+	//
+	// Links:
+	//  1) https://core.telegram.org/mtproto/TL-combinators#conditional-fields
 	Flags bin.Fields
-	// HideName field of InputInvoiceStarGiftAuctionBid.
+	// If set, your name will be hidden if the destination peer decides to display the gift
+	// on their profile (they will still see that you sent the gift).    Must not be set when
+	// updating an existing bid, as the value cannot be changed for existing bids.
 	HideName bool
-	// UpdateBid field of InputInvoiceStarGiftAuctionBid.
+	// Must be set when increasing an already existing bid.
 	UpdateBid bool
-	// Peer field of InputInvoiceStarGiftAuctionBid.
+	// Identifier of the user or channel (only if channelFull¹.stargifts_available is set)
+	// that will receive the gift.
+	//
+	// Links:
+	//  1) https://core.telegram.org/constructor/channelFull
 	//
 	// Use SetPeer and GetPeer helpers.
 	Peer InputPeerClass
-	// GiftID field of InputInvoiceStarGiftAuctionBid.
+	// Identifier of the gift, from starGift¹.id
+	//
+	// Links:
+	//  1) https://core.telegram.org/constructor/starGift
 	GiftID int64
-	// BidAmount field of InputInvoiceStarGiftAuctionBid.
+	// Total amount of the bid in Telegram Stars¹.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/stars
 	BidAmount int64
-	// Message field of InputInvoiceStarGiftAuctionBid.
+	// Optional message that will be attached with the gift if we end up winning this round:
+	// the maximum length for this field is specified in the stargifts_message_length_max
+	// client configuration value »¹.    Must not be set when updating an existing bid, as
+	// the value cannot be changed for existing bids.
+	//
+	// Links:
+	//  1) https://core.telegram.org/api/config#stargifts-message-length-max
 	//
 	// Use SetMessage and GetMessage helpers.
 	Message TextWithEntities
@@ -2957,7 +3140,7 @@ const InputInvoiceClassName = "InputInvoice"
 //	case *tg.InputInvoiceStarGiftTransfer: // inputInvoiceStarGiftTransfer#4a5f5bd9
 //	case *tg.InputInvoicePremiumGiftStars: // inputInvoicePremiumGiftStars#dabab2ef
 //	case *tg.InputInvoiceBusinessBotTransferStars: // inputInvoiceBusinessBotTransferStars#f4997e42
-//	case *tg.InputInvoiceStarGiftResale: // inputInvoiceStarGiftResale#c39f5324
+//	case *tg.InputInvoiceStarGiftResale: // inputInvoiceStarGiftResale#e9b0c658
 //	case *tg.InputInvoiceStarGiftPrepaidUpgrade: // inputInvoiceStarGiftPrepaidUpgrade#9a0b48b8
 //	case *tg.InputInvoicePremiumAuthCode: // inputInvoicePremiumAuthCode#3e77f614
 //	case *tg.InputInvoiceStarGiftDropOriginalDetails: // inputInvoiceStarGiftDropOriginalDetails#923d8d1
@@ -3061,7 +3244,7 @@ func DecodeInputInvoice(buf *bin.Buffer) (InputInvoiceClass, error) {
 		}
 		return &v, nil
 	case InputInvoiceStarGiftResaleTypeID:
-		// Decoding inputInvoiceStarGiftResale#c39f5324.
+		// Decoding inputInvoiceStarGiftResale#e9b0c658.
 		v := InputInvoiceStarGiftResale{}
 		if err := v.Decode(buf); err != nil {
 			return nil, fmt.Errorf("unable to decode InputInvoiceClass: %w", err)
