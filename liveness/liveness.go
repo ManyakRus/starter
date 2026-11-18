@@ -1,5 +1,6 @@
 // модуль для работы веб-сервера с функцией Liveness
 // Для GET запросов веб-сервер возвращает статус 200 "ok", и текст `{"status":"ok"}`
+// нужно для cubernetes
 
 package liveness
 
@@ -70,7 +71,9 @@ func Start_ctx(ctx *context.Context, WaitGroup *sync.WaitGroup) {
 	fiber_connect.Settings.WEBSERVER_HOST = Settings.LIVENESS_HOST
 	fiber_connect.Settings.WEBSERVER_PORT = Settings.LIVENESS_PORT
 
-	fiber_connect.Start()
+	if fiber_connect.Client == nil {
+		fiber_connect.Start()
+	}
 
 	Client := fiber_connect.Client
 	//if Client == nil {
@@ -102,12 +105,15 @@ func FillSettings() {
 	Settings.LIVENESS_HOST = os.Getenv("LIVENESS_HOST")
 	Settings.LIVENESS_PORT = os.Getenv("LIVENESS_PORT")
 	if Settings.LIVENESS_HOST == "" {
-		log.Debug("Need fill LIVENESS_HOST ! in OS Environment ")
-		Settings.LIVENESS_HOST = os.Getenv("WEB_SERVER_HOST")
+		//log.Debug("Need fill LIVENESS_HOST ! in OS Environment ")
+		Settings.LIVENESS_HOST = os.Getenv("WEBSERVER_HOST")
 	}
 
 	if Settings.LIVENESS_PORT == "" {
-		log.Warn("Need fill LIVENESS_PORT ! in OS Environment. Use default: ", WEBSERVER_PORT_DEFAULT)
+		Settings.LIVENESS_PORT = os.Getenv("WEBSERVER_PORT")
+	}
+	if Settings.LIVENESS_PORT == "" {
 		Settings.LIVENESS_PORT = WEBSERVER_PORT_DEFAULT
+		log.Warn("Need fill WEBSERVER_PORT ! in OS Environment. Use default: ", WEBSERVER_PORT_DEFAULT)
 	}
 }
